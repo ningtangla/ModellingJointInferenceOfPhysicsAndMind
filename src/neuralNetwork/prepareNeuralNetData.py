@@ -1,23 +1,21 @@
 import numpy as np
 import pickle
 import random
-from AnalyticGeometryFunctions import computeAngleBetweenVectors
 
-
-class OptimalPolicy:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
-
-    def __call__(self, state):
-        targetState = state[2:4]
-        agentState = state[0:2]
-        relativeVector = np.array(targetState) - np.array(agentState)
-        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
-                               np.array(self.actionSpace)}
-        action = angleBetweenVectors[min(angleBetweenVectors.keys())]
-        return action
-
-
+# class OptimalPolicy:
+#     def __init__(self, actionSpace):
+#         self.actionSpace = actionSpace
+#
+#     def __call__(self, state):
+#         targetState = state[2:4]
+#         agentState = state[0:2]
+#         relativeVector = np.array(targetState) - np.array(agentState)
+#         angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
+#                                np.array(self.actionSpace)}
+#         action = angleBetweenVectors[min(angleBetweenVectors.keys())]
+#         return action
+#
+#
 class SampleTrajectory:
     def __init__(self, maxTimeStep, transitionFunction, isTerminal, reset):
         self.maxTimeStep = maxTimeStep
@@ -71,8 +69,8 @@ def sampleData(data, batchSize):
     return batchInput, batchOutput
 
 
-def prepareDataContinuousEnv():
-    actionSpace = [[0, 1], [1, 0], [-1, 0], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]
+def main():
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     policy = OptimalPolicy(actionSpace)
 
     maxTimeStep = 180
@@ -94,16 +92,4 @@ def prepareDataContinuousEnv():
 
 
 if __name__ == "__main__":
-    # prepareDataContinuousEnv()
-    numDataPoints = 10000
-    path = 'sheepWolfMujocoData.pkl'
-
-    allStates = np.random.random_sample((numDataPoints, 12))
-    allActions = np.eye(8)[np.random.choice(8, numDataPoints)]
-
-    dataSet = list(zip(allStates, allActions))
-    saveFile = open(path, "wb")
-    pickle.dump(dataSet, saveFile)
-
-
-
+    prepareDataMujoco()

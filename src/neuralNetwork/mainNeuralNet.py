@@ -3,7 +3,7 @@ import tensorflow as tf
 import random
 import supervisedLearning as SL
 import neuralNetwork as NN
-import prepareDataContinuousEnv as PD
+import prepareNeuralNetData as PD
 
 
 if __name__ == "__main__":
