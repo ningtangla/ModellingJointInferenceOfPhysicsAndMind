@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../src/algorithms/')
-sys.path.append('../src/')
+sys.path.append('../src/sheepWolf')
 import unittest
 import numpy as np
 from ddt import ddt, data, unpack
@@ -12,7 +12,7 @@ from envSheepChaseWolf import GetAgentPos
 
 @ddt
 class TestMCTSInMujoco(unittest.TestCase):
-    @data((np.asarray([[-8, 0, -8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), -1.6), (np.asarray([[8, 0, 8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), 0), (np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), -2*np.sqrt(2)))
+    @data((np.asarray([[-8, 0, -8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), -1.6), (np.asarray([[8, 0, 8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), 0), (np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), -2 * np.sqrt(2)))
     @unpack
     def testRolloutHeuristicBasedOnClosenessToTarget(self, state, groundTruthReward):
         weight = 0.1
@@ -24,6 +24,7 @@ class TestMCTSInMujoco(unittest.TestCase):
         getSheepPosition = GetAgentPos(sheepId, xPosIndex, numXPosEachAgent)
         getWolfPosition = GetAgentPos(wolfId, xPosIndex, numXPosEachAgent)
 
-        rolloutHeuristic = HeuristicDistanceToTarget(weight, getWolfPosition, getSheepPosition)
+        rolloutHeuristic = HeuristicDistanceToTarget(
+            weight, getWolfPosition, getSheepPosition)
         reward = rolloutHeuristic(state)
         self.assertEqual(reward, groundTruthReward)
