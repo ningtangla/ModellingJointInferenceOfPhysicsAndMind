@@ -3,34 +3,6 @@ import pandas as pd
 from functools import reduce
 
 
-def stationaryWolfPolicy(worldState):
-    return (0, 0)
-
-
-class WolfPolicyForceDirectlyTowardsSheep:
-    def __init__(self, getSheepXPos, getWolfXPos, wolfActionMagnitude):
-        self.getSheepXPos = getSheepXPos
-        self.getWolfXPos = getWolfXPos
-        self.wolfActionMagnitude = wolfActionMagnitude
-
-    def __call__(self, worldState):
-        sheepXPos = self.getSheepXPos(worldState)
-        wolfXPos = self.getWolfXPos(worldState)
-
-        sheepAction = sheepXPos - wolfXPos
-        sheepActionNorm = np.sum(np.abs(sheepAction))
-        if sheepActionNorm != 0:
-            sheepAction = sheepAction/sheepActionNorm
-            sheepAction *= self.wolfActionMagnitude
-
-        return sheepAction
-
-
-def computeDistance(pos1, pos2):
-    distance = np.linalg.norm((pos1 - pos2), ord=2)
-    return distance
-
-
 class GetAgentPosFromTrajectory:
     def __init__(self, timeStep, stateIndex, agentId, posIndex, numPosEachAgent):
         self.timeStep = timeStep
@@ -53,22 +25,6 @@ class GetTrialTrajectoryFromDf:
     def __call__(self, dataFrame):
         trajectory = dataFrame.values[self.trialIndex]
         return trajectory
-
-
-class DistanceBetweenActualAndOptimalNextPosition:
-    def __init__(self, optimalNextPosition, getPosAtNextStepFromTrajectory, getFirstTrajectoryFromDf):
-        self.optimalNextPosition = optimalNextPosition
-        self.getPosAtNextStepFromTrajectory = getPosAtNextStepFromTrajectory
-        self.getFirstTrajectoryFromDf = getFirstTrajectoryFromDf
-
-    def __call__(self, trajectoryDf):
-        trajectory = self.getFirstTrajectoryFromDf(trajectoryDf)
-        posAtNextStep = self.getPosAtNextStepFromTrajectory(trajectory)
-        distance = computeDistance(self.optimalNextPosition, posAtNextStep)
-
-        distanceSeries = pd.Series({'distance': distance})
-
-        return distanceSeries
 
 
 class GetAgentPos:

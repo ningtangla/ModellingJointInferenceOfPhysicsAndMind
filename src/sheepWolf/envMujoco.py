@@ -79,13 +79,16 @@ def euclideanDistance(pos1, pos2):
     return np.sqrt(np.sum(np.square(pos1 - pos2)))
 
 
-class IsTerminal():
-    def __init__(self, minXDis):
+class IsTerminal():     # change
+    def __init__(self, minXDis, getAgent0Pos, getAgent1Pos):
         self.minXDis = minXDis
+        self.getAgent0Pos = getAgent0Pos
+        self.getAgent1Pos = getAgent1Pos
 
     def __call__(self, state):
-        pos0 = state[0][2:4]
-        pos1 = state[1][2:4]
+        pos0 = self.getAgent0Pos(state)
+        pos1 = self.getAgent1Pos(state)
         distance = euclideanDistance(pos0, pos1)
         terminal = (distance <= self.minXDis)
+
         return terminal

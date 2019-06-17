@@ -17,8 +17,8 @@ skvideo.setFFmpegPath("/usr/local/bin")
 from mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \
     InitializeChildren, HeuristicDistanceToTarget
 import reward
-from envSheepChaseWolf import stationaryWolfPolicy, WolfPolicyForceDirectlyTowardsSheep, DistanceBetweenActualAndOptimalNextPosition, \
-    GetAgentPosFromTrajectory, GetAgentPos, GetAgentActionFromTrajectoryDf, GetEpisodeLength, GetTrialTrajectoryFromDf
+from wolfPoliciesFixed import PolicyActionDirectlyTowardsOtherAgent
+from wrapperFunctions import GetAgentPosFromTrajectory, GetAgentPos, GetAgentActionFromTrajectoryDf, GetEpisodeLength, GetTrialTrajectoryFromDf
 from envMujoco import Reset, TransitionFunction, IsTerminal
 from play import SampleTrajectory
 
@@ -29,88 +29,40 @@ def drawPerformanceLine(dataDf, axForDraw, title):
         grp.plot(ax=axForDraw, label=key, title=title, y='mean', yerr='std')
 
 
-class GetSheepPolicy:
-    def __init__(self, getMCTS, randomPolicy):
-        self.getMCTS = getMCTS
-        self.randomPolicy = randomPolicy
-
-    def __call__(self, policyName, numSimulations):
-        mcts = self.getMCTS(numSimulations)
-        policies = {'mcts': mcts, 'random': self.randomPolicy}
-
-        return policies[policyName]
-
-
-class PrepareAllAgentsPolicy:
-    def __init__(self, getSheepPolicy, wolfPolicy):
-        self.getSheepPolicy = getSheepPolicy
+class GenerateTrajectories:
+    def __init__(self, getSampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath):
+        self.getSampleTrajectory = getSampleTrajectory
+        self.getSheepPolicies = getSheepPolicies
+        self.numTrials = numTrials
+        self.getSavePath = getSavePath
         self.wolfPolicy = wolfPolicy
 
-    def __call__(self, sheepPolicyName, sheepPolicyNumSimulations):
-        sheepPolicy = self.getSheepPolicy(sheepPolicyName, sheepPolicyNumSimulations)
-        policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
-
-        return policy
-
-
-class GetSavePath:
-    def __init__(self, dataDirectory):
-        self.dataDirectory = dataDirectory
-
     def __call__(self, oneConditionDf):
-        modelDf = oneConditionDf.reset_index()
-        manipulatedVariableNames = modelDf.columns.values.tolist()
-        manipulatedVariableValues = {name: modelDf[name][0] for name in manipulatedVariableNames}
-        path = self.dataDirectory + '/'
-
-        nameValueStringPairs = [variable + '=' + str(manipulatedVariableValues[variable]) for variable in
-                                manipulatedVariableNames]
-
-        path += '_'.join(nameValueStringPairs) + '.pickle'
-        path = path.replace(" ", "")
-
-        print(path)
-        return path
-
-
-class GenerateTrajectoriesAndComputeStatistics:
-    def __init__(self, getSampleTrajectory, prepareAllAgentsPolicy, numTrials, getSaveFileName):
-        self.getSampleTrajectory = getSampleTrajectory
-        self.prepareAllAgentsPolicy = prepareAllAgentsPolicy
-        self.numTrials = numTrials
-        self.getSaveFileName = getSaveFileName
-
-    def __call__(self, oneConditionDf):
-        modelDf = oneConditionDf.reset_index()
-        qPosInit = modelDf['qPosInit'][0]
-        sheepPolicyName = modelDf['sheepPolicyName'][0]
-        numSimulations = modelDf['numSimulations'][0]
+        qPosInit = oneConditionDf.index.get_level_values('qPosInit')[0]
+        sheepPolicyName = oneConditionDf.index.get_level_values('sheepPolicyName')[0]
+        numSimulations = oneConditionDf.index.get_level_values('numSimulations')[0]
 
         print('qPosInit', qPosInit, 'sheepPolicy', sheepPolicyName, 'numSimulations', numSimulations)
 
         sampleTrajectory = self.getSampleTrajectory(qPosInit)
-        policy = self.prepareAllAgentsPolicy(sheepPolicyName, numSimulations)
+        getSheepPolicy = self.getSheepPolicies[sheepPolicyName]
+        sheepPolicy = getSheepPolicy(numSimulations)
+        policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
 
         allTrajectories = [sampleTrajectory(policy) for trial in range(self.numTrials)]
 
-        allEpisodeLengths = [len(trajectory) for trajectory in allTrajectories]
-        meanEpisodeLength = np.mean(allEpisodeLengths)
-        episodeLengthStdDev = np.std(allEpisodeLengths)
-
-        saveFileName = self.getSaveFileName(oneConditionDf)
+        saveFileName = self.getSavePath(oneConditionDf)
         pickle_in = open(saveFileName, 'wb')
         pickle.dump(allTrajectories, pickle_in)
         pickle_in.close()
 
-        returnSeries = pd.Series({'mean': meanEpisodeLength, 'std': episodeLengthStdDev})
-
-        return returnSeries
+        return allTrajectories
 
 
 def main():
     # experiment conditions
-    maxRunningSteps = 15
-    numTrials = 50
+    maxRunningSteps = 3
+    numTrials = 3
     manipulatedVariables = OrderedDict()
     manipulatedVariables['qPosInit'] = [(0.3, 0, -0.3, 0), (9.75, 0, 9.15, 0), (9.75, 9.75, 9.3, 9.3)]
     manipulatedVariables['sheepPolicyName'] = ['mcts', 'random']
@@ -128,15 +80,28 @@ def main():
     qPosInitNoise = 0
     qVelInitNoise = 0
 
+    # functions to get agent positions
+    sheepId = 0
+    wolfId = 1
+    xPosIndex = 2
+    numXPosEachAgent = 2
+
+    getSheepXPos = GetAgentPos(sheepId, xPosIndex, numXPosEachAgent)
+    getWolfXPos = GetAgentPos(wolfId, xPosIndex, numXPosEachAgent)
+
     # isTerminal
     killzoneRadius = 0.5
-    isTerminal = IsTerminal(killzoneRadius)
+    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+
+    # wolf policies
+    wolfActionMagnitude = 5
+    wolfPolicyDirectlyTowardsSheep = PolicyActionDirectlyTowardsOtherAgent(getSheepXPos, getWolfXPos, wolfActionMagnitude)
 
     # transit for multiplayer transition; sheepTransit for sheep's MCTS simulation (only takes sheep's action as input)
     renderOn = False
     numSimulationFrames = 20
     transit = TransitionFunction(envModelName, isTerminal, renderOn, numSimulationFrames)
-    sheepTransit = lambda state, action: transit(state, [action, stationaryWolfPolicy(state)])
+    sheepTransit = lambda state, action: transit(state, [action, wolfPolicyDirectlyTowardsSheep(state)])
 
     # reward function
     aliveBonus = 0.05
@@ -164,27 +129,16 @@ def main():
     # select next action
     selectNextAction = SelectNextAction(sheepTransit)
 
-    sheepId = 0
-    wolfId = 1
-    xPosIndex = 2
-    numXPosEachAgent = 2
-
-    getSheepXPos = GetAgentPos(sheepId, xPosIndex, numXPosEachAgent)
-    getWolfXPos = GetAgentPos(wolfId, xPosIndex, numXPosEachAgent)
-
     # rollout
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
-    # All agents' policies
+
     getMCTS = lambda numSimulations: MCTS(numSimulations, selectChild, expand, rollout, backup, selectNextAction)
-    sheepPolicyRandom = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    getSheepPolicy = GetSheepPolicy(getMCTS, sheepPolicyRandom)
-    wolfActionMagnitude = 5
-    wolfPolicyDirectlyTowardsSheep = WolfPolicyForceDirectlyTowardsSheep(getSheepXPos, getWolfXPos, wolfActionMagnitude)
-    prepareAllAgentsPolicy = PrepareAllAgentsPolicy(getSheepPolicy, wolfPolicyDirectlyTowardsSheep)
+    getRandom = lambda numSimulations: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    sheepPolicies = {'mcts': getMCTS, 'random': getRandom}
 
     # wrapper function sample trajectory
     getSampleTrajectory = lambda qPosInit: SampleTrajectory(maxRunningSteps, transit, isTerminal, Reset(envModelName,
@@ -195,13 +149,21 @@ def main():
     if not os.path.exists(dataDirectory):
         os.makedirs(dataDirectory)
 
-    getSaveFileName = GetSavePath(dataDirectory)
-    generateTrajectoriesAndComputeStatistics = GenerateTrajectoriesAndComputeStatistics(getSampleTrajectory,
-                                                                                        prepareAllAgentsPolicy,
-                                                                                        numTrials, getSaveFileName)
+    extension = 'pickle'
+    getSavePath = GetSavePath(dataDirectory, extension)
+
+    generateTrajectories = GenerateTrajectories(getSampleTrajectory, sheepPolicies, wolfPolicyDirectlyTowardsSheep,
+                                                numTrials, getSavePath)
 
     # run all trials and save trajectories
-    statisticsDf = toSplitFrame.groupby(levelNames).apply(generateTrajectoriesAndComputeStatistics)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectories)
+
+    # function to compute statistics
+    loadTrajectories = LoadTrajectories(getSavePath)
+    computeStatistics = ComputeStatistics(loadTrajectories, numTrials, len)
+
+    # compute Statistics
+    statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
     # plot the statistics
     fig = plt.figure()

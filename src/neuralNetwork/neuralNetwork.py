@@ -54,6 +54,7 @@ class GeneratePolicyNet:
 
             with tf.name_scope("outputs"):
                 actionDistribution_ = tf.nn.softmax(allActionActivation_, name='actionDistribution_')
+                tf.add_to_collection("actionDistribution", actionDistribution_)
 
                 cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionDistribution_,
                                                                            labels=actionLabel_, name='cross_entropy')

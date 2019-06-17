@@ -21,4 +21,5 @@ class SampleTrajectory:
             nextState = self.transit(state, action)
             state = nextState
 
+        print(trajectory)
         return trajectory
