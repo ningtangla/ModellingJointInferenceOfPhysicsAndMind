@@ -1,5 +1,5 @@
 import numpy as np
-import pandas as pd
+
 
 def computeDistance(pos1, pos2):
     distance = np.linalg.norm((pos1 - pos2), ord=2)
@@ -7,16 +7,12 @@ def computeDistance(pos1, pos2):
 
 
 class DistanceBetweenActualAndOptimalNextPosition:
-    def __init__(self, optimalNextPosition, getPosAtNextStepFromTrajectory, getFirstTrajectoryFromDf):
+    def __init__(self, optimalNextPosition, getPosAtNextStepFromTrajectory):
         self.optimalNextPosition = optimalNextPosition
         self.getPosAtNextStepFromTrajectory = getPosAtNextStepFromTrajectory
-        self.getFirstTrajectoryFromDf = getFirstTrajectoryFromDf
 
-    def __call__(self, trajectoryDf):
-        trajectory = self.getFirstTrajectoryFromDf(trajectoryDf)
+    def __call__(self, trajectory):
         posAtNextStep = self.getPosAtNextStepFromTrajectory(trajectory)
         distance = computeDistance(self.optimalNextPosition, posAtNextStep)
 
-        distanceSeries = pd.Series({'distance': distance})
-
-        return distanceSeries
+        return distance

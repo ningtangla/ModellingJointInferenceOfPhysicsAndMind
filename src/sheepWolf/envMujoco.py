@@ -4,7 +4,7 @@ import numpy as np
 
 class Reset():
     def __init__(self, modelName, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
-        model = mujoco.load_model_from_path('../env/xmls/' + modelName + '.xml')
+        model = mujoco.load_model_from_path('../../env/xmls/' + modelName + '.xml')
         self.simulation = mujoco.MjSim(model)
         self.qPosInit = qPosInit
         self.qVelInit = qVelInit
@@ -32,7 +32,7 @@ class Reset():
 
 class TransitionFunction:
     def __init__(self, modelName, isTerminal, renderOn, numSimulationFrames):
-        model = mujoco.load_model_from_path('../env/xmls/' + modelName + '.xml')
+        model = mujoco.load_model_from_path('../../env/xmls/' + modelName + '.xml')
         self.simulation = mujoco.MjSim(model)
         self.numQPos = len(self.simulation.data.qpos)
         self.numQVel = len(self.simulation.data.qvel)
@@ -79,7 +79,7 @@ def euclideanDistance(pos1, pos2):
     return np.sqrt(np.sum(np.square(pos1 - pos2)))
 
 
-class IsTerminal():     # change
+class IsTerminal():
     def __init__(self, minXDis, getAgent0Pos, getAgent1Pos):
         self.minXDis = minXDis
         self.getAgent0Pos = getAgent0Pos

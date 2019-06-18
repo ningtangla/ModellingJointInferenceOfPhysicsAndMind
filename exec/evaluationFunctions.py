@@ -3,16 +3,19 @@ import pickle
 import numpy as np
 import pandas as pd
 
+
 class GetSavePath:
-    def __init__(self, dataDirectory, extension):
+    def __init__(self, dataDirectory, extension, fixedParameters={}):
         self.dataDirectory = dataDirectory
         self.extension = extension
+        self.fixedParameters = fixedParameters
 
     def __call__(self, parameters):
-        nameValueStringPairs = [variable + '=' + str(parameters[variable]) for variable in
-                                parameters]
+        parameters.update(self.fixedParameters)
+        sortedParameters = sorted(parameters.items())
+        nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
 
-        fileName = '_'.join(nameValueStringPairs) + '.' + self.extension
+        fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
 
         path = os.path.join(self.dataDirectory, fileName)
@@ -25,7 +28,9 @@ class LoadTrajectories:
         self.getSavePath = getSavePath
 
     def __call__(self, oneConditionDf):
-        savePath = self.getSavePath(oneConditionDf)
+        indexLevelNames = oneConditionDf.index.names
+        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
+        savePath = self.getSavePath(parameters)
         pickleIn = open(savePath, 'rb')
         trajectories = pickle.load(pickleIn)
 
@@ -45,5 +50,3 @@ class ComputeStatistics:
         measurementStd = np.std(allMeasurements)
 
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
-
-

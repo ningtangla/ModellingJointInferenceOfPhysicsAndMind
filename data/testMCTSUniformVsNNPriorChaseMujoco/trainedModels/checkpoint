@@ -1,0 +1,2 @@
+model_checkpoint_path: "learnRate=0.0001_maxRunningSteps=5_numSimulations=5_numTrials=7_qPosInit=(-4,0,4,0)_trainSteps=50000"
+all_model_checkpoint_paths: "learnRate=0.0001_maxRunningSteps=5_numSimulations=5_numTrials=7_qPosInit=(-4,0,4,0)_trainSteps=50000"
