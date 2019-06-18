@@ -1,61 +1,44 @@
 import numpy as np
+from envSheepChaseWolf import computeDistance
 
 
 class Reset():
     def __init__(self, numOfAgent, initPosition, initPositionNoise):
         self.numOfAgent = numOfAgent
-        self.initPosition = initPosition  # [[],[]]
+        self.initPosition = initPosition
         self.initPositionNoiseLow, self.initPositionNoiseHigh = initPositionNoise
 
     def __call__(self):
         initPositionNoise = np.random.uniform(
             low=-self.initPositionNoiseLow, high=self.initPositionNoiseHigh, size=self.numOfAgent)
-        initState = [np.asarray(
-            positions) + initPositionNoise for positions in self.initPosition]
-        initState = [list(s) for s in initState]
+        initState = [positions +
+                     initPositionNoise for positions in self.initPosition]
         return initState
 
 
 class TransitionForMultiAgent():
-    def __init__(self, numSimulationFrames, checkBoundaryAndAdjust, isTerminal, render, renderOn):
-        self.numSimulationFrames = numSimulationFrames
+    def __init__(self, checkBoundaryAndAdjust):
         self.checkBoundaryAndAdjust = checkBoundaryAndAdjust
-        self.isTerminal = isTerminal
-        self.render = render
-        self.renderOn = renderOn
 
     def __call__(self, state, action):
-        for i in range(self.numSimulationFrames):
-            if self.isTerminal(state):
-                break
-            if self.renderOn:
-                render(state)
-            newState = np.array(state) + np.array(action)
-            checkedNewStateAndVelocities = [self.checkBoundaryAndAdjust(
-                position, velocity) for position, velocity in zip(newState, action)]
-            newState, newAction = list(zip(*checkedNewStateAndVelocities))
-            newState = [list(s) for s in newState]
+        newState = state + np.array(action)
+        checkedNewStateAndVelocities = [self.checkBoundaryAndAdjust(
+            position, velocity) for position, velocity in zip(newState, action)]
+        newState, newAction = list(zip(*checkedNewStateAndVelocities))
         return newState
 
 
-def euclideanDistance(pos1, pos2):
-    pos1 = np.asarray(pos1)
-    pos2 = np.asarray(pos2)
-    distance = np.linalg.norm((pos1 - pos2), ord=2)
-    return distance
-
-
 class IsTerminal():
-    def __init__(self, sheepId, wolfId, minDistance):
-        self.sheepId = sheepId
-        self.wolfId = wolfId
+    def __init__(self, getAgentPos, getTargetPos, minDistance):
+        self.getAgentPos = getAgentPos
+        self.getTargetPos = getTargetPos
         self.minDistance = minDistance
 
     def __call__(self, state):
         terminal = False
-        sheepPosition = state[self.sheepId]
-        wolfPosition = state[self.wolfId]
-        if euclideanDistance(sheepPosition, wolfPosition) <= self.minDistance:
+        agentPosition = self.getAgentPos(state)
+        targetPosition = self.getTargetPos(state)
+        if computeDistance(np.array(agentPosition), np.array(targetPosition)) <= self.minDistance:
             terminal = True
         return terminal
 
@@ -85,51 +68,15 @@ class CheckBoundaryAndAdjust():
         return checkedPosition, checkedVelocity
 
 
-class GetEachState():
-    def __init__(self, sheepId, wolfId):
-        self.sheepId = sheepId
-        self.wolfId = wolfId
+class CheckBoundary():
+    def __init__(self, xBoundary, yBoundary):
+        self.xMin, self.xMax = xBoundary
+        self.yMin, self.yMax = yBoundary
 
-    def __call__(self, state):
-        sheepState = state[self.sheepId]
-        wolfState = state[self.wolfId]
-        return sheepState, wolfState
-
-
-def computeAngleBetweenVectors(vector1, vector2):
-    vectoriseInnerProduct = np.dot(vector1, vector2.T)
-    if np.ndim(vectoriseInnerProduct) > 0:
-        innerProduct = vectoriseInnerProduct.diagonal()
-    else:
-        innerProduct = vectoriseInnerProduct
-    angle = np.arccos(
-        innerProduct / (computeVectorNorm(vector1) * computeVectorNorm(vector2)))
-    return angle
-
-
-def computeVectorNorm(vector):
-    return np.power(np.power(vector, 2).sum(axis=0), 0.5)
-
-
-class WolfHeatSeekingPolicy:
-    def __init__(self, actionSpace, getEachState):
-        self.actionSpace = actionSpace
-        self.getEachState = getEachState
-
-    def __call__(self, state):
-        sheepState, wolfState = self.getEachState(state)
-        relativeVector = np.array(sheepState) - np.array(wolfState)
-        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
-                               np.array(self.actionSpace)}
-        action = angleBetweenVectors[min(angleBetweenVectors.keys())]
-        return action
-
-
-class SheepRandomPolicy:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
-
-    def __call__(self, state):
-        actionIndex = np.random.randint(len(actionSpace))
-        action = actionSpace[actionIndex]
-        return action
+    def __call__(self, position):
+        xPos, yPos = position
+        if xPos >= self.xMax or xPos <= self.xMin:
+            return False
+        elif yPos >= self.yMax or yPos <= self.yMin:
+            return False
+        return True

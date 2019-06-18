@@ -20,7 +20,7 @@ class WolfPolicyForceDirectlyTowardsSheep:
         sheepAction = sheepXPos - wolfXPos
         sheepActionNorm = np.sum(np.abs(sheepAction))
         if sheepActionNorm != 0:
-            sheepAction = sheepAction/sheepActionNorm
+            sheepAction = sheepAction / sheepActionNorm
             sheepAction *= self.wolfActionMagnitude
 
         return sheepAction
@@ -41,7 +41,8 @@ class GetAgentPosFromTrajectory:
 
     def __call__(self, trajectory):
         stateAtTimeStep = trajectory[self.timeStep][self.stateIndex]
-        posAtTimeStep = stateAtTimeStep[self.agentId][self.posIndex:self.posIndex + self.numPosEachAgent]
+        posAtTimeStep = stateAtTimeStep[self.agentId][self.posIndex:
+                                                      self.posIndex + self.numPosEachAgent]
 
         return posAtTimeStep
 
@@ -76,8 +77,10 @@ class GetAgentPos:
         self.agentId = agentId
         self.posIndex = posIndex
         self.numPosEachAgent = numPosEachAgent
+
     def __call__(self, state):
-        agentPos = state[self.agentId][self.posIndex:self.posIndex+self.numPosEachAgent]
+        agentPos = state[self.agentId][self.posIndex:self.posIndex +
+                                       self.numPosEachAgent]
 
         return agentPos
 
@@ -91,8 +94,10 @@ class GetAgentActionFromTrajectoryDf:
 
     def __call__(self, trajectoryDf):
         trajectory = self.getTrialTrajectoryFromDf(trajectoryDf)
-        allAgentActionsAtTimeStep = self.getAllAgentActionFromTrajectory(trajectory, self.timeStep)
-        actionAtTimeStep = self.getAgentActionFromAllAgentActions(allAgentActionsAtTimeStep)
+        allAgentActionsAtTimeStep = self.getAllAgentActionFromTrajectory(
+            trajectory, self.timeStep)
+        actionAtTimeStep = self.getAgentActionFromAllAgentActions(
+            allAgentActionsAtTimeStep)
         actionSeries = pd.Series({'action': actionAtTimeStep})
 
         return actionSeries
@@ -107,5 +112,46 @@ class GetEpisodeLength:
         return len(trajectory)
 
 
+def stationaryAgentPolicy(state):
+    return (0, 0)
 
 
+class RandomPolicy:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def __call__(self, state):
+        actionIndex = np.random.randint(len(self.actionSpace))
+        action = self.actionSpace[actionIndex]
+        return action
+
+
+class HeatSeekingPolicy:
+    def __init__(self, actionSpace, getAgentPos, getTargetPos):
+        self.actionSpace = actionSpace
+        self.getAgentPos = getAgentPos
+        self.getTargetPos = getTargetPos
+
+    def __call__(self, state):
+        sheepPosition = self.getAgentPos(state)
+        wolfPosition = self.getTargetPos(state)
+        relativeVector = np.array(sheepPosition) - np.array(wolfPosition)
+        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
+                               np.array(self.actionSpace)}
+        action = angleBetweenVectors[min(angleBetweenVectors.keys())]
+        return action
+
+
+def computeAngleBetweenVectors(vector1, vector2):
+    vectoriseInnerProduct = np.dot(vector1, vector2.T)
+    if np.ndim(vectoriseInnerProduct) > 0:
+        innerProduct = vectoriseInnerProduct.diagonal()
+    else:
+        innerProduct = vectoriseInnerProduct
+    angle = np.arccos(
+        innerProduct / (computeVectorNorm(vector1) * computeVectorNorm(vector2)))
+    return angle
+
+
+def computeVectorNorm(vector):
+    return np.power(np.power(vector, 2).sum(axis=0), 0.5)

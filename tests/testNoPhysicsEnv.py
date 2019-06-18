@@ -5,7 +5,8 @@ import sys
 sys.path.append('../src/sheepWolf')
 
 # Local import
-from envNoPhysics import Reset, TransitionForMultiAgent, IsTerminal, CheckBoundaryAndAdjust
+from envNoPhysics import *
+from envSheepChaseWolf import GetAgentPos
 
 
 @ddt
@@ -14,29 +15,35 @@ class TestEnvNoPhysics(unittest.TestCase):
         self.numOfAgent = 2
         self.sheepId = 0
         self.wolfId = 1
+        self.posIndex = 0
+        self.numPosEachAgent = 2
         self.xBoundary = [0, 640]
         self.yBoundary = [0, 480]
         self.minDistance = 50
+        self.getSheepPos = GetAgentPos(
+            self.sheepId, self.posIndex, self.numPosEachAgent)
+        self.getWolfPos = GetAgentPos(
+            self.wolfId, self.posIndex, self.numPosEachAgent)
         self.checkBoundaryAndAdjust = CheckBoundaryAndAdjust(
             self.xBoundary, self.yBoundary)
         self.isTerminal = IsTerminal(
-            self.sheepId, self.wolfId, self.minDistance)
-        self.numSimulationFrames = 20
+            self.getSheepPos, self.getWolfPos, self.minDistance)
         self.transition = TransitionForMultiAgent(self.checkBoundaryAndAdjust)
 
-    @data(([[0, 0], [0, 0]], [0, 0], [[0, 0], [0, 0]]), ([[9, 5], [2, 7]], [0, 0], [[9, 5], [2, 7]]))
+    @data((np.array([[0, 0], [0, 0]]), [0, 0], np.array([[0, 0], [0, 0]])), (np.array([[9, 5], [2, 7]]), [0, 0], np.array([[9, 5], [2, 7]])))
     @unpack
     def testReset(self, initPosition, initPositionNoise, groundTruthReturnedInitialState):
         reset = Reset(self.numOfAgent, initPosition, initPositionNoise)
         returnedInitialState = reset()
         truthValue = returnedInitialState == groundTruthReturnedInitialState
-        self.assertTrue(truthValue)
+        self.assertTrue(truthValue.all())
 
-    @data(([[0, 0], [0, 0]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]), ([[1, 2], [3, 4]], [[1, 0], [0, 1]], [[2, 2], [3, 5]]))
+    @data((np.array([[0, 0], [0, 0]]), np.array([[0, 0], [0, 0]]), np.array([[0, 0], [0, 0]])), (np.array([[1, 2], [3, 4]]), np.array([[1, 0], [0, 1]]), np.array([[2, 2], [3, 5]])))
     @unpack
     def testTransition(self, state, action, groundTruthReturnedNextState):
         nextState = self.transition(state, action)
-        self.assertEqual(nextState, groundTruthReturnedNextState)
+        truthValue = nextState == groundTruthReturnedNextState
+        self.assertTrue(truthValue.all())
 
     @data(([[2, 2], [10, 10]], True), ([[10, 23], [100, 100]], False))
     @unpack
@@ -50,6 +57,14 @@ class TestEnvNoPhysics(unittest.TestCase):
         checkState, checkAction = self.checkBoundaryAndAdjust(state, action)
         truthValue = checkState == groundTruthNextState
         self.assertTrue(truthValue.all())
+
+    @data(([1, 1], True), ([1, -2], False), ([650, 120], False))
+    @unpack
+    def testCheckBoundary(self, position, groundTruth):
+        self.checkBoundary = CheckBoundary(self.xBoundary, self.yBoundary)
+        returnedValue = self.checkBoundary(position)
+        truthValue = returnedValue == groundTruth
+        self.assertTrue(truthValue)
 
 
 if __name__ == '__main__':
