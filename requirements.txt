@@ -1,0 +1,11 @@
+tensorflow-gpu
+tensorflow_probability
+pygame
+scipy
+matplotlib
+mujoco-py<2.1,>=2.0
+anytree
+sk-video
+ffmpeg
+click
+pandas
