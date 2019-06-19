@@ -1,4 +1,6 @@
 import sys
+sys.path.append('../src/algorithms')
+sys.path.append('../src/sheepWolf')
 sys.path.append('../src')
 import numpy as np
 import pandas as pd
@@ -12,11 +14,11 @@ import pickle
 skvideo.setFFmpegPath("/usr/local/bin")
 
 # Local import
-from algorithms.mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \
+from mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \
     InitializeChildren, HeuristicDistanceToTarget
 import reward
-from envSheepChaseWolf import stationaryWolfPolicy, WolfPolicyForceDirectlyTowardsSheep, DistanceBetweenActualAndOptimalNextPosition, \
-    GetAgentPosFromTrajectory, GetAgentPos, GetAgentActionFromTrajectoryDf, GetEpisodeLength, GetTrialTrajectoryFromDf
+from wolfPoliciesFixed import PolicyActionDirectlyTowardsOtherAgent
+from wrapperFunctions import GetAgentPosFromTrajectory, GetAgentPos, GetAgentActionFromTrajectoryDf, GetEpisodeLength, GetTrialTrajectoryFromDf
 from envMujoco import Reset, TransitionFunction, IsTerminal
 from play import SampleTrajectory
 
@@ -24,132 +26,47 @@ from play import SampleTrajectory
 def drawPerformanceLine(dataDf, axForDraw, title):
     for key, grp in dataDf.groupby('sheepPolicyName'):
         grp.index = grp.index.droplevel('sheepPolicyName')
-        grp.plot(ax=axForDraw, label=key, title=title, y = 'mean', yerr='std')
+        grp.plot(ax=axForDraw, label=key, title=title, y='mean', yerr='std')
 
 
-class GetSheepPolicy:
-    def __init__(self, getMCTS, randomPolicy):
-        self.getMCTS = getMCTS
-        self.randomPolicy = randomPolicy
-
-    def __call__(self, policyName, numSimulations):
-        mcts = self.getMCTS(numSimulations)
-        policies = {'mcts': mcts, 'random': self.randomPolicy}
-
-        return policies[policyName]
-
-
-class PrepareAllAgentsPolicy:
-    def __init__(self, getSheepPolicy, wolfPolicy):
-        self.getSheepPolicy = getSheepPolicy
+class GenerateTrajectories:
+    def __init__(self, getSampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath):
+        self.getSampleTrajectory = getSampleTrajectory
+        self.getSheepPolicies = getSheepPolicies
+        self.numTrials = numTrials
+        self.getSavePath = getSavePath
         self.wolfPolicy = wolfPolicy
 
-    def __call__(self, sheepPolicyName, sheepPolicyNumSimulations):
-        sheepPolicy = self.getSheepPolicy(sheepPolicyName, sheepPolicyNumSimulations)
-        policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
-
-        return policy
-
-
-def tupleToString(tuple):
-    string = '('
-
-    for index in range(len(tuple)):
-        string += str(tuple[index]).replace('.', ',')
-        if(index != len(tuple)-1):
-            string += '_'
-
-    string += ')'
-
-    return string
-
-
-class GetSaveFileName:
-    def __init__(self, dataDirectory, tupleToString):             # CHANGE THIS NAME PARENTDIRECTORY
-        self.dataDirectory = dataDirectory
-        self.tupleToString = tupleToString
-
     def __call__(self, oneConditionDf):
-        modelDf = oneConditionDf.reset_index()
-        manipulatedVariableNames = modelDf.columns.values.tolist()
-        manipulatedVariableValues = {name: modelDf[name][0] for name in manipulatedVariableNames}
-
-        fileName = self.dataDirectory + '/'
-
-        for variable in manipulatedVariableValues:
-            fileName += variable
-            fileName += '='
-
-            variableValue = manipulatedVariableValues[variable]
-            if type(variableValue) is tuple:
-                fileName += self.tupleToString(variableValue)
-            else:
-                fileName += str(variableValue)
-
-            fileName += '|'
-
-        fileName += '.pickle'
-
-        return fileName
-
-
-class ComputeMeanMeasurement:
-    def __init__(self, getSaveFileName, measurementFunction):
-        self.getSaveFileName = getSaveFileName
-        self.measurementFunction = measurementFunction
-
-    def __call__(self, conditionDf):
-        readFile = self.getSaveFileName(conditionDf)
-        trajectoriesDf = pd.read_pickle(readFile)
-
-        trajectoriesDf['measurements'] = trajectoriesDf.apply(self.measurementFunction, axis=1)
-
-        return pd.Series({'mean': trajectoriesDf['measurements'].mean(axis=0), 'std': trajectoriesDf['measurements'].std(axis=0)})
-
-
-class GenerateTrajectoriesAndComputeStatistics:
-    def __init__(self, getReset, getSampleTrajectory, prepareAllAgentsPolicy, numTrials, getSaveFileName):
-        self.getReset = getReset
-        self.getSampleTrajectory = getSampleTrajectory
-        self.prepareAllAgentsPolicy = prepareAllAgentsPolicy
-        self.numTrials = numTrials
-        self.getSaveFileName = getSaveFileName
-
-    def __call__(self, oneConditionDf):
-        modelDf = oneConditionDf.reset_index()
-        qPosInit = modelDf['qPosInit'][0]
-        sheepPolicyName = modelDf['sheepPolicyName'][0]
-        numSimulations = modelDf['numSimulations'][0]
+        qPosInit = oneConditionDf.index.get_level_values('qPosInit')[0]
+        sheepPolicyName = oneConditionDf.index.get_level_values('sheepPolicyName')[0]
+        numSimulations = oneConditionDf.index.get_level_values('numSimulations')[0]
 
         print('qPosInit', qPosInit, 'sheepPolicy', sheepPolicyName, 'numSimulations', numSimulations)
 
-        reset = self.getReset(qPosInit)
-        sampleTrajectory = self.getSampleTrajectory(reset)
-        policy = self.prepareAllAgentsPolicy(sheepPolicyName, numSimulations)
+        sampleTrajectory = self.getSampleTrajectory(qPosInit)
+        getSheepPolicy = self.getSheepPolicies[sheepPolicyName]
+        sheepPolicy = getSheepPolicy(numSimulations)
+        policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
 
         allTrajectories = [sampleTrajectory(policy) for trial in range(self.numTrials)]
 
-        allEpisodeLengths = [len(trajectory) for trajectory in allTrajectories]
-        meanEpisodeLength = np.mean(allEpisodeLengths)
-        episodeLengthStdDev = np.std(allEpisodeLengths)
-
-        saveFileName = self.getSaveFileName(oneConditionDf)
+        saveFileName = self.getSavePath(oneConditionDf)
         pickle_in = open(saveFileName, 'wb')
         pickle.dump(allTrajectories, pickle_in)
         pickle_in.close()
 
-        returnSeries = pd.Series({'mean': meanEpisodeLength, 'std': episodeLengthStdDev})
+        return allTrajectories
 
-        return returnSeries
 
 def main():
     # experiment conditions
-    maxRunningSteps = 15
-    numTrials = 50
+    maxRunningSteps = 3
+    numTrials = 3
     manipulatedVariables = OrderedDict()
     manipulatedVariables['qPosInit'] = [(0.3, 0, -0.3, 0), (9.75, 0, 9.15, 0), (9.75, 9.75, 9.3, 9.3)]
     manipulatedVariables['sheepPolicyName'] = ['mcts', 'random']
-    manipulatedVariables['numSimulations'] = [5, 25, 50, 100, 250, 400]
+    manipulatedVariables['numSimulations'] = [5]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -163,15 +80,28 @@ def main():
     qPosInitNoise = 0
     qVelInitNoise = 0
 
+    # functions to get agent positions
+    sheepId = 0
+    wolfId = 1
+    xPosIndex = 2
+    numXPosEachAgent = 2
+
+    getSheepXPos = GetAgentPos(sheepId, xPosIndex, numXPosEachAgent)
+    getWolfXPos = GetAgentPos(wolfId, xPosIndex, numXPosEachAgent)
+
     # isTerminal
     killzoneRadius = 0.5
-    isTerminal = IsTerminal(killzoneRadius)
+    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+
+    # wolf policies
+    wolfActionMagnitude = 5
+    wolfPolicyDirectlyTowardsSheep = PolicyActionDirectlyTowardsOtherAgent(getSheepXPos, getWolfXPos, wolfActionMagnitude)
 
     # transit for multiplayer transition; sheepTransit for sheep's MCTS simulation (only takes sheep's action as input)
     renderOn = False
     numSimulationFrames = 20
     transit = TransitionFunction(envModelName, isTerminal, renderOn, numSimulationFrames)
-    sheepTransit = lambda state, action: transit(state, [action, stationaryWolfPolicy(state)])
+    sheepTransit = lambda state, action: transit(state, [action, wolfPolicyDirectlyTowardsSheep(state)])
 
     # reward function
     aliveBonus = 0.05
@@ -199,46 +129,41 @@ def main():
     # select next action
     selectNextAction = SelectNextAction(sheepTransit)
 
-    sheepId = 0
-    wolfId = 1
-    xPosIndex = 2
-    numXPosEachAgent = 2
-
-    getSheepXPos = GetAgentPos(sheepId, xPosIndex, numXPosEachAgent)
-    getWolfXPos = GetAgentPos(wolfId, xPosIndex, numXPosEachAgent)
-
     # rollout
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
-    # wrapper function
-    getReset = lambda qPosInit: Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
-    # All agents' policies
     getMCTS = lambda numSimulations: MCTS(numSimulations, selectChild, expand, rollout, backup, selectNextAction)
-    sheepPolicyRandom = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    getSheepPolicy = GetSheepPolicy(getMCTS, sheepPolicyRandom)
-    wolfActionMagnitude = 5
-    wolfPolicyDirectlyTowardsSheep = WolfPolicyForceDirectlyTowardsSheep(getSheepXPos, getWolfXPos, wolfActionMagnitude)
-    prepareAllAgentsPolicy = PrepareAllAgentsPolicy(getSheepPolicy, wolfPolicyDirectlyTowardsSheep)
+    getRandom = lambda numSimulations: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    sheepPolicies = {'mcts': getMCTS, 'random': getRandom}
 
-    # sample trajectory
-    getSampleTrajectory = lambda reset: SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
+    # wrapper function sample trajectory
+    getSampleTrajectory = lambda qPosInit: SampleTrajectory(maxRunningSteps, transit, isTerminal, Reset(envModelName,
+                                                        qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise))
 
     # function to generate and save trajectories
     dataDirectory = '../data/testMCTSvsRandomInSheepEscape/trajectories'
     if not os.path.exists(dataDirectory):
         os.makedirs(dataDirectory)
 
-    getSaveFileName = GetSaveFileName(dataDirectory, tupleToString)
-    generateTrajectoriesAndComputeStatistics = GenerateTrajectoriesAndComputeStatistics(getReset, getSampleTrajectory,
-                                                                                        prepareAllAgentsPolicy,
-                                                                                        numTrials, getSaveFileName)
+    extension = 'pickle'
+    getSavePath = GetSavePath(dataDirectory, extension)
+
+    generateTrajectories = GenerateTrajectories(getSampleTrajectory, sheepPolicies, wolfPolicyDirectlyTowardsSheep,
+                                                numTrials, getSavePath)
 
     # run all trials and save trajectories
-    statisticsDf = toSplitFrame.groupby(levelNames).apply(generateTrajectoriesAndComputeStatistics)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectories)
+
+    # function to compute statistics
+    loadTrajectories = LoadTrajectories(getSavePath)
+    computeStatistics = ComputeStatistics(loadTrajectories, numTrials, len)
+
+    # compute Statistics
+    statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
     # plot the statistics
     fig = plt.figure()

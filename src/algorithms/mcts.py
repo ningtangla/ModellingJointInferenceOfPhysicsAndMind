@@ -8,7 +8,7 @@ class CalculateScore:
         self.cBase = cBase
 
     def __call__(self, currentNode, child):
-        parent_visit_count = currentNode.numVisited
+        parentVisitCount = currentNode.numVisited
         selfVisitCount = child.numVisited
         actionPrior = child.actionPrior
 
@@ -16,8 +16,8 @@ class CalculateScore:
             uScore = np.inf
             qScore = 0
         else:
-            explorationRate = np.log((1 + parent_visit_count + self.cBase) / self.cBase) + self.cInit
-            uScore = explorationRate * actionPrior * np.sqrt(parent_visit_count) / float(1 + selfVisitCount)
+            explorationRate = np.log((1 + parentVisitCount + self.cBase) / self.cBase) + self.cInit
+            uScore = explorationRate * actionPrior * np.sqrt(parentVisitCount) / float(1 + selfVisitCount)
             qScore = child.sumValue / selfVisitCount
 
         score = qScore + uScore
@@ -30,10 +30,7 @@ class SelectChild:
 
     def __call__(self, currentNode):
         scores = [self.calculateScore(currentNode, child) for child in currentNode.children]
-        try:
-            maxIndex = np.argwhere(scores == np.max(scores)).flatten()
-        except:
-            import ipdb; ipdb.set_trace()
+        maxIndex = np.argwhere(scores == np.max(scores)).flatten()
         selectedChildIndex = np.random.choice(maxIndex)
         selectedChild = currentNode.children[selectedChildIndex]
         return selectedChild

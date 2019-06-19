@@ -1,2 +1,0 @@
-model_checkpoint_path: "30000data_64x4_minibatch_100kIter_contState_actionDist"
-all_model_checkpoint_paths: "30000data_64x4_minibatch_100kIter_contState_actionDist"
