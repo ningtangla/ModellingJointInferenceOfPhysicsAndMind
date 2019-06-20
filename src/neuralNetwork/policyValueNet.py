@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import dataTools
+import random
 
 
 class GenerateModelSeparateLastLayer:
@@ -167,7 +167,7 @@ class Train:
 			if self.batchSize is None:
 				stateBatch, actionLabelBatch, valueLabelBatch = trainingData
 			else:
-				stateBatch, actionLabelBatch, valueLabelBatch = dataTools.sampleData(trainingDataList, self.batchSize)
+				stateBatch, actionLabelBatch, valueLabelBatch = sampleData(trainingDataList, self.batchSize)
 			actionLossCoef, valueLossCoef = self.CoefficientController(evalDict)
 			evalDict, _, summary = model.run(fetches, feed_dict={state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch,
 																 actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef})
@@ -199,6 +199,10 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
 		testWriter.add_summary(summary, stepNum)
 	return evalDict
 
+def sampleData(data, batchSize):
+	batch = [list(varBatch) for varBatch in zip(*random.sample(data, batchSize))]
+	return batch
+
 
 def saveVariables(model, path):
 	graph = model.graph
@@ -215,37 +219,51 @@ def restoreVariables(model, path):
 	return model
 
 
-def approximatePolicy(stateBatch, policyValueNet, actionSpace):
-	if np.array(stateBatch).ndim == 1:
-		stateBatch = np.array([stateBatch])
-	graph = policyValueNet.graph
-	state_ = graph.get_collection_ref("inputs")[0]
-	actionIndices_ = graph.get_collection_ref("actionIndices")[0]
-	actionIndices = policyValueNet.run(actionIndices_, feed_dict={state_: stateBatch})
-	actionBatch = [actionSpace[i] for i in actionIndices]
-	if len(actionBatch) == 1:
-		actionBatch = actionBatch[0]
-	return actionBatch
+class ApproximatePolicy():
+	def __init__(self, model, actionSpace):
+		self.actionSpace = actionSpace
+		self.model = model
+
+	def __call__(self, stateBatch):
+		if np.array(stateBatch).ndim == 1:
+			stateBatch = np.array([stateBatch])
+		graph = self.model.graph
+		state_ = graph.get_collection_ref("inputs")[0]
+		actionIndices_ = graph.get_collection_ref("actionIndices")[0]
+		actionIndices = self.model.run(actionIndices_, feed_dict={state_: stateBatch})
+		actionBatch = [self.actionSpace[i] for i in actionIndices]
+		if len(actionBatch) == 1:
+			actionBatch = actionBatch[0]
+		return actionBatch
 
 
-def approximateActionPrior(state, policyValueNet, actionSpace):
-	graph = policyValueNet.graph
-	state_ = graph.get_collection_ref("inputs")[0]
-	actionDist_ = graph.get_collection_ref("actionDist")[0]
-	actionDist = policyValueNet.run(actionDist_, feed_dict={state_: np.array([state])})[0]
-	actionPrior = {action: prob for action, prob in zip(actionSpace, actionDist)}
-	return actionPrior
+class ApproximateActionPrior:
+	def __init__ (self, policyValueNet, actionSpace):
+		self.policyValueNet = policyValueNet
+		self.actionSpace = actionSpace
+
+	def __call__(self, state):
+		graph = self.policyValueNet.graph
+		state_ = graph.get_collection_ref("inputs")[0]
+		actionDist_ = graph.get_collection_ref("actionDist")[0]
+		actionDist = self.policyValueNet.run(actionDist_, feed_dict={state_: np.array([state])})[0]
+		actionPrior = {action: prob for action, prob in zip(self.actionSpace, actionDist)}
+		return actionPrior
 
 
-def approximateValueFunction(stateBatch, policyValueNet):
-	scalarOutput = False
-	if np.array(stateBatch).ndim == 1:
-		stateBatch = np.array([stateBatch])
-		scalarOutput = True
-	graph = policyValueNet.graph
-	state_ = graph.get_collection_ref("inputs")[0]
-	valuePrediction_ = graph.get_collection_ref("valuePrediction")[0]
-	valuePrediction = policyValueNet.run(valuePrediction_, feed_dict={state_: stateBatch})
-	if scalarOutput:
-		valuePrediction = valuePrediction[0][0]
-	return valuePrediction
+class ApproximateValueFunction:
+	def __init__(self, policyValueNet):
+		self.policyValueNet = policyValueNet
+
+	def __call__(self, stateBatch):
+		scalarOutput = False
+		if np.array(stateBatch).ndim == 1:
+			stateBatch = np.array([stateBatch])
+			scalarOutput = True
+		graph = self.policyValueNet.graph
+		state_ = graph.get_collection_ref("inputs")[0]
+		valuePrediction_ = graph.get_collection_ref("valuePrediction")[0]
+		valuePrediction = self.policyValueNet.run(valuePrediction_, feed_dict={state_: stateBatch})
+		if scalarOutput:
+			valuePrediction = valuePrediction[0][0]
+		return valuePrediction
