@@ -148,7 +148,7 @@ class MCTS:
                 currentNode = nextNode
 
             leafNode = self.expand(currentNode)
-            value = self.nodeValueFunc(leafNode)
+            value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
 
         mctsOutput = self.outputActionOrDistribution(root)
