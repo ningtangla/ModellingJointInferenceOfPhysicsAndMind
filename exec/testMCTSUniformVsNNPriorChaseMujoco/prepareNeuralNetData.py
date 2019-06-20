@@ -18,9 +18,9 @@ from policiesFixed import stationaryAgentPolicy
 
 
 def main():
-    maxRunningSteps = 5#15
+    maxRunningSteps = 15
     qPosInit = (-4, 0, 4, 0)
-    numSimulations = 5#200
+    numSimulations = 200
 
     # functions for MCTS
     envModelName = 'twoAgents'
@@ -76,7 +76,7 @@ def main():
     policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
 
     # generate trajectories
-    numTrials = 7#100
+    numTrials = 100
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]
 
@@ -84,7 +84,7 @@ def main():
     saveDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
     extension = '.pickle'
     getSavePath = GetSavePath(saveDirectory, extension)
-    sheepPolicyName = 'mcts'
+    sheepPolicyName = 'MCTS'
     conditionVariables = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit, 'numSimulations': numSimulations,
                           'numTrials': numTrials, 'sheepPolicyName': sheepPolicyName}
     path = getSavePath(conditionVariables)

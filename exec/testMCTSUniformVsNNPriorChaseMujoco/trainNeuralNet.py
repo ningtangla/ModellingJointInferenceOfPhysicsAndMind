@@ -29,16 +29,16 @@ class ActionToOneHot:
         return oneHotAction
 
 
-class PreprocessTrajectories:
+class PreProcessTrajectories:
     def __init__(self, agentId, actionIndex, actionToOneHot):
         self.agentId = agentId
         self.actionIndex = actionIndex
         self.actionToOneHot = actionToOneHot
 
     def __call__(self, trajectories):
-        stateActionPairs = [pair for trajectory in dataSetTrajectories for pair in trajectory]
+        stateActionPairs = [pair for trajectory in trajectories for pair in trajectory]
         stateActionPairsFiltered = list(filter(lambda pair: pair[self.actionIndex] is not None, stateActionPairs))
-        stateActionPairsProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(action[self.agentId]))
+        stateActionPairsProcessed = [(np.asarray(state).flatten().tolist(), self.actionToOneHot(action[self.agentId]))
                                      for state, action in stateActionPairsFiltered]
 
         return stateActionPairsProcessed
@@ -49,11 +49,11 @@ if __name__ == '__main__':
     dataSetDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
-    dataSetMaxRunningSteps = 5#15
-    dataSetNumSimulations = 5#2
-    dataSetNumTrials = 7 #1
+    dataSetMaxRunningSteps = 15
+    dataSetNumSimulations = 200
+    dataSetNumTrials = 100
     dataSetQPosInit = (-4, 0, 4, 0)
-    dataSetSheepPolicyName = 'mcts'
+    dataSetSheepPolicyName = 'MCTS'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'sheepPolicyName': dataSetSheepPolicyName}
@@ -66,8 +66,8 @@ if __name__ == '__main__':
     actionToOneHot = ActionToOneHot(actionSpace)
     sheepId = 0
     actionIndex = 1
-    preprocessTrajectories = PreprocessTrajectories(sheepId, actionIndex, actionToOneHot)
-    stateActionPairsProcessed = preprocessTrajectories(dataSetTrajectories)
+    preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot)
+    stateActionPairsProcessed = preProcessTrajectories(dataSetTrajectories)
 
     # shuffle and separate states and actions
     random.shuffle(stateActionPairsProcessed)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # train model
     trainSteps = 50000
     reportInterval = 500
-    lossChangeThreshold = 1e-6
+    lossChangeThreshold = 1e-8
     lossHistorySize = 10
     train = Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
                      summaryOn=False, testData=None)

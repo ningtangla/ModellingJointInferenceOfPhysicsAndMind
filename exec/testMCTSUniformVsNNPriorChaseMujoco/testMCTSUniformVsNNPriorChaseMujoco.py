@@ -1,8 +1,9 @@
 import sys
-sys.path.append('../../src/algorithms')
-sys.path.append('../../src/sheepWolf')
-sys.path.append('../../src')
-sys.path.append('../../src/neuralNetwork')
+import os
+sys.path.append(os.path.join('..', '..', 'src', 'algorithms'))
+sys.path.append(os.path.join('..', '..', 'src', 'sheepWolf'))
+sys.path.append(os.path.join('..', '..', 'src'))
+sys.path.append(os.path.join('..', '..', 'src', 'neuralNetwork'))
 sys.path.append('..')
 
 import numpy as np
@@ -11,7 +12,6 @@ import random
 from collections import OrderedDict
 import pickle
 import pandas as pd
-import os
 from matplotlib import pyplot as plt
 
 from envMujoco import Reset, IsTerminal, TransitionFunction
@@ -31,7 +31,6 @@ def drawPerformanceLine(dataDf, axForDraw):
         grp.index = grp.index.droplevel('sheepPolicyName')
         grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='Distance Between Optimal And Actual First Step'
                                                                       ' of Sheep')
-
 
 class GetMCTS:
     def __init__(self, selectChild, rollout, backup, selectNextAction, actionPriorFunction):
@@ -131,11 +130,11 @@ if __name__ == "__main__":
     tf.set_random_seed(128)
 
     # manipulated variables (and some other parameters that are commonly varied)
-    numTrials = 1
+    numTrials = 100
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNNFirstStep', 'MCTSNNAllSteps']
-    manipulatedVariables['numSimulations'] = [1, 2]
+    manipulatedVariables['numSimulations'] = [5, 25, 50, 100, 250]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -197,9 +196,9 @@ if __name__ == "__main__":
 
     model = generatePolicyNet(hiddenWidths)
 
-    dataSetMaxRunningSteps = 5#15
-    dataSetNumSimulations = 5#200
-    dataSetNumTrials = 7#1
+    dataSetMaxRunningSteps = 15
+    dataSetNumSimulations = 200
+    dataSetNumTrials = 100
     dataSetQPosInit = (-4, 0, 4, 0)
     trainSteps = 50000
     modelTrainConditions = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,

@@ -4,7 +4,8 @@ import numpy as np
 
 class Reset():
     def __init__(self, modelName, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
-        model = mujoco.load_model_from_path('../../env/xmls/' + modelName + '.xml')
+        dirName = os.path.dirname(__file__)
+        model = mujoco.load_model_from_path(os.path.join(dirName, '..', '..', 'env', 'xmls', '{}.xml'.format(modelName)))
         self.simulation = mujoco.MjSim(model)
         self.qPosInit = qPosInit
         self.qVelInit = qVelInit
@@ -27,12 +28,14 @@ class Reset():
         xPos = np.concatenate(self.simulation.data.body_xpos[-self.numAgent: , :numQPosEachAgent])
         startState = np.array([np.concatenate([qPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)], xPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)],
             qVel[numQVelEachAgent * agentIndex : numQVelEachAgent * (agentIndex + 1)]]) for agentIndex in range(self.numAgent)])
+
         return startState
 
 
 class TransitionFunction:
     def __init__(self, modelName, isTerminal, renderOn, numSimulationFrames):
-        model = mujoco.load_model_from_path('../../env/xmls/' + modelName + '.xml')
+        dirName = os.path.dirname(__file__)
+        model = mujoco.load_model_from_path(os.path.join(dirName, '..', '..', 'env', 'xmls', '{}.xml'.format(modelName)))
         self.simulation = mujoco.MjSim(model)
         self.numQPos = len(self.simulation.data.qpos)
         self.numQVel = len(self.simulation.data.qvel)
