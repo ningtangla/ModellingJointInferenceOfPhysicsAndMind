@@ -129,31 +129,37 @@ def backup(value, nodeList):
         node.sumValue += value
         node.numVisited += 1
 
+def getGreedyAction(root):
+    visits = np.array([child.numVisited for child in root.children])
+    maxIndices = np.argwhere(visits == np.max(visits)).flatten()
+    selectedIndex = np.random.choice(maxIndices)
+    action = list(root.children[selectedIndex].id.keys())[0]
+    return action
 
-class SelectNextAction:
-    def __init__(self, transitionFunction):
-        self.transitionFunction = transitionFunction
 
-    def __call__(self, currentRoot):
-        numVisitedForAllChildren = [child.numVisited for child in currentRoot.children]
-        try:
-            maxIndex = np.argwhere(numVisitedForAllChildren == np.max(numVisitedForAllChildren)).flatten()
-        except:
-            import ipdb; ipdb.set_trace()
-        selectedChildIndex = np.random.choice(maxIndex)
+def getPlainActionDist(root):
+    visits = np.array([child.numVisited for child in root.children])
+    actionProbs = visits / np.sum(visits)
+    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    return actionDist
 
-        action = list(currentRoot.children[selectedChildIndex].id.keys())[0]
-        return action
+
+def getSoftmaxActionDist(root):
+    visits = np.array([child.numVisited for child in root.children])
+    expVisits = np.exp(visits)
+    actionProbs = expVisits / np.sum(expVisits)
+    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    return actionDist
 
 
 class MCTS:
-    def __init__(self, numSimulation, selectChild, expand, rollout, backup, selectNextAction):
+    def __init__(self, numSimulation, selectChild, expand, nodeValueFunc, backup, getMCTSOutput):
         self.numSimulation = numSimulation
         self.selectChild = selectChild
         self.expand = expand
-        self.rollout = rollout
+        self.nodeValueFunc = nodeValueFunc
         self.backup = backup
-        self.selectNextAction = selectNextAction
+        self.getMCTSOutput = getMCTSOutput
 
     def __call__(self, currentState):
         root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
@@ -169,11 +175,11 @@ class MCTS:
                 currentNode = nextNode
 
             leafNode = self.expand(currentNode)
-            value = self.rollout(leafNode)
+            value = self.nodeValueFunc(leafNode)
             self.backup(value, nodePath)
 
-        nextAction = self.selectNextAction(root)
-        return nextAction
+        mctsOutput = self.getMCTSOutput(root)
+        return mctsOutput
 
 
 def main():
