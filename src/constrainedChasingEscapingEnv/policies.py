@@ -1,4 +1,5 @@
 import numpy as np
+from analyticGeometryFunctions import computeAngleBetweenVectors
 
 def stationaryAgentPolicy(state):
     return (0, 0)
@@ -45,4 +46,4 @@ class HeatSeekingContinuesDeterministicPolicy:
             action = action/actionNorm
             action *= self.actionMagnitude
 
-return action
+        return action

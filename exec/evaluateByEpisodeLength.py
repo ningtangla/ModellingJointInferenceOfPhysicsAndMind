@@ -1,17 +1,20 @@
 import sys
 sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/sheepWolf")
+sys.path.append("../src/constrainedChasingEscapingEnv")
 sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import numpy as np
+import pandas as pd
 import mcts
-import noPhysicsEnv as env
-import envSheepChaseWolf
+import envNoPhysics as env
+import wrapperFunctions
 import policyValueNet as net
-import policiesFixed
+import policies
 import os
 import subprocess
 import play
+from collections import OrderedDict
+import pickle
 
 
 def makeVideo(videoName, path):
@@ -39,10 +42,30 @@ def makeVideo(videoName, path):
         #         videoName = "mean_{}_{}_trajectories_nn_demo.mp4".format(evalResults['mean'], trajNum)
         #         makeVideo(videoName, self.savePath)
 
-if __name__ == "__main__":
-    evaluateTrajNum = 100
-    maxTrajLen = 100
 
+class EvaluateEpisode():
+    def __init__(self, sampleTrajectory):
+        self.sampleTrajectory = sampleTrajectory
+    def __call__(self, df):
+        policy = df.index.get_level_values('policy')[0]
+        trajNum = df.index.get_level_values('sampleTrajNum')[0]
+        maxTrajLen = df.index.get_level_values("maxTrajLen")[0]
+        episodes = [self.sampleTrajectory(policy) for cnt in range(trajNum)]
+        episodeLength = [len(episode) for episode in episodes]
+        avgLen = np.mean(episodeLength)
+        stdLen = np.std(episodeLength)
+        minLen = np.min(episodeLength)
+        maxLen = np.max(episodeLength)
+        medLen = np.median(episodeLength)
+        return pd.Series({"mean": avgLen, "var": stdLen, "min": minLen, "max": maxLen, "median": medLen})
+
+
+if __name__ == "__main__":
+    sampleTrajNum = 100
+    maxTrajLen = 1
+
+    dataPath = "../data/neuralNetworkGraphVariables"
+    modelName = "60000data_64x4_minibatch_100kIter_contState_actionDist"
     # env
     wolfID = 0
     sheepID = 1
@@ -59,12 +82,12 @@ if __name__ == "__main__":
     wolfVelocity = sheepVelocity * 0.95
 
     # mcts policy
-    getSheepPos = envSheepChaseWolf.GetAgentPos(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = envSheepChaseWolf.GetAgentPos(wolfID, posIndex, numPosEachAgent)
-    checkBoundaryAndAdjust = env.CheckBoundaryAndAdjust(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policiesFixed.PolicyActionDirectlyTowardsOtherAgent(getWolfPos, getSheepPos, wolfVelocity)
+    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
+    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfPos, getSheepPos)
     transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(np.array(state), [np.array(action), wolfDriectChasingPolicy(state)])
+    sheepTransition = lambda state, action: transition(np.array(state), [wolfDriectChasingPolicy(state), np.array(action)])
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
 
     rewardFunction = lambda state, action: 1
@@ -74,19 +97,39 @@ if __name__ == "__main__":
     calculateScore = mcts.CalculateScore(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
-    getActionPrior = mcts.GetActionPrior(actionSpace)
+    mctsUniformActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
+    getActionPrior = mctsUniformActionPrior
     initializeChildren = mcts.InitializeChildren(actionSpace, sheepTransition, getActionPrior)
     expand = mcts.Expand(isTerminal, initializeChildren)
 
     maxRollOutSteps = 5
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    heuristic = mcts.HeuristicDistanceToTarget(1, getSheepPos, getWolfPos)
+    heuristic = lambda state: 0
     nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
     numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.getGreedyAction)
+    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.selectGreedyAction)
+
+    # neuralNetwork Policy
+    modelPath = os.path.join(dataPath, modelName)
+    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0,
+                                                       regularizationFactor=0, valueRelativeErrBound=0.0)
+    emptyModel = generateModel([64] * 4)
+    trainedModel = net.restoreVariables(emptyModel, modelPath)
+    nnPolicy = net.ApproximateActionPrior(trainedModel, actionSpace)
 
     reset = lambda: [np.array([10, 10]), np.array([90, 90])]
-    sampleTrajectory = play.SampleTrajectory(maxTrajLen, transition, isTerminal, reset)
-    episodes = sampleTrajectory(mctsPolicy)
-    print(episodes)
+    sampleTrajectory = play.SampleTrajectory(maxTrajLen, sheepTransition, isTerminal, reset)
+
+    independentVariables = OrderedDict()
+    independentVariables['policy'] = [nnPolicy, mctsPolicy]
+    independentVariables['sampleTrajNum'] = [sampleTrajNum]
+    independentVariables['maxTrajLen'] = [maxTrajLen]
+
+    levelNames = list(independentVariables.keys())
+    levelValues = list(independentVariables.values())
+    MultiIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    toSplitFrame = pd.DataFrame(index=MultiIndex)
+    evaluateEpisode = EvaluateEpisode(sampleTrajectory)
+    resultDF = toSplitFrame.groupby(levelNames).apply(evaluateEpisode)
+    print(resultDF)

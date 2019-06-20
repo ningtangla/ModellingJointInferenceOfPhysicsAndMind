@@ -1,5 +1,5 @@
 import numpy as np
-from envSheepChaseWolf import computeDistance
+from measurementFunctions import computeDistance
 
 
 class Reset():

@@ -1,6 +1,6 @@
 import sys
 sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/sheepWolf")
+sys.path.append("../src/constrainedChasingEscapingEnv")
 sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import pandas as pd
@@ -60,7 +60,7 @@ def main(tfseed=128):
     saveModelDir = "../data/neuralNetworkGraphVariables"
     dataSetName = "test"
     dataSetPath = os.path.join(saveDir, dataSetName)
-    dataSet =
+    dataSet = list()
     random.shuffle(dataSet)
 
     independentVariables = OrderedDict()

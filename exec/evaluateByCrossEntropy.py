@@ -1,16 +1,16 @@
 import sys
 sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/sheepWolf")
+sys.path.append("../src/constrainedChasingEscapingEnv")
 sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import policyValueNet as net
-import noPhysicsEnv as env
-import envSheepChaseWolf
+import envNoPhysics as env
+import wrapperFunctions
 import numpy as np
 import pandas as pd
-from AnalyticGeometryFunctions import calculateCrossEntropy
+from measurementFunctions import calculateCrossEntropy
 from pylab import plt
-import policiesFixed
+import policies
 import mcts
 import os
 
@@ -84,10 +84,10 @@ def main():
     wolfVelocity = sheepVelocity*0.95
 
     # mcts policy
-    getSheepPos = envSheepChaseWolf.GetAgentPos(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = envSheepChaseWolf.GetAgentPos(wolfID, posIndex, numPosEachAgent)
-    checkBoundaryAndAdjust = env.CheckBoundaryAndAdjust(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policiesFixed.PolicyActionDirectlyTowardsOtherAgent(getWolfPos, getSheepPos, wolfVelocity)
+    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
+    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfPos, getSheepPos)
     transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
     sheepTransition = lambda state, action: transition(state, [np.array(action), wolfDriectChasingPolicy(state)])
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
@@ -99,17 +99,18 @@ def main():
     calculateScore = mcts.CalculateScore(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
-    getActionPrior = mcts.GetActionPrior(actionSpace)
+    mctsUniformActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
+    getActionPrior = mctsUniformActionPrior
     initializeChildren = mcts.InitializeChildren(actionSpace, sheepTransition, getActionPrior)
     expand = mcts.Expand(isTerminal, initializeChildren)
 
     maxRollOutSteps = 5
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    heuristic = mcts.HeuristicDistanceToTarget(1, getSheepPos, getWolfPos)
+    heuristic = lambda state: 0
     nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
     numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.getSoftmaxActionDist)
+    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
 
     # neuralNetworkModel
     modelPath = os.path.join(savePath, "neuralNetworkGraphVariables/60000data_64x4_minibatch_100kIter_contState_actionDist")
