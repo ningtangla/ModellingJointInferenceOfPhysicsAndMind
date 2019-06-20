@@ -15,3 +15,19 @@ class RewardFunctionCompete():
             reward += self.deathPenalty
 
         return reward
+
+class HeuristicDistanceToTarget:
+    def __init__(self, weight, getTargetPosition, getCurrentPosition):
+        self.weight = weight
+        self.getTargetPosition = getTargetPosition
+        self.getCurrentPosition = getCurrentPosition
+
+    def __call__(self, state):
+        terminalPosition = self.getTargetPosition(state)
+        currentPosition = self.getCurrentPosition(state)
+
+        distance = np.sqrt(np.sum(np.square(currentPosition - terminalPosition)))
+        reward = -self.weight * distance
+
+        return reward
+
