@@ -1,5 +1,8 @@
 import sys
+<<<<<<< HEAD
 sys.path.append('../src')
+=======
+>>>>>>> mctsWithNeuralNetNoPhysicsEnv
 sys.path.append('../src/sheepWolf')
 sys.path.append('../env/xmls')
 import unittest
@@ -43,7 +46,8 @@ class TestEnvMujoco(unittest.TestCase):
           (np.asarray([[-6, 8, -6, 8, 0, 0], [6, -8, 6, -8, 0, 0]]), [[-1, 1], [1, -1]]))
     @unpack
     def testQPositionChangesInDirectionOfActionAfterTransition(self, oldState, allAgentsActions):
-        transitionFunction = TransitionFunction(self.modelName, self.isTerminal, False, self.numSimulationFrames)
+        transitionFunction = TransitionFunction(
+            self.modelName, self.isTerminal, False, self.numSimulationFrames)
         newState = transitionFunction(oldState, allAgentsActions)
         differenceBetweenStates = newState - oldState
         differenceBetweenQPositions = differenceBetweenStates[:, :2].flatten()
@@ -57,7 +61,8 @@ class TestEnvMujoco(unittest.TestCase):
           (np.asarray([[-6, 8, -6, 8, 0, 0], [6, -8, 6, -8, 0, 0]]), np.asarray([[-1, 1], [1, -1]])))
     @unpack
     def testXPosEqualsQPosAfterTransition(self, state, allAgentsActions):
-        transitionFunction = TransitionFunction(self.modelName, self.isTerminal, False, self.numSimulationFrames)
+        transitionFunction = TransitionFunction(
+            self.modelName, self.isTerminal, False, self.numSimulationFrames)
         newState = transitionFunction(state, allAgentsActions)
         newXPos = newState[:, 2:4]
         newQPos = newState[:, :2]
