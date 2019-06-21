@@ -1,24 +1,22 @@
 import sys
 sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/sheepWolf")
+sys.path.append("../src/constrainedChasingEscapingEnv")
 sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
-from AnalyticGeometryFunctions import calculateCrossEntropy, getSymmetricVector
+from analyticGeometryFunctions import createActionVector
 
 @ddt
 class TestAnalyticGeometryFunctions(unittest.TestCase):
-	@data((np.array([0.228, 0.619, 0.153]), np.array([0, 1, 0]), 0.47965))
-	@unpack
-	def testCrossEntropy(self, prediction, target, groundTruth):
-		self.assertAlmostEqual(calculateCrossEntropy(prediction, target), groundTruth, places=5)
 
-	@data((np.array([1, 1]), np.array([0.5, 0]), np.array([0, 0.5])))
+	@data((8, 2, [(2, 0), (np.power(2,0.5), np.power(2,0.5)), (0, 2), (-np.power(2,0.5), np.power(2,0.5)), (-2, 0), (-np.power(2,0.5), -np.power(2,0.5)),
+	              (0, -2), (np.power(2,0.5), -np.power(2,0.5))]))
 	@unpack
-	def testgetSymmetricVector(self, symmetricAxis, originalVector, groundTruth):
-		self.assertTrue(np.allclose(getSymmetricVector(symmetricAxis, originalVector), groundTruth, rtol=1e-05, atol=1e-08))
+	def testCreateActionVector(self, discreteFactor, magnitude, groundTruth):
+		arrayGroundTruth = [np.array(action) for action in groundTruth]
+		self.assertTrue(np.allclose(createActionVector(discreteFactor, magnitude), np.array(arrayGroundTruth)))
 
 if __name__ == "__main__":
 	unittest.main()
