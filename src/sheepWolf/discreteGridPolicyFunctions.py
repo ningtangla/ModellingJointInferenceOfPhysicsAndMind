@@ -1,5 +1,4 @@
 import numpy as np 
-
 class ActHeatSeeking:
     def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
         self.actionSpace = actionSpace
