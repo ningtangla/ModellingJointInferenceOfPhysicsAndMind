@@ -31,6 +31,7 @@ class ModifyOverlappingPoints:
         return pointsLocation
 
 
+
 class DrawCircles:
     def __init__(self, pointExtendTime, FPS, colorList, pointWidth, modifyOverlappingPoints):
         self.FPS = FPS
@@ -57,10 +58,9 @@ class DrawCircles:
 
 
 class InitializeGame:
-    def __init__(self, gridPixelSize, gridSize, caption):
-        gridX, gridY = gridSize
-        self.screenWidth = gridX * gridPixelSize
-        self.screenHeight = gridY * gridPixelSize
+    def __init__(self, screenWidth, screenHeight, caption):
+        self.screenWidth = screenWidth
+        self.screenHeight = screenHeight
         self.caption = caption
     def __call__(self):
         pygame.init()
@@ -71,6 +71,7 @@ class InitializeGame:
 
 class DrawGrid:
     def __init__(self, gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth):
+
         self.gridNumberX, self.gridNumberY = gridSize
         self.gridPixelSize = gridPixelSize
         self.backgroundColor=backgroundColor
@@ -93,10 +94,10 @@ class DrawGrid:
 
 
 class DrawPointsFromLocationDfAndSaveImage:
-    def __init__(self, InitializeGameFunction, DrawGridFunction, DrawCircleFunction, gridPixelSize):
-        self.initializaGame = InitializeGameFunction
-        self.drawGrid = DrawGridFunction
-        self.drawCircles = DrawCircleFunction
+    def __init__(self, initializeGame, drawGrid, drawCircles, gridPixelSize):
+        self.initializaGame = initializeGame
+        self.drawGrid = drawGrid
+        self.drawCircles = drawCircles
         self.gridPixelSize = gridPixelSize
 
     def __call__(self, locationDf, iterationNumber, saveImage = False):
@@ -108,4 +109,4 @@ class DrawPointsFromLocationDfAndSaveImage:
                                   for pointCoord in pointsCoord]
             game = self.drawCircles(game, pointsLocation)
             if saveImage:
-                pygame.image.save(game, "screenshot"+ str(currentState) + ".jpeg")
+                pygame.image.save(game, "screenshot"+ format(currentState, '04') + ".png")

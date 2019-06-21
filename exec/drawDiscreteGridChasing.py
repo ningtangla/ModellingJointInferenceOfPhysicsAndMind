@@ -15,14 +15,15 @@ from calculateAngleFunction import *
 
 from discreteGridVisualization import *
 
+pd.set_option('display.max_columns', 50)
 
 
 def main():
 
     rationalityParam = 0.9
     actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
-    gridSize = (5,5)
-    iterationNumber = 20
+    gridSize = (10,10)
+    iterationNumber = 50
     agentNames = ["Wolf", "Sheep", "Master"]
 
 
@@ -82,8 +83,14 @@ def main():
     GREEN = (0, 255, 0)
 
 
-    gridPixelSize = 120
-    pointExtendTime = 200
+    screenWidth = 800
+    screenHeight = 800
+    gridNumberX, gridNumberY = gridSize
+    gridPixelSize = min(screenHeight// gridNumberX, screenWidth// gridNumberY)
+
+
+ #   gridPixelSize = 120
+    pointExtendTime = 100
     FPS = 60
     colorList = [BLUE, PINK, GREEN] # wolf, sheep, master
     pointWidth = 10
@@ -94,7 +101,7 @@ def main():
     drawCircles = DrawCircles(pointExtendTime, FPS, colorList , pointWidth, modifyOverlappingPoints)
 
     caption= "Game"
-    initializeGame = InitializeGame(gridPixelSize, gridSize, caption)
+    initializeGame = InitializeGame(screenWidth, screenHeight, caption)
 
     gridColor = BLACK
     gridLineWidth = 3
@@ -102,7 +109,7 @@ def main():
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
     drawPointsFromLocationDfandSaveImage =  DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
-    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber)
+    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber, saveImage = True)
 
 
 
