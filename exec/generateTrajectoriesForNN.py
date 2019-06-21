@@ -1,9 +1,6 @@
 import sys
 sys.path.append("..")
-
-from src.constrainedChasingEscapingEnv.envNoPhysics import Reset
-
-sys.path.append('..')
+import os
 import numpy as np
 import pickle
 
@@ -15,26 +12,23 @@ import src.play as play
 from exec.evaluationFunctions import GetSavePath
 
 
-def main():
+def generateTrajectories():
     # env
     wolfID = 0
     sheepID = 1
     posIndex = 0
     numOfAgent = 2
     numPosEachAgent = 2
-    numStateSpace = numOfAgent * numPosEachAgent
     actionSpace = [(0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)]
     numActionSpace = len(actionSpace)
     xBoundary = [0, 180]
     yBoundary = [0, 180]
-    sheepVelocity = 20
     killZoneRadius = 5
-    wolfVelocity = sheepVelocity * 0.95
 
     getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
     getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getSheepPos, getWolfPos)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfPos, getSheepPos)
     transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
     sheepTransition = lambda state, action: transition(np.array(state), [wolfDriectChasingPolicy(state), np.array(action)])
 
@@ -76,19 +70,33 @@ def main():
     sampleTrajWithActionDist = play.SampleTrajectoryWithActionDist(maxRunningSteps, transition, isTerminal, reset, worldDist2Action)
     policyDistOutput = lambda state: [wolfDriectChasingPolicy(state), mctsPolicyDistOutput(state)]
 
-    useActionDist = False
-    numTrajs = 1
+    useActionDist = True
+    numTrajs = 0
     if not useActionDist:
         trajs = [sampleTraj(policy) for _ in range(numTrajs)]
     else:
         trajs = [sampleTrajWithActionDist(policyDistOutput) for _ in range(numTrajs)]
 
+    dataDirectory = '../data/trainingDataForNN/trajectories'
+    if not os.path.exists(dataDirectory):
+        os.makedirs(dataDirectory)
+    extension = '.pickle'
+    getSavePath = GetSavePath(dataDirectory, extension)
+    varDict = {}
+    varDict["initPos"] = list(initPosition.flatten())
+    varDict["rolloutSteps"] = maxRollOutSteps
+    varDict["numSimulations"] = numSimulations
+    varDict["maxRunningSteps"] = maxRunningSteps
+    varDict["numTrajs"] = numTrajs
+    varDict["withActionDist"] = useActionDist
+    savePath = getSavePath(varDict)
+
     saveOn = True
-    savePath = "temp.pkl"  # TODO: use GetSavePath
     if saveOn:
         with open(savePath, "wb") as f:
             pickle.dump(trajs, f)
+        print("Saved trajectories in {}".format(savePath))
 
 
 if __name__ == "__main__":
-    main()
+    generateTrajectories()
