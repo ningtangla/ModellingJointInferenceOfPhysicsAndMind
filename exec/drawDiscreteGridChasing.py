@@ -1,0 +1,110 @@
+
+import sys
+import pandas as pd 
+import numpy as np 
+from random import randint
+
+sys.path.append('../src/sheepWolf')
+sys.path.append('../visualize')
+
+
+from envDiscreteGrid import *
+from discreteGridWrapperFunctions import *
+from discreteGridPolicyFunctions import *
+from calculateAngleFunction import *
+
+from discreteGridVisualization import *
+
+
+
+def main():
+
+    rationalityParam = 0.9
+    actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
+    gridSize = (5,5)
+    iterationNumber = 20
+    agentNames = ["Wolf", "Sheep", "Master"]
+
+
+    lowerBoundAngle = 0
+    upperBoundAngle = np.pi / 2
+
+    getWolfProperAction = ActHeatSeeking(actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle)
+    getSheepProperAction = ActHeatSeeking(actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle)
+    
+    lowerGridBound = 1
+    stayWithinBoundary = StayWithinBoundary(gridSize, lowerGridBound)
+
+    wolfID = 0
+    sheepID = 1
+    masterID = 2
+    positionIndex = [0,1]
+
+    locateWolf = LocateAgent(wolfID, positionIndex)
+    locateSheep = LocateAgent(sheepID, positionIndex)
+    locateMaster = LocateAgent(masterID, positionIndex)
+
+    getWolfPolicy = HeatSeekingPolicy(rationalityParam, getWolfProperAction, locateWolf, locateSheep)
+    getSheepPolicy = HeatSeekingPolicy(rationalityParam, getSheepProperAction, locateWolf,locateSheep)
+    getMasterPolicy = RandomActionPolicy(actionSpace)
+
+    allAgentPolicyFunction = [getWolfPolicy, getSheepPolicy, getMasterPolicy]
+    policy = lambda state: [getAction(state) for getAction in allAgentPolicyFunction]
+
+
+    samplePulledForceDirection = SamplePulledForceDirection(calculateAngle, actionSpace, lowerBoundAngle, upperBoundAngle)
+
+    agentCount = 3
+    reset = Reset(gridSize, lowerGridBound, agentCount)
+
+    transitWolf = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateMaster, locateWolf)
+    transitSheep = PlainTransition(stayWithinBoundary, locateSheep)
+    transitMaster = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateWolf, locateMaster)
+
+
+    allAgentTransitionFunction = [transitWolf, transitSheep, transitMaster]
+    transition = lambda allAgentActions, state: [transitAgent(action, state) for transitAgent, action in zip(allAgentTransitionFunction, allAgentActions)]
+
+
+    isTerminal = IsTerminal(locateWolf, locateSheep)
+
+    getMultiAgentSampleTrajectory = MultiAgentSampleTrajectory(agentNames, iterationNumber, isTerminal, reset)
+
+    locationDf = getMultiAgentSampleTrajectory(policy, transition)
+    print(locationDf)
+
+
+
+    BLACK = (  0,   0,   0)
+    WHITE = (255, 255, 255)
+    BLUE =  (  0,   0, 255)
+    PINK = ( 250,   0, 255)
+    GREEN = (0, 255, 0)
+
+
+    gridPixelSize = 120
+    pointExtendTime = 200
+    FPS = 60
+    colorList = [BLUE, PINK, GREEN] # wolf, sheep, master
+    pointWidth = 10
+    modificationRatio = 3
+
+
+    modifyOverlappingPoints = ModifyOverlappingPoints(gridPixelSize, modificationRatio, checkDuplicates)
+    drawCircles = DrawCircles(pointExtendTime, FPS, colorList , pointWidth, modifyOverlappingPoints)
+
+    caption= "Game"
+    initializeGame = InitializeGame(gridPixelSize, gridSize, caption)
+
+    gridColor = BLACK
+    gridLineWidth = 3
+    backgroundColor= WHITE
+    drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
+
+    drawPointsFromLocationDfandSaveImage =  DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
+    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber)
+
+
+
+if __name__ == '__main__':
+    main()
