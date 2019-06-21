@@ -24,7 +24,7 @@ class HeatSeekingDiscreteDeterministicPolicy:
         sheepPosition = self.getAgentPos(state)
         wolfPosition = self.getTargetPos(state)
         relativeVector = np.array(sheepPosition) - np.array(wolfPosition)
-        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
+        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in 
                                np.array(self.actionSpace)}
         action = angleBetweenVectors[min(angleBetweenVectors.keys())]
         return action
@@ -44,5 +44,4 @@ class HeatSeekingContinuesDeterministicPolicy:
         if actionNorm != 0:
             action = action/actionNorm
             action *= self.actionMagnitude
-
-return action
+        return action
