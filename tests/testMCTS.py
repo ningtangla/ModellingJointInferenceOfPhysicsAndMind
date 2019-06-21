@@ -5,8 +5,8 @@ import numpy as np
 from ddt import ddt, data, unpack
 from anytree import AnyNode as Node
 
-from src.algorithms.mcts import CalculateScore, SelectChild, Expand, RollOut, backup, GetActionPrior, InitializeChildren  
-from src.algorithms.mcts import getGreedyAction, getPlainActionDist, getSoftmaxActionDist
+from src.algorithms.mcts import CalculateScore, SelectChild, Expand, RollOut, backup, InitializeChildren  
+from src.algorithms.mcts import selectGreedyAction, establishPlainActionDist, establishSoftmaxActionDist
 from src.simple1DEnv import TransitionFunction, RewardFunction, Terminal
 
 
@@ -20,7 +20,7 @@ class TestMCTS(unittest.TestCase):
 
         self.action_space = [-1, 1]
         self.num_action_space = len(self.action_space)
-        self.actionPrior_func = GetActionPrior(self.action_space)
+        self.uniformActionPrior = {action : 1/self.num_action_space for action in self.action_space}
 
         step_penalty = -1
         catch_reward = 1
@@ -32,11 +32,11 @@ class TestMCTS(unittest.TestCase):
         self.calculateScore = CalculateScore(self.c_init, self.c_base)
 
         self.selectChild = SelectChild(self.calculateScore)
-        
+         
         init_state = 3
         level1_0_state = self.transition(init_state, action=0)
         level1_1_state = self.transition(init_state, action=1)
-        self.default_actionPrior = 0.5
+        self.default_actionPrior = 1/self.num_action_space
 
         self.root = Node(id={1: init_state}, numVisited=1, sumValue=0,
                          actionPrior=self.default_actionPrior, isExpanded=True)
@@ -44,9 +44,10 @@ class TestMCTS(unittest.TestCase):
                              0: level1_0_state}, numVisited=2, sumValue=5, actionPrior=self.default_actionPrior, isExpanded=False)
         self.level1_1 = Node(parent=self.root, id={
                              1: level1_1_state}, numVisited=3, sumValue=10, actionPrior=self.default_actionPrior, isExpanded=False)
-
+       
+        self.getActionPrior = lambda state : self.uniformActionPrior
         self.initializeChildren = InitializeChildren(
-            self.action_space, self.transition, self.actionPrior_func)
+            self.action_space, self.transition, self.getActionPrior)
         self.expand = Expand(self.isTerminal, self.initializeChildren)
 
     @data((0, 1, 0, 1, 0), (1, 1, 0, 1, np.log(3) / 2), (1, 1, 1, 1, 1 + np.log(3) / 2))
@@ -177,24 +178,24 @@ class TestMCTS(unittest.TestCase):
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [25, 28, 500, 1], (-1, 0)),
           ([(-1, 0), (0, -1), (1, 0), (0, 1)], [500, 1, 25, 28], (-1, 0)))
     @unpack
-    def testGetGreedyAction(self, actions, numVisits, greedyAction):
+    def testselectGreedyAction(self, actions, numVisits, greedyAction):
         root = Node(id={None: None})
         for a, v in zip(actions, numVisits):
             Node(parent=root, id={a: None}, numVisited=v)
-        self.assertEqual(getGreedyAction(root), greedyAction)
+        self.assertEqual(selectGreedyAction(root), greedyAction)
 
     @data(([0, 1], [0, 0], [0, 1], 1000, 300),
           ([-1, 0, 1], [5, 2, 5], [-1, 1], 1000, 300),
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [25, 28, 28, 1], [(0, 1), (-1, 0)], 1000, 300),
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [25, 25, 25, 25], [(1, 0), (0, 1), (-1, 0), (0, -1)], 1000, 150))
     @unpack
-    def testRandomnessInGetGreedyAction(self, actions, numVisits, greedyActions, rep, minSelected):
+    def testRandomnessInselectGreedyAction(self, actions, numVisits, greedyActions, rep, minSelected):
         root = Node(id={None: None})
         for a, v in zip(actions, numVisits):
             Node(parent=root, id={a: None}, numVisited=v)
         counter = {action: 0 for action in greedyActions}
         for _ in range(rep):
-            selectedAction = getGreedyAction(root)
+            selectedAction = selectGreedyAction(root)
             counter[selectedAction] += 1
         self.assertEqual(sum(counter.values()), rep)
         for action in counter:
@@ -205,11 +206,11 @@ class TestMCTS(unittest.TestCase):
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [0, 25, 50, 25], {(1, 0): 0, (0, 1): 0.25, (-1, 0): 0.5, (0, -1): 0.25}),
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [98, 1, 0, 1], {(1, 0): 0.98, (0, 1): 0.01, (-1, 0): 0, (0, -1): 0.01}))
     @unpack
-    def testGetPlainActionDist(self, actions, numVisits, plainActionDist):
+    def testestablishPlainActionDist(self, actions, numVisits, plainActionDist):
         root = Node(id={None: None})
         for a, v in zip(actions, numVisits):
             Node(parent=root, id={a: None}, numVisited=v)
-        dist = getPlainActionDist(root)
+        dist = establishPlainActionDist(root)
         self.assertAlmostEqual(sum(list(dist.values())), 1)
         self.assertEqual(dist, plainActionDist)
 
@@ -224,11 +225,11 @@ class TestMCTS(unittest.TestCase):
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [0, 2, 3, 1], {(1, 0): 0.03206, (0, 1): 0.23688, (-1, 0): 0.64391, (0, -1): 0.08714}),
           ([(1, 0), (0, 1), (-1, 0), (0, -1)], [2, 0, 0, 0], {(1, 0): 0.71123, (0, 1): 0.09626, (-1, 0): 0.09626, (0, -1): 0.09626}))
     @unpack
-    def testGetPlainActionDist(self, actions, numVisits, softmaxActionDist):
+    def testestablishPlainActionDist(self, actions, numVisits, softmaxActionDist):
         root = Node(id={None: None})
         for a, v in zip(actions, numVisits):
             Node(parent=root, id={a: None}, numVisited=v)
-        dist = getSoftmaxActionDist(root)
+        dist = establishSoftmaxActionDist(root)
         self.assertAlmostEqualActionDists(dist, softmaxActionDist)
 
 
