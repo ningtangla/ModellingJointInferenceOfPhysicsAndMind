@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from functools import reduce
 
 
 class GetAgentPosFromTrajectory:
@@ -15,6 +14,7 @@ class GetAgentPosFromTrajectory:
 
         return posAtTimeStep
 
+
 class GetAgentPosFromState:
     def __init__(self, agentId, posIndex, numPosEachAgent):
         self.agentId = agentId
@@ -26,4 +26,3 @@ class GetAgentPosFromState:
                                        self.numPosEachAgent]
 
         return agentPos
-

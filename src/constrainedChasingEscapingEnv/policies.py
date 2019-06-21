@@ -1,4 +1,6 @@
 import numpy as np
+import random
+
 
 def stationaryAgentPolicy(state):
     return (0, 0)
@@ -14,18 +16,18 @@ class RandomPolicy:
         return action
 
 
-class HeatSeekingDeterministicPolicy:
-    def __init__(self, actionSpace, getAgentPos, getTargetPos):
+class HeatSeekingDiscreteDeterministicPolicy:
+    def __init__(self, actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors):
         self.actionSpace = actionSpace
-        self.getAgentPos = getAgentPos
-        self.getTargetPos = getTargetPos
+        self.getPreyPos = getPreyPos
+        self.getPredatorPos = getPredatorPos
+        self.computeAngleBetweenVectors = computeAngleBetweenVectors
 
     def __call__(self, state):
-        sheepPosition = self.getAgentPos(state)
-        wolfPosition = self.getTargetPos(state)
-        relativeVector = np.array(sheepPosition) - np.array(wolfPosition)
-        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
-                               np.array(self.actionSpace)}
-        action = angleBetweenVectors[min(angleBetweenVectors.keys())]
+        preyPosition = self.getPreyPos(state)
+        predatorPosition = self.getPredatorPos(state)
+        heatSeekingVector = np.array(preyPosition) - np.array(predatorPosition)
+        angleBetweenVectors = {action: self.computeAngleBetweenVectors(heatSeekingVector, np.array(action)) for action in self.actionSpace}
+        optimalActionList = [action for action in angleBetweenVectors.keys() if angleBetweenVectors[action] == min(angleBetweenVectors.values())]
+        action = random.choice(optimalActionList)
         return action
-
