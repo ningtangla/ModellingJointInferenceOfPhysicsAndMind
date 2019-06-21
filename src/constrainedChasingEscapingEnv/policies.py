@@ -16,31 +16,27 @@ class RandomPolicy:
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
-    def __init__(self, actionSpace, getAgentPos, getTargetPos):
+    def __init__(self, actionSpace, getChaserPos, getEscaperPos):
         self.actionSpace = actionSpace
-        self.getAgentPos = getAgentPos
-        self.getTargetPos = getTargetPos
+        self.getChaserPos = getChaserPos
+        self.getEscaperPos = getEscaperPos
 
     def __call__(self, state):
-        sheepPosition = self.getAgentPos(state)
-        wolfPosition = self.getTargetPos(state)
-        relativeVector = np.array(sheepPosition) - np.array(wolfPosition)
+        relativeVector = np.array(self.getEscaperPos(state)) - np.array(self.getChaserPos(state))
         angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in
                                np.array(self.actionSpace)}
         action = angleBetweenVectors[min(angleBetweenVectors.keys())]
         return action
 
 class HeatSeekingContinuesDeterministicPolicy:
-    def __init__(self, getSelfXPos, getOtherXPos, actionMagnitude):
-        self.getSelfXPos = getSelfXPos
-        self.getOtherXPos = getOtherXPos
+    def __init__(self,  getChaserPos, getEscaperPos, actionMagnitude):
+        self.getChaserPos = getChaserPos
+        self.getEscaperPos = getEscaperPos
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-        selfXPos = self.getSelfXPos(state)
-        otherXPos = self.getOtherXPos(state)
 
-        action = otherXPos - selfXPos
+        action = np.array(self.getEscaperPos(state)) - np.array(self.getChaserPos(state))
         actionNorm = np.sum(np.abs(action))
         if actionNorm != 0:
             action = action/actionNorm
