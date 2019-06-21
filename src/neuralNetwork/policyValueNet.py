@@ -225,6 +225,10 @@ class ApproximatePolicy():
 		self.model = model
 
 	def __call__(self, stateBatch):
+		if np.array(stateBatch).ndim == 3:
+			stateBatch = [np.concatenate(state) for state in stateBatch]
+		if np.array(stateBatch).ndim == 2:
+			stateBatch = np.concatenate(stateBatch)
 		if np.array(stateBatch).ndim == 1:
 			stateBatch = np.array([stateBatch])
 		graph = self.model.graph
@@ -242,11 +246,17 @@ class ApproximateActionPrior:
 		self.policyValueNet = policyValueNet
 		self.actionSpace = actionSpace
 
-	def __call__(self, state):
+	def __call__(self, stateBatch):
+		if np.array(stateBatch).ndim == 3:
+			stateBatch = [np.concatenate(state) for state in stateBatch]
+		if np.array(stateBatch).ndim == 2:
+			stateBatch = np.concatenate(stateBatch)
+		if np.array(stateBatch).ndim == 1:
+			stateBatch = np.array([stateBatch])
 		graph = self.policyValueNet.graph
 		state_ = graph.get_collection_ref("inputs")[0]
 		actionDist_ = graph.get_collection_ref("actionDist")[0]
-		actionDist = self.policyValueNet.run(actionDist_, feed_dict={state_: np.array([state])})[0]
+		actionDist = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
 		actionPrior = {action: prob for action, prob in zip(self.actionSpace, actionDist)}
 		return actionPrior
 
@@ -257,6 +267,10 @@ class ApproximateValueFunction:
 
 	def __call__(self, stateBatch):
 		scalarOutput = False
+		if np.array(stateBatch).ndim == 3:
+			stateBatch = [np.concatenate(state) for state in stateBatch]
+		if np.array(stateBatch).ndim == 2:
+			stateBatch = np.concatenate(stateBatch)
 		if np.array(stateBatch).ndim == 1:
 			stateBatch = np.array([stateBatch])
 			scalarOutput = True
