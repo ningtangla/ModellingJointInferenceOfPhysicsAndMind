@@ -22,7 +22,7 @@ class AccumulateRewards:
 
 def addValuesToTraj(traj, trajValueFunc):
     values = trajValueFunc(traj)
-    trajWithValues = [(s, a, dist, v) for (s, a, dist), v in zip(traj, values)]
+    trajWithValues = [(s, a, dist, np.array([v])) for (s, a, dist), v in zip(traj, values)]
     return trajWithValues
 
 
@@ -91,6 +91,10 @@ def main():
     random.seed(seed)
     random.shuffle(dataWithLabelsAndProbs)
 
+    dataSetVarNames = ["state", "action", "actionDist", "value"]
+    dataSetVarValues = [list(values) for values in zip(*dataWithLabelsAndProbs)]
+    dataSet = dict(zip(dataSetVarNames, dataSetVarValues))
+
     dataSetsDir = '../data/trainingDataForNN/dataSets'
     if not os.path.exists(dataSetsDir):
         os.makedirs(dataSetsDir)
@@ -102,7 +106,7 @@ def main():
     saveOn = True
     if saveOn:
         with open(dataSetPath, "wb") as f:
-            pickle.dump(dataWithLabelsAndProbs, f)
+            pickle.dump(dataSet, f)
         print("Saved data set to {}".format(dataSetPath))
 
 
