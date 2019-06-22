@@ -10,10 +10,11 @@ from measurementFunctions import calculateCrossEntropy
 
 @ddt
 class TestAnalyticGeometryFunctions(unittest.TestCase):
-    @data((np.array([0.228, 0.619, 0.153]), np.array([0, 1, 0]), 0.47965))
+    @data(({"predict":np.array([0.228, 0.619, 0.153]), "target":np.array([0, 1, 0])}, 0.47965),
+        ({"predict":np.array([0, 1, 0]), "target":np.array([0, 1, 0])}, 0))
     @unpack
-    def testCrossEntropy(self, prediction, target, groundTruth):
-        self.assertAlmostEqual(calculateCrossEntropy(prediction, target), groundTruth, places=5)
+    def testCrossEntropy(self, data, groundTruth):
+        self.assertAlmostEqual(calculateCrossEntropy(data), groundTruth, places=5)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ class DistanceBetweenActualAndOptimalNextPosition:
 
         return distance
 
-def calculateCrossEntropy(prediction, target, episilon = 1e-12):
+def calculateCrossEntropy(data, episilon = 1e-12):
+    prediction, target = list(data.values())
     ce = -1 * sum([target[index] * np.log(prediction[index]+episilon) for index in range(len(prediction))])
     return ce
