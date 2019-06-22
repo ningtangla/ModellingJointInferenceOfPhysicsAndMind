@@ -27,25 +27,43 @@ from measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, Co
 from sheepWolfWrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, GetStateFromTrajectory
 
 
-def drawPerformanceLine(dataDf, axForDraw, trainSteps):
+class NNSampleTrajectory:
+    def __init__(self, transit, neuralNetworkPolicy):
+        self.transit = transit
+        self.neuralNetworkPolicy = neuralNetworkPolicy
+
+    def __call__(self, initState):
+        initAllAgentActions = self.neuralNetworkPolicy(initState)
+        newState = self.transit(initState, initAllAgentActions)
+        newAllAgentActions = self.neuralNetworkPolicy(newState)
+
+        trajectory = [(initState, initAllAgentActions), (newState, newAllAgentActions)]
+        return trajectory
+
+
+class NNGenerateTrajectories:
+    def __init__(self, getSavePath, nnSampleTrajectory):
+        self.getSavePath = getSavePath
+        self.nnSampleTrajectory = nnSampleTrajectory
+
+    def __call__(self, parameters):
+        parameters['sheepPolicyName'] = 'MCTSNN'
+        MCTSNNTrajPath = self.getSavePath(parameters)
+        pickleIn = open(MCTSNNTrajPath, 'rb')
+        MCTSNNTrajectories = pickle.load(pickleIn)
+        allMCTSNNInitStates = [trajectory[0][0] for trajectory in MCTSNNTrajectories]
+
+        NNTrajectories = [self.nnSampleTrajectory(initState) for initState in allMCTSNNInitStates]
+
+        return NNTrajectories
+
+
+def drawPerformanceLine(dataDf, axForDraw, steps):
     for key, grp in dataDf.groupby('sheepPolicyName'):
         grp.index = grp.index.droplevel('sheepPolicyName')
-        grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(trainSteps))
-
-class GetMCTS:
-    def __init__(self, selectChild, rollout, backup, selectNextAction, getActionPriorFunction):
-        self.selectChild = selectChild
-        self.rollout = rollout
-        self.backup = backup
-        self.selectNextAction = selectNextAction
-        self.getActionPriorFunction = getActionPriorFunction
-
-    def __call__(self, numSimulations, trainedModel):
-        actionPriorFunction = self.getActionPriorFunction(trainedModel)
-        expand = Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit, actionPriorFunction))
-        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, selectNextAction)
-
-        return mcts
+        # grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(steps))
+        grp.plot(ax=axForDraw, label=key, y='mean', title='TrainSteps: {}'.format(steps))
+        axForDraw.set_ylim([0, 0.4])
 
 
 class GetActionDistNeuralNet:
@@ -98,21 +116,25 @@ class NeuralNetworkPolicy:
 
 
 class GenerateTrajectories:
-    def __init__(self, sampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath, trainedModels):
-        self.sampleTrajectory = sampleTrajectory
+    def __init__(self, getSampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath, trainedModels, transit):
+        self.getSampleTrajectory = getSampleTrajectory
         self.getSheepPolicies = getSheepPolicies
         self.wolfPolicy = wolfPolicy
         self.numTrials = numTrials
         self.getSavePath = getSavePath
         self.trainedModels = trainedModels
+        self.transit = transit
 
     def __call__(self, oneConditionDf):
         startTime = time.time()
         trainSteps = oneConditionDf.index.get_level_values('trainSteps')[0]
         sheepPolicyName = oneConditionDf.index.get_level_values('sheepPolicyName')[0]
         numSimulations = oneConditionDf.index.get_level_values('numSimulations')[0]
+        maxInitDistance = oneConditionDf.index.get_level_values('maxInitDistance')[0]
 
-        trainedModel = trainedModels[trainSteps]
+        sampleTrajectory = self.getSampleTrajectory(maxInitDistance)
+
+        trainedModel = self.trainedModels[trainSteps]
         getSheepPolicy = self.getSheepPolicies[sheepPolicyName]
         sheepPolicy = getSheepPolicy(numSimulations, trainedModel)
         policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
@@ -120,6 +142,16 @@ class GenerateTrajectories:
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
         saveFileName = self.getSavePath(parameters)
+
+        if sheepPolicyName == 'NN':
+            if os.path.isfile(saveFileName):
+                print("NN file existed")
+            nnSampleTrajectory = NNSampleTrajectory(self.transit, policy)
+            nnGenerateTrajectories = NNGenerateTrajectories(self.getSavePath, nnSampleTrajectory)
+            allNNTrajectories = nnGenerateTrajectories(parameters)
+            pickleOut = open(saveFileName, 'wb')
+            pickle.dump(allNNTrajectories, pickleOut)
+            pickleOut.close()
 
         if not os.path.isfile(saveFileName):
             allTrajectories = [sampleTrajectory(policy) for trial in range(self.numTrials)]
@@ -134,18 +166,41 @@ class GenerateTrajectories:
         return None
 
 
-if __name__ == "__main__":
+class Check:
+    def __call__(self, oneConditionDf):
+        indexLevelNames = oneConditionDf.index.names
+        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
+
+        if parameters['sheepPolicyName'] == 'NN':
+            filePath = getSavePath(parameters)
+            pickleIn = open(filePath, 'rb')
+            NNTrajectories = pickle.load(pickleIn)
+            NNinitStates = [trajectory[0] for trajectory in NNTrajectories]
+            pickleIn.close()
+
+            MCTSFilePath = filePath.replace('sheepPolicyName=NN', 'sheepPolicyName=MCTSNN')
+            pickleIn = open(MCTSFilePath, 'rb')
+            MCTSNNTrajectories = pickle.load(pickleIn)
+            MCTSNNinitStates = [trajectory[0] for trajectory in MCTSNNTrajectories]
+            pickleIn.close()
+
+            truthValue = NNinitStates == MCTSNNinitStates
+            print(truthValue)
+
+
+def main():
     random.seed(128)
     np.random.seed(128)
     tf.set_random_seed(128)
 
     # manipulated variables (and some other parameters that are commonly varied)
-    numTrials = 100
+    numTrials = 50
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['trainSteps'] = [1000, 5000, 10000, 15000]
-    manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNN']
-    manipulatedVariables['numSimulations'] = [10, 50, 100, 150, 200]
+    manipulatedVariables['maxInitDistance'] = [30.0]#[2.5, 30]
+    manipulatedVariables['trainSteps'] = [0, 20, 50]#[0, 50, 100, 500]
+    manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN']
+    manipulatedVariables['numSimulations'] = [50, 200, 800]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -153,12 +208,11 @@ if __name__ == "__main__":
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
     # functions for MCTS
-    qPosInit = (0, 0, 4, 0)
-
+    qPosInit = (0, 0, 0, 0)
     envModelName = 'twoAgents'
     qVelInit = [0, 0, 0, 0]
     numAgents = 2
-    qPosInitNoise = 6
+    qPosInitNoise = 9.7
     qVelInitNoise = 0
     reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
@@ -202,9 +256,9 @@ if __name__ == "__main__":
     generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     dataSetMaxRunningSteps = 10
-    dataSetNumSimulations = 100
+    dataSetNumSimulations = 75
     dataSetNumTrials = 1500
-    dataSetQPosInit = (0, 0, 8, 0)
+    dataSetQPosInit = (0, 0, 0, 0)
     modelTrainFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'learnRate': learningRate}
@@ -219,19 +273,28 @@ if __name__ == "__main__":
     trainedModels = {trainSteps: restoreVariables(generatePolicyNet(hiddenWidths), modelSavePath) for
                      trainSteps, modelSavePath in modelSavePaths.items()}
 
-    # wrapper functions for action prior
-    getActionPriorUniformFunction = lambda trainedModel: GetActionPrior(actionSpace)
-    getActionPriorNNFunction = lambda trainedModel: GetActionDistNeuralNet(actionSpace, trainedModel)
+    # wrapper function for expand
+    getExpandUniformPrior = lambda trainedModel: Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit,
+                                                                                       GetActionPrior(actionSpace)))
+    getExpandNNPrior = lambda trainedModel: Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit,
+                                                                                  GetActionDistNeuralNet(actionSpace,
+                                                                                                         trainedModel)))
 
     # wrapper functions for sheep policies
-    getMCTS = GetMCTS(selectChild, rollout, backup, selectNextAction, getActionPriorUniformFunction)
-    getMCTSNN = GetMCTS(selectChild, rollout, backup, selectNextAction, getActionPriorNNFunction)
+    getMCTS = lambda numSimulations, trainedModel: MCTS(numSimulations, selectChild,
+                                                        getExpandUniformPrior(trainedModel), rollout, backup,
+                                                        selectNextAction)
+    getMCTSNN = lambda numSimulations, trainedModel: MCTS(numSimulations, selectChild,
+                                                        getExpandNNPrior(trainedModel), rollout, backup,
+                                                        selectNextAction)
     getRandom = lambda numSimulations, trainedModel: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
     getNN = lambda numSimulations, trainedModel: NeuralNetworkPolicy(trainedModel, actionSpace)
     getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN}
 
     # sample trajectory
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
+    # sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
+    getSampleTrajectory = lambda maxInitDistance: SampleTrajectory(maxRunningSteps, transit, isTerminal, reset,
+                                                                   maxInitDistance)
 
     # function to generate trajectories
     trajectoryDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
@@ -242,11 +305,17 @@ if __name__ == "__main__":
     fixedParameters = {'numTrials': numTrials, 'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, extension, fixedParameters)
 
-    generateTrajectories = GenerateTrajectories(sampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
-                                                getTrajectorySavePath, trainedModels)
+    # generateTrajectories = GenerateTrajectories(sampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
+    #                                             getTrajectorySavePath, trainedModels)
+    generateTrajectories = GenerateTrajectories(getSampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
+                                                getTrajectorySavePath, trainedModels, transit)
+
 
     # run all trials and save trajectories
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
+
+    # check if NN and MCTSNN has same starting initState
+    toSplitFrame.groupby(levelNames).apply(check)
 
     # measurement Function
     initTimeStep = 0
@@ -264,20 +333,31 @@ if __name__ == "__main__":
     computeStatistics = ComputeStatistics(loadTrajectories, numTrials, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
+    combinedMeanDf = statisticsDf.groupby(['trainSteps', 'sheepPolicyName', 'numSimulations']).agg('mean')
+
+    print('statisticsDf')
     print(statisticsDf)
+    print('combinedMeanDf')
+    print(combinedMeanDf)
 
     # plot the statistics
     fig = plt.figure()
 
     numColumns = len(manipulatedVariables['trainSteps'])
+    # numRows = len(manipulatedVariables['maxInitDistance'])
+    numRows = 1
     plotCounter = 1
 
-    for key, grp in statisticsDf.groupby('trainSteps'):
-        grp.index = grp.index.droplevel('trainSteps')
-        axForDraw = fig.add_subplot(1, numColumns, plotCounter)
-        drawPerformanceLine(grp, axForDraw, key)
+    for steps, grpSteps in combinedMeanDf.groupby('trainSteps'):
+        grpSteps.index = grpSteps.index.droplevel('trainSteps')
+        axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+        drawPerformanceLine(grpSteps, axForDraw, steps)
         plotCounter += 1
 
     plt.legend(loc='best')
 
     plt.show()
+
+
+if __name__ == '__main__':
+    main()

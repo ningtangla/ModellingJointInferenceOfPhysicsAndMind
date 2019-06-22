@@ -53,9 +53,9 @@ if __name__ == '__main__':
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 10
-    dataSetNumSimulations = 100
+    dataSetNumSimulations = 75
     dataSetNumTrials = 1500
-    dataSetQPosInit = (0, 0, 8, 0)
+    dataSetQPosInit = (0, 0, 0, 0)
     dataSetSheepPolicyName = 'MCTS'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
@@ -90,8 +90,8 @@ if __name__ == '__main__':
     generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [1000, 5000, 10000, 15000]
-    reportInterval = 500
+    allTrainSteps = [20]#[0, 50, 100, 500]#[1000, 5000, 10000, 15000]
+    reportInterval = 100
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
     getTrain = lambda trainSteps: Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
