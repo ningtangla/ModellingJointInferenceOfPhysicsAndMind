@@ -130,20 +130,13 @@ def backup(value, nodeList):
         node.numVisited += 1
 
 
-class SelectNextAction:
-    def __init__(self, transitionFunction):
-        self.transitionFunction = transitionFunction
+def selectNextAction(currentRoot):
+    numVisitedForAllChildren = [child.numVisited for child in currentRoot.children]
+    maxIndex = np.argwhere(numVisitedForAllChildren == np.max(numVisitedForAllChildren)).flatten()
+    selectedChildIndex = np.random.choice(maxIndex)
 
-    def __call__(self, currentRoot):
-        numVisitedForAllChildren = [child.numVisited for child in currentRoot.children]
-        try:
-            maxIndex = np.argwhere(numVisitedForAllChildren == np.max(numVisitedForAllChildren)).flatten()
-        except:
-            import ipdb; ipdb.set_trace()
-        selectedChildIndex = np.random.choice(maxIndex)
-
-        action = list(currentRoot.children[selectedChildIndex].id.keys())[0]
-        return action
+    action = list(currentRoot.children[selectedChildIndex].id.keys())[0]
+    return action
 
 
 class MCTS:

@@ -1,65 +1,48 @@
 import numpy as np
-import pandas as pd
-from functools import reduce
-
-
-class GetAgentPosFromTrajectory:
-    def __init__(self, timeStep, stateIndex, getAgentPosFromState):
-        self.timeStep = timeStep
-        self.stateIndex = stateIndex
-        self.getAgentPosFromState = getAgentPosFromState
-
-    def __call__(self, trajectory):
-        stateAtTimeStep = trajectory[self.timeStep][self.stateIndex]
-        posAtTimeStep = self.getAgentPosFromState(stateAtTimeStep)
-
-        return posAtTimeStep
-
-
-class GetTrialTrajectoryFromDf:
-    def __init__(self, trialIndex):
-        self.trialIndex = trialIndex
-
-    def __call__(self, dataFrame):
-        trajectory = dataFrame.values[self.trialIndex]
-        return trajectory
-
 
 class GetAgentPosFromState:
-    def __init__(self, agentId, posIndex, numPosEachAgent):
+    def __init__(self, agentId, posIndex):
         self.agentId = agentId
         self.posIndex = posIndex
-        self.numPosEachAgent = numPosEachAgent
+
     def __call__(self, state):
-        agentPos = state[self.agentId][self.posIndex:self.posIndex+self.numPosEachAgent]
+        state = np.asarray(state)
+        agentPos = state[self.agentId][self.posIndex]
 
         return agentPos
 
 
-class GetAgentActionFromTrajectoryDf:
-    def __init__(self, getTrialTrajectoryFromDf, timeStep, getAgentActionFromAllAgentActions, getAllAgentActionFromTrajectory):
-        self.getTrialTrajectoryFromDf = getTrialTrajectoryFromDf
+class GetStateFromTrajectory:
+    def __init__(self, timeStep, stateIndex):
         self.timeStep = timeStep
-        self.getAgentActionFromAllAgentActions = getAgentActionFromAllAgentActions
-        self.getAllAgentActionFromTrajectory = getAllAgentActionFromTrajectory
+        self.stateIndex = stateIndex
 
-    def __call__(self, trajectoryDf):
-        trajectory = self.getTrialTrajectoryFromDf(trajectoryDf)
-        allAgentActionsAtTimeStep = self.getAllAgentActionFromTrajectory(trajectory, self.timeStep)
-        actionAtTimeStep = self.getAgentActionFromAllAgentActions(allAgentActionsAtTimeStep)
-        actionSeries = pd.Series({'action': actionAtTimeStep})
+    def __call__(self, trajectory):
+        state = trajectory[self.timeStep][self.stateIndex]
 
-        return actionSeries
+        return state
 
 
-class GetEpisodeLength:
-    def __init__(self, getTrajectoryFromDf):
-        self.getTrajectoryFromDf = getTrajectoryFromDf
+class GetAgentPosFromTrajectory:
+    def __init__(self, getAgentPosFromState, getStateFromTrajectory):
+        self.getAgentPosFromState = getAgentPosFromState
+        self.getStateFromTrajectory = getStateFromTrajectory
 
-    def __call__(self, trajectoryDf):
-        trajectory = self.getTrajectoryFromDf(trajectoryDf)
-        return len(trajectory)
+    def __call__(self, trajectory):
+        state = self.getStateFromTrajectory(trajectory)
+        agentPos = self.getAgentPosFromState(state)
+
+        return agentPos
 
 
+class GetAgentActionFromTrajectory:
+    def __init__(self, timeStep, actionIndex, agentId):
+        self.timeStep = timeStep
+        self.actionIndex = actionIndex
+        self.agentId = agentId
 
+    def __call__(self, trajectory):
+        allAgentActions = trajectory[self.timeStep][self.actionIndex]
+        agentAction = allAgentActions[self.agentId]
 
+        return agentAction
