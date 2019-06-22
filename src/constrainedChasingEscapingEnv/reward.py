@@ -1,8 +1,4 @@
 import numpy as np
-# import env
-
-def euclideanDistance(pos1, pos2):
-    return np.sqrt(np.sum(np.square(pos1 - pos2)))
 
 class RewardFunctionCompete():
     def __init__(self, aliveBonus, deathPenalty, isTerminal):
@@ -26,7 +22,7 @@ class HeuristicDistanceToTarget:
         terminalPosition = self.getTargetPosition(state)
         currentPosition = self.getCurrentPosition(state)
 
-        distance = np.sqrt(np.sum(np.square(currentPosition - terminalPosition)))
+        distance = np.linalg.norm(currentPosition - terminalPosition, ord = 2)
         reward = -self.weight * distance
 
         return reward

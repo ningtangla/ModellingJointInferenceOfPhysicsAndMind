@@ -1,6 +1,7 @@
 import sys
-sys.path.append('../src/algorithms/')
-sys.path.append('../src/sheepWolf')
+import os
+sys.path.append(os.path.join('..', 'src', 'algorithms'))
+sys.path.append(os.path.join('..', 'src'))
 import unittest
 import numpy as np
 from ddt import ddt, data, unpack

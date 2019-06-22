@@ -5,11 +5,10 @@ import pylab as plt
 from matplotlib import pyplot as plt
 from datetime import datetime
 from collections import OrderedDict
-import skvideo
 import skvideo.io
-import copy
+import os
 
-skvideo.setFFmpegPath("/usr/local/bin")
+skvideo.setFFmpegPath(os.path.join("usr", "local", "bin"))
 
 # Local import
 from algorithms.mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \

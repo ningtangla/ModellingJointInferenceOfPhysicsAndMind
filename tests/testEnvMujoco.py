@@ -23,9 +23,8 @@ class TestEnvMujoco(unittest.TestCase):
         self.numSimulationFrames = 20
         self.sheepId = 0
         self.wolfId = 1
-        self.xPosIndex = 2
-        self.numXPosEachAgent = 2
-        self.getSheepPos = GetAgentPosFromState(self.sheepId, self.xPosIndex, self.numXPosEachAgent)
+        self.xPosIndex = [2, 3]
+        self.getSheepPos = GetAgentPosFromState(self.sheepId, self.xPosIndex)
         self.getWolfPos = GetAgentPosFromState(self.wolfId, self.xPosIndex, self.numXPosEachAgent)
         self.isTerminal = IsTerminal(self.killzoneRadius, self.getSheepPos, self.getWolfPos)
 
@@ -72,7 +71,7 @@ class TestEnvMujoco(unittest.TestCase):
 
     @data((0.2, np.asarray([[0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 0, 0]]), False),
           (1, np.asarray([[-0.5, -0.5, -0.5, -0.5, 0, 0], [0, 0, 0, 0, 0, 0]]), True),
-          (0.5, np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), False))
+          (0.5, np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), False))       # add cases where it is close to the boundary
     @unpack
     def testIsTerminal(self, minXDis, state, groundTruthTerminal):
         isTerminal = IsTerminal(minXDis, self.getSheepPos, self.getWolfPos)

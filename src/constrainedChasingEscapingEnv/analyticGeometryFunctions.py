@@ -8,12 +8,10 @@ def transitePolarToCartesian(angle):
 
 def computeAngleBetweenVectors(vector1, vector2):
     vectoriseInnerProduct = np.dot(vector1, vector2.T)
-    if np.ndim(vectoriseInnerProduct) > 0:
-        innerProduct = vectoriseInnerProduct.diagonal()
-    else:
-        innerProduct = vectoriseInnerProduct
+    innerProduct = vectoriseInnerProduct
     angle = np.arccos(innerProduct/(computeVectorNorm(vector1) * computeVectorNorm(vector2)))
     return angle
 
 def computeVectorNorm(vector):
-    return np.power(np.power(vector, 2).sum(axis = 1), 0.5)
+    L2Norm = np.linalg.norm(vector, ord = 2)
+    return L2Norm

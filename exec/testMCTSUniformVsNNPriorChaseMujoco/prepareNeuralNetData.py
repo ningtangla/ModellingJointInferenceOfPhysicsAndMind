@@ -1,11 +1,12 @@
 import sys
-sys.path.append('../../src')
-sys.path.append('../../src/algorithms')
-sys.path.append('../../src/sheepWolf')
+import os
+sys.path.append(os.path.join('..', '..', 'src'))
+sys.path.append(os.path.join('..', '..', 'src', 'algorithms'))
+sys.path.append(os.path.join('..', '..', 'src', 'sheepWolf'))
 sys.path.append('..')
+
 import numpy as np
 import pickle
-import random
 
 from envMujoco import Reset, IsTerminal, TransitionFunction
 from mcts import CalculateScore, SelectChild, InitializeChildren, GetActionPrior, SelectNextAction, RollOut,\
@@ -18,25 +19,24 @@ from policiesFixed import stationaryAgentPolicy
 
 
 def main():
-    maxRunningSteps = 15
-    qPosInit = (-4, 0, 4, 0)
-    numSimulations = 200
+    maxRunningSteps = 10
+    qPosInit = (0, 0, 0, 0)
+    numSimulations = 75
 
     # functions for MCTS
     envModelName = 'twoAgents'
     qVelInit = [0, 0, 0, 0]
     numAgents = 2
-    qPosInitNoise = 0
-    qVelInitNoise = 0
+    qPosInitNoise = 9.7
+    qVelInitNoise = 1
     reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
-    xPosIndex = 2
-    numXPosEachAgent = 2
+    xPosIndex = [2, 3]
 
-    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex, numXPosEachAgent)
-    getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex, numXPosEachAgent)
+    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
     killzoneRadius = 0.5
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
@@ -64,7 +64,7 @@ def main():
     numActionSpace = len(actionSpace)
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
 
-    selectNextAction = SelectNextAction(sheepTransit)
+    selectNextAction = SelectNextAction()
 
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
@@ -76,7 +76,7 @@ def main():
     policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
 
     # generate trajectories
-    numTrials = 100
+    numTrials = 1500
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]
 
