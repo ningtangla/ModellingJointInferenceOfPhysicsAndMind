@@ -167,12 +167,15 @@ class GenerateTrajectories:
 
 
 class Check:
+    def __init__(self, getSavePath):
+        self.getSavePath = getSavePath
+
     def __call__(self, oneConditionDf):
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
 
         if parameters['sheepPolicyName'] == 'NN':
-            filePath = getSavePath(parameters)
+            filePath = self.getSavePath(parameters)
             pickleIn = open(filePath, 'rb')
             NNTrajectories = pickle.load(pickleIn)
             NNinitStates = [trajectory[0] for trajectory in NNTrajectories]
@@ -184,8 +187,6 @@ class Check:
             MCTSNNinitStates = [trajectory[0] for trajectory in MCTSNNTrajectories]
             pickleIn.close()
 
-            truthValue = NNinitStates == MCTSNNinitStates
-            print(truthValue)
 
 
 def main():
@@ -198,7 +199,7 @@ def main():
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
     manipulatedVariables['maxInitDistance'] = [30.0]#[2.5, 30]
-    manipulatedVariables['trainSteps'] = [0, 20, 50]#[0, 50, 100, 500]
+    manipulatedVariables['trainSteps'] = [0, 10, 20, 50]#[0, 50, 100, 500]
     manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN']
     manipulatedVariables['numSimulations'] = [50, 200, 800]
 
@@ -314,8 +315,9 @@ def main():
     # run all trials and save trajectories
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
 
-    # check if NN and MCTSNN has same starting initState
-    toSplitFrame.groupby(levelNames).apply(check)
+    # # check if NN and MCTSNN has same starting initState
+    # check = Check(getTrajectorySavePath)
+    # toSplitFrame.groupby(levelNames).apply(check)
 
     # measurement Function
     initTimeStep = 0

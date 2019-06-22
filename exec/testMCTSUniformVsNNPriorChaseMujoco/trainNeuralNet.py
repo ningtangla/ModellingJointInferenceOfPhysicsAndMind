@@ -90,7 +90,7 @@ if __name__ == '__main__':
     generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [20]#[0, 50, 100, 500]#[1000, 5000, 10000, 15000]
+    allTrainSteps = [10]#[0, 50, 100, 500]#[1000, 5000, 10000, 15000]
     reportInterval = 100
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
