@@ -3,9 +3,9 @@ import numpy as np
 from ddt import ddt, data, unpack
 import sys
 import os
-sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
+sys.path.append('..')
 
-from analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors, computeVectorNorm 
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors, computeVectorNorm 
 
 
 @ddt
@@ -22,11 +22,14 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
         returnedValue = transitePolarToCartesian(angle)
         self.assertAlmostEqual(returnedValue.all(), groundTruthCoordinates.all(), places=3)
 
-    @data((np.array([1, 1]), np.array([1, 1]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571))
+    @data((np.array([1, 1]), np.array([1, 1]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571), (np.array([0, 0]), np.array([1, 1]), np.nan))
     @unpack
     def testComputeAngleBetweenVectors(self, vector1, vector2, groundTruthAngle):
         returnedValue = computeAngleBetweenVectors(vector1, vector2)
-        self.assertAlmostEqual(returnedValue, groundTruthAngle, places=3)
+        if not np.isnan(groundTruthAngle):
+            self.assertAlmostEqual(returnedValue, groundTruthAngle, places=3)
+        else:
+            self.assertTrue(np.isnan(returnedValue))
 
     @data((np.asarray([1, 2]), np.sqrt(5)),
           (np.asarray([-10, 10]), 10*np.sqrt(2)))

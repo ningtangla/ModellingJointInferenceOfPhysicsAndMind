@@ -14,11 +14,16 @@ def computeVectorNorm(vector):
 
 
 def computeAngleBetweenVectors(vector1, vector2):
-    vectoriseInnerProduct = np.dot(vector1, vector2.T)
+    vectoriseInnerProduct = np.dot(np.array(vector1), np.array(vector2).T)
     innerProduct = vectoriseInnerProduct
-    unclipRatio = innerProduct/(computeVectorNorm(vector1) * computeVectorNorm(vector2))
-    ratio = np.clip(unclipRatio, -1.0, 1.0)# float precision probblem as enmin report
-    angle = np.arccos(ratio)
+    norm1 = computeVectorNorm(vector1) 
+    norm2 = computeVectorNorm(vector2)
+    if norm1 > 0 and norm2 > 0:
+        unclipRatio = innerProduct/(norm1 * norm2)
+        ratio = np.clip(unclipRatio, -1.0, 1.0)# float precision probblem as enmin report
+        angle = np.arccos(ratio)
+    else:
+        angle = np.nan
     return angle
 
 def computeVectorNorm(vector):
