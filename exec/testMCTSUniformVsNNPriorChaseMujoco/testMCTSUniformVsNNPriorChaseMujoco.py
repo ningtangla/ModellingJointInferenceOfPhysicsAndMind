@@ -14,6 +14,8 @@ import pickle
 import pandas as pd
 from matplotlib import pyplot as plt
 import time
+from multiprocessing import Pool
+import multiprocessing as mp
 
 from envMujoco import Reset, IsTerminal, TransitionFunction
 from mcts import CalculateScore, SelectChild, InitializeChildren, GetActionPrior, selectNextAction, RollOut,\
@@ -27,43 +29,30 @@ from measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, Co
 from sheepWolfWrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, GetStateFromTrajectory
 
 
-class NNSampleTrajectory:
-    def __init__(self, transit, neuralNetworkPolicy):
-        self.transit = transit
-        self.neuralNetworkPolicy = neuralNetworkPolicy
-
-    def __call__(self, initState):
-        initAllAgentActions = self.neuralNetworkPolicy(initState)
-        newState = self.transit(initState, initAllAgentActions)
-        newAllAgentActions = self.neuralNetworkPolicy(newState)
-
-        trajectory = [(initState, initAllAgentActions), (newState, newAllAgentActions)]
-        return trajectory
-
-
-class NNGenerateTrajectories:
-    def __init__(self, getSavePath, nnSampleTrajectory):
-        self.getSavePath = getSavePath
-        self.nnSampleTrajectory = nnSampleTrajectory
-
-    def __call__(self, parameters):
-        parameters['sheepPolicyName'] = 'MCTSNN'
-        MCTSNNTrajPath = self.getSavePath(parameters)
-        pickleIn = open(MCTSNNTrajPath, 'rb')
-        MCTSNNTrajectories = pickle.load(pickleIn)
-        allMCTSNNInitStates = [trajectory[0][0] for trajectory in MCTSNNTrajectories]
-
-        NNTrajectories = [self.nnSampleTrajectory(initState) for initState in allMCTSNNInitStates]
-
-        return NNTrajectories
-
-
 def drawPerformanceLine(dataDf, axForDraw, steps):
     for key, grp in dataDf.groupby('sheepPolicyName'):
         grp.index = grp.index.droplevel('sheepPolicyName')
         # grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(steps))
-        grp.plot(ax=axForDraw, label=key, y='mean', title='TrainSteps: {}'.format(steps))
+        grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(steps))
         axForDraw.set_ylim([0, 0.4])
+
+
+# class RunSampleTrajectory:
+#     def __init__(self, getSampleTrajectory, policy):
+#         self.getSampleTrajectory = getSampleTrajectory
+#         self.policy = policy
+#
+#     def __call__(self, qPosInit):
+#         sampleTrajectory = self.getSampleTrajectory(qPosInit)
+#         trajectory = sampleTrajectory(self.policy)
+#
+#         return trajectory
+
+def runSampleTrajectory(qPosInit, getSampleTrajectory, policy):
+    sampleTrajectory = getSampleTrajectory(qPosInit)
+    trajectory = sampleTrajectory(policy)
+
+    return trajectory
 
 
 class GetActionDistNeuralNet:
@@ -116,59 +105,43 @@ class NeuralNetworkPolicy:
 
 
 class GenerateTrajectories:
-    def __init__(self, getSampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath, trainedModels, transit):
+    def __init__(self, getSampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath, trainedModels,
+                 getReset, allQPosInit, pool):
         self.getSampleTrajectory = getSampleTrajectory
         self.getSheepPolicies = getSheepPolicies
         self.wolfPolicy = wolfPolicy
         self.numTrials = numTrials
         self.getSavePath = getSavePath
         self.trainedModels = trainedModels
-        self.transit = transit
+        self.getReset = getReset
+        self.allQPosInit = allQPosInit
+        self.pool = pool
 
     def __call__(self, oneConditionDf):
         startTime = time.time()
         trainSteps = oneConditionDf.index.get_level_values('trainSteps')[0]
         sheepPolicyName = oneConditionDf.index.get_level_values('sheepPolicyName')[0]
         numSimulations = oneConditionDf.index.get_level_values('numSimulations')[0]
-        maxInitDistance = oneConditionDf.index.get_level_values('maxInitDistance')[0]
-
-        sampleTrajectory = self.getSampleTrajectory(maxInitDistance)
 
         trainedModel = self.trainedModels[trainSteps]
         getSheepPolicy = self.getSheepPolicies[sheepPolicyName]
         sheepPolicy = getSheepPolicy(numSimulations, trainedModel)
-        policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
+        # policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
+        def policy(state):
+            return [sheepPolicy(state), self.wolfPolicy(state)]
 
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
         saveFileName = self.getSavePath(parameters)
 
-        # if sheepPolicyName == 'NN':
-        #     if os.path.isfile(saveFileName):
-        #         print("NN file existed")
-        #     nnSampleTrajectory = NNSampleTrajectory(self.transit, policy)
-        #     nnGenerateTrajectories = NNGenerateTrajectories(self.getSavePath, nnSampleTrajectory)
-        #     allNNTrajectories = nnGenerateTrajectories(parameters)
-        #     pickleOut = open(saveFileName, 'wb')
-        #     pickle.dump(allNNTrajectories, pickleOut)
-        #     pickleOut.close()
-        if sheepPolicyName == 'MCTS' and trainSteps != 0:
-            print("entered if")
-            loadParameters = parameters.copy()
-            loadParameters['trainSteps'] = 0
-            loadPath = self.getSavePath(loadParameters)
-            pickleIn = open(loadPath, 'rb')
-            allTrajectoriesMCTS = pickle.load(pickleIn)
-            pickleOut = open(saveFileName, 'wb')
-            pickle.dump(allTrajectoriesMCTS, pickleOut)
-            pickleOut.close()
-
         if not os.path.isfile(saveFileName):
-            print("entered if not. PolicyName:", sheepPolicyName)
-            allTrajectories = [sampleTrajectory(policy) for trial in range(self.numTrials)]
-            pickleOut = open(saveFileName, 'wb')
-            pickle.dump(allTrajectories, pickleOut)
-            pickleOut.close()
+            # allTrajectories = self.pool.map(runSampleTrajectory, self.allQPosInit)
+            allTrajectories = [self.pool.apply(runSampleTrajectory, args=(qPosInit, self.getSampleTrajectory, policy))
+                               for qPosInit in self.allQPosInit]
+            print("ALL TRAJECTORIES: ", allTrajectories)
+            # pickleOut = open(saveFileName, 'wb')
+            # pickle.dump(allTrajectories, pickleOut)
+            # pickleOut.close()
 
         endTime = time.time()
         print("Time for policy {}, numSimulations {}, trainSteps {} = {}".format(sheepPolicyName, numSimulations,
@@ -177,56 +150,34 @@ class GenerateTrajectories:
         return None
 
 
-class Check:
-    def __init__(self, getSavePath):
-        self.getSavePath = getSavePath
-
-    def __call__(self, oneConditionDf):
-        indexLevelNames = oneConditionDf.index.names
-        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-
-        if parameters['sheepPolicyName'] == 'NN':
-            filePath = self.getSavePath(parameters)
-            pickleIn = open(filePath, 'rb')
-            NNTrajectories = pickle.load(pickleIn)
-            NNinitStates = [trajectory[0] for trajectory in NNTrajectories]
-            pickleIn.close()
-
-            MCTSFilePath = filePath.replace('sheepPolicyName=NN', 'sheepPolicyName=MCTSNN')
-            pickleIn = open(MCTSFilePath, 'rb')
-            MCTSNNTrajectories = pickle.load(pickleIn)
-            MCTSNNinitStates = [trajectory[0] for trajectory in MCTSNNTrajectories]
-            pickleIn.close()
-
-
-
 def main():
     random.seed(128)
     np.random.seed(128)
     tf.set_random_seed(128)
 
     # manipulated variables (and some other parameters that are commonly varied)
-    numTrials = 50
+    numTrials = 2#50
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['maxInitDistance'] = [30.0]#[2.5, 30]
-    manipulatedVariables['trainSteps'] = [0, 10, 20, 50]#[0, 50, 100, 500]
+    manipulatedVariables['trainSteps'] = [0, 10, 20, 50]
     manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN', 'MCTS']
-    manipulatedVariables['numSimulations'] = [50, 200, 800]
+    manipulatedVariables['numSimulations'] = [1, 2]#[50, 200, 800]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
+    # generate a set of initial positions to maintain consistency across all conditions
+    allQPosInit = [np.random.uniform(0, 9.7, 4) for trial in range(numTrials)]
+
     # functions for MCTS
-    qPosInit = (0, 0, 0, 0)
     envModelName = 'twoAgents'
     qVelInit = [0, 0, 0, 0]
     numAgents = 2
-    qPosInitNoise = 9.7
+    qPosInitNoise = 0
     qVelInitNoise = 0
-    reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    getReset = lambda qPosInit: Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)        ###########
 
     sheepId = 0
     wolfId = 1
@@ -303,10 +254,12 @@ def main():
     getNN = lambda numSimulations, trainedModel: NeuralNetworkPolicy(trainedModel, actionSpace)
     getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN}
 
-    # sample trajectory
-    # sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
-    getSampleTrajectory = lambda maxInitDistance: SampleTrajectory(maxRunningSteps, transit, isTerminal, reset,
-                                                                   maxInitDistance)
+    # getSampleTrajectory = lambda qPosInit: SampleTrajectory(maxRunningSteps, transit, isTerminal, getReset(qPosInit))
+    def getSampleTrajectory(qPosInit):
+        return SampleTrajectory(maxRunningSteps, transit, isTerminal, getReset(qPosInit))
+
+    # pool for multiprocessing
+    pool = Pool(mp.cpu_count())
 
     # function to generate trajectories
     trajectoryDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
@@ -314,21 +267,14 @@ def main():
         os.makedirs(trajectoryDirectory)
 
     extension = '.pickle'
-    fixedParameters = {'numTrials': numTrials, 'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit}
+    fixedParameters = {'numTrials': numTrials, 'maxRunningSteps': maxRunningSteps, 'processing': 'multiCore'}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, extension, fixedParameters)
 
-    # generateTrajectories = GenerateTrajectories(sampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
-    #                                             getTrajectorySavePath, trainedModels)
     generateTrajectories = GenerateTrajectories(getSampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
-                                                getTrajectorySavePath, trainedModels, transit)
-
+                                                getTrajectorySavePath, trainedModels, getReset, allQPosInit, pool)
 
     # run all trials and save trajectories
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
-
-    # # check if NN and MCTSNN has same starting initState
-    # check = Check(getTrajectorySavePath)
-    # toSplitFrame.groupby(levelNames).apply(check)
 
     # measurement Function
     initTimeStep = 0
@@ -346,25 +292,20 @@ def main():
     computeStatistics = ComputeStatistics(loadTrajectories, numTrials, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
-    combinedMeanDf = statisticsDf.groupby(['trainSteps', 'sheepPolicyName', 'numSimulations']).agg('mean')
-
     print('statisticsDf')
     print(statisticsDf)
-    print('combinedMeanDf')
-    print(combinedMeanDf)
 
     # plot the statistics
     fig = plt.figure()
 
     numColumns = len(manipulatedVariables['trainSteps'])
-    # numRows = len(manipulatedVariables['maxInitDistance'])
     numRows = 1
     plotCounter = 1
 
-    for steps, grpSteps in combinedMeanDf.groupby('trainSteps'):
-        grpSteps.index = grpSteps.index.droplevel('trainSteps')
+    for key, grp in statisticsDf.groupby('trainSteps'):
+        grp.index = grp.index.droplevel('trainSteps')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-        drawPerformanceLine(grpSteps, axForDraw, steps)
+        drawPerformanceLine(grp, axForDraw, key)
         plotCounter += 1
 
     plt.legend(loc='best')
