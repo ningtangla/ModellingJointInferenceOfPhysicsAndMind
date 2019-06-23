@@ -17,10 +17,10 @@ class RandomPolicy:
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
-    def __init__(self, actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors):
+    def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
         self.actionSpace = actionSpace
-        self.getPreyPos = getPreyPos
         self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
         self.computeAngleBetweenVectors = computeAngleBetweenVectors
 
     def __call__(self, state):
@@ -33,16 +33,16 @@ class HeatSeekingDiscreteDeterministicPolicy:
         return action
 
 class HeatSeekingContinuesDeterministicPolicy:
-    def __init__(self,  getChaserPos, getEscaperPos, actionMagnitude):
-        self.getChaserPos = getChaserPos
-        self.getEscaperPos = getEscaperPos
+    def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
+        self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
 
-        action = np.array(self.getEscaperPos(state)) - np.array(self.getChaserPos(state))
-        actionNorm = np.sum(np.abs(action))
-        if actionNorm != 0:
-            action = action / actionNorm
+        action = np.array(self.getPreyPos(state)) - np.array(self.getPredatorPos(state))
+        actionL2Norm = np.linalg.norm(action, ord = 2)
+        if actionL2Norm != 0:
+            action = action / actionL2Norm
             action *= self.actionMagnitude
         return action
