@@ -21,7 +21,7 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
         returnedValue = transitePolarToCartesian(angle)
         self.assertAlmostEqual(returnedValue.all(), groundTruthCoordinates.all(), places=3)
 
-    @data((np.array([0, 0]), np.array([0, 0]), 0), (np.array([1, 1]), np.array([1, 1]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571))
+    @data((np.array([0, 0]), np.array([0, 0]), 0), (np.array([1, 1]), np.array([80, 80]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571))
     @unpack
     def testComputeAngleBetweenVectors(self, vector1, vector2, groundTruthAngle):
         returnedValue = computeAngleBetweenVectors(vector1, vector2)

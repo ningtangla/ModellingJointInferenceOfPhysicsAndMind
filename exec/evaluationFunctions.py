@@ -14,10 +14,11 @@ class GetSavePath:
         parameters.update(self.fixedParameters)
         sortedParameters = sorted(parameters.items())
         nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
-
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
-
+        fileName = fileName.replace("\n", "")
+        fileName = fileName.replace("[", "(")
+        fileName = fileName.replace("]", ")")
         path = os.path.join(self.dataDirectory, fileName)
 
         return path

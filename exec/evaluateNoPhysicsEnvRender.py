@@ -1,16 +1,20 @@
 import sys
 sys.path.append('../src')
-sys.path.append('../src/sheepWolf')
+sys.path.append('../src/constrainedChasingEscapingEnv')
 import numpy as np
 import pygame as pg
 
 # local
 import envNoPhysics as env
-import envSheepChaseWolf as game
+
 import reward
 
-from algorithms.mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \
-    InitializeChildren, HeuristicDistanceToTarget
+from algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
+    InitializeChildren
+from wrapperFunctions import GetAgentPosFromState
+from policies import HeatSeekingDiscreteDeterministicPolicy
+from measurementFunctions import computeDistance
+from analyticGeometryFunctions import computeAngleBetweenVectors
 
 
 class Render():
@@ -71,13 +75,10 @@ class SampleTrajectory:
 
 
 if __name__ == '__main__':
-    actionSpace = [(0, 1), (1, 0), (-1, 0), (0, -1),
-                   (1, 1), (-1, -1), (1, -1), (-1, 1)]
-    numActionSpace = len(actionSpace)
 
     numOfAgent = 2
     numOfOneAgentState = 2
-    numSimulationFrames = 1000
+    maxRunningSteps = 200
 
     sheepId = 0
     wolfId = 1
@@ -85,32 +86,38 @@ if __name__ == '__main__':
     numPosEachAgent = 2
     minDistance = 25
 
-    initPosition = np.array([[30, 30], [200, 200]])
-    initPositionNoise = [0, 0]
     xBoundary = [0, 640]
     yBoundary = [0, 480]
+
+
+    # initPosition = np.array([[30, 30], [200, 200]])
+    initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]),np.random.uniform(yBoundary[0], yBoundary[1])],[np.random.uniform(xBoundary[0], xBoundary[1]),np.random.uniform(yBoundary[0], yBoundary[1])]])
+    initPositionNoise = [0, 0]
+
+
     renderOn = True
-
     from pygame.color import THECOLORS
-
     screenColor = THECOLORS['black']
     circleColorList = [THECOLORS['green'], THECOLORS['red']]
     circleSize = 8
     screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-
     render = Render(numOfAgent, numOfOneAgentState, positionIndex,
                     screen, screenColor, circleColorList, circleSize)
 
-    getAgentPos = game.GetAgentPos(sheepId, positionIndex, numPosEachAgent)
-    getTargetPos = game.GetAgentPos(wolfId, positionIndex, numPosEachAgent)
+    getPreyPos = GetAgentPosFromState(sheepId, positionIndex, numPosEachAgent)
+    getPredatorPos = GetAgentPosFromState(wolfId, positionIndex, numPosEachAgent)
 
-    checkBoundaryAndAdjust = env.CheckBoundaryAndAdjust(xBoundary, yBoundary)
-    isTerminal = env.IsTerminal(getAgentPos, getTargetPos, minDistance)
-    transitionFunction = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
+    stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
+    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance, computeDistance)
+    transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
     reset = env.Reset(numOfAgent, initPosition, initPositionNoise)
 
-    wolfPolicy = game.HeatSeekingPolicy(actionSpace, getAgentPos, getTargetPos)
-    # sheepPolicy = game.RandomPolicy(actionSpace)
+
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
+                   (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    numActionSpace = len(actionSpace)
+
+    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors)
 
     # select child
     cInit = 1
@@ -119,9 +126,7 @@ if __name__ == '__main__':
     selectChild = SelectChild(calculateScore)
 
     # prior
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
-                   (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    getActionPrior = GetActionPrior(actionSpace)
+    getActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
 
     def sheepTransit(state, action): return transitionFunction(
         state, [action, wolfPolicy(state)])
@@ -138,31 +143,27 @@ if __name__ == '__main__':
     expand = Expand(isTerminal, initializeChildren)
 
     # random rollout policy
-    numActionSpace = len(actionSpace)
-
     def rolloutPolicy(
         state): return actionSpace[np.random.choice(range(numActionSpace))]
 
-    # select next action
-    selectNextAction = SelectNextAction(sheepTransit)
-
-    sheepId = 0
-    wolfId = 1
     # rollout
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
-    rolloutHeuristic = HeuristicDistanceToTarget(
-        rolloutHeuristicWeight, getTargetPos, getAgentPos)
+    rolloutHeuristic = reward.HeuristicDistanceToTarget(
+        rolloutHeuristicWeight, getPredatorPos, getPreyPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit,
                       rewardFunction, isTerminal, rolloutHeuristic)
+
     numSimulations = 10
     sheepPolicy = MCTS(numSimulations, selectChild, expand,
-                       rollout, backup, selectNextAction)
+                       rollout, backup, selectGreedyAction)
 
+    # All agents' policies
     def policy(state): return [sheepPolicy(state), wolfPolicy(state)]
 
     sampleTraj = SampleTrajectory(
-        numSimulationFrames, transitionFunction, isTerminal, reset, render, renderOn)
+        maxRunningSteps, transitionFunction, isTerminal, reset, render, renderOn)
 
+    # generate trajectories
     traj = sampleTraj(policy)
     print(traj)

@@ -35,6 +35,7 @@ class SelectChild:
         selectedChild = currentNode.children[selectedChildIndex]
         return selectedChild
 
+
 class InitializeChildren:
     def __init__(self, actionSpace, transition, getActionPrior):
         self.actionSpace = actionSpace
@@ -66,6 +67,7 @@ class Expand:
 
         return leafNode
 
+
 class RollOut:
     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
         self.transitionFunction = transitionFunction
@@ -82,7 +84,7 @@ class RollOut:
         for rolloutStep in range(self.maxRolloutStep):
             action = self.rolloutPolicy(currentState)
             totalRewardForRollout += self.rewardFunction(currentState, action)
-            
+
             if self.isTerminal(currentState):
                 reachedTerminal = True
                 break
@@ -101,6 +103,7 @@ def backup(value, nodeList):
     for node in nodeList:
         node.sumValue += value
         node.numVisited += 1
+
 
 def selectGreedyAction(root):
     visits = np.array([child.numVisited for child in root.children])
@@ -148,7 +151,7 @@ class MCTS:
                 currentNode = nextNode
 
             leafNode = self.expand(currentNode)
-            value = self.nodeValueFunc(leafNode)
+            value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
 
         mctsOutput = self.outputActionOrDistribution(root)
