@@ -58,9 +58,12 @@ def main():
     agentCount = 3
     reset = Reset(gridSize, lowerGridBound, agentCount)
 
-    transitWolf = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateMaster, locateWolf)
+    adjustingParam = 3 
+    getPullingForce = GetPullingForce(adjustingParam, roundNumber)
+
+    transitWolf = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateMaster, locateWolf, getPullingForce)
     transitSheep = PlainTransition(stayWithinBoundary, locateSheep)
-    transitMaster = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateWolf, locateMaster)
+    transitMaster = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateWolf, locateMaster, getPullingForce)
 
 
     allAgentTransitionFunction = [transitWolf, transitSheep, transitMaster]
@@ -89,7 +92,6 @@ def main():
     gridPixelSize = min(screenHeight// gridNumberX, screenWidth// gridNumberY)
 
 
- #   gridPixelSize = 120
     pointExtendTime = 100
     FPS = 60
     colorList = [BLUE, PINK, GREEN] # wolf, sheep, master

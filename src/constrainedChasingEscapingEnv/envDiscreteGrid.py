@@ -1,4 +1,5 @@
 import numpy as np 
+import math 
 from random import randint
 
 class Reset:
@@ -58,20 +59,42 @@ class SamplePulledForceDirection:
         pulledAction = pulledActions[pulledActionSampleIndex]
         return pulledAction
 
+
+def roundNumber(number):
+    if number - math.floor(number) < 0.5:
+        return math.floor(number)
+    return math.ceil(number)
+
+class GetPullingForce:
+    def __init__(self, adjustingParam, roundNumber):
+        self.adjustingParam = adjustingParam
+        self.roundNumber = roundNumber
+    def __call__(self, relativeLocation):
+        relativeLocationArray = np.array(relativeLocation)
+        distance = np.sqrt(relativeLocationArray.dot(relativeLocationArray))
+        force = self.roundNumber(distance / self.adjustingParam + 1)
+        return force
+    
+
 class PulledAgentTransition:
-    def __init__(self, stayWithinBoundary, samplePulledForceDirection, locatePullingAgent, locatePulledAgent):
+    def __init__(self, stayWithinBoundary, samplePulledForceDirection, locatePullingAgent, locatePulledAgent, getPullingForce):
         self.stayWithinBoundary = stayWithinBoundary
         self.samplePulledForceDirection = samplePulledForceDirection
         self.locatePullingAgent = locatePullingAgent
         self.locatePulledAgent = locatePulledAgent
+        self.getPullingForce = getPullingForce
 
     def __call__(self, action, state):
         pullingAgentState = self.locatePullingAgent(state)
         pulledAgentState = self.locatePulledAgent(state)
 
         pullingDirection = np.array(pullingAgentState) - np.array(pulledAgentState)
+        
         pulledAction = self.samplePulledForceDirection(pullingDirection)
-        nextIntendedState = np.array(pulledAgentState) + np.array(pulledAction) + np.array(action)
+        pullingForce = self.getPullingForce(pullingDirection)
+        pullingResultAction = np.array(pulledAction) * pullingForce
+        
+        nextIntendedState = np.array(pulledAgentState) + pullingResultAction + np.array(action)
         pulledAgentNextState = self.stayWithinBoundary(nextIntendedState)
         return pulledAgentNextState
 
@@ -101,3 +124,7 @@ class IsTerminal:
             return True
         else:
             return False
+
+
+
+

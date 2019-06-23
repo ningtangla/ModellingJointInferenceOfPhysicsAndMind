@@ -29,6 +29,9 @@ class TestEnvironment(unittest.TestCase):
 
 		self.lowerBoundary = 1
 
+		self.adjustingParam = 2
+		self.getPullingForce = GetPullingForce(self.adjustingParam, roundNumber)
+
 	@data(
 		((-2, -1), {(-1, 0): 0.5, (0, -1): 0.5}),
 		((1, 0), {(1, 0): 1}),
@@ -56,43 +59,45 @@ class TestEnvironment(unittest.TestCase):
 			self.assertAlmostEqual(truePulledActionCount[action], pulledActionList.count(action), delta = 200)
 
 
+# param = 2
+# force = math.ceil(distance / self.adjustingParam + 1)
 
 	@data(
-		((5, 5), (1, 0), [(5,1), (2,3), (3,1)], (5, 1)),
-		((6, 6), (0, -1), [(2,1), (2,3), (3,1)], (3, 1)),
-		((5, 5), (1, 0), [(4, 2), (2,3), (3,2)], (4, 2)),
-		((5, 5), (1, 0), [(3, 2), (5, 5), (3, 5)], (4, 3)),
-		((5, 5), (0, 1), [(5, 4), (4, 5), (5, 5)], (5,5))
-		)
+		((3,4), 4),
+		((1,1), 2),
+		((1,3), 3),
+		((0,1), 2)
+	)
 	@unpack
-	def testPulledAgentTransition(self, gridSize, action, state, trueNextState):
-		stayWithinBoundary = StayWithinBoundary(gridSize, self.lowerBoundary)
-		transitAgent = PulledAgentTransition(stayWithinBoundary, self.samplePulledForceDirection, self.locateMaster, self.locateWolf)
-		nextState = transitAgent(action, state)
-		self.assertEqual(nextState, trueNextState)
+	def testPullingForce(self, relativeLocation, trueForce):
+		force = self.getPullingForce(relativeLocation)
+		self.assertEqual(force, trueForce)
 
 
+	
 	@data(
-		((5, 5), (1, 0), [(5,2), (2,3), (3,1)], {(5,1): 0.5, (5,2): 0.5}),
-		((6, 6), (0, -1), [(2,1), (2,3), (3,3)] , {(3,1): 0.5, (2,1): 0.5}),
-		((5, 5), (1, 0), [(4, 2), (2,3), (5,5)], {(5,2): 0.5, (5,3): 0.5}),
-		)
+		((5, 5), (1, 0), [(5,2), (2,3), (3,1)], {(5,1): 0.5, (4,2): 0.5}),
+		((6, 6), (0, -1), [(2,1), (2,3), (3,3)], {(4,1): 0.5, (2,2): 0.5}),
+		((5, 5), (1, 0), [(4, 2), (2,3), (5,5)], {(5,2): 0.5, (5,5): 0.5}),
+	
+		((5, 5), (1, 0), [(5, 1), (2, 3), (3, 1)], {(4, 1): 1}),
+		((6, 6), (0,-1), [(2, 1), (2, 3), (3, 1)], {(4, 1):1}),
+		((5, 5), (0, 1), [(5, 4), (4, 5), (5, 5)], {(5, 5):1})
+	)
 	@unpack
-	def testPulledProbablisticTransition(self, gridSize, action, state, trueNextStateProb):
+	def testPulledAgentTransition(self, gridSize, action, state, trueNextStateProb):
 		stayWithinBoundary = StayWithinBoundary(gridSize, self.lowerBoundary)
-
-		getWolfTransition = PulledAgentTransition(stayWithinBoundary, self.samplePulledForceDirection, self.locateMaster, self.locateWolf)
-
+	
+		getWolfTransition = PulledAgentTransition(stayWithinBoundary, self.samplePulledForceDirection, self.locateMaster, self.locateWolf, self.getPullingForce)
+	
 		iterationTime = 10000
 		trueNextStateProbPair = zip(trueNextStateProb.keys(), trueNextStateProb.values())
 		trueNextStateCount = {action: trueNextStateProb * iterationTime
 		for action, trueNextStateProb in trueNextStateProbPair}
-
 		nextStateList = [getWolfTransition(action, state) for _ in range(iterationTime)]
-
 		for action in trueNextStateCount.keys():
 			self.assertAlmostEqual(trueNextStateCount[action], nextStateList.count(action), delta = 200)
-
+	
 
 	@data(
 		((5,5), (1,0), [(2,3),(5,1),(3,1)], (5,1)),
