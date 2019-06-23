@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Reset():
     def __init__(self, numOfAgent, initPosition, initPositionNoise):
         self.numOfAgent = numOfAgent

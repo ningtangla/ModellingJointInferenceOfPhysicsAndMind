@@ -1,18 +1,19 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'src', 'sheepWolf'))
+sys.path.append('..')
 
 import unittest
 from ddt import ddt, unpack, data
 import numpy as np
 
-from measurementFunctions import computeDistance, ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition
-from sheepWolfWrapperFunctions import GetStateFromTrajectory, GetAgentPosFromState, GetAgentPosFromTrajectory
-from policiesFixed import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
-from envMujoco import TransitionFunction, IsTerminal
+from src.constrainedChasingEscapingEnv.measurementFunctions import ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition, calculateCrossEntropy
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetStateFromTrajectory, GetAgentPosFromState, GetAgentPosFromTrajectory
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.envMujoco import TransitionFunction, IsTerminal
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 @ddt
-class TestSheepWolfMeasurementFunctions(unittest.TestCase):
+class TestMeasurementFunctions(unittest.TestCase):
     def setUp(self):
         self.actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         self.sheepId = 0
@@ -20,7 +21,7 @@ class TestSheepWolfMeasurementFunctions(unittest.TestCase):
         self.xPosIndex = [2, 3]
         self.getSheepXPos = GetAgentPosFromState(self.sheepId, self.xPosIndex)
         self.getWolfXPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
-        self.optimalPolicy = HeatSeekingDiscreteDeterministicPolicy(self.actionSpace, self.getWolfXPos, self.getSheepXPos)
+        self.optimalPolicy = HeatSeekingDiscreteDeterministicPolicy(self.actionSpace, self.getSheepXPos, self.getWolfXPos, computeAngleBetweenVectors)
         self.killzoneRadius = 0.5
         self.isTerminal = IsTerminal(self.killzoneRadius, self.getSheepXPos, self.getWolfXPos)
         self.modelName = 'twoAgents'
@@ -33,16 +34,6 @@ class TestSheepWolfMeasurementFunctions(unittest.TestCase):
         self.getInitStateFromTrajectory = GetStateFromTrajectory(0, self.stateIndex)
         self.computeOptimalNextPos = ComputeOptimalNextPos(self.getInitStateFromTrajectory, self.optimalPolicy,
                                                            self.sheepTransit, self.getSheepXPos)
-
-    @data((np.asarray([1, 2]), np.asarray([3, 4]), 2*np.sqrt(2)),
-          (np.asarray([-10, 10]), np.asarray([10, -10]), 20*np.sqrt(2)))
-    @unpack
-    def testComputeDistance(self, pos1, pos2, groundTruthDistance):
-        distance = computeDistance(pos1, pos2)
-
-        self.assertEqual(groundTruthDistance, distance)
-
-
     @data(([(np.asarray([[3, 4, 3, 4, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))])],
            np.asarray((-7, 7))),
           ([(np.asarray([[3, 3, 3, 3, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
@@ -79,3 +70,12 @@ class TestSheepWolfMeasurementFunctions(unittest.TestCase):
 
         passed = allDistances[0] < allDistances[1] < allDistances[2]
         self.assertTrue(passed)
+
+    @data(({"predict":np.array([0.228, 0.619, 0.153]), "target":np.array([0, 1, 0])}, 0.47965),
+        ({"predict":np.array([0, 1, 0]), "target":np.array([0, 1, 0])}, 0))
+    @unpack
+    def testCrossEntropy(self, data, groundTruth):
+        self.assertAlmostEqual(calculateCrossEntropy(data), groundTruth, places=5)
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,9 +2,10 @@ import unittest
 import numpy as np
 from ddt import ddt, data, unpack
 import sys
-sys.path.append('../src/constrainedChasingEscapingEnv')
+import os
+sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
 
-from analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors
+from analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors, computeVectorNorm 
 
 
 @ddt
@@ -26,6 +27,14 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
     def testComputeAngleBetweenVectors(self, vector1, vector2, groundTruthAngle):
         returnedValue = computeAngleBetweenVectors(vector1, vector2)
         self.assertAlmostEqual(returnedValue, groundTruthAngle, places=3)
+
+    @data((np.asarray([1, 2]), np.sqrt(5)),
+          (np.asarray([-10, 10]), 10*np.sqrt(2)))
+    @unpack
+    def testComputeDistance(self, vector, groundTruthDistance):
+        norm = computeVectorNorm(vector)
+
+        self.assertEqual(norm, groundTruthDistance)
 
 
 if __name__ == "__main__":

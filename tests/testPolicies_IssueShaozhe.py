@@ -1,13 +1,13 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'src', 'sheepWolf'))
+sys.path.append('..')
 
 import unittest
 import numpy as np
 from ddt import ddt, data, unpack
 
-from policiesFixed import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy, PolicyDirectlyTowardsOtherAgent
-from sheepWolfWrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
 
 @ddt
 class TestPoliciesInMujoco(unittest.TestCase):
@@ -31,14 +31,17 @@ class TestPoliciesInMujoco(unittest.TestCase):
         self.assertTrue(truthValue)
 
 
-    @data((np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), 10, np.asarray((-10, 0))),
-          (np.asarray([[-8, 6, -8, 6, 0, 0], [4, -3, 4, -3, 0, 0]]), 5, np.asarray((-4, 3))),
-          (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), 1, np.asarray((0, 1))))
+    @data((np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), 10, np.asarray((10, 0))),
+          (np.asarray([[-8, 6, -8, 6, 0, 0], [-4, 3, -4, 3, 0, 0]]), 5, np.asarray((4, -3))),
+          (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), 1, np.asarray((0, -1))))
     @unpack
-    def testPolicyDirectlyTowardsOtherAgent(self, state, actionMagnitude, groundTruthWolfAction):
-        policyDirectlyTowardsOtherAgent = PolicyDirectlyTowardsOtherAgent(self.getSheepXPos, self.getWolfXPos,
+    def testHeatSeekingContinuesDeterministicPolicy(self, state, actionMagnitude, groundTruthWolfAction):
+        heatSeekingPolicy = HeatSeekingContinuesDeterministicPolicy(self.getSheepXPos, self.getWolfXPos,
                                                                           actionMagnitude)
-        wolfAction = policyDirectlyTowardsOtherAgent(state)
-
-        truthValue = np.allclose(wolfAction, groundTruthWolfAction)
+        action = heatSeekingPolicy(state)
+        truthValue = np.allclose(action, groundTruthWolfAction)
         self.assertTrue(truthValue)
+
+
+if __name__ == "__main__":
+    unittest.main()

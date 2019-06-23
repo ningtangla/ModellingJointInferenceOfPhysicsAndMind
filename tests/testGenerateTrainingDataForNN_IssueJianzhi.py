@@ -1,8 +1,10 @@
 import sys
+import os
 sys.path.append("..")
+sys.path.append(os.path.join('..', 'exec'))
 import unittest
 from ddt import ddt, data, unpack
-import exec.generateTrainingDataForNN as generateData
+import generateTrainingDataForNN as generateData
 
 @ddt
 class TestGenerateData(unittest.TestCase):

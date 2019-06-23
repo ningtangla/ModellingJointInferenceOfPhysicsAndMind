@@ -33,16 +33,14 @@ class HeatSeekingDiscreteDeterministicPolicy:
         return action
 
 class HeatSeekingContinuesDeterministicPolicy:
-    def __init__(self, getSelfXPos, getOtherXPos, actionMagnitude):
-        self.getSelfXPos = getSelfXPos
-        self.getOtherXPos = getOtherXPos
+    def __init__(self,  getChaserPos, getEscaperPos, actionMagnitude):
+        self.getChaserPos = getChaserPos
+        self.getEscaperPos = getEscaperPos
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-        selfXPos = self.getSelfXPos(state)
-        otherXPos = self.getOtherXPos(state)
 
-        action = otherXPos - selfXPos
+        action = np.array(self.getEscaperPos(state)) - np.array(self.getChaserPos(state))
         actionNorm = np.sum(np.abs(action))
         if actionNorm != 0:
             action = action / actionNorm

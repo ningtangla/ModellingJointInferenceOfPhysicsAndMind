@@ -1,3 +1,5 @@
+import numpy as np
+
 class SampleTrajectory:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset):
         self.maxRunningSteps = maxRunningSteps
@@ -22,6 +24,7 @@ class SampleTrajectory:
             state = nextState
 
         return trajectory
+
 
 class SampleTrajectoryWithActionDist:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, distToAction):
@@ -49,3 +52,17 @@ class SampleTrajectoryWithActionDist:
             state = nextState
 
         return trajectory
+
+
+def agentDistToGreedyAction(actionDist):
+    actions = list(actionDist.keys())
+    probs = list(actionDist.values())
+    maxIndices = np.argwhere(probs == np.max(probs)).flatten()
+    selectedIndex = np.random.choice(maxIndices)
+    selectedAction = actions[selectedIndex]
+    return selectedAction
+
+
+def worldDistToAction(agentDistToAction, worldDist):
+    worldAction = [agentDistToAction(dist) if type(dist) is dict else dist for dist in worldDist]
+    return worldAction

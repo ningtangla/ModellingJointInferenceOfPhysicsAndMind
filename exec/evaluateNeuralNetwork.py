@@ -1,10 +1,9 @@
 import sys
 sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/sheepWolf")
+sys.path.append("../src/constrainedChasingEscapingEnv")
 sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import pandas as pd
-import random
 import os
 import pickle
 import policyValueNet as net
@@ -19,9 +18,10 @@ class ApplyFunction:
 
     def __call__(self, df, dataSet, criticFunction, tfseed):
         trainDataSize = df.index.get_level_values('trainingDataSize')[0]
-        trainData =  [list(varData) for varData in zip(*dataSet[:trainDataSize])]
+        trainDataType = df.index.get_level_values('trainingDataType')[0]
+        trainData = [dataSet[varName][:trainDataSize] for varName in ['state', trainDataType, 'value']]
         testDataSize = df.index.get_level_values('testDataSize')[0]
-        testData = [list(varData) for varData in zip(*dataSet[:testDataSize])]
+        testData = [dataSet[varName][:testDataSize] for varName in ['state', trainDataType, 'value']]
         numStateSpace = df.index.get_level_values('numStateSpace')[0]
         numActionSpace = df.index.get_level_values('numActionSpace')[0]
         learningRate = df.index.get_level_values('learningRate')[0]
@@ -56,15 +56,16 @@ class ApplyFunction:
 
 
 def main(tfseed=128):
-    saveDir = "../data"
     saveModelDir = "../data/neuralNetworkGraphVariables"
-    dataSetName = "test"
+    saveDir = "../data/trainingDataForNN/dataSets"
+    dataSetName = "initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=2717_numSimulations=200_numTrajs=100_rolloutSteps=10_standardizedReward=False_withActionDist=True.pickle"
     dataSetPath = os.path.join(saveDir, dataSetName)
-    dataSet =
-    random.shuffle(dataSet)
+    with open(dataSetPath, "rb") as f:
+        dataSet = pickle.load(f)
 
     independentVariables = OrderedDict()
-    independentVariables['trainingDataSize'] = [len(dataSet)]  # [5000, 15000, 30000, 45000, 60000]
+    independentVariables['trainingDataType'] = ['actionDist']
+    independentVariables['trainingDataSize'] = [len(dataSet["state"])]  # [5000, 15000, 30000, 45000, 60000]
     independentVariables['testDataSize'] = [10000]
     independentVariables['numStateSpace'] = [4]
     independentVariables['numActionSpace'] = [8]
@@ -72,7 +73,7 @@ def main(tfseed=128):
     independentVariables['regularizationFactor'] = [0]
     independentVariables['valueRelativeErrBound'] = [0.1]
     independentVariables['iteration'] = [50000]
-    independentVariables['batchSize'] = [4096]
+    independentVariables['batchSize'] = [32]
     independentVariables['reportInterval'] = [1000]
     independentVariables['lossChangeThreshold']= [1e-8]
     independentVariables['lossHistorySize'] = [10]

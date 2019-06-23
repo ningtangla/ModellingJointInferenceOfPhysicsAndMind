@@ -1,19 +1,19 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'exec'))
-sys.path.append(os.path.join('..', 'src', 'algorithms'))
-sys.path.append(os.path.join('..', 'exec', 'testMCTSUniformVsNNPriorChaseMujoco'))
+sys.path.append('..')
 sys.path.append(os.path.join('..', 'src'))
-sys.path.append(os.path.join('..', 'src', 'sheepWolf'))
+sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
+sys.path.append(os.path.join('..', 'src', 'algorithms'))
 sys.path.append(os.path.join('..', 'src', 'neuralNetwork'))
+sys.path.append(os.path.join('..', 'exec', 'testMCTSUniformVsNNPriorChaseMujoco'))
 
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 
-from testMCTSUniformVsNNPriorChaseMujoco import GetNonUniformPriorAtSpecificState, GenerateTrajectories
-from mcts import GetActionPrior
-from trainNeuralNet import ActionToOneHot, PreProcessTrajectories
+from exec.testMCTSUniformVsNNPriorChaseMujoco.testMCTSUniformVsNNPriorChaseMujoco import GetNonUniformPriorAtSpecificState, GenerateTrajectories
+from src.algorithms.mcts import GetActionPrior
+from exec.testMCTSUniformVsNNPriorChaseMujoco.trainNeuralNet import ActionToOneHot, PreProcessTrajectories
 
 
 @ddt
@@ -68,3 +68,6 @@ class TestNNMCTS(unittest.TestCase):
         stateActionPairsProcessed = preProcessTrajectories(trajectories)
 
         self.assertEqual(stateActionPairsProcessed, groundTruthStateActionPairsProcessed)
+
+if __name__ == "__main__":
+    unittest.main()

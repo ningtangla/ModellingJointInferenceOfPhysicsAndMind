@@ -1,18 +1,20 @@
 import sys
 sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/sheepWolf")
+sys.path.append("../src/constrainedChasingEscapingEnv")
 sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import policyValueNet as net
-import noPhysicsEnv as env
-import envSheepChaseWolf
+import envNoPhysics as env
+import wrapperFunctions
 import numpy as np
 import pandas as pd
-from AnalyticGeometryFunctions import calculateCrossEntropy
+from measurementFunctions import calculateCrossEntropy
+from analyticGeometryFunctions import transitePolarToCartesian
 from pylab import plt
-import policiesFixed
+import policies
 import mcts
 import os
+import math
 
 
 class Evaluate:
@@ -67,7 +69,8 @@ class SampleFunction:
 
 
 def main():
-    savePath = "../data/"
+    savePath = "../data/evaluateByCrossEntropy"
+
     # env
     wolfID = 0
     sheepID = 1
@@ -75,21 +78,25 @@ def main():
     numOfAgent = 2
     numPosEachAgent = 2
     numStateSpace = numOfAgent * numPosEachAgent
-    actionSpace = [(0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)]
-    numActionSpace = len(actionSpace)
+    numActionSpace = 8
+    sheepSpeed = 20
+    wolfSpeed = sheepSpeed * 0.95
+    degrees = [math.pi/2, 0, math.pi, -math.pi/2, math.pi/4, -math.pi*3/4, -math.pi/4, math.pi*3/4]
+    sheepActionSpace = [tuple(np.round(sheepSpeed * transitePolarToCartesian(degree))) for degree in degrees]
+    wolfActionSpace = [tuple(np.round(wolfSpeed * transitePolarToCartesian(degree))) for degree in degrees]
+    print(sheepActionSpace)
+    print(wolfActionSpace)
     xBoundary = [0, 180]
     yBoundary = [0, 180]
-    sheepVelocity = 20
     killZoneRadius = 25
-    wolfVelocity = sheepVelocity*0.95
 
     # mcts policy
-    getSheepPos = envSheepChaseWolf.GetAgentPos(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = envSheepChaseWolf.GetAgentPos(wolfID, posIndex, numPosEachAgent)
-    checkBoundaryAndAdjust = env.CheckBoundaryAndAdjust(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policiesFixed.PolicyActionDirectlyTowardsOtherAgent(getWolfPos, getSheepPos, wolfVelocity)
+    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
+    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos)
     transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(state, [np.array(action), wolfDriectChasingPolicy(state)])
+    sheepTransition = lambda state, action: transition(state, [wolfDriectChasingPolicy(state), np.array(action)])
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
 
     rewardFunction = lambda state, action: 1
@@ -99,24 +106,27 @@ def main():
     calculateScore = mcts.CalculateScore(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
-    getActionPrior = mcts.GetActionPrior(actionSpace)
-    initializeChildren = mcts.InitializeChildren(actionSpace, sheepTransition, getActionPrior)
+    mctsUniformActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
+    getActionPrior = mctsUniformActionPrior
+    initializeChildren = mcts.InitializeChildren(sheepActionSpace, sheepTransition, getActionPrior)
     expand = mcts.Expand(isTerminal, initializeChildren)
 
-    maxRollOutSteps = 5
-    rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    heuristic = mcts.HeuristicDistanceToTarget(1, getSheepPos, getWolfPos)
+    maxRollOutSteps = 10
+    rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
+    heuristic = lambda state: 0
     nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
     numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.getSoftmaxActionDist)
+    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
 
     # neuralNetworkModel
-    modelPath = os.path.join(savePath, "neuralNetworkGraphVariables/60000data_64x4_minibatch_100kIter_contState_actionDist")
+    modelDir = "../data/evaluateNeuralNetwork/savedModels"
+    modelName = "60000data_64x4_minibatch_100kIter_contState_actionDist"
+    modelPath = os.path.join(modelDir, modelName)
     generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0, regularizationFactor=0, valueRelativeErrBound=0.0)
     emptyModel = generateModel([64]*4)
     trainedModel = net.restoreVariables(emptyModel, modelPath)
-    nnPolicy = net.ApproximateActionPrior(trainedModel, actionSpace)
+    nnPolicy = net.ApproximateActionPrior(trainedModel, sheepActionSpace)
 
     # pandas
     wolfDiscreteFactor = 3
@@ -125,7 +135,7 @@ def main():
     wolfDiscreteRange = xBoundary[1] / (wolfDiscreteFactor+1)
     sheepDiscreteRange = xBoundary[1] / (sheepDiscreteFactor+1)
     samplePoints = 25
-    figureName = os.path.join(savePath, "evaluateByCrossEntropy/Factor{}x{}_{}sample_HeatMap.png".format(wolfDiscreteFactor, sheepDiscreteFactor, samplePoints))
+    figureName = os.path.join(savePath, "Factor{}x{}_{}sample_rollout{}HeatMap.png".format(wolfDiscreteFactor, sheepDiscreteFactor, samplePoints, maxRollOutSteps))
     wolfXPosition = [wolfDiscreteRange * (i+1) for i in range(wolfDiscreteFactor)]
     wolfYPosition = wolfXPosition
     sheepXPosition = [sheepDiscreteRange * (i+1) for i in range(sheepDiscreteFactor)]

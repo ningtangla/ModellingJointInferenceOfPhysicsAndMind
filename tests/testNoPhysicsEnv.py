@@ -2,13 +2,13 @@ import unittest
 import numpy as np
 from ddt import ddt, data, unpack
 import sys
-sys.path.append('../src/constrainedChasingEscapingEnv')
+import os
+sys.path.append('..')
 
 # Local import
-from envNoPhysics import Reset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
-from wrapperFunctions import GetAgentPosFromState
-from measurementFunctions import computeDistance
-
+from src.constrainedChasingEscapingEnv.envNoPhysics import Reset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeVectorNorm
 
 @ddt
 class TestEnvNoPhysics(unittest.TestCase):
@@ -16,19 +16,18 @@ class TestEnvNoPhysics(unittest.TestCase):
         self.numOfAgent = 2
         self.sheepId = 0
         self.wolfId = 1
-        self.posIndex = 0
-        self.numPosEachAgent = 2
+        self.posIndex = [0, 1]
         self.xBoundary = [0, 640]
         self.yBoundary = [0, 480]
         self.minDistance = 50
         self.getSheepPos = GetAgentPosFromState(
-            self.sheepId, self.posIndex, self.numPosEachAgent)
+            self.sheepId, self.posIndex)
         self.getWolfPos = GetAgentPosFromState(
-            self.wolfId, self.posIndex, self.numPosEachAgent)
+            self.wolfId, self.posIndex)
         self.stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(
             self.xBoundary, self.yBoundary)
         self.isTerminal = IsTerminal(
-            self.getSheepPos, self.getWolfPos, self.minDistance, computeDistance)
+            self.getSheepPos, self.getWolfPos, self.minDistance, computeVectorNorm)
         self.transition = TransiteForNoPhysics(self.stayInBoundaryByReflectVelocity)
 
     @data((np.array([[0, 0], [0, 0]]), [0, 0], np.array([[0, 0], [0, 0]])), (np.array([[9, 5], [2, 7]]), [0, 0], np.array([[9, 5], [2, 7]])))
