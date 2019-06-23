@@ -5,12 +5,14 @@ class RewardFunctionCompete():
         self.aliveBonus = aliveBonus
         self.deathPenalty = deathPenalty
         self.isTerminal = isTerminal
+
     def __call__(self, state, action):
         reward = self.aliveBonus
         if self.isTerminal(state):
             reward += self.deathPenalty
 
         return reward
+
 
 class HeuristicDistanceToTarget:
     def __init__(self, weight, getTargetPosition, getCurrentPosition):
@@ -26,4 +28,3 @@ class HeuristicDistanceToTarget:
         reward = -self.weight * distance
 
         return reward
-

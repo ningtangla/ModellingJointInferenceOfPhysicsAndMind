@@ -1,4 +1,6 @@
 import numpy as np
+import random
+
 
 def stationaryAgentPolicy(state):
     return (0, 0)
@@ -15,31 +17,34 @@ class RandomPolicy:
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
-    def __init__(self, actionSpace, getAgentPos, getTargetPos):
+    def __init__(self, actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors):
         self.actionSpace = actionSpace
-        self.getAgentPos = getAgentPos
-        self.getTargetPos = getTargetPos
+        self.getPreyPos = getPreyPos
+        self.getPredatorPos = getPredatorPos
+        self.computeAngleBetweenVectors = computeAngleBetweenVectors
 
     def __call__(self, state):
-        sheepPosition = self.getAgentPos(state)
-        wolfPosition = self.getTargetPos(state)
-        relativeVector = np.array(sheepPosition) - np.array(wolfPosition)
-        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in 
-                               np.array(self.actionSpace)}
-        action = angleBetweenVectors[min(angleBetweenVectors.keys())]
+        preyPosition = self.getPreyPos(state)
+        predatorPosition = self.getPredatorPos(state)
+        heatSeekingVector = np.array(preyPosition) - np.array(predatorPosition)
+        angleBetweenVectors = {action: self.computeAngleBetweenVectors(heatSeekingVector, np.array(action)) for action in self.actionSpace}
+        optimalActionList = [action for action in angleBetweenVectors.keys() if angleBetweenVectors[action] == min(angleBetweenVectors.values())]
+        action = random.choice(optimalActionList)
         return action
 
-class HeatSeekingDiscreteDeterministicPolicy:
-    def __init__(self, actionSpace, getAgentPos, getTargetPos):
-        self.actionSpace = actionSpace
-        self.getAgentPos = getAgentPos
-        self.getTargetPos = getTargetPos
+class HeatSeekingContinuesDeterministicPolicy:
+    def __init__(self, getSelfXPos, getOtherXPos, actionMagnitude):
+        self.getSelfXPos = getSelfXPos
+        self.getOtherXPos = getOtherXPos
+        self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-        sheepPosition = self.getAgentPos(state)
-        wolfPosition = self.getTargetPos(state)
-        relativeVector = np.array(sheepPosition) - np.array(wolfPosition)
-        angleBetweenVectors = {computeAngleBetweenVectors(relativeVector, action): action for action in 
-                               np.array(self.actionSpace)}
-        action = angleBetweenVectors[min(angleBetweenVectors.keys())]
+        selfXPos = self.getSelfXPos(state)
+        otherXPos = self.getOtherXPos(state)
+
+        action = otherXPos - selfXPos
+        actionNorm = np.sum(np.abs(action))
+        if actionNorm != 0:
+            action = action / actionNorm
+            action *= self.actionMagnitude
         return action

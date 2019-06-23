@@ -2,11 +2,12 @@ import unittest
 import numpy as np
 from ddt import ddt, data, unpack
 import sys
-sys.path.append('../src/sheepWolf')
+sys.path.append('../src/constrainedChasingEscapingEnv')
 
 # Local import
-from envNoPhysics import *
-from envSheepChaseWolf import GetAgentPos
+from envNoPhysics import Reset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
+from wrapperFunctions import GetAgentPosFromState
+from measurementFunctions import computeDistance
 
 
 @ddt
@@ -20,15 +21,15 @@ class TestEnvNoPhysics(unittest.TestCase):
         self.xBoundary = [0, 640]
         self.yBoundary = [0, 480]
         self.minDistance = 50
-        self.getSheepPos = GetAgentPos(
+        self.getSheepPos = GetAgentPosFromState(
             self.sheepId, self.posIndex, self.numPosEachAgent)
-        self.getWolfPos = GetAgentPos(
+        self.getWolfPos = GetAgentPosFromState(
             self.wolfId, self.posIndex, self.numPosEachAgent)
-        self.checkBoundaryAndAdjust = CheckBoundaryAndAdjust(
+        self.stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(
             self.xBoundary, self.yBoundary)
         self.isTerminal = IsTerminal(
-            self.getSheepPos, self.getWolfPos, self.minDistance)
-        self.transition = TransitionForMultiAgent(self.checkBoundaryAndAdjust)
+            self.getSheepPos, self.getWolfPos, self.minDistance, computeDistance)
+        self.transition = TransiteForNoPhysics(self.stayInBoundaryByReflectVelocity)
 
     @data((np.array([[0, 0], [0, 0]]), [0, 0], np.array([[0, 0], [0, 0]])), (np.array([[9, 5], [2, 7]]), [0, 0], np.array([[9, 5], [2, 7]])))
     @unpack
@@ -51,10 +52,10 @@ class TestEnvNoPhysics(unittest.TestCase):
         terminal = self.isTerminal(state)
         self.assertEqual(terminal, groundTruthTerminal)
 
-    @data(([0, 0], [0, 0], [0, 0]), ([1, -2], [1, -3], [1, 2]))
+    @data(([0, 0], [0, 0], [0, 0]), ([1, -2], [1, -3], [1, 2]), ([1, 3], [2, 2], [1, 3]))
     @unpack
     def testCheckBoundaryAndAdjust(self, state, action, groundTruthNextState):
-        checkState, checkAction = self.checkBoundaryAndAdjust(state, action)
+        checkState, checkAction = self.stayInBoundaryByReflectVelocity(state, action)
         truthValue = checkState == groundTruthNextState
         self.assertTrue(truthValue.all())
 
