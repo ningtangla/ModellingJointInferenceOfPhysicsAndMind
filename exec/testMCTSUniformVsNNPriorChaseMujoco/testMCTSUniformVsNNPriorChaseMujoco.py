@@ -143,17 +143,28 @@ class GenerateTrajectories:
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
         saveFileName = self.getSavePath(parameters)
 
-        if sheepPolicyName == 'NN':
-            if os.path.isfile(saveFileName):
-                print("NN file existed")
-            nnSampleTrajectory = NNSampleTrajectory(self.transit, policy)
-            nnGenerateTrajectories = NNGenerateTrajectories(self.getSavePath, nnSampleTrajectory)
-            allNNTrajectories = nnGenerateTrajectories(parameters)
+        # if sheepPolicyName == 'NN':
+        #     if os.path.isfile(saveFileName):
+        #         print("NN file existed")
+        #     nnSampleTrajectory = NNSampleTrajectory(self.transit, policy)
+        #     nnGenerateTrajectories = NNGenerateTrajectories(self.getSavePath, nnSampleTrajectory)
+        #     allNNTrajectories = nnGenerateTrajectories(parameters)
+        #     pickleOut = open(saveFileName, 'wb')
+        #     pickle.dump(allNNTrajectories, pickleOut)
+        #     pickleOut.close()
+        if sheepPolicyName == 'MCTS' and trainSteps != 0:
+            print("entered if")
+            loadParameters = parameters.copy()
+            loadParameters['trainSteps'] = 0
+            loadPath = self.getSavePath(loadParameters)
+            pickleIn = open(loadPath, 'rb')
+            allTrajectoriesMCTS = pickle.load(pickleIn)
             pickleOut = open(saveFileName, 'wb')
-            pickle.dump(allNNTrajectories, pickleOut)
+            pickle.dump(allTrajectoriesMCTS, pickleOut)
             pickleOut.close()
 
         if not os.path.isfile(saveFileName):
+            print("entered if not. PolicyName:", sheepPolicyName)
             allTrajectories = [sampleTrajectory(policy) for trial in range(self.numTrials)]
             pickleOut = open(saveFileName, 'wb')
             pickle.dump(allTrajectories, pickleOut)
@@ -200,7 +211,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['maxInitDistance'] = [30.0]#[2.5, 30]
     manipulatedVariables['trainSteps'] = [0, 10, 20, 50]#[0, 50, 100, 500]
-    manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN']
+    manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN', 'MCTS']
     manipulatedVariables['numSimulations'] = [50, 200, 800]
 
     levelNames = list(manipulatedVariables.keys())
