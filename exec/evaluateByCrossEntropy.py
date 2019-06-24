@@ -88,7 +88,7 @@ class ConstructTestState:
 
 
 def main():
-
+    dataDir = "../data/evaluateByCrossEntropy"
     # env
     wolfID = 1
     sheepID = 0
@@ -138,9 +138,12 @@ def main():
     mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
 
     # neuralNetworkModel
-    modelDir = "../data/evaluateNeuralNetwork/savedModels"
+    modelDir = "savedModels"
     modelName = "60000data_64x4_minibatch_100kIter_contState_actionDist"
-    modelPath = os.path.join(modelDir, modelName)
+    modelPath = os.path.join(dataDir, modelDir, modelName)
+    if not os.path.exists(modelPath):
+        print("Model {} does not exist".format(modelPath))
+        exit(1)
     generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0, regularizationFactor=0, valueRelativeErrBound=0.0)
     emptyModel = generateModel([64]*4)
     trainedModel = net.restoreVariables(emptyModel, modelPath)
@@ -162,13 +165,14 @@ def main():
     toSplitFrame = pd.DataFrame(index=diffIndex)
 
     constructTestState = ConstructTestState(sheepID=sheepID, wolfID=wolfID, isTerminal=isTerminal)
-    dataDirectory = "../data/evaluateByCrossEntropy/actionDistributions"
+    adDir = "actionDistributions"
+    adPath = os.path.join(dataDir, adDir)
     extension = ".pickle"
     fixedParameters = OrderedDict()
     fixedParameters['numSimulations'] = numSimulations
-    if not os.path.exists(dataDirectory):
-        os.makedirs(dataDirectory)
-    getSavePath = GetSavePath(dataDirectory, extension, fixedParameters)
+    if not os.path.exists(adPath):
+        os.makedirs(adPath)
+    getSavePath = GetSavePath(adPath, extension, fixedParameters)
     generateDistribution = GenerateDistribution(mctsPolicy, nnPolicy, constructTestState, getSavePath, numTrials)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateDistribution)
 
@@ -177,13 +181,15 @@ def main():
     statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
     drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'])
     drawHeatMap(statisticDf, "mean")
-    figureSavePath = "../data/evaluateByCrossEntropy"
-    figureName = os.path.join(figureSavePath, "Factor{}x{}_{}sample_rollout{}HeatMap.png".format(wolfDiscreteFactor,
-                                                                                                 sheepDiscreteFactor,
-                                                                                                 numTrials,
-                                                                                                 maxRollOutSteps))
-
-    plt.savefig(figureName)
+    figureDir = "Graphs"
+    figurePath = os.path.join(dataDir, figureDir)
+    if not os.path.exists(figurePath):
+        os.makedirs(figurePath)
+    figureName = "Factor{}x{}_{}sample_rollout{}HeatMap.png".format(wolfDiscreteFactor,
+                                                                    sheepDiscreteFactor,
+                                                                    numTrials,
+                                                                    maxRollOutSteps)
+    plt.savefig(os.path.join(figurePath, figureName))
 
 
 if __name__ == "__main__":
