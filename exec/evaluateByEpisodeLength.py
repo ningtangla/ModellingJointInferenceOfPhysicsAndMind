@@ -17,6 +17,7 @@ from collections import OrderedDict
 import pickle
 import math
 from analyticGeometryFunctions import transitePolarToCartesian
+from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
 
 
 def makeVideo(videoName, path):
@@ -45,33 +46,41 @@ def makeVideo(videoName, path):
         #         makeVideo(videoName, self.savePath)
 
 
-class EvaluateEpisode():
-    def __init__(self, sampleTrajectory):
+class GenerateTrajectory():
+    def __init__(self, sampleTrajectory, getSavePath, numTrials):
         self.sampleTrajectory = sampleTrajectory
+        self.getSavePath = getSavePath
+        self.numTrials = numTrials
 
     def __call__(self, df):
         policyDict = df.index.get_level_values('policy')[0]
         policyName, policy = policyDict
-        trajNum = df.index.get_level_values('sampleTrajNum')[0]
-        maxTrajLen = df.index.get_level_values("maxTrajLen")[0]
-        episodes = [self.sampleTrajectory(policy) for cnt in range(trajNum)]
-        episodeLength = [len(episode) for episode in episodes]
-        avgLen = np.mean(episodeLength)
-        stdLen = np.std(episodeLength)
-        minLen = np.min(episodeLength)
-        maxLen = np.max(episodeLength)
-        medLen = np.median(episodeLength)
-        return pd.Series({"mean": avgLen, "var": stdLen, "min": minLen, "max": maxLen, "median": medLen})
+        indexLevelNames = df.index.names
+        parameters = {levelName: df.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
+        saveFileName = self.getSavePath(parameters)
+        trajs = [self.sampleTrajectory(policy) for cnt in range(self.numTrials)]
+        file = open(saveFileName, "wb")
+        pickle.dump(trajs, file)
+        file.close()
+        return trajs
+
+
+def evaluateEpisodes(trajectories):
+    episodeLength = [len(traj) for traj in trajectories]
+    avgLen = np.mean(episodeLength)
+    stdLen = np.std(episodeLength)
+    minLen = np.min(episodeLength)
+    maxLen = np.max(episodeLength)
+    medLen = np.median(episodeLength)
+    return pd.Series({"mean": avgLen, "var": stdLen, "min": minLen, "max": maxLen, "median": medLen})
 
 
 if __name__ == "__main__":
-    sampleTrajNum = 100
-    maxTrajLen = 100
-    relateDir = "../data/evaluateByEpisodeLength"
+    dataDir = "../data/evaluateByEpisodeLength"
 
     # env
-    wolfID = 0
-    sheepID = 1
+    wolfID = 1
+    sheepID = 0
     posIndex = 0
     numOfAgent = 2
     numPosEachAgent = 2
@@ -94,7 +103,7 @@ if __name__ == "__main__":
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
     wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos)
     transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(np.array(state), [wolfDriectChasingPolicy(state), np.array(action)])
+    sheepTransition = lambda state, action: transition(np.array(state), [np.array(action), wolfDriectChasingPolicy(state)])
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
 
     rewardFunction = lambda state, action: 1
@@ -118,9 +127,12 @@ if __name__ == "__main__":
     mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
 
     # neuralNetwork Policy
-    modelDir = "../data/evaluateNeuralNetwork/savedModels"
+    modelDir = "savedModels"
     modelName = "60000data_64x4_minibatch_100kIter_contState_actionDist"
-    modelPath = os.path.join(modelDir, modelName)
+    modelPath = os.path.join(dataDir, modelDir, modelName)
+    if not os.path.exists(modelPath):
+        print("Model {} does not exist".format(modelPath))
+        exit(1)
     generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0,
                                                        regularizationFactor=0, valueRelativeErrBound=0.0)
     emptyModel = generateModel([64] * 4)
@@ -128,24 +140,33 @@ if __name__ == "__main__":
     nnPolicy = net.ApproximatePolicy(trainedModel, sheepActionSpace)
 
     reset = lambda: [np.array([10, 10]), np.array([20, 20])]
+    maxTrajLen = 100
     sampleTrajectory = play.SampleTrajectoryWithActionDist(maxTrajLen, sheepTransition, isTerminal, reset, play.agentDistToGreedyAction)
-    episodes = sampleTrajectory(mctsPolicy)
 
     independentVariables = OrderedDict()
     independentVariables['policy'] = [('NN',nnPolicy), ('mcts',mctsPolicy)]
-    independentVariables['sampleTrajNum'] = [sampleTrajNum]
-    independentVariables['maxTrajLen'] = [maxTrajLen]
+
 
     levelNames = list(independentVariables.keys())
     levelValues = list(independentVariables.values())
     MultiIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=MultiIndex)
 
-    evaluateEpisode = EvaluateEpisode(sampleTrajectory)
-    resultDF = toSplitFrame.groupby(levelNames).apply(evaluateEpisode)
+    trajDir = "trajectores"
+    trajPath = os.path.join(dataDir, trajDir)
+    if not os.path.exists(modelPath):
+        os.mkdir(trajPath)
+    extension = ".pickle"
+    getSavePath = GetSavePath(trajPath, extension)
+    numTrials = 20
+    generateTrajectory = GenerateTrajectory(sampleTrajectory, getSavePath, numTrials)
+    resultDF = toSplitFrame.groupby(levelNames).apply(generateTrajectory)
 
+    loadTrajctories = LoadTrajectories(getSavePath)
+    computeStatistic = ComputeStatistics(loadTrajctories, numTrials, evaluateEpisodes)
+    statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
     saveFileName = "mcts_simulation={}_vs_{}.pkl".format(numSimulations, modelName)
-    path = os.path.join(relateDir, saveFileName)
+    path = os.path.join(dataDir, saveFileName)
     file = open(path, "wb")
-    pickle.dump(resultDF, file)
+    pickle.dump(statisticDf, file)
     file.close()
