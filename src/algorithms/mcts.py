@@ -35,16 +35,6 @@ class SelectChild:
         selectedChild = currentNode.children[selectedChildIndex]
         return selectedChild
 
-
-class GetActionPrior:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
-
-    def __call__(self, currentState):
-        actionPrior = {action: 1 / len(self.actionSpace) for action in self.actionSpace}
-        return actionPrior
-
-
 class InitializeChildren:
     def __init__(self, actionSpace, transition, getActionPrior):
         self.actionSpace = actionSpace
@@ -75,23 +65,6 @@ class Expand:
             leafNode = self.initializeChildren(leafNode)
 
         return leafNode
-
-
-class HeuristicDistanceToTarget:
-    def __init__(self, weight, getTargetPosition, getCurrentPosition):
-        self.weight = weight
-        self.getTargetPosition = getTargetPosition
-        self.getCurrentPosition = getCurrentPosition
-
-    def __call__(self, state):
-        terminalPosition = self.getTargetPosition(state)
-        currentPosition = self.getCurrentPosition(state)
-
-        distance = np.sqrt(np.sum(np.square(currentPosition - terminalPosition)))
-        reward = -self.weight * distance
-
-        return reward
-
 
 class RollOut:
     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
@@ -129,24 +102,35 @@ def backup(value, nodeList):
         node.sumValue += value
         node.numVisited += 1
 
-
-def selectNextAction(currentRoot):
-    numVisitedForAllChildren = [child.numVisited for child in currentRoot.children]
-    maxIndex = np.argwhere(numVisitedForAllChildren == np.max(numVisitedForAllChildren)).flatten()
-    selectedChildIndex = np.random.choice(maxIndex)
-
-    action = list(currentRoot.children[selectedChildIndex].id.keys())[0]
+def selectGreedyAction(root):
+    visits = np.array([child.numVisited for child in root.children])
+    maxIndices = np.argwhere(visits == np.max(visits)).flatten()
+    selectedIndex = np.random.choice(maxIndices)
+    action = list(root.children[selectedIndex].id.keys())[0]
     return action
 
+def establishPlainActionDist(root):
+    visits = np.array([child.numVisited for child in root.children])
+    actionProbs = visits / np.sum(visits)
+    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    return actionDist
+
+
+def establishSoftmaxActionDist(root):
+    visits = np.array([child.numVisited for child in root.children])
+    expVisits = np.exp(visits)
+    actionProbs = expVisits / np.sum(expVisits)
+    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    return actionDist
 
 class MCTS:
-    def __init__(self, numSimulation, selectChild, expand, rollout, backup, selectNextAction):
+    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputActionOrDistribution):
         self.numSimulation = numSimulation
         self.selectChild = selectChild
         self.expand = expand
-        self.rollout = rollout
+        self.estimateValue = estimateValue
         self.backup = backup
-        self.selectNextAction = selectNextAction
+        self.outputActionOrDistribution = outputActionOrDistribution
 
     def __call__(self, currentState):
         root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
@@ -162,11 +146,11 @@ class MCTS:
                 currentNode = nextNode
 
             leafNode = self.expand(currentNode)
-            value = self.rollout(leafNode)
+            value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
 
-        nextAction = self.selectNextAction(root)
-        return nextAction
+        mctsOutput = self.outputActionOrDistribution(root)
+        return mctsOutput
 
 
 def main():

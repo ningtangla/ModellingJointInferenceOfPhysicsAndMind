@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.join('..', '..', 'src', 'algorithms'))
-sys.path.append(os.path.join('..', '..', 'src', 'sheepWolf'))
+sys.path.append(os.path.join('..', '..', 'src', 'constrainedChasingEscapingEnv'))
 sys.path.append(os.path.join('..', '..', 'src'))
 sys.path.append(os.path.join('..', '..', 'src', 'neuralNetwork'))
 sys.path.append('..')
@@ -18,7 +18,7 @@ from multiprocessing import Pool
 import multiprocessing as mp
 
 from envMujoco import Reset, IsTerminal, TransitionFunction
-from mcts import CalculateScore, SelectChild, InitializeChildren, GetActionPrior, selectNextAction, RollOut,\
+from mcts import CalculateScore, SelectChild, InitializeChildren, selectNextAction, RollOut,\
 HeuristicDistanceToTarget, Expand, MCTS, backup
 from play import SampleTrajectory
 import reward

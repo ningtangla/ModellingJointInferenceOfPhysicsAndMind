@@ -1,14 +1,13 @@
 import sys
-sys.path.append('../src')
-sys.path.append('../src/sheepWolf')
-sys.path.append('../env/xmls')
+import os
+sys.path.append('..')
 import unittest
 import numpy as np
 from ddt import ddt, data, unpack
 
 # Local import
-from envMujoco import Reset, TransitionFunction, IsTerminal
-from sheepWolfWrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.envMujoco import Reset, TransitionFunction, IsTerminal
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
 
 
 @ddt
@@ -22,7 +21,7 @@ class TestEnvMujoco(unittest.TestCase):
         self.wolfId = 1
         self.xPosIndex = [2, 3]
         self.getSheepPos = GetAgentPosFromState(self.sheepId, self.xPosIndex)
-        self.getWolfPos = GetAgentPosFromState(self.wolfId, self.xPosIndex, self.numXPosEachAgent)
+        self.getWolfPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
         self.isTerminal = IsTerminal(self.killzoneRadius, self.getSheepPos, self.getWolfPos)
 
 
@@ -42,7 +41,8 @@ class TestEnvMujoco(unittest.TestCase):
           (np.asarray([[-6, 8, -6, 8, 0, 0], [6, -8, 6, -8, 0, 0]]), [[-1, 1], [1, -1]]))
     @unpack
     def testQPositionChangesInDirectionOfActionAfterTransition(self, oldState, allAgentsActions):
-        transitionFunction = TransitionFunction(self.modelName, self.isTerminal, False, self.numSimulationFrames)
+        transitionFunction = TransitionFunction(
+            self.modelName, self.isTerminal, False, self.numSimulationFrames)
         newState = transitionFunction(oldState, allAgentsActions)
         differenceBetweenStates = newState - oldState
         differenceBetweenQPositions = differenceBetweenStates[:, :2].flatten()
@@ -56,7 +56,8 @@ class TestEnvMujoco(unittest.TestCase):
           (np.asarray([[-6, 8, -6, 8, 0, 0], [6, -8, 6, -8, 0, 0]]), np.asarray([[-1, 1], [1, -1]])))
     @unpack
     def testXPosEqualsQPosAfterTransition(self, state, allAgentsActions):
-        transitionFunction = TransitionFunction(self.modelName, self.isTerminal, False, self.numSimulationFrames)
+        transitionFunction = TransitionFunction(
+            self.modelName, self.isTerminal, False, self.numSimulationFrames)
         newState = transitionFunction(state, allAgentsActions)
         newXPos = newState[:, 2:4]
         newQPos = newState[:, :2]
@@ -72,3 +73,6 @@ class TestEnvMujoco(unittest.TestCase):
         isTerminal = IsTerminal(minXDis, self.getSheepPos, self.getWolfPos)
         terminal = isTerminal(state)
         self.assertEqual(terminal, groundTruthTerminal)
+
+if __name__ == "__main__":
+    unittest.main()

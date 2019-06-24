@@ -2,8 +2,119 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="47533536-b2d1-4baa-8caf-57290092fe0a" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/60000data_64x4_minibatch_100kIter_contState_actionDist.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/60000data_64x4_minibatch_100kIter_contState_actionDist.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/60000data_64x4_minibatch_100kIter_contState_actionDist.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/checkpoint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/trainingDataForNN/dataSets/initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=2717_numSimulations=200_numTrajs=100_rolloutSteps=10_standardizedReward=False_withActionDist=True.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/trainingDataForNN/dataSets/initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=2717_numSimulations=200_numTrajs=100_rolloutSteps=10_standardizedReward=True_withActionDist=True.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/trainingDataForNN/trajectories/initPos=[30,30,20,20]_maxRunningSteps=30_numSimulations=200_numTrajs=100_rolloutSteps=10_withActionDist=True.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/drawDiscreteGridChasing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateByCrossEntropy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateByEpisodeLength.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateNeuralNetwork.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/generateTrajectoriesForNN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/preprocessTrajectoriesForNN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testNoPhysicsEnv.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envNoPhysics.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/neuralNetwork/dataTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/neuralNetwork/trainTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/.testRewardFunction_IssureEnMin.py.swp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testAnalyticGeometryFunction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testDataTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testDrawingFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testGenerateTrainingDataForNN_IssueJianzhi.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testNoPhysicsEnv.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testPlay.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testPolicies_IssueShaozhe.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testRewardFunction_IssureNishad.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/visualize/discreteGridVisualization.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/visualize/render.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ModellingJointInferenceOfPhysicsAndMind.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/mcts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/mcts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/mujocoMCTSChasingData.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/neuralNetwork.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/supervisedLearning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560577590.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560620638.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621108.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621147.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621170.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621190.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560636293.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560636378.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560637065.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560637184.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560637294.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560577590.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560620638.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621108.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621146.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621170.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621190.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560636293.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560636378.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560637065.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560637184.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560637294.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/AnalyticGeometryFunctions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/0 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/1e-4 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/1e-5 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/3e-4 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/6e-4 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 1e-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 1e-5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 3e-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 6e-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/continuousEnv/1000-12000 DataSize continuousEnv Accuracy vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/continuousEnv/1000-12000 DataSize continuousEnv Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/all_data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/continuousEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/continuous_data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/demo/12000 Data Points 0.993 Accuracy  Chasing Demo.mp4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/evaluate.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/evaluateNeuralNetwork.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/gridEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/mainDiscrete.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/new_continuous_data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/policyNet.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/policyValueNet.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/prepareData.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/prepareDataContinuousEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/visualize.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/play.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/play.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/envMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/measurementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measurementFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/policiesFixed.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/reward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/sheepWolfWrapperFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/wrapperFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test1DEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test1DEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testEnvMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testEnvMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testExecEvaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testExecEvaluationFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testMCTS.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testMCTS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testMCTSInMujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testNNMCTS.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testEvaluteMCTSGuidedByNNPrior_IssueNishaed.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testPoliciesInMujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testRunPolicyIn1DEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testSheepWolfMeasurementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testMeasurementFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testWrapperFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testWrapperFunctions.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -63,7 +174,7 @@
         <entry file="file://$PROJECT_DIR$/src/play.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="495">
-              <caret line="33" selection-start-line="33" selection-end-line="33" />
+              <caret line="102" selection-start-line="102" selection-end-line="102" />
             </state>
           </provider>
         </entry>
@@ -100,6 +211,7 @@
       </list>
     </option>
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -371,7 +483,7 @@
     <entry file="file://$PROJECT_DIR$/src/play.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="495">
-          <caret line="33" selection-start-line="33" selection-end-line="33" />
+          <caret line="102" selection-start-line="102" selection-end-line="102" />
         </state>
       </provider>
     </entry>

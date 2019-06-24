@@ -1,12 +1,12 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'src', 'sheepWolf'))
+sys.path.append('..')
 
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 
-from sheepWolfWrapperFunctions import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
     GetAgentActionFromTrajectory
 
 
@@ -72,3 +72,6 @@ class TestWrapperFunctions(unittest.TestCase):
 
         truthValue = np.array_equal(agentAction, groundTruthAgentAction)
         self.assertTrue(truthValue)
+
+if __name__ == "__main__":
+    unittest.main()

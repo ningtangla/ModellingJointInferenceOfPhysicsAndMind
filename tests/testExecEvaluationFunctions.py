@@ -1,18 +1,13 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'exec'))
-sys.path.append(os.path.join('..', 'src', 'algorithms'))
-sys.path.append(os.path.join('..', 'exec', 'testMCTSUniformVsNNPriorChaseMujoco'))
-sys.path.append(os.path.join('..', 'src'))
-sys.path.append(os.path.join('..', 'src', 'sheepWolf'))
-sys.path.append(os.path.join('..', 'src', 'neuralNetwork'))
+sys.path.append('..')
 
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 import pandas as pd
 
-from evaluationFunctions import GetSavePath, LoadTrajectories
+from exec.evaluationFunctions import GetSavePath, LoadTrajectories
 
 
 @ddt
@@ -40,7 +35,7 @@ class TestExecEvaluationFunctions(unittest.TestCase):
     @data((pd.DataFrame(index=pd.MultiIndex.from_tuples([(100, (-4, 0, 4, 0))],
                                                         names=['numTrials', 'qPosInit'])), {'maxRunningSteps': 15,
                                                                                             'numSimulations': 200,
-                                                                                            'sheepPolicyName': 'mcts'}))
+                                                                                            'sheepPolicyName': 'MCTS'}))
     @unpack
     def testLoadTrajectoriesNumTrials(self, oneConditionDf, fixedParameters):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
@@ -56,7 +51,7 @@ class TestExecEvaluationFunctions(unittest.TestCase):
 
     @data((pd.DataFrame(index=pd.MultiIndex.from_tuples([(100, (-4, 0, 4, 0))],
                         names=['numTrials', 'qPosInit'])), {'maxRunningSteps': 15, 'numSimulations': 200,
-                                                            'sheepPolicyName': 'mcts'}))
+                                                            'sheepPolicyName': 'MCTS'}))
     @unpack
     def testLoadTrajectoriesQPosInit(self, oneConditionDf, fixedParameters):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
@@ -75,3 +70,6 @@ class TestExecEvaluationFunctions(unittest.TestCase):
         allTruthValues = np.asarray([np.all(qPosInit == groundTruthQPosInit) for qPosInit in allQPosInit])
 
         self.assertTrue(np.all(allTruthValues))
+
+if __name__ == "__main__":
+    unittest.main()
