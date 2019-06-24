@@ -53,20 +53,18 @@ def main():
     maxRollOutSteps = 10
     numSimulations = 200
     maxRunningSteps = 30
-    numTrajs = 100
-    useActionDist = True
+    numTrajs = 200
 
     trajectoriesDir = '../data/trainingDataForNN/trajectories'
     extension = '.pickle'
     getTrajectoriesPath = GetSavePath(trajectoriesDir, extension)
-    varDict = {}
-    varDict["initPos"] = list(initPosition.flatten())
-    varDict["rolloutSteps"] = maxRollOutSteps
-    varDict["numSimulations"] = numSimulations
-    varDict["maxRunningSteps"] = maxRunningSteps
-    varDict["numTrajs"] = numTrajs
-    varDict["withActionDist"] = useActionDist
-    trajectoriesPath = getTrajectoriesPath(varDict)
+    pathVarDict = {}
+    pathVarDict["initPos"] = list(initPosition.flatten())
+    pathVarDict["rolloutSteps"] = maxRollOutSteps
+    pathVarDict["numSimulations"] = numSimulations
+    pathVarDict["maxRunningSteps"] = maxRunningSteps
+    pathVarDict["numTrajs"] = numTrajs
+    trajectoriesPath = getTrajectoriesPath(pathVarDict)
 
     with open(trajectoriesPath, "rb") as f:
         trajs = pickle.load(f)
@@ -76,12 +74,12 @@ def main():
     decay = 1
     unstandardizedRewardFunc = lambda s, a: 1
     standardizedRewardFunc = lambda s, a: 1.0 / maxRunningSteps
-    useStandardReward = False
+    useStandardReward = True
     trajRewardFunc = AccumulateRewards(decay, unstandardizedRewardFunc if not useStandardReward else standardizedRewardFunc)
     trajsWithRewards = [addValuesToTraj(traj, trajRewardFunc) for traj in trajs]
 
     dataPoints = worldStatesToNpArrays(sum(trajsWithRewards, []))
-    sheepID = 1
+    sheepID = 0
     dataWithSingleAgentActions = removeIrrelevantActions(dataPoints, sheepID)
     actionSpace = [(0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)]
     dataWithLabels = actionsToLabels(dataWithSingleAgentActions, actionSpace)
@@ -99,9 +97,9 @@ def main():
     if not os.path.exists(dataSetsDir):
         os.makedirs(dataSetsDir)
     getDataSetPath = GetSavePath(dataSetsDir, extension)
-    varDict["standardizedReward"] = useStandardReward
-    varDict["numDataPoints"] = len(dataWithLabelsAndProbs)
-    dataSetPath = getDataSetPath(varDict)
+    pathVarDict["standardizedReward"] = useStandardReward
+    pathVarDict["numDataPoints"] = len(dataWithLabelsAndProbs)
+    dataSetPath = getDataSetPath(pathVarDict)
 
     saveOn = True
     if saveOn:
