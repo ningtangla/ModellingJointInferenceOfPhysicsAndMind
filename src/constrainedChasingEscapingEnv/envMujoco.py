@@ -2,6 +2,7 @@ import mujoco_py as mujoco
 import os
 import numpy as np
 
+
 class Reset():
     def __init__(self, modelName, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         dirName = os.path.dirname(__file__)
@@ -16,8 +17,8 @@ class Reset():
     def __call__(self):
         numQPos = len(self.simulation.data.qpos)
         numQVel = len(self.simulation.data.qvel)
-        numQPosEachAgent = int(numQPos/self.numAgent)
-        numQVelEachAgent = int(numQVel/self.numAgent)
+        numQPosEachAgent = int(numQPos / self.numAgent)
+        numQVelEachAgent = int(numQVel / self.numAgent)
 
         qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
         qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
@@ -25,9 +26,9 @@ class Reset():
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
         self.simulation.forward()
-        xPos = np.concatenate(self.simulation.data.body_xpos[-self.numAgent: , :numQPosEachAgent])
-        startState = np.array([np.concatenate([qPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)], xPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)],
-            qVel[numQVelEachAgent * agentIndex : numQVelEachAgent * (agentIndex + 1)]]) for agentIndex in range(self.numAgent)])
+        xPos = np.concatenate(self.simulation.data.body_xpos[-self.numAgent:, :numQPosEachAgent])
+        startState = np.array([np.concatenate([qPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)], xPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)],
+                                               qVel[numQVelEachAgent * agentIndex: numQVelEachAgent * (agentIndex + 1)]]) for agentIndex in range(self.numAgent)])
 
         return startState
 
@@ -46,14 +47,14 @@ class TransitionFunction:
 
         self.isTerminal = isTerminal
         self.numSimulationFrames = numSimulationFrames
-        
+
     def __call__(self, worldState, allAgentsActions):
         worldState = np.asarray(worldState)
         allAgentsActions = np.asarray(allAgentsActions)
 
         numAgent = len(worldState)
-        numQPosEachAgent = int(self.numQPos/numAgent)
-        numQVelEachAgent = int(self.numQVel/numAgent)
+        numQPosEachAgent = int(self.numQPos / numAgent)
+        numQVelEachAgent = int(self.numQVel / numAgent)
 
         allAgentOldQPos = worldState[:, 0:numQPosEachAgent].flatten()
         allAgentOldQVel = worldState[:, -numQVelEachAgent:].flatten()
@@ -70,10 +71,10 @@ class TransitionFunction:
                 self.frames.append(frame)
 
             newQPos, newQVel = self.simulation.data.qpos, self.simulation.data.qvel
-            newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent: , :numQPosEachAgent])
+            newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent:, :numQPosEachAgent])
 
-            newState = np.array([np.concatenate([newQPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)], newXPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)],
-                        newQVel[numQVelEachAgent * agentIndex : numQVelEachAgent * (agentIndex + 1)]]) for agentIndex in range(numAgent)])
+            newState = np.array([np.concatenate([newQPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)], newXPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)],
+                                                 newQVel[numQVelEachAgent * agentIndex: numQVelEachAgent * (agentIndex + 1)]]) for agentIndex in range(numAgent)])
 
             if self.isTerminal(newState):
                 break
@@ -91,7 +92,7 @@ class IsTerminal():
         state = np.asarray(state)
         pos0 = self.getAgent0Pos(state)
         pos1 = self.getAgent1Pos(state)
-        L2Normdistance = np.linalg.norm((pos0 - pos1), ord = 2)
+        L2Normdistance = np.linalg.norm((pos0 - pos1), ord=2)
         terminal = (L2Normdistance <= self.minXDis)
 
         return terminal

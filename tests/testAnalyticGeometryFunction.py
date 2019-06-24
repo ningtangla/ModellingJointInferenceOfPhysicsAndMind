@@ -3,7 +3,7 @@ import numpy as np
 from ddt import ddt, data, unpack
 import sys
 import os
-sys.path.append('..')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors, computeVectorNorm
 
@@ -20,7 +20,7 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
     @unpack
     def testTransitePolarToCartesian(self, angle, groundTruthCoordinates):
         returnedValue = transitePolarToCartesian(angle)
-        self.assertTrue(np.allclose(returnedValue, groundTruthCoordinates, rtol=3))
+        self.assertTrue(np.allclose(returnedValue, groundTruthCoordinates, rtol=0.01))
 
     @data((np.array([1, 1]), np.array([1, 1]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571), (np.array([0, 0]), np.array([1, 1]), np.nan), (np.array([1, 1]), np.array([80, 80]), 0))
     @unpack

@@ -1,28 +1,30 @@
 import numpy as np
+<< << << < Updated upstream
 import pandas as pd
 
+
 class MultiAgentSampleTrajectory:
-    def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState = None):
+    def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
         self.agentNames = agentNames
         self.iterationNumber = iterationNumber
         self.isTerminal = isTerminal
         self.reset = reset
         self.currentState = currentState
 
-
     def __call__(self, multiAgentPolicy, multiAgentTransition):
         if self.currentState is None:
             self.currentState = self.reset()
 
-        locationDataFrame = pd.DataFrame([[agentState] for agentState in self.currentState], index = self.agentNames)
+        locationDataFrame = pd.DataFrame([[agentState] for agentState in self.currentState], index=self.agentNames)
         for i in range(self.iterationNumber):
             allAgentNextAction = multiAgentPolicy(self.currentState)
             nextState = multiAgentTransition(allAgentNextAction, self.currentState)
-            locationDataFrame[i+1] = nextState
+            locationDataFrame[i + 1] = nextState
             self.currentState = nextState
             if self.isTerminal(self.currentState):
                 break
         return locationDataFrame
+
 
 class SampleTrajectory:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset):

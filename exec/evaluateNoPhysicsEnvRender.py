@@ -1,27 +1,24 @@
 import sys
-sys.path.append('../src')
-sys.path.append('../src/constrainedChasingEscapingEnv')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import pygame as pg
 
 # local
-import envNoPhysics as env
+import src.constrainedChasingEscapingEnv.envNoPhysics as env
 
-import reward
 
-from algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
-    InitializeChildren
-from wrapperFunctions import GetAgentPosFromState
-from policies import HeatSeekingDiscreteDeterministicPolicy
-from measurementFunctions import computeDistance
-from analyticGeometryFunctions import computeAngleBetweenVectors
+from src.algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, InitializeChildren
+
+import src.constrainedChasingEscapingEnv.reward as reward
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 
 class Render():
-    def __init__(self, numOfAgent, numPosEachAgent, positionIndex, screen, screenColor, circleColorList, circleSize):
+    def __init__(self, numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize):
         self.numOfAgent = numOfAgent
-        self.numPosEachAgent = numPosEachAgent
-        self.positionIndex = positionIndex
+        self.posIndex = posIndex
         self.screen = screen
         self.screenColor = screenColor
         self.circleColorList = circleColorList
@@ -35,8 +32,7 @@ class Render():
             self.screen.fill(self.screenColor)
 
             for i in range(self.numOfAgent):
-                agentPos = state[i][self.positionIndex:self.positionIndex +
-                                    self.numPosEachAgent]
+                agentPos = state[i][self.posIndex]
                 pg.draw.circle(self.screen, self.circleColorList[i], [np.int(
                     agentPos[0]), np.int(agentPos[1])], self.circleSize)
             pg.display.flip()
@@ -82,15 +78,14 @@ if __name__ == '__main__':
 
     sheepId = 0
     wolfId = 1
-    positionIndex = 0
-    numPosEachAgent = 2
+    posIndex = [0, 1]
     minDistance = 25
 
     xBoundary = [0, 640]
     yBoundary = [0, 480]
 
-    # initPosition = np.array([[30, 30], [200, 200]])
-    initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])], [np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])]])
+    initPosition = np.array([[30, 30], [200, 200]])
+    # initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])], [np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])]])
     initPositionNoise = [0, 0]
 
     renderOn = True
@@ -99,14 +94,14 @@ if __name__ == '__main__':
     circleColorList = [THECOLORS['green'], THECOLORS['red']]
     circleSize = 8
     screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-    render = Render(numOfAgent, numOfOneAgentState, positionIndex,
+    render = Render(numOfAgent, posIndex,
                     screen, screenColor, circleColorList, circleSize)
 
-    getPreyPos = GetAgentPosFromState(sheepId, positionIndex, numPosEachAgent)
-    getPredatorPos = GetAgentPosFromState(wolfId, positionIndex, numPosEachAgent)
+    getPreyPos = GetAgentPosFromState(sheepId, posIndex)
+    getPredatorPos = GetAgentPosFromState(wolfId, posIndex)
 
     stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance, computeDistance)
+    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance)
     transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
     reset = env.Reset(numOfAgent, initPosition, initPositionNoise)
 
@@ -114,7 +109,7 @@ if __name__ == '__main__':
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
-    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors)
+    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
     # select child
     cInit = 1

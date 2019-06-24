@@ -9,6 +9,7 @@ import numpy as np
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget
 
+
 @ddt
 class TestMeasurementFunctions(unittest.TestCase):
     def setUp(self):
@@ -19,7 +20,6 @@ class TestMeasurementFunctions(unittest.TestCase):
         self.getSheepXPos = GetAgentPosFromState(self.sheepId, self.xPosIndex)
         self.getWolfXPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
         self.killzoneRadius = 0.5
-
 
     @data((np.asarray([[-8, 0, -8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), -1.6), (np.asarray([[8, 0, 8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), 0), (np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), -2 * np.sqrt(2)))
     @unpack

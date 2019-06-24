@@ -1,29 +1,25 @@
+import os
 import sys
-sys.path.append('../')
-sys.path.append('../../src')
-sys.path.append('../../src/algorithms')
-sys.path.append('../../src/constrainedChasingEscapingEnv')
+sys.path.append(os.path.join(os.path.join(os.path.dirname(__file__), '..'), '..'))
 import numpy as np
 import pickle
 import random
 import pygame as pg
 
-import envNoPhysics as env
-from algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
+from src.algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
     InitializeChildren
 
-import reward
-from evaluationFunctions import GetSavePath
-from policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
-from wrapperFunctions import GetAgentPosFromState
-from measurementFunctions import computeDistance
-from analyticGeometryFunctions import computeAngleBetweenVectors
+import src.constrainedChasingEscapingEnv.envNoPhysics as env
+import src.constrainedChasingEscapingEnv.reward as reward
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from exec.evaluationFunctions import GetSavePath
 
 
 class Render():
     def __init__(self, numOfAgent, numPosEachAgent, positionIndex, screen, screenColor, circleColorList, circleSize):
         self.numOfAgent = numOfAgent
-        self.numPosEachAgent = numPosEachAgent
         self.positionIndex = positionIndex
         self.screen = screen
         self.screenColor = screenColor
@@ -38,8 +34,7 @@ class Render():
             self.screen.fill(self.screenColor)
 
             for i in range(self.numOfAgent):
-                agentPos = state[i][self.positionIndex:self.positionIndex +
-                                    self.numPosEachAgent]
+                agentPos = state[i][self.positionIndex]
                 pg.draw.circle(self.screen, self.circleColorList[i], [np.int(
                     agentPos[0]), np.int(agentPos[1])], self.circleSize)
             pg.display.flip()
@@ -126,12 +121,10 @@ def main():
 
     numOfAgent = 2
     numOfOneAgentState = 2
-    maxRunningSteps = 200
 
     sheepId = 0
     wolfId = 1
-    positionIndex = 0
-    numPosEachAgent = 2
+    positionIndex = [0, 1]
     minDistance = 25
 
     xBoundary = [0, 640]
@@ -141,7 +134,7 @@ def main():
     # initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]),np.random.uniform(yBoundary[0], yBoundary[1])],[np.random.uniform(xBoundary[0], xBoundary[1]),np.random.uniform(yBoundary[0], yBoundary[1])]])
     initPositionNoise = [0, 0]
 
-    renderOn = False
+    renderOn = True
     from pygame.color import THECOLORS
     screenColor = THECOLORS['black']
     circleColorList = [THECOLORS['green'], THECOLORS['red']]
@@ -150,11 +143,11 @@ def main():
     render = Render(numOfAgent, numOfOneAgentState, positionIndex,
                     screen, screenColor, circleColorList, circleSize)
 
-    getPreyPos = GetAgentPosFromState(sheepId, positionIndex, numPosEachAgent)
-    getPredatorPos = GetAgentPosFromState(wolfId, positionIndex, numPosEachAgent)
+    getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
+    getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
 
     stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance, computeDistance)
+    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance)
     transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
     reset = env.Reset(numOfAgent, initPosition, initPositionNoise)
 
@@ -162,7 +155,7 @@ def main():
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
-    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors)
+    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
     # select child
     cInit = 1
@@ -206,10 +199,8 @@ def main():
     # All agents' policies
     def policy(state): return [sheepPolicy(state), wolfPolicy(state)]
 
-    sampleTraj = SampleTrajectory(
-        maxRunningSteps, transitionFunction, isTerminal, reset, render, renderOn)
-
     # generate trajectories
+    maxRunningSteps = 15
     numTrials = 10
     sampleTrajectory = SampleTrajectory(
         maxRunningSteps, transitionFunction, isTerminal, reset, render, renderOn)

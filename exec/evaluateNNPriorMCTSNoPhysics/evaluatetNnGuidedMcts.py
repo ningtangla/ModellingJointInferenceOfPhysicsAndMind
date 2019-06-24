@@ -1,10 +1,10 @@
 
 import sys
-sys.path.append('../')
-sys.path.append('../../src')
-sys.path.append('../../src/algorithms')
-sys.path.append('../../src/constrainedChasingEscapingEnv')
-sys.path.append('../../src/neuralNetwork')
+sys.path.append('../../')
+# sys.path.append('../../src')
+# sys.path.append('../../src/algorithms')
+# sys.path.append('../../src/constrainedChasingEscapingEnv')
+# sys.path.append('../../src/neuralNetwork')
 
 import os
 import numpy as np
@@ -20,20 +20,18 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
-import reward
-from evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
-from policyNet import GenerateModel, Train, restoreVariables
-from measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, computeDistance
-from wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory
+import src.constrainedChasingEscapingEnv.reward
+from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
+from src.neuralNetwork.policyNet import GenerateModel, Train, restoreVariables
+from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, computeDistance
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory
 
-import envNoPhysics as env
-from algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
+import src.constrainedChasingEscapingEnv.envNoPhysics as env
+from src.algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
     InitializeChildren
 
-import reward
-from evaluationFunctions import GetSavePath
-from policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
-from analyticGeometryFunctions import computeAngleBetweenVectors
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 
 class Render():
@@ -207,7 +205,7 @@ if __name__ == "__main__":
     tf.set_random_seed(128)
 
     # manipulated variables (and some other parameters that are commonly varied)
-    numTrials = 100
+    numTrials = 2
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNNFirstStep', 'MCTSNNAllSteps']

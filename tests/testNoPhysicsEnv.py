@@ -3,12 +3,14 @@ import numpy as np
 from ddt import ddt, data, unpack
 import sys
 import os
-sys.path.append('..')
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Local import
 from src.constrainedChasingEscapingEnv.envNoPhysics import Reset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeVectorNorm
+
 
 @ddt
 class TestEnvNoPhysics(unittest.TestCase):
@@ -20,14 +22,14 @@ class TestEnvNoPhysics(unittest.TestCase):
         self.xBoundary = [0, 640]
         self.yBoundary = [0, 480]
         self.minDistance = 50
-        self.getSheepPos = GetAgentPosFromState(
+        self.getPreyPos = GetAgentPosFromState(
             self.sheepId, self.posIndex)
-        self.getWolfPos = GetAgentPosFromState(
+        self.getPredatorPos = GetAgentPosFromState(
             self.wolfId, self.posIndex)
         self.stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(
             self.xBoundary, self.yBoundary)
         self.isTerminal = IsTerminal(
-            self.getSheepPos, self.getWolfPos, self.minDistance, computeVectorNorm)
+            self.getPredatorPos, self.getPreyPos, self.minDistance)
         self.transition = TransiteForNoPhysics(self.stayInBoundaryByReflectVelocity)
 
     @data((np.array([[0, 0], [0, 0]]), [0, 0], np.array([[0, 0], [0, 0]])), (np.array([[9, 5], [2, 7]]), [0, 0], np.array([[9, 5], [2, 7]])))

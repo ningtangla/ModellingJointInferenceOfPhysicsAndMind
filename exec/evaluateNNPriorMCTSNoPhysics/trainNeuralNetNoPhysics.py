@@ -1,9 +1,9 @@
+import os
 import sys
-sys.path.append('../../src/neuralNetwork/')
-sys.path.append('..')
+sys.path.append(os.path.join(os.path.join(os.path.dirname(__file__), '..'), '..'))
 
-from evaluationFunctions import GetSavePath
-from policyNet import GenerateModel, Train, saveVariables
+from exec.evaluationFunctions import GetSavePath
+from src.neuralNetwork.policyNet import GenerateModel, Train, saveVariables
 
 import random
 import os
