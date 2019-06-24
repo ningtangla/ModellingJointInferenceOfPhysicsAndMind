@@ -1,6 +1,4 @@
 import numpy as np
-from measurementFunctions import computeDistance
-
 
 class Reset():
     def __init__(self, numOfAgent, initPosition, initPositionNoise):
@@ -16,29 +14,30 @@ class Reset():
         return initState
 
 
-class TransitionForMultiAgent():
-    def __init__(self, checkBoundaryAndAdjust):
-        self.checkBoundaryAndAdjust = checkBoundaryAndAdjust
+class TransiteForNoPhysics():
+    def __init__(self, stayInBoundaryByReflectVelocity):
+        self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
 
     def __call__(self, state, action):
         newState = state + np.array(action)
-        checkedNewStateAndVelocities = [self.checkBoundaryAndAdjust(
+        checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, action)]
         newState, newAction = list(zip(*checkedNewStateAndVelocities))
         return newState
 
 
 class IsTerminal():
-    def __init__(self, getAgentPos, getTargetPos, minDistance):
-        self.getAgentPos = getAgentPos
-        self.getTargetPos = getTargetPos
+    def __init__(self, getPredatorPos, getPreyPos, minDistance, computeDistance):
+        self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
         self.minDistance = minDistance
+        self.computeDistance = computeDistance
 
     def __call__(self, state):
         terminal = False
-        agentPosition = self.getAgentPos(state)
-        targetPosition = self.getTargetPos(state)
-        if computeDistance(np.array(agentPosition), np.array(targetPosition)) <= self.minDistance:
+        preyPosition = self.getPreyPos(state)
+        predatorPosition = self.getPredatorPos(state)
+        if self.computeDistance(np.array(preyPosition) - np.array(predatorPosition)) <= self.minDistance:
             terminal = True
         return terminal
 

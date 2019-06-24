@@ -1,12 +1,11 @@
 import sys
-sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/constrainedChasingEscapingEnv")
-sys.path.append("../src/algorithms")
-sys.path.append("../src")
+import os
+sys.path.append('..')
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
-from dataTools import createSymmetricVector
+
+from src.neuralNetwork.dataTools import createSymmetricVector
 
 @ddt
 class TestAnalyticGeometryFunctions(unittest.TestCase):

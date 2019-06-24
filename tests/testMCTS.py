@@ -50,20 +50,6 @@ class TestMCTS(unittest.TestCase):
             self.action_space, self.transition, self.getActionPrior)
         self.expand = Expand(self.isTerminal, self.initializeChildren)
 
-    @data((0, 1, 0, 1, 0), (1, 1, 0, 1, np.log(3) / 2), (1, 1, 1, 1, 1 + np.log(3) / 2))
-    @unpack
-    def testCalculateScore(self, parent_visit_number, self_visit_number, sumValue, actionPrior, groundtruth_score):
-        curr_node = Node(numVisited=parent_visit_number)
-        child = Node(numVisited=self_visit_number,
-                     sumValue=sumValue, actionPrior=actionPrior)
-        
-        self.root = Node(id={1: init_state}, numVisited=1, sumValue=0, actionPrior=self.default_actionPrior, isExpanded=True)
-        self.level1_0 = Node(parent=self.root, id={0: level1_0_state}, numVisited=2, sumValue=5, actionPrior=self.default_actionPrior, isExpanded=False)
-        self.level1_1 = Node(parent=self.root, id={1: level1_1_state}, numVisited=3, sumValue=10, actionPrior=self.default_actionPrior, isExpanded=False)
-
-        self.initializeChildren = InitializeChildren(self.action_space, self.transition, self.actionPrior_func)
-        self.expand = Expand(self.isTerminal, self.initializeChildren)
-
     @data((0, 1, 0, 1, 0), (1, 1, 0, 1, np.log(3)/2), (1, 1, 1, 1, 1 + np.log(3)/2))
     @unpack
     def testCalculateScore(self, parent_visit_number, self_visit_number, sumValue, actionPrior, groundtruth_score):

@@ -1,8 +1,8 @@
 import sys
-sys.path.append('../src')
+sys.path.append('..')
 import unittest
 from ddt import ddt, data, unpack
-from simple1DEnv import TransitionFunction, RewardFunction, Terminal
+from src.simple1DEnv import TransitionFunction, RewardFunction, Terminal
 
 
 @ddt
@@ -53,5 +53,3 @@ class TestReward(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # testTransitionSuite = unittest.TestLoader().loadTestsFromTestCase(TestTransition)
-    # unittest.TextTestRunner(verbosity=2).run(testTransitionSuite)
