@@ -37,15 +37,14 @@ class ApplyFunction:
         batchSize = df.index.get_level_values('batchSize')[0]
         lossChangeThreshold = df.index.get_level_values('lossChangeThreshold')[0]
         lossHistorySize = df.index.get_level_values('lossHistorySize')[0]
-        initActionCoefficient = df.index.get_level_values('initActionCoefficient')[0]
-        initValueCoefficient = df.index.get_level_values('initValueCoefficient')[0]
+        initCoeffs = df.index.get_level_values('initCoeffs')[0]
         netNeurons = df.index.get_level_values('netNeurons')[0]
         netLayers = df.index.get_level_values('netLayers')[0]
         neuronsPerLayer = int(round(netNeurons/netLayers))
         reportInterval = df.index.get_level_values('reportInterval')[0]
 
         trainTerminalController = trainTools.TrainTerminalController(lossHistorySize, lossChangeThreshold)
-        coefficientController = trainTools.coefficientCotroller(initActionCoefficient, initValueCoefficient)
+        coefficientController = trainTools.coefficientCotroller(initCoeffs, initCoeffs)
         trainReporter = trainTools.TrainReporter(maxStepNum, reportInterval)
         train = net.Train(maxStepNum, batchSize, trainTerminalController, coefficientController, trainReporter)
 
@@ -92,8 +91,7 @@ def main(tfseed=128):
     independentVariables['reportInterval'] = [1000]
     independentVariables['lossChangeThreshold'] = [1e-8]
     independentVariables['lossHistorySize'] = [10]
-    independentVariables['initActionCoefficient'] = [1]
-    independentVariables['initValueCoefficient'] = [1]
+    independentVariables['initCoeffs'] = [(1, 1)]
     independentVariables['netNeurons'] = [256]
     independentVariables['netLayers'] = [4]
 
