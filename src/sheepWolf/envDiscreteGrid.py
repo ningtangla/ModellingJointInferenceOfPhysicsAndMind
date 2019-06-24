@@ -29,9 +29,24 @@ class StayWithinBoundary:
             nextY = self.gridY
         return nextX, nextY
 
+def roundNumber(number):
+    if number - math.floor(number) < 0.5:
+        return math.floor(number)
+    return math.ceil(number)
+
+class GetPullingForceValue:
+    def __init__(self, adjustingParam, roundNumber):
+        self.adjustingParam = adjustingParam
+        self.roundNumber = roundNumber
+    def __call__(self, relativeLocation):
+        relativeLocationArray = np.array(relativeLocation)
+        distance = np.sqrt(relativeLocationArray.dot(relativeLocationArray))
+        force = self.roundNumber(distance / self.adjustingParam + 1)
+        return force
 
 class SamplePulledForceDirection:
     def __init__(self, calculateAngle, forceSpace, lowerBoundAngle, upperBoundAngle):
+
         self.calculateAngle = calculateAngle
         self.forceSpace = forceSpace
         self.lowerBoundAngle = lowerBoundAngle
@@ -59,72 +74,59 @@ class SamplePulledForceDirection:
         pulledAction = pulledActions[pulledActionSampleIndex]
         return pulledAction
 
-
-def roundNumber(number):
-    if number - math.floor(number) < 0.5:
-        return math.floor(number)
-    return math.ceil(number)
-
-class GetPullingForce:
-    def __init__(self, adjustingParam, roundNumber):
-        self.adjustingParam = adjustingParam
-        self.roundNumber = roundNumber
-    def __call__(self, relativeLocation):
-        relativeLocationArray = np.array(relativeLocation)
-        distance = np.sqrt(relativeLocationArray.dot(relativeLocationArray))
-        force = self.roundNumber(distance / self.adjustingParam + 1)
-        return force
     
+class GetAgentsForceAction:
+    def __init__(self, locatePullingAgent, locatePulledAgent, samplePulledForceDirection, getPullingForceValue):
 
-class PulledAgentTransition:
-    def __init__(self, stayWithinBoundary, samplePulledForceDirection, locatePullingAgent, locatePulledAgent, getPullingForce):
-        self.stayWithinBoundary = stayWithinBoundary
-        self.samplePulledForceDirection = samplePulledForceDirection
         self.locatePullingAgent = locatePullingAgent
         self.locatePulledAgent = locatePulledAgent
-        self.getPullingForce = getPullingForce
+        self.samplePulledForceDirection = samplePulledForceDirection
+        self.getPullingForceValue = getPullingForceValue
 
-    def __call__(self, action, state):
+    def __call__(self, state):
         pullingAgentState = self.locatePullingAgent(state)
         pulledAgentState = self.locatePulledAgent(state)
+        pullingDirection = np.array(pullingAgentState) - np.array(pulledAgentState)       
+        pulledDirection = self.samplePulledForceDirection(pullingDirection) 
+        pullingForceValue = self.getPullingForceValue(pullingDirection)
 
-        pullingDirection = np.array(pullingAgentState) - np.array(pulledAgentState)
-        
-        pulledAction = self.samplePulledForceDirection(pullingDirection)
-        pullingForce = self.getPullingForce(pullingDirection)
-        pullingResultAction = np.array(pulledAction) * pullingForce
-        
-        nextIntendedState = np.array(pulledAgentState) + pullingResultAction + np.array(action)
-        pulledAgentNextState = self.stayWithinBoundary(nextIntendedState)
-        return pulledAgentNextState
+        pullingResultAction = np.array(pulledDirection) * pullingForceValue
 
-class PlainTransition:
-    def __init__(self, stayWithinBoundary, locateCurrentAgent):
+        pullingResultDependentAction = -pullingResultAction
+        noPullingAction = (0,0)   
+
+        agentsForceAction = [pullingResultAction, noPullingAction, pullingResultDependentAction]
+
+        return agentsForceAction
+
+
+class Transition:
+    def __init__(self, stayWithinBoundary, getAgentsForceAction):
         self.stayWithinBoundary = stayWithinBoundary
-        self.locateCurrentAgent = locateCurrentAgent
+        self.getAgentsForceAction = getAgentsForceAction
 
-    def __call__(self, action, state):
-        agentCurrentState = self.locateCurrentAgent(state)
-        nextIntendedState = np.array(agentCurrentState) + np.array(action)
-        agentNextState = self.stayWithinBoundary(nextIntendedState)
-        return agentNextState
+    def __call__(self, allAgentActions, state):
+        agentsForceAction = self.getAgentsForceAction(state)
+
+        nextIntendedState = [np.array(currentState) + np.array(agentForce) + np.array(action) for currentState, agentForce, action in zip(state, agentsForceAction, allAgentActions)]
+
+        agentsNextState = [self.stayWithinBoundary(agentIntendedState) for agentIntendedState in nextIntendedState]
+
+        return agentsNextState
 
 
 class IsTerminal:
-    def __init__(self, locateChasingAgent, locateEscapingAgent):
-        self.locateChasingAgent = locateChasingAgent
-        self.locateEscapingAgent = locateEscapingAgent
+    def __init__(self, locatePredator, locatePrey):
+        self.locatePredator = locatePredator
+        self.locatePrey = locatePrey
 
     def __call__(self, state):
 
-        chasingAgentPosition = self.locateChasingAgent(state)
-        escapingAgentPosition = self.locateEscapingAgent(state)
+        predatorPosition = self.locatePredator(state)
+        preyPosition = self.locatePrey(state)
 
-        if np.all(np.array(chasingAgentPosition) == np.array(escapingAgentPosition)):
+        if np.all(np.array(predatorPosition) == np.array(preyPosition)):
             return True
         else:
             return False
-
-
-
 

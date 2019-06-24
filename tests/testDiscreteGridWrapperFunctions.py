@@ -24,5 +24,3 @@ class TestWrapperFunc(unittest.TestCase):
 if __name__ == "__main__":
     wrapperFunctionTest = unittest.TestLoader().loadTestsFromTestCase(TestWrapperFunc)
     unittest.TextTestRunner(verbosity=2).run(wrapperFunctionTest)
-
-

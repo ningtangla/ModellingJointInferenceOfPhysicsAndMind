@@ -23,17 +23,17 @@ class ActHeatSeeking:
         return [chosenActions, unchosenActions]  
 
 class HeatSeekingPolicy:
-    def __init__(self, rationalityParam, actHeatSeeking, locateChasingAgent, locateEscapingAgent):
+    def __init__(self, rationalityParam, actHeatSeeking, locatePredator, locatePrey):
         self.rationalityParam = rationalityParam
         self.actHeatSeeking = actHeatSeeking
-        self.locateChasingAgent = locateChasingAgent
-        self.locateEscapingAgent = locateEscapingAgent
+        self.locatePredator = locatePredator
+        self.locatePrey = locatePrey
 
     def __call__(self, state):
-        chasingAgentPosition = self.locateChasingAgent(state)
-        escapingAgentPosition = self.locateEscapingAgent(state)
+        predatorPosition = self.locatePredator(state)
+        preyPosition = self.locatePrey(state)
 
-        heatSeekingDirection = np.array(escapingAgentPosition) - np.array(chasingAgentPosition)
+        heatSeekingDirection = np.array(preyPosition) - np.array(predatorPosition)
         chosenActions, unchosenActions = self.actHeatSeeking(heatSeekingDirection)
 
         chosenActionsLikelihood = {action: self.rationalityParam / len(chosenActions) for action in chosenActions}

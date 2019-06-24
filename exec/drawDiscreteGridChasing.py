@@ -1,4 +1,3 @@
-
 import sys
 import pandas as pd 
 import numpy as np 
@@ -53,22 +52,19 @@ def main():
     policy = lambda state: [getAction(state) for getAction in allAgentPolicyFunction]
 
 
-    samplePulledForceDirection = SamplePulledForceDirection(calculateAngle, actionSpace, lowerBoundAngle, upperBoundAngle)
 
     agentCount = 3
     reset = Reset(gridSize, lowerGridBound, agentCount)
 
     adjustingParam = 3 
-    getPullingForce = GetPullingForce(adjustingParam, roundNumber)
+    getPullingForceValue = GetPullingForceValue(adjustingParam, roundNumber)
+    
+    samplePulledForceDirection = SamplePulledForceDirection(calculateAngle, actionSpace, lowerBoundAngle, upperBoundAngle)
 
-    transitWolf = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateMaster, locateWolf, getPullingForce)
-    transitSheep = PlainTransition(stayWithinBoundary, locateSheep)
-    transitMaster = PulledAgentTransition(stayWithinBoundary, samplePulledForceDirection, locateWolf, locateMaster, getPullingForce)
+    getAgentsForceAction = GetAgentsForceAction(locateMaster, locateWolf, samplePulledForceDirection, getPullingForceValue)
 
-
-    allAgentTransitionFunction = [transitWolf, transitSheep, transitMaster]
-    transition = lambda allAgentActions, state: [transitAgent(action, state) for transitAgent, action in zip(allAgentTransitionFunction, allAgentActions)]
-
+    transition = Transition(stayWithinBoundary, getAgentsForceAction)
+  
 
     isTerminal = IsTerminal(locateWolf, locateSheep)
 
