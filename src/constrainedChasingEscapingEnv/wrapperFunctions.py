@@ -1,28 +1,46 @@
 import numpy as np
-import pandas as pd
-
-
-class GetAgentPosFromTrajectory:
-    def __init__(self, timeStep, stateIndex, getAgentPosFromState):
-        self.timeStep = timeStep
-        self.stateIndex = stateIndex
-        self.getAgentPosFromState = getAgentPosFromState
-
-    def __call__(self, trajectory):
-        stateAtTimeStep = trajectory[self.timeStep][self.stateIndex]
-        posAtTimeStep = self.getAgentPosFromState(stateAtTimeStep)
-
-        return posAtTimeStep
-
 
 class GetAgentPosFromState:
-    def __init__(self, agentId, posIndex, numPosEachAgent):
+    def __init__(self, agentId, posIndex):
         self.agentId = agentId
         self.posIndex = posIndex
-        self.numPosEachAgent = numPosEachAgent
 
     def __call__(self, state):
-        agentPos = state[self.agentId][self.posIndex:self.posIndex +
-                                       self.numPosEachAgent]
+        state = np.asarray(state)
+        agentPos = state[self.agentId][self.posIndex]
 
         return agentPos
+
+
+class GetStateFromTrajectory:
+    def __init__(self, timeStep, stateIndex):
+        self.timeStep = timeStep
+        self.stateIndex = stateIndex
+
+    def __call__(self, trajectory):
+        state = trajectory[self.timeStep][self.stateIndex]
+
+        return state
+
+class GetAgentPosFromTrajectory:
+    def __init__(self, getAgentPosFromState, getStateFromTrajectory):
+        self.getAgentPosFromState = getAgentPosFromState
+        self.getStateFromTrajectory = getStateFromTrajectory
+
+    def __call__(self, trajectory):
+        state = self.getStateFromTrajectory(trajectory)
+        agentPos = self.getAgentPosFromState(state)
+
+        return agentPos
+
+class GetAgentActionFromTrajectory:
+    def __init__(self, timeStep, actionIndex, agentId):
+        self.timeStep = timeStep
+        self.actionIndex = actionIndex
+        self.agentId = agentId
+
+    def __call__(self, trajectory):
+        allAgentActions = trajectory[self.timeStep][self.actionIndex]
+        agentAction = allAgentActions[self.agentId]
+
+        return agentAction

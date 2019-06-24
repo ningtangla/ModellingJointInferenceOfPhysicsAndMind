@@ -17,10 +17,10 @@ class RandomPolicy:
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
-    def __init__(self, actionSpace, getPreyPos, getPredatorPos, computeAngleBetweenVectors):
+    def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
         self.actionSpace = actionSpace
-        self.getPreyPos = getPreyPos
         self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
         self.computeAngleBetweenVectors = computeAngleBetweenVectors
 
     def __call__(self, state):
@@ -32,20 +32,64 @@ class HeatSeekingDiscreteDeterministicPolicy:
         action = random.choice(optimalActionList)
         return action
 
-
 class HeatSeekingContinuesDeterministicPolicy:
-    def __init__(self, getSelfXPos, getOtherXPos, actionMagnitude):
-        self.getSelfXPos = getSelfXPos
-        self.getOtherXPos = getOtherXPos
+    def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
+        self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-        selfXPos = self.getSelfXPos(state)
-        otherXPos = self.getOtherXPos(state)
 
-        action = otherXPos - selfXPos
-        actionNorm = np.sum(np.abs(action))
-        if actionNorm != 0:
-            action = action / actionNorm
+        action = np.array(self.getPreyPos(state)) - np.array(self.getPredatorPos(state))
+        actionL2Norm = np.linalg.norm(action, ord = 2)
+        if actionL2Norm != 0:
+            action = action / actionL2Norm
             action *= self.actionMagnitude
         return action
+
+class ActHeatSeeking:
+    def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
+        self.actionSpace = actionSpace
+        self.calculateAngle = calculateAngle
+        self.lowerBoundAngle = lowerBoundAngle
+        self.upperBoundAngle = upperBoundAngle
+        
+    def __call__(self, heatSeekingDirection):
+        heatActionAngle = {mvmtVector: self.calculateAngle(heatSeekingDirection, mvmtVector) 
+                                              for mvmtVector in self.actionSpace}
+
+        angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
+        
+        movementAnglePair = zip(self.actionSpace, heatActionAngle.values())
+
+        angleFilter = {movement: angleWithinRange(angle) for movement, angle in movementAnglePair}
+        chosenActions = [action for action, index in zip(angleFilter.keys(), angleFilter.values()) if index]
+
+        unchosenFilter = [action in chosenActions for action in self.actionSpace]
+        unchosenActions = [action for action, index in zip(self.actionSpace, unchosenFilter) if not index]
+
+        return [chosenActions, unchosenActions]  
+
+class HeatSeekingDiscreteStochasticPolicy:
+    def __init__(self, rationalityParam, actHeatSeeking, locateChasingAgent, locateEscapingAgent):
+        self.rationalityParam = rationalityParam
+        self.actHeatSeeking = actHeatSeeking
+        self.locateChasingAgent = locateChasingAgent
+        self.locateEscapingAgent = locateEscapingAgent
+
+    def __call__(self, state):
+        chasingAgentPosition = self.locateChasingAgent(state)
+        escapingAgentPosition = self.locateEscapingAgent(state)
+
+        heatSeekingDirection = np.array(escapingAgentPosition) - np.array(chasingAgentPosition)
+        chosenActions, unchosenActions = self.actHeatSeeking(heatSeekingDirection)
+
+        chosenActionsLikelihood = {action: self.rationalityParam / len(chosenActions) for action in chosenActions}
+        unchosenActionsLikelihood = {action: (1 - self.rationalityParam) / len(unchosenActions) for action in unchosenActions}
+
+        heatSeekingActionLikelihood = {**chosenActionsLikelihood, **unchosenActionsLikelihood}
+        heatSeekingSampleLikelihood = list(heatSeekingActionLikelihood.values())
+        heatSeekingActionIndex = list(np.random.multinomial(1, heatSeekingSampleLikelihood)).index(1)
+        chasingAction = list(heatSeekingActionLikelihood.keys())[heatSeekingActionIndex]
+        
+        return chasingAction

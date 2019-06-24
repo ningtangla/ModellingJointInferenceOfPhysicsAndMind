@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Reset():
     def __init__(self, numOfAgent, initPosition, initPositionNoise):
         self.numOfAgent = numOfAgent
@@ -28,9 +27,9 @@ class TransiteForNoPhysics():
 
 
 class IsTerminal():
-    def __init__(self, getPreyPos, getPredatorPos, minDistance, computeDistance):
-        self.getPreyPos = getPreyPos
+    def __init__(self, getPredatorPos, getPreyPos, minDistance, computeDistance):
         self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
         self.minDistance = minDistance
         self.computeDistance = computeDistance
 
@@ -38,7 +37,7 @@ class IsTerminal():
         terminal = False
         preyPosition = self.getPreyPos(state)
         predatorPosition = self.getPredatorPos(state)
-        if self.computeDistance(np.array(preyPosition), np.array(predatorPosition)) <= self.minDistance:
+        if self.computeDistance(np.array(preyPosition) - np.array(predatorPosition)) <= self.minDistance:
             terminal = True
         return terminal
 

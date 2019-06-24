@@ -89,11 +89,9 @@ if __name__ == '__main__':
     xBoundary = [0, 640]
     yBoundary = [0, 480]
 
-
     # initPosition = np.array([[30, 30], [200, 200]])
-    initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]),np.random.uniform(yBoundary[0], yBoundary[1])],[np.random.uniform(xBoundary[0], xBoundary[1]),np.random.uniform(yBoundary[0], yBoundary[1])]])
+    initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])], [np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])]])
     initPositionNoise = [0, 0]
-
 
     renderOn = True
     from pygame.color import THECOLORS
@@ -111,7 +109,6 @@ if __name__ == '__main__':
     isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance, computeDistance)
     transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
     reset = env.Reset(numOfAgent, initPosition, initPositionNoise)
-
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]

@@ -112,7 +112,6 @@ def selectGreedyAction(root):
     action = list(root.children[selectedIndex].id.keys())[0]
     return action
 
-
 def establishPlainActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     actionProbs = visits / np.sum(visits)
@@ -126,7 +125,6 @@ def establishSoftmaxActionDist(root):
     actionProbs = expVisits / np.sum(expVisits)
     actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
     return actionDist
-
 
 class MCTS:
     def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputActionOrDistribution):

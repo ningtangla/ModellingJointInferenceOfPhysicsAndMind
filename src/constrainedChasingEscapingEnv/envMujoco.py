@@ -7,8 +7,8 @@ class Reset():
         dirName = os.path.dirname(__file__)
         model = mujoco.load_model_from_path(os.path.join(dirName, '..', '..', 'env', 'xmls', '{}.xml'.format(modelName)))
         self.simulation = mujoco.MjSim(model)
-        self.qPosInit = qPosInit
-        self.qVelInit = qVelInit
+        self.qPosInit = np.asarray(qPosInit)
+        self.qVelInit = np.asarray(qVelInit)
         self.numAgent = numAgent
         self.qPosInitNoise = qPosInitNoise
         self.qVelInitNoise = qVelInitNoise
@@ -19,8 +19,8 @@ class Reset():
         numQPosEachAgent = int(numQPos/self.numAgent)
         numQVelEachAgent = int(numQVel/self.numAgent)
 
-        qPos = np.array(self.qPosInit) + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
-        qVel = np.array(self.qVelInit) + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
@@ -48,6 +48,9 @@ class TransitionFunction:
         self.numSimulationFrames = numSimulationFrames
         
     def __call__(self, worldState, allAgentsActions):
+        worldState = np.asarray(worldState)
+        allAgentsActions = np.asarray(allAgentsActions)
+
         numAgent = len(worldState)
         numQPosEachAgent = int(self.numQPos/numAgent)
         numQVelEachAgent = int(self.numQVel/numAgent)
@@ -57,7 +60,7 @@ class TransitionFunction:
 
         self.simulation.data.qpos[:] = allAgentOldQPos
         self.simulation.data.qvel[:] = allAgentOldQVel
-        self.simulation.data.ctrl[:] = np.asarray(allAgentsActions).flatten()
+        self.simulation.data.ctrl[:] = allAgentsActions.flatten()
 
         for i in range(self.numSimulationFrames):
             self.simulation.step()
@@ -78,10 +81,6 @@ class TransitionFunction:
         return newState
 
 
-def euclideanDistance(pos1, pos2):
-    return np.sqrt(np.sum(np.square(pos1 - pos2)))
-
-
 class IsTerminal():
     def __init__(self, minXDis, getAgent0Pos, getAgent1Pos):
         self.minXDis = minXDis
@@ -89,9 +88,10 @@ class IsTerminal():
         self.getAgent1Pos = getAgent1Pos
 
     def __call__(self, state):
+        state = np.asarray(state)
         pos0 = self.getAgent0Pos(state)
         pos1 = self.getAgent1Pos(state)
-        distance = euclideanDistance(pos0, pos1)
-        terminal = (distance <= self.minXDis)
+        L2Normdistance = np.linalg.norm((pos0 - pos1), ord = 2)
+        terminal = (L2Normdistance <= self.minXDis)
 
         return terminal

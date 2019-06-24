@@ -2,9 +2,8 @@ import sys
 sys.path.append("..")
 import unittest
 from ddt import ddt, data, unpack
-import src.play as play
-import src.simple1DEnv as env
-import exec.generateTrainingDataForNN as generateData
+from src.play import SampleTrajectory, SampleTrajectoryWithActionDist, agentDistToGreedyAction, worldDistToAction
+from src.simple1DEnv import TransitionFunction, Terminal
 
 
 @ddt
@@ -12,9 +11,9 @@ class TestPlay(unittest.TestCase):
     def setUp(self):
         bound_low = 0
         bound_high = 7
-        self.transition = env.TransitionFunction(bound_low, bound_high)
+        self.transition = TransitionFunction(bound_low, bound_high)
         self.target_state = bound_high
-        self.isTerminal = env.Terminal(self.target_state)
+        self.isTerminal = Terminal(self.target_state)
         self.reset = lambda: 0
 
     @data(([0], [(0, 0)]*5),
@@ -25,10 +24,50 @@ class TestPlay(unittest.TestCase):
     @unpack
     def testSampleTrajectory(self, policyArray, groundTruthTraj):
         maxRunningSteps = 5
-        sampleTraj = play.SampleTrajectory(maxRunningSteps, self.transition, self.isTerminal, self.reset)
+        sampleTraj = SampleTrajectory(maxRunningSteps, self.transition, self.isTerminal, self.reset)
         policy = lambda i: policyArray[i]
         traj = sampleTraj(policy)
         self.assertEqual(traj, groundTruthTraj)
+
+    @data(({0: 1}, 0),
+          ({1: 0.2, 0: 0.3, -1: 0.5}, -1),
+          ({(0, 0): 0.125, (1, 0): 0.75, (0, 1): 0.125, (1, 1): 0}, (1, 0)),
+          ({(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1, (1, 1): 0.1, (-1, -1): 0.1, (-1, 0): 0.1, (0, -1): 0.3}, (0, -1)))
+    @unpack
+    def testAgentDistToGreedyAction(self, actionDist, greedyAction):
+        selectedAction = agentDistToGreedyAction(actionDist)
+        self.assertEqual(selectedAction, greedyAction)
+
+    @data(({1: 0.33, 0: 0.33, -1: 0.33, 2: 0.01}, [1, 0, -1], 1000, 200),
+          ({(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1, (1, 1): 0.3, (-1, -1): 0, (-1, 0): 0, (0, -1): 0.3}, [(1, 1), (0, -1)], 1000, 400))
+    @unpack
+    def testRandomnessInAgentDistToGreedyAction(self, actionDist, greedyActions, rep, minSelected):
+        counter = {action: 0 for action in greedyActions}
+        for _ in range(rep):
+            selectedAction = agentDistToGreedyAction(actionDist)
+            counter[selectedAction] += 1
+        self.assertEqual(sum(counter.values()), rep)
+        for action in counter:
+            self.assertGreater(counter[action], minSelected)
+
+    @data(([0, 1, 0], [0, 1, 0]),
+          ([{0: 0.6, 1: 0.4}], [0]),
+          ([{0: 0.6, 1: 0.4}, {0: 0.4, 1: 0.6}, {0: 0, 1: 1}, {0: 0.3, 1: 0.7}], [0, 1, 1, 1]),
+          ([{0: 0.6, 1: 0.4}, 1, {0: 0, 1: 1}, 1], [0, 1, 1, 1]),
+          ([{(1, 0): 0.1, (0, 1): 0.7, (-1, 0): 0.1, (0, -1): 0.1},
+            {(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.7, (0, -1): 0.1},
+            {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1},
+            {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1}],
+           [(0, 1), (-1, 0), (1, 0), (1, 0)]),
+          ([{(1, 0): 0.1, (0, 1): 0.7, (-1, 0): 0.1, (0, -1): 0.1},
+            (-1, 0),
+            (1, 0),
+            {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1}],
+           [(0, 1), (-1, 0), (1, 0), (1, 0)]))
+    @unpack
+    def testWorldDistToAction(self, dists, actions):
+        convertedDists = worldDistToAction(agentDistToGreedyAction, dists)
+        self.assertEqual(convertedDists, actions)
 
     @data(([{0: 1}], [(0, 0, {0: 1})]*5),
           ([{1: 0.7, 2: 0.1, 3: 0.2}, {-1: 0.9, 0: 0.1}],
@@ -41,8 +80,8 @@ class TestPlay(unittest.TestCase):
     @unpack
     def testSampleTrajectoryWithActionDist(self, policyArray, groundTruthTraj):
         maxRunningSteps = 5
-        distToAction = generateData.distToGreedyAction
-        sampleTraj = play.SampleTrajectoryWithActionDist(maxRunningSteps, self.transition, self.isTerminal, self.reset, distToAction)
+        distToAction = agentDistToGreedyAction
+        sampleTraj = SampleTrajectoryWithActionDist(maxRunningSteps, self.transition, self.isTerminal, self.reset, distToAction)
         policy = lambda i: policyArray[i]
         traj = sampleTraj(policy)
         self.assertEqual(traj, groundTruthTraj)

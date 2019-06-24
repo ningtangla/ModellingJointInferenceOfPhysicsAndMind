@@ -12,7 +12,7 @@ from collections import OrderedDict
 import skvideo.io
 import pickle
 
-skvideo.setFFmpegPath("/usr/local/bin")
+skvideo.setFFmpegPath(os.path.join("usr", "local", "bin"))
 
 # Local import
 from mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \
