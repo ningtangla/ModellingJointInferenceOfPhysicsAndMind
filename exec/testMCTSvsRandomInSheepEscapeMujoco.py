@@ -1,17 +1,18 @@
 import sys
-sys.path.append('../src/algorithms')
-sys.path.append('../src/sheepWolf')
-sys.path.append('../src')
+import os
+sys.path.append(os.path.join('..', 'src', 'algorithms'))
+sys.path.append(os.path.join('..', 'src', 'sheepWolf'))
+sys.path.append(os.path.join('..', 'src'))
+
 import numpy as np
 import pandas as pd
 import pylab as plt
 from matplotlib import pyplot as plt
 from collections import OrderedDict
 import skvideo.io
-import os
 import pickle
 
-skvideo.setFFmpegPath("/usr/local/bin")
+skvideo.setFFmpegPath(os.path.join("usr", "local", "bin"))
 
 # Local import
 from mcts import MCTS, CalculateScore, GetActionPrior, SelectNextAction, SelectChild, Expand, RollOut, backup, \

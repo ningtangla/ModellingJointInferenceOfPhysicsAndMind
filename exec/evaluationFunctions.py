@@ -33,6 +33,7 @@ class LoadTrajectories:
         savePath = self.getSavePath(parameters)
         pickleIn = open(savePath, 'rb')
         trajectories = pickle.load(pickleIn)
+        pickleIn.close()
 
         return trajectories
 

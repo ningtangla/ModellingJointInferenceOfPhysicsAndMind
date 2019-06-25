@@ -1,12 +1,14 @@
 import sys
-sys.path.append('../../src/neuralNetwork/')
+import os
+sys.path.append(os.path.join('..', '..', 'src', 'neuralNetwork'))
+sys.path.append(os.path.join('..', '..', 'src', 'sheepWolf'))
 sys.path.append('..')
 
 from evaluationFunctions import GetSavePath
 from policyNet import GenerateModel, Train, saveVariables
+from sheepWolfWrapperFunctions import GetAgentPosFromState
 
 import random
-import os
 import numpy as np
 import pickle
 
@@ -29,17 +31,18 @@ class ActionToOneHot:
         return oneHotAction
 
 
-class PreprocessTrajectories:
+class PreProcessTrajectories:
     def __init__(self, agentId, actionIndex, actionToOneHot):
         self.agentId = agentId
         self.actionIndex = actionIndex
         self.actionToOneHot = actionToOneHot
 
     def __call__(self, trajectories):
-        stateActionPairs = [pair for trajectory in dataSetTrajectories for pair in trajectory]
-        stateActionPairsFiltered = list(filter(lambda pair: pair[self.actionIndex] is not None, stateActionPairs))
-        stateActionPairsProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(action[self.agentId]))
-                                     for state, action in stateActionPairsFiltered]
+        stateActionPairs = [pair for trajectory in trajectories for pair in trajectory]
+        stateActionPairsFiltered = list(filter(lambda pair: pair[self.actionIndex] is not None and pair[0][1][2] < 9.7, stateActionPairs))
+        print("{} data points remain after filtering".format(len(stateActionPairsFiltered)))
+        stateActionPairsProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]))
+                                     for state, actions in stateActionPairsFiltered]
 
         return stateActionPairsProcessed
 
@@ -49,11 +52,11 @@ if __name__ == '__main__':
     dataSetDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
-    dataSetMaxRunningSteps = 5#15
-    dataSetNumSimulations = 5#2
-    dataSetNumTrials = 7 #1
-    dataSetQPosInit = (-4, 0, 4, 0)
-    dataSetSheepPolicyName = 'mcts'
+    dataSetMaxRunningSteps = 10
+    dataSetNumSimulations = 100
+    dataSetNumTrials = 1500
+    dataSetQPosInit = (0, 0, 8, 0)
+    dataSetSheepPolicyName = 'MCTS'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'sheepPolicyName': dataSetSheepPolicyName}
@@ -66,8 +69,12 @@ if __name__ == '__main__':
     actionToOneHot = ActionToOneHot(actionSpace)
     sheepId = 0
     actionIndex = 1
-    preprocessTrajectories = PreprocessTrajectories(sheepId, actionIndex, actionToOneHot)
-    stateActionPairsProcessed = preprocessTrajectories(dataSetTrajectories)
+    stateIndex = 0
+    wolfId = 1
+    xPosIndex = [2, 3]
+    getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
+    preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot)
+    stateActionPairsProcessed = preProcessTrajectories(dataSetTrajectories)
 
     # shuffle and separate states and actions
     random.shuffle(stateActionPairsProcessed)
@@ -81,29 +88,32 @@ if __name__ == '__main__':
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
     generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
-    modelToTrain = generatePolicyNet(hiddenWidths)
 
-    # train model
-    trainSteps = 50000
+    # train models
+    allTrainSteps = [1000, 5000, 10000, 15000]
     reportInterval = 500
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
-    train = Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
-                     summaryOn=False, testData=None)
+    getTrain = lambda trainSteps: Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
+                                        summaryOn=False, testData=None)
 
-    trainedModel = train(modelToTrain, trainData)
+    allTrainFunctions = {trainSteps: getTrain(trainSteps) for trainSteps in allTrainSteps}
+    allTrainedModels = {trainSteps: train(generatePolicyNet(hiddenWidths), trainData) for trainSteps, train in
+                        allTrainFunctions.items()}
 
-    # get path to save trained model
-    modelTrainConditions = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
-                            'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
-                            'learnRate': learningRate, 'trainSteps': trainSteps}
+    # get path to save trained models
+    fixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
+                       'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
+                       'learnRate': learningRate}
     modelSaveDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels"
     if not os.path.exists(modelSaveDirectory):
         os.makedirs(modelSaveDirectory)
     modelSaveExtension = ''
 
-    getModelSavePath = GetSavePath(modelSaveDirectory, modelSaveExtension)
-    modelSavePath = getModelSavePath(modelTrainConditions)
+    getModelSavePath = GetSavePath(modelSaveDirectory, modelSaveExtension, fixedParameters)
+    allModelSavePaths = {trainedModel: getModelSavePath({'trainSteps': trainSteps}) for trainSteps, trainedModel in
+                         allTrainedModels.items()}
 
     # save trained model variables
-    saveVariables(trainedModel, modelSavePath)
+    savedVariables = [saveVariables(trainedModel, modelSavePath) for trainedModel, modelSavePath in
+                      allModelSavePaths.items()]

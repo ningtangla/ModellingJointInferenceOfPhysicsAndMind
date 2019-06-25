@@ -1,18 +1,19 @@
 import sys
-import pandas as pd 
-import numpy as np 
-from random import randint
+import pandas as pd
 
-sys.path.append('../src/sheepWolf')
+sys.path.append('../src/constrainedChasingEscapingEnv')
 sys.path.append('../visualize')
+sys.path.append('../src')
 
 
 from envDiscreteGrid import *
-from discreteGridWrapperFunctions import *
-from discreteGridPolicyFunctions import *
-from calculateAngleFunction import *
+from wrapperFunctions import *
+from policies import *
+from analyticGeometryFunctions import computeAngleBetweenVectors
 
 from discreteGridVisualization import *
+
+from play import MultiAgentSampleTrajectory
 
 pd.set_option('display.max_columns', 50)
 
@@ -29,9 +30,9 @@ def main():
     lowerBoundAngle = 0
     upperBoundAngle = np.pi / 2
 
-    getWolfProperAction = ActHeatSeeking(actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle)
-    getSheepProperAction = ActHeatSeeking(actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle)
-    
+    getWolfProperAction = ActHeatSeeking(actionSpace, computeAngleBetweenVectors, lowerBoundAngle, upperBoundAngle)
+    getSheepProperAction = ActHeatSeeking(actionSpace, computeAngleBetweenVectors, lowerBoundAngle, upperBoundAngle)
+
     lowerGridBound = 1
     stayWithinBoundary = StayWithinBoundary(gridSize, lowerGridBound)
 
@@ -40,33 +41,49 @@ def main():
     masterID = 2
     positionIndex = [0,1]
 
-    locateWolf = LocateAgent(wolfID, positionIndex)
-    locateSheep = LocateAgent(sheepID, positionIndex)
-    locateMaster = LocateAgent(masterID, positionIndex)
+    getPredatorPos = GetAgentPosFromState(wolfID, positionIndex)
+    getPreyPos = GetAgentPosFromState(sheepID, positionIndex)
+    getMasterPos = GetAgentPosFromState(masterID, positionIndex)
 
-    getWolfPolicy = HeatSeekingPolicy(rationalityParam, getWolfProperAction, locateWolf, locateSheep)
-    getSheepPolicy = HeatSeekingPolicy(rationalityParam, getSheepProperAction, locateWolf,locateSheep)
-    getMasterPolicy = RandomActionPolicy(actionSpace)
+    getWolfPolicy = HeatSeekingDiscreteStochasticPolicy(rationalityParam, getWolfProperAction, getPredatorPos, getPreyPos)
+    getSheepPolicy = HeatSeekingDiscreteStochasticPolicy(rationalityParam, getSheepProperAction, getPredatorPos, getPreyPos)
+    getMasterPolicy = RandomPolicy(actionSpace)
 
-    allAgentPolicyFunction = [getWolfPolicy, getSheepPolicy, getMasterPolicy]
+    allAgentPolicyFunction = pd.Series(data = [getWolfPolicy, getSheepPolicy, getMasterPolicy], index = [wolfID, sheepID, masterID]).sort_index().tolist()
+
+
     policy = lambda state: [getAction(state) for getAction in allAgentPolicyFunction]
-
 
 
     agentCount = 3
     reset = Reset(gridSize, lowerGridBound, agentCount)
 
-    adjustingParam = 3 
+    adjustingParam = 3
     getPullingForceValue = GetPullingForceValue(adjustingParam, roundNumber)
-    
-    samplePulledForceDirection = SamplePulledForceDirection(calculateAngle, actionSpace, lowerBoundAngle, upperBoundAngle)
+    samplePulledForceDirection = SamplePulledForceDirection(computeAngleBetweenVectors, actionSpace, lowerBoundAngle, upperBoundAngle)
 
-    getAgentsForceAction = GetAgentsForceAction(locateMaster, locateWolf, samplePulledForceDirection, getPullingForceValue)
 
-    transition = Transition(stayWithinBoundary, getAgentsForceAction)
-  
+    pulledAgentID = 0
+    noPullAgentID = 1
+    pullingAgentID = 2
 
-    isTerminal = IsTerminal(locateWolf, locateSheep)
+    getPulledAgentPos = GetAgentPosFromState(pulledAgentID, positionIndex)
+    getNoPullAgentPos = GetAgentPosFromState(noPullAgentID, positionIndex)
+    getPullingAgentPos = GetAgentPosFromState(pullingAgentID, positionIndex)
+
+    getPulledAgentForce = GetPulledAgentForce(getPullingAgentPos, getPulledAgentPos, samplePulledForceDirection, getPullingForceValue)
+    getNoPullingForce= GetNoForceAgentForce(getPullingAgentPos, getPulledAgentPos)
+    getPullingAgentForce = GetPulledAgentForce(getPulledAgentPos, getPullingAgentPos, samplePulledForceDirection, getPullingForceValue)
+
+    transitPulledAgent = TransitAgent(stayWithinBoundary, getPulledAgentForce, getPulledAgentPos)
+    transitNoPullAgent = TransitAgent(stayWithinBoundary, getNoPullingForce, getNoPullAgentPos)
+    transitPullingAgent = TransitAgent(stayWithinBoundary, getPullingAgentForce, getPullingAgentPos)
+    allAgentTransitionFunction = pd.Series(data = [transitPulledAgent, transitNoPullAgent, transitPullingAgent], index = [pulledAgentID, noPullAgentID, pullingAgentID]).sort_index().tolist()
+
+    transition = lambda allAgentActions, state: [transitAgent(action, state) for transitAgent, action in zip(allAgentTransitionFunction, allAgentActions)]
+
+
+    isTerminal = IsTerminal(getPredatorPos, getPreyPos)
 
     getMultiAgentSampleTrajectory = MultiAgentSampleTrajectory(agentNames, iterationNumber, isTerminal, reset)
 
@@ -90,7 +107,7 @@ def main():
 
     pointExtendTime = 100
     FPS = 60
-    colorList = [BLUE, PINK, GREEN] # wolf, sheep, master
+    colorList = [BLUE, PINK, GREEN]
     pointWidth = 10
     modificationRatio = 3
 
@@ -107,9 +124,10 @@ def main():
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
     drawPointsFromLocationDfandSaveImage =  DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
-    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber, saveImage = True)
+    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber, saveImage = False)
 
 
 
 if __name__ == '__main__':
     main()
+

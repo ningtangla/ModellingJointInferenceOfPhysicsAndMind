@@ -147,7 +147,7 @@ class Train:
                                               feed_dict={state_: stateBatch, actionLabel_: actionLabelBatch})
 
             if stepNum % self.reportInterval == 0:
-                print("#{} loss: {}".format(stepNum, loss))
+                print("#{} loss: {}, accuracy: {}".format(stepNum, loss, accuracy))
 
             if terminalCond:
                 break
