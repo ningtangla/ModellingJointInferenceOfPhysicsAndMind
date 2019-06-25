@@ -138,12 +138,12 @@ class GenerateModelSeparateLastLayer:
 
 
 class Train:
-	def __init__(self, maxStepNum, batchSize, terimnalController, CoefficientController, trainReporter):
+	def __init__(self, maxStepNum, batchSize, terimnalController, coefficientController, trainReporter):
 		self.maxStepNum = maxStepNum
 		self.batchSize = batchSize
 		self.reporter = trainReporter
 		self.terminalController = terimnalController
-		self.CoefficientController = CoefficientController
+		self.coefficientController = coefficientController
 
 	def __call__(self, model, trainingData):
 		graph = model.graph
@@ -157,20 +157,19 @@ class Train:
 		trainOp = graph.get_collection_ref(tf.GraphKeys.TRAIN_OP)[0]
 		fullSummaryOp = graph.get_collection_ref('summaryOps')[0]
 		trainWriter = graph.get_collection_ref('writers')[0]
-		fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
-				   trainOp, fullSummaryOp]
+		fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_}, trainOp, fullSummaryOp]
 
 		evalDict = None
 		trainingDataList = list(zip(*trainingData))
 
 		for stepNum in range(self.maxStepNum):
-			if self.batchSize is None:
+			if self.batchSize == 0:
 				stateBatch, actionLabelBatch, valueLabelBatch = trainingData
 			else:
 				stateBatch, actionLabelBatch, valueLabelBatch = sampleData(trainingDataList, self.batchSize)
-			actionLossCoef, valueLossCoef = self.CoefficientController(evalDict)
-			evalDict, _, summary = model.run(fetches, feed_dict={state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch,
-																 actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef})
+			actionLossCoef, valueLossCoef = self.coefficientController(evalDict)
+			feedDict = {state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
+			evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
 
 			self.reporter(evalDict, stepNum, trainWriter, summary)
 
@@ -199,6 +198,7 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
 		testWriter.add_summary(summary, stepNum)
 	return evalDict
 
+
 def sampleData(data, batchSize):
 	batch = [list(varBatch) for varBatch in zip(*random.sample(data, batchSize))]
 	return batch
@@ -219,7 +219,7 @@ def restoreVariables(model, path):
 	return model
 
 
-class ApproximatePolicy():
+class ApproximatePolicy:
 	def __init__(self, model, actionSpace):
 		self.actionSpace = actionSpace
 		self.model = model
