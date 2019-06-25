@@ -1,5 +1,12 @@
 import numpy as np
 
+def rearrangeList(inputList, order):
+    inputArray = np.array(inputList)
+    orderArray = np.array(order)
+    sortingIndex = orderArray.argsort()
+    sortedFunctions = list(inputArray[sortingIndex])
+    return sortedFunctions
+
 class GetAgentPosFromState:
     def __init__(self, agentId, posIndex):
         self.agentId = agentId

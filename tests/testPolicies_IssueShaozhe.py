@@ -61,13 +61,13 @@ class TestPolicyFunctions(unittest.TestCase):
         self.masterID = 2
         self.positionIndex = [0, 1]
 
-        self.locateWolf = GetAgentPosFromState(self.wolfID, self.positionIndex)
-        self.locateSheep = GetAgentPosFromState(self.sheepID, self.positionIndex)
-        self.locateMaster = GetAgentPosFromState(self.masterID, self.positionIndex)
+        self.getWolfPos = GetAgentPosFromState(self.wolfID, self.positionIndex)
+        self.getSheepPos = GetAgentPosFromState(self.sheepID, self.positionIndex)
+        self.getMasterPos = GetAgentPosFromState(self.masterID, self.positionIndex)
 
     @data(((3,2),[(1,0), (0,1)],[(-1, 0), (0, -1), (0, 0)]),
            ((0,-1), [(0, -1)],[(-1, 0), (1, 0), (0, 1), (0, 0)]))
-    @unpack 
+    @unpack
     def testHeatSeekingProperAction(self, heatSeekingDirection, trueChosenActions, trueUnchosenActions):
         actionLists = self.actHeatSeeking(heatSeekingDirection)
         chosenActions = actionLists[0]
@@ -81,11 +81,13 @@ class TestPolicyFunctions(unittest.TestCase):
         ([(4, 2),(5, 1)], {(-1, 0): 0.1 / 3, (1, 0): 0.45, (0, 1): 0.1 / 3, (0, -1): 0.45, (0, 0): 0.1 / 3}),
         ([(5, 2), (5, 1)], {(-1, 0): 0.1 / 4, (1, 0): 0.1 / 4, (0, 1): 0.1 / 4, (0, -1): 0.9, (0, 0): 0.1 / 4}),
         ([(4, 2), (2, 3)], {(-1, 0): 0.45, (1, 0): 0.1 / 3, (0, 1): 0.45, (0, -1): 0.1 / 3, (0, 0): 0.1 / 3}),
-        ([(4, 2), (2, 2)], {(-1, 0): 0.9, (1, 0): 0.1 / 4, (0, 1): 0.1 / 4, (0, -1): 0.1 / 4, (0, 0): 0.1 / 4}))
+        ([(4, 2), (2, 2)], {(-1, 0): 0.9, (1, 0): 0.1 / 4, (0, 1): 0.1 / 4, (0, -1): 0.1 / 4, (0, 0): 0.1 / 4}),
+        ([(6, 6), (6, 10)], {(0, 1): 0.9, (-1, 0): 0.1 / 4, (1, 0): 0.1 / 4, (0, -1): 0.1 / 4, (0, 0): 0.1 / 4})
+    )
     @unpack
     def testHeatSeekingPolicy(self, state, trueActionLikelihood):
 
-        heatSeekingPolicy = HeatSeekingDiscreteStochasticPolicy(self.rationalityParam, self.actHeatSeeking, self.locateWolf, self.locateSheep)
+        heatSeekingPolicy = HeatSeekingDiscreteStochasticPolicy(self.rationalityParam, self.actHeatSeeking, self.getWolfPos, self.getSheepPos)
 
         iterationTime = 10000
         trueActionLikelihoodPair = zip(trueActionLikelihood.keys(), trueActionLikelihood.values())
@@ -95,19 +97,78 @@ class TestPolicyFunctions(unittest.TestCase):
 
         for action in trueActionCount.keys():
             self.assertAlmostEqual(trueActionCount[action],intendedActionList.count(action), delta=200)
-    
+
     def testRandomPolicy(self):
         state = [[1,2], [2,3], [3,4]]
         randomPolicy = RandomPolicy(self.actionSpace)
 
         iterationTime = 10000
         trueActionCount = {action: 1/len(self.actionSpace) * iterationTime for action in self.actionSpace}
-        intendedActionList = [randomPolicy(state) for _ in range(iterationTime)] 
-        
+        intendedActionList = [randomPolicy(state) for _ in range(iterationTime)]
+
         for action in trueActionCount.keys():
             self.assertAlmostEqual(trueActionCount[action],intendedActionList.count(action), delta=200)
 
 
+
+    def tearDown(self):
+        pass
+
+
+@ddt
+class TestPolicyFunctionsRandomOrder(unittest.TestCase):
+    def setUp(self):
+        self.actionSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
+        self.rationalityParam = 0.9
+        self.lowerBoundAngle = 0
+        self.upperBoundAngle = np.pi / 2
+
+        self.actHeatSeeking = ActHeatSeeking(self.actionSpace, computeAngleBetweenVectors, self.lowerBoundAngle,
+                                             self.upperBoundAngle)
+        self.wolfID = 0
+        self.sheepID = 2
+        self.masterID = 1
+        self.positionIndex = [0, 1]
+
+        self.getWolfPos = GetAgentPosFromState(self.wolfID, self.positionIndex)
+        self.getSheepPos = GetAgentPosFromState(self.sheepID, self.positionIndex)
+        self.getMasterPos = GetAgentPosFromState(self.masterID, self.positionIndex)
+
+
+    @data(
+        ([(2, 3), (1, 1), (4, 2)], {(-1, 0): 0.1 / 3, (1, 0): 0.45, (0, 1): 0.1 / 3, (0, -1): 0.45, (0, 0): 0.1 / 3}),
+        ([(2, 2), (1, 1), (4, 2)], {(-1, 0): 0.1 / 4, (1, 0): 0.9, (0, 1): 0.1 / 4, (0, -1): 0.1 / 4, (0, 0): 0.1 / 4}),
+        ([(4, 2), (1, 1), (5, 1)], {(-1, 0): 0.1 / 3, (1, 0): 0.45, (0, 1): 0.1 / 3, (0, -1): 0.45, (0, 0): 0.1 / 3}),
+        ([(5, 2), (1, 1), (5, 1)], {(-1, 0): 0.1 / 4, (1, 0): 0.1 / 4, (0, 1): 0.1 / 4, (0, -1): 0.9, (0, 0): 0.1 / 4}),
+        ([(4, 2), (1, 1), (2, 3)], {(-1, 0): 0.45, (1, 0): 0.1 / 3, (0, 1): 0.45, (0, -1): 0.1 / 3, (0, 0): 0.1 / 3}),
+        ([(4, 2), (1, 1), (2, 2)], {(-1, 0): 0.9, (1, 0): 0.1 / 4, (0, 1): 0.1 / 4, (0, -1): 0.1 / 4, (0, 0): 0.1 / 4}),
+        ([(6, 6), (1, 1), (6, 10)], {(0, 1): 0.9, (-1, 0): 0.1 / 4, (1, 0): 0.1 / 4, (0, -1): 0.1 / 4, (0, 0): 0.1 / 4})
+    )
+    @unpack
+    def testHeatSeekingPolicy(self, state, trueActionLikelihood):
+
+        heatSeekingPolicy = HeatSeekingDiscreteStochasticPolicy(self.rationalityParam, self.actHeatSeeking,
+                                                                self.getWolfPos, self.getSheepPos)
+
+        iterationTime = 10000
+        trueActionLikelihoodPair = zip(trueActionLikelihood.keys(), trueActionLikelihood.values())
+        trueActionCount = {action: trueActionProb * iterationTime for
+                           action, trueActionProb in trueActionLikelihoodPair}
+        intendedActionList = [heatSeekingPolicy(state) for _ in range(iterationTime)]
+
+        for action in trueActionCount.keys():
+            self.assertAlmostEqual(trueActionCount[action], intendedActionList.count(action), delta=200)
+
+    def testRandomPolicy(self):
+        state = [[1, 2], [2, 3], [3, 4]]
+        randomPolicy = RandomPolicy(self.actionSpace)
+
+        iterationTime = 10000
+        trueActionCount = {action: 1 / len(self.actionSpace) * iterationTime for action in self.actionSpace}
+        intendedActionList = [randomPolicy(state) for _ in range(iterationTime)]
+
+        for action in trueActionCount.keys():
+            self.assertAlmostEqual(trueActionCount[action], intendedActionList.count(action), delta=200)
 
     def tearDown(self):
         pass
