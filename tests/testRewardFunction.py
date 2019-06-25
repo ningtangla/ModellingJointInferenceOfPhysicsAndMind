@@ -7,7 +7,8 @@ from ddt import ddt, unpack, data
 import numpy as np
 
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
-from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
+from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 
 @ddt
 class TestMeasurementFunctions(unittest.TestCase):
@@ -19,16 +20,25 @@ class TestMeasurementFunctions(unittest.TestCase):
         self.getSheepXPos = GetAgentPosFromState(self.sheepId, self.xPosIndex)
         self.getWolfXPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
         self.killzoneRadius = 0.5
-
+        self.isTerminal = IsTerminal(self.killzoneRadius, self.getSheepXPos, self.getWolfXPos)
 
     @data((np.asarray([[-8, 0, -8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), -1.6), (np.asarray([[8, 0, 8, 0, 0, 0], [8, 0, 8, 0, 0, 0]]), 0), (np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), -2 * np.sqrt(2)))
     @unpack
     def testRolloutHeuristicBasedOnClosenessToTarget(self, state, groundTruthReward):
         weight = 0.1
 
-        rolloutHeuristic = HeuristicDistanceToTarget(
-            weight, self.getWolfXPos, self.getSheepXPos)
+        rolloutHeuristic = HeuristicDistanceToTarget(weight, self.getWolfXPos, self.getSheepXPos)
         reward = rolloutHeuristic(state)
+        self.assertEqual(reward, groundTruthReward)
+
+
+    @data((-0.05, 1, np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05),
+          (-0.05, 1, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05))
+    @unpack
+    def testRewardFunctionCompete(self, aliveBonus, deathPenalty, state, action, groundTruthReward):
+        rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, self.isTerminal)
+        reward = rewardFunction(state, action)
+
         self.assertEqual(reward, groundTruthReward)
 
 

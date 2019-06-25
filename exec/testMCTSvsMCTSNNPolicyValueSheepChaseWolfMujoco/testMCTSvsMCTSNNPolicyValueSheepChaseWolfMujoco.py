@@ -1,10 +1,7 @@
 import sys
 import os
-sys.path.append(os.path.join('..', '..', 'src', 'algorithms'))
-sys.path.append(os.path.join('..', '..', 'src', 'constrainedChasingEscapingEnv'))
-sys.path.append(os.path.join('..', '..', 'src'))
-sys.path.append(os.path.join('..', '..', 'src', 'neuralNetwork'))
-sys.path.append('..')
+DIRNAME = os.path.dirname(__file__)
+sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
 import numpy as np
 import tensorflow as tf
@@ -14,108 +11,52 @@ import pickle
 import pandas as pd
 from matplotlib import pyplot as plt
 import time
-from multiprocessing import Pool
-import multiprocessing as mp
 
-from envMujoco import Reset, IsTerminal, TransitionFunction
-from mcts import CalculateScore, SelectChild, InitializeChildren, selectNextAction, RollOut,\
-HeuristicDistanceToTarget, Expand, MCTS, backup
-from play import SampleTrajectory
-import reward
-from policiesFixed import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
-from evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
-from policyNet import GenerateModel, Train, restoreVariables
-from measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, ComputeOptimalNextPos
-from sheepWolfWrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, GetStateFromTrajectory
+from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, RollOut, Expand, \
+    MCTS, backup
+from src.play import SampleTrajectory
+from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
+from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
+from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, restoreVariables, ApproximateActionPrior, \
+    ApproximateValueFunction, ApproximatePolicy
+from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, \
+    ComputeOptimalNextPos
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, \
+    GetStateFromTrajectory
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 
 def drawPerformanceLine(dataDf, axForDraw, steps):
     for key, grp in dataDf.groupby('sheepPolicyName'):
         grp.index = grp.index.droplevel('sheepPolicyName')
-        # grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(steps))
         grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(steps))
         axForDraw.set_ylim([0, 0.4])
 
 
-# class RunSampleTrajectory:
-#     def __init__(self, getSampleTrajectory, policy):
-#         self.getSampleTrajectory = getSampleTrajectory
-#         self.policy = policy
-#
-#     def __call__(self, qPosInit):
-#         sampleTrajectory = self.getSampleTrajectory(qPosInit)
-#         trajectory = sampleTrajectory(self.policy)
-#
-#         return trajectory
+class NNValueFunction:
+    def __init__(self, trainedModel, getStateFromNode):
+        self.trainedModel = trainedModel
+        self.getStateFromNode = getStateFromNode
 
-def runSampleTrajectory(qPosInit, getSampleTrajectory, policy):
-    sampleTrajectory = getSampleTrajectory(qPosInit)
-    trajectory = sampleTrajectory(policy)
+    def __call__(self, leafNode):
+        state = self.getStateFromNode(leafNode)
+        approximateValueFunction = ApproximateValueFunction(self.trainedModel)
 
-    return trajectory
+        value = approximateValueFunction(state)
 
-
-class GetActionDistNeuralNet:
-    def __init__(self, actionSpace, model):
-        self.actionSpace = actionSpace
-        self.model = model
-
-    def __call__(self, state):
-        stateFlat = np.asarray(state).flatten()
-        graph = self.model.graph
-        actionDistribution_ = graph.get_collection_ref("actionDistribution")[0]
-        state_ = graph.get_collection_ref("inputs")[0]
-        actionDistribution = self.model.run(actionDistribution_, feed_dict={state_: [stateFlat]})[0]
-        actionDistributionDict = dict(zip(self.actionSpace, actionDistribution))
-
-        return actionDistributionDict
-
-
-class GetNonUniformPriorAtSpecificState:
-    def __init__(self, getNonUniformPrior, getUniformPrior, specificState):
-        self.getNonUniformPrior = getNonUniformPrior
-        self.getUniformPrior = getUniformPrior
-        self.specificState = specificState
-
-    def __call__(self, currentState):
-        if (currentState == self.specificState).all():
-            actionPrior = self.getNonUniformPrior(currentState)
-        else:
-            actionPrior = self.getUniformPrior(currentState)
-
-        return actionPrior
-
-
-class NeuralNetworkPolicy:
-    def __init__(self, model, actionSpace):
-        self.model = model
-        self.actionSpace = actionSpace
-
-    def __call__(self, state):
-        stateFlat = np.asarray(state).flatten()
-        graph = self.model.graph
-        actionDistribution_ = graph.get_collection_ref("actionDistribution")[0]
-        state_ = graph.get_collection_ref("inputs")[0]
-        actionDistribution = self.model.run(actionDistribution_, feed_dict={state_: [stateFlat]})[0]
-        maxIndex = np.argwhere(actionDistribution == np.max(actionDistribution)).flatten()
-        actionIndex = np.random.choice(maxIndex)
-        action = self.actionSpace[actionIndex]
-
-        return action
+        return value
 
 
 class GenerateTrajectories:
-    def __init__(self, getSampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath, trainedModels,
-                 getReset, allQPosInit, pool):
-        self.getSampleTrajectory = getSampleTrajectory
+    def __init__(self, sampleTrajectory, getSheepPolicies, wolfPolicy, numTrials, getSavePath, trainedModels):
+        self.sampleTrajectory = sampleTrajectory
         self.getSheepPolicies = getSheepPolicies
         self.wolfPolicy = wolfPolicy
         self.numTrials = numTrials
         self.getSavePath = getSavePath
         self.trainedModels = trainedModels
-        self.getReset = getReset
-        self.allQPosInit = allQPosInit
-        self.pool = pool
 
     def __call__(self, oneConditionDf):
         startTime = time.time()
@@ -126,22 +67,17 @@ class GenerateTrajectories:
         trainedModel = self.trainedModels[trainSteps]
         getSheepPolicy = self.getSheepPolicies[sheepPolicyName]
         sheepPolicy = getSheepPolicy(numSimulations, trainedModel)
-        # policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
-        def policy(state):
-            return [sheepPolicy(state), self.wolfPolicy(state)]
+        policy = lambda state: [sheepPolicy(state), self.wolfPolicy(state)]
 
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
         saveFileName = self.getSavePath(parameters)
 
         if not os.path.isfile(saveFileName):
-            # allTrajectories = self.pool.map(runSampleTrajectory, self.allQPosInit)
-            allTrajectories = [self.pool.apply(runSampleTrajectory, args=(qPosInit, self.getSampleTrajectory, policy))
-                               for qPosInit in self.allQPosInit]
-            print("ALL TRAJECTORIES: ", allTrajectories)
-            # pickleOut = open(saveFileName, 'wb')
-            # pickle.dump(allTrajectories, pickleOut)
-            # pickleOut.close()
+            allTrajectories = [self.sampleTrajectory(policy) for trial in range(self.numTrials)]
+            pickleOut = open(saveFileName, 'wb')
+            pickle.dump(allTrajectories, pickleOut)
+            pickleOut.close()
 
         endTime = time.time()
         print("Time for policy {}, numSimulations {}, trainSteps {} = {}".format(sheepPolicyName, numSimulations,
@@ -159,7 +95,7 @@ def main():
     numTrials = 2#50
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['trainSteps'] = [0, 10, 20, 50]
+    manipulatedVariables['trainSteps'] = [10]#[0, 10, 20, 50]
     manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN', 'MCTS']
     manipulatedVariables['numSimulations'] = [1, 2]#[50, 200, 800]
 
@@ -168,16 +104,14 @@ def main():
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
-    # generate a set of initial positions to maintain consistency across all conditions
-    allQPosInit = [np.random.uniform(0, 9.7, 4) for trial in range(numTrials)]
-
     # functions for MCTS
     envModelName = 'twoAgents'
+    qPosInit = (0, 0, 0, 0)
     qVelInit = [0, 0, 0, 0]
     numAgents = 2
-    qPosInitNoise = 0
+    qPosInitNoise = 9.7
     qVelInitNoise = 0
-    getReset = lambda qPosInit: Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)        ###########
+    reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)                            ###########
 
     sheepId = 0
     wolfId = 1
@@ -195,7 +129,7 @@ def main():
 
     aliveBonus = -0.05
     deathPenalty = 1
-    rewardFunction = reward.RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+    rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
     cInit = 1
     cBase = 100
@@ -208,7 +142,7 @@ def main():
 
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
-    rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
+    rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getSheepXPos, getWolfXPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
     # load trained neural network model
@@ -216,7 +150,7 @@ def main():
     learningRate = 0.0001
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
-    generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
+    generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     dataSetMaxRunningSteps = 10
     dataSetNumSimulations = 75
@@ -224,8 +158,8 @@ def main():
     dataSetQPosInit = (0, 0, 0, 0)
     modelTrainFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
-                                 'learnRate': learningRate}
-    modelSaveDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels"
+                                 'learnRate': learningRate, 'output': 'policyValue'}
+    modelSaveDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels"
     if not os.path.exists(modelSaveDirectory):
         os.makedirs(modelSaveDirectory)
     modelSaveExtension = ''
@@ -237,32 +171,31 @@ def main():
                      trainSteps, modelSavePath in modelSavePaths.items()}
 
     # wrapper function for expand
+    uniformActionPrior = lambda state: {action: 1/len(actionSpace) for action in actionSpace}
     getExpandUniformPrior = lambda trainedModel: Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit,
-                                                                                       GetActionPrior(actionSpace)))
+                                                                                       uniformActionPrior))
     getExpandNNPrior = lambda trainedModel: Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit,
-                                                                                  GetActionDistNeuralNet(actionSpace,
-                                                                                                         trainedModel)))
+                                                                                  ApproximateActionPrior(trainedModel,
+                                                                                                         actionSpace)))
 
     # wrapper functions for sheep policies
+    getStateFromNode = lambda node: list(node.id.values())[0]
     getMCTS = lambda numSimulations, trainedModel: MCTS(numSimulations, selectChild,
                                                         getExpandUniformPrior(trainedModel), rollout, backup,
-                                                        selectNextAction)
+                                                        selectGreedyAction)
     getMCTSNN = lambda numSimulations, trainedModel: MCTS(numSimulations, selectChild,
-                                                        getExpandNNPrior(trainedModel), rollout, backup,
-                                                        selectNextAction)
+                                                          getExpandNNPrior(trainedModel),
+                                                          NNValueFunction(trainedModel, getStateFromNode), backup,
+                                                          selectGreedyAction)
     getRandom = lambda numSimulations, trainedModel: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    getNN = lambda numSimulations, trainedModel: NeuralNetworkPolicy(trainedModel, actionSpace)
+    getNN = lambda numSimulations, trainedModel: ApproximatePolicy(trainedModel, actionSpace)
     getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN}
 
-    # getSampleTrajectory = lambda qPosInit: SampleTrajectory(maxRunningSteps, transit, isTerminal, getReset(qPosInit))
-    def getSampleTrajectory(qPosInit):
-        return SampleTrajectory(maxRunningSteps, transit, isTerminal, getReset(qPosInit))
-
-    # pool for multiprocessing
-    pool = Pool(mp.cpu_count())
+    # sample trajectory
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
 
     # function to generate trajectories
-    trajectoryDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
+    trajectoryDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trajectories"
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -270,8 +203,8 @@ def main():
     fixedParameters = {'numTrials': numTrials, 'maxRunningSteps': maxRunningSteps, 'processing': 'multiCore'}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, extension, fixedParameters)
 
-    generateTrajectories = GenerateTrajectories(getSampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
-                                                getTrajectorySavePath, trainedModels, getReset, allQPosInit, pool)
+    generateTrajectories = GenerateTrajectories(sampleTrajectory, getSheepPolicies, stationaryAgentPolicy, numTrials,
+                                                getTrajectorySavePath, trainedModels)
 
     # run all trials and save trajectories
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
@@ -280,7 +213,7 @@ def main():
     initTimeStep = 0
     stateIndex = 0
     getInitStateFromTrajectory = GetStateFromTrajectory(initTimeStep, stateIndex)
-    getOptimalAction = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfXPos, getSheepXPos)
+    getOptimalAction = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getSheepXPos, getWolfXPos, computeAngleBetweenVectors)
     computeOptimalNextPos = ComputeOptimalNextPos(getInitStateFromTrajectory, getOptimalAction, sheepTransit, getSheepXPos)
     measurementTimeStep = 1
     getNextStateFromTrajectory = GetStateFromTrajectory(measurementTimeStep, stateIndex)

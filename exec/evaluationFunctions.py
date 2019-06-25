@@ -35,12 +35,7 @@ class LoadTrajectories:
         trajectories = pickle.load(pickleIn)
         pickleIn.close()
 
-        # filter the trajectories that are terminal in the first step
-        filteredTrajectories = list(filter(lambda trajectory: trajectory[0][1] is not None, trajectories))
-
-        return filteredTrajectories
-
-        # return trajectories
+        return trajectories
 
 
 class ComputeStatistics:
@@ -55,5 +50,4 @@ class ComputeStatistics:
         measurementMean = np.mean(allMeasurements)
         measurementStd = np.std(allMeasurements)
 
-        # return pd.Series({'mean': measurementMean, 'std': measurementStd})
-        return pd.Series({'mean': measurementMean})
+        return pd.Series({'mean': measurementMean, 'std': measurementStd})

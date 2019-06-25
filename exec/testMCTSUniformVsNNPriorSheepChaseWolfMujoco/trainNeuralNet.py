@@ -1,12 +1,11 @@
 import sys
 import os
-sys.path.append(os.path.join('..', '..', 'src', 'neuralNetwork'))
-sys.path.append(os.path.join('..', '..', 'src', 'sheepWolf'))
-sys.path.append('..')
+dirName = os.path.dirname(__file__)
+sys.path.append(os.path.join(dirName, '..', '..'))
 
-from evaluationFunctions import GetSavePath
-from policyNet import GenerateModel, Train, saveVariables
-from sheepWolfWrapperFunctions import GetAgentPosFromState
+from exec.evaluationFunctions import GetSavePath
+from src.neuralNetwork.policyNet import GenerateModel, Train, saveVariables
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
 
 import random
 import numpy as np
@@ -49,13 +48,13 @@ class PreProcessTrajectories:
 
 if __name__ == '__main__':
     # Get dataset for training
-    dataSetDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
+    dataSetDirectory = "../../data/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trajectories"
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 10
-    dataSetNumSimulations = 75
+    dataSetNumSimulations = 100
     dataSetNumTrials = 1500
-    dataSetQPosInit = (0, 0, 0, 0)
+    dataSetQPosInit = (0, 0, 8, 0)
     dataSetSheepPolicyName = 'MCTS'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
@@ -90,8 +89,8 @@ if __name__ == '__main__':
     generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [10]#[0, 50, 100, 500]#[1000, 5000, 10000, 15000]
-    reportInterval = 100
+    allTrainSteps = [2]#[1000, 5000, 10000, 15000]
+    reportInterval = 500
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
     getTrain = lambda trainSteps: Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
@@ -105,7 +104,7 @@ if __name__ == '__main__':
     fixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                        'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                        'learnRate': learningRate}
-    modelSaveDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels"
+    modelSaveDirectory = "../../data/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trainedModels"
     if not os.path.exists(modelSaveDirectory):
         os.makedirs(modelSaveDirectory)
     modelSaveExtension = ''

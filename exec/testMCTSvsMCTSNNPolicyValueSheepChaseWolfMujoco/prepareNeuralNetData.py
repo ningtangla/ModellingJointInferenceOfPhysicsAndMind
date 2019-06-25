@@ -1,27 +1,25 @@
 import sys
 import os
-sys.path.append(os.path.join('..', '..', 'src'))
-sys.path.append(os.path.join('..', '..', 'src', 'algorithms'))
-sys.path.append(os.path.join('..', '..', 'src', 'sheepWolf'))
-sys.path.append('..')
+dirName = os.path.dirname(__file__)
+sys.path.append(os.path.join(dirName, '..', '..'))
 
 import numpy as np
 import pickle
 
-from envMujoco import Reset, IsTerminal, TransitionFunction
-from mcts import CalculateScore, SelectChild, InitializeChildren, GetActionPrior, SelectNextAction, RollOut,\
-HeuristicDistanceToTarget, Expand, MCTS, backup
-from play import SampleTrajectory
-import reward
-from sheepWolfWrapperFunctions import GetAgentPosFromState
-from evaluationFunctions import GetSavePath
-from policiesFixed import stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, RollOut, Expand, \
+    MCTS, backup
+from src.play import SampleTrajectory
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from exec.evaluationFunctions import GetSavePath
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 
 
 def main():
-    maxRunningSteps = 10
+    maxRunningSteps = 1#10
     qPosInit = (0, 0, 0, 0)
-    numSimulations = 75
+    numSimulations = 2#75
 
     # functions for MCTS
     envModelName = 'twoAgents'
@@ -48,7 +46,7 @@ def main():
 
     aliveBonus = -0.05
     deathPenalty = 1
-    rewardFunction = reward.RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+    rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
     cInit = 1
     cBase = 100
@@ -56,15 +54,14 @@ def main():
     selectChild = SelectChild(calculateScore)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    getActionPrior = GetActionPrior(actionSpace)
+    actionPriorUniform = {action: 1/len(actionSpace) for action in actionSpace}
+    getActionPriorUniform = lambda state: actionPriorUniform
 
-    initializeChildren = InitializeChildren(actionSpace, sheepTransit, getActionPrior)
+    initializeChildren = InitializeChildren(actionSpace, sheepTransit, getActionPriorUniform)
     expand = Expand(isTerminal, initializeChildren)
 
     numActionSpace = len(actionSpace)
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-
-    selectNextAction = SelectNextAction()
 
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
@@ -72,16 +69,16 @@ def main():
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
     # All agents' policies
-    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, selectNextAction)
+    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, selectGreedyAction)
     policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
 
     # generate trajectories
-    numTrials = 1500
+    numTrials = 2#1500
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]
 
     # save the trajectories
-    saveDirectory = "../../data/testMCTSUniformVsNNPriorChaseMujoco/trajectories"
+    saveDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trajectories"
     extension = '.pickle'
     getSavePath = GetSavePath(saveDirectory, extension)
     sheepPolicyName = 'MCTS'
