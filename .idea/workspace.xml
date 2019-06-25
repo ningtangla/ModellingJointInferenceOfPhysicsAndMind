@@ -1,0 +1,921 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/webResources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/60000data_64x4_minibatch_100kIter_contState_actionDist.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/60000data_64x4_minibatch_100kIter_contState_actionDist.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/60000data_64x4_minibatch_100kIter_contState_actionDist.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/evaluateNeuralNetwork/savedModels/checkpoint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/Figure_1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/initPos(-4, 0, 4, 0).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/initPos(-4,0,4,0)_trainDataInitialisedRandomly.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/initPos(-8,0,8,0).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/initPosRandomTrainDataInitialisedRandomly.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=1000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=1000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=1000.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=10000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=10000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=10000.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=15000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=15000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=15000.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=5000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=5000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=5000.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=50000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=50000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_trainSteps=50000.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_trainSteps=50000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_trainSteps=50000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-8,0,8,0)_trainSteps=50000.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-8,0,8,0)_trainSteps=50000.index" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=10_numSimulations=100_numTrials=1500_qPosInit=(0,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=100_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=10_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=10_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=10_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=10_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=10_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=10_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=150_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=150_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=150_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=150_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=150_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1600_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1600_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1600_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1600_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1600_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=200_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=250_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=25_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=400_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=400_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=400_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=400_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=400_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNN_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS_trainSteps=5000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=50_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random_trainSteps=1000.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(-8,0,8,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=5_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=75_numTrials=1500_qPosInit=(0,0,0,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=800_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=800_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNAllSteps.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=800_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=MCTSNNFirstStep.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=800_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=NN.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=800_numTrials=100_qPosInit=(0,0,4,0)_sheepPolicyName=random.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=3_numSimulations=1_numTrials=2_qPosInit=(0,0,0,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/trainingDataForNN/dataSets/initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=2717_numSimulations=200_numTrajs=100_rolloutSteps=10_standardizedReward=False_withActionDist=True.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/trainingDataForNN/dataSets/initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=2717_numSimulations=200_numTrajs=100_rolloutSteps=10_standardizedReward=True_withActionDist=True.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/trainingDataForNN/trajectories/initPos=[30,30,20,20]_maxRunningSteps=30_numSimulations=200_numTrajs=100_rolloutSteps=10_withActionDist=True.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateByCrossEntropy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateByEpisodeLength.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateNeuralNetwork.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/generateTrajectoriesForNN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/preprocessTrajectoriesForNN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560901396.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560902012.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560974238.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560999220.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561050837.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561053192.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561053481.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561061597.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561066551.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561146496.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561146567.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561147482.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561148774.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561149210.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561149587.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561149593.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561149710.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561150006.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561150550.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151762.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151763.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151789.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151791.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151837.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151895.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561152182.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158461.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158462.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158511.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158512.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158513.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158531.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158532.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158603.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158604.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158772.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158774.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158823.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159180.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159181.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159223.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159224.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159225.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159267.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159268.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159343.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159344.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159345.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560900735.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560901396.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560902012.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560957272.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560977937.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560999220.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560999730.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561053481.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561061596.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561066551.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561075874.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561146495.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561146567.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561147482.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561148774.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561149210.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561149587.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561149593.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561149710.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561150005.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151730.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151731.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151762.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151763.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151789.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151791.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151837.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561151895.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561152182.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561152778.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158460.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158461.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158462.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158511.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158512.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158513.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158531.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158532.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158533.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158603.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158604.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158772.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158773.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158774.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158823.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159179.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159180.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159181.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159223.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159224.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159225.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159267.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159268.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159343.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159344.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561159345.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/testNoPhysicsEnv.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envNoPhysics.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measurementFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/wrapperFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/neuralNetwork/dataTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/neuralNetwork/trainTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/.testRewardFunction_IssureEnMin.py.swp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testAnalyticGeometryFunction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testData/maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_sheepPolicyName=MCTS.pickle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testDataTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testDrawingFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testEvaluteMCTSGuidedByNNPrior_IssueNishaed.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testExecEvaluationFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testGenerateTrainingDataForNN_IssueJianzhi.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testMeasurementFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testNoPhysicsEnv.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testPlay.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testPolicies_IssueShaozhe.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testRewardFunction_IssureNishad.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testWrapperFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/visualize/render.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ModellingJointInferenceOfPhysicsAndMind.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ModellingJointInferenceOfPhysicsAndMind.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/checkpoint" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/checkpoint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=5_numSimulations=5_numTrials=7_qPosInit=(-4,0,4,0)_trainSteps=50000.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=5_numSimulations=5_numTrials=7_qPosInit=(-4,0,4,0)_trainSteps=50000.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=5_numSimulations=5_numTrials=7_qPosInit=(-4,0,4,0)_trainSteps=50000.meta" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-8,0,8,0)_trainSteps=50000.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/maxRunningSteps=5_qPosInit=(-4,0,4,0)_numSimulations=5_numTrials=5_learnRate=0.0001_trainSteps=50000.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/maxRunningSteps=5_qPosInit=(-4,0,4,0)_numSimulations=5_numTrials=5_learnRate=0.0001_trainSteps=50000.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/maxRunningSteps=5_qPosInit=(-4,0,4,0)_numSimulations=5_numTrials=5_learnRate=0.0001_trainSteps=50000.meta" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=15_numSimulations=200_numTrials=100_qPosInit=(-4,0,4,0)_trainSteps=50000.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=15_qPosInit=(-4,0,4,0)_numSimulations=2_numTrials=1_sheepPolicyName=mcts.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=mcts.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=mctsNnAllSteps.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=mctsNnFirstStep.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=nn.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=1_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=2_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=mcts.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=2_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=mctsNnAllSteps.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=2_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=mctsNnFirstStep.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=2_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=nn.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=2_numSimulations=2_numTrials=1_qPosInit=(-4,0,4,0)_sheepPolicyName=random.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=5_numSimulations=5_numTrials=5_qPosInit=(-4,0,4,0)_sheepPolicyName=mcts.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=5_numSimulations=5_numTrials=7_qPosInit=(-4,0,4,0)_sheepPolicyName=mcts.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/maxRunningSteps=5_qPosInit=(-4,0,4,0)_numSimulations=5_numTrials=5_sheepPolicyName=mcts.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=mctsNnAllSteps_numSimulations=1_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=mctsNnAllSteps_numSimulations=2_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=mctsNnFirstStep_numSimulations=1_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=mctsNnFirstStep_numSimulations=2_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=mcts_numSimulations=1_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=mcts_numSimulations=2_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=nn_numSimulations=1_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=nn_numSimulations=2_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=random_numSimulations=1_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testMCTSUniformVsNNPriorChaseMujoco/trajectories/sheepPolicyName=random_numSimulations=2_numTrials=1_maxRunningSteps=2_qPosInit=(-4,0,4,0).pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/drawDiscreteGridChasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/drawDiscreteGridChasing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluationFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSQEffectMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSQEffectMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/prepareNeuralNetData.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/prepareNeuralNetData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/trainNeuralNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/trainNeuralNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSvsRandomInSheepEscapeMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSvsRandomInSheepEscapeMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testSheepFirstStepInEscapeMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testSheepFirstStepInEscapeMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/mcts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/mcts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/offlineA2CMonteCarloAdvantageDiscrete.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/policyGradient.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/stochasticMCTS.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/mujocoMCTSChasingData.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/neuralNetwork.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/policyNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/neuralNetwork/policyNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/sheepWolfMujocoData.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/supervisedLearning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560577590.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560957272.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560620638.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561152778.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621108.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561149651.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621147.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560974238.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621170.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560900735.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560621190.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561150550.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560636293.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158533.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560636378.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151731.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560637065.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561053192.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560637184.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561158822.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/test/events.out.tfevents.1560637294.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560977828.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560577590.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561050837.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560620638.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561159179.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621108.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1560977828.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621146.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158773.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621170.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560999730.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560621190.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158822.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560636293.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561151730.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560636378.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1560977937.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560637065.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561158460.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560637184.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/test/events.out.tfevents.1561075874.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/tbdata/train/events.out.tfevents.1560637294.Nishads-MacBook-Air-1391.local" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/tbdata/train/events.out.tfevents.1561149651.Nishads-MacBook-Air-1391.local" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/AnalyticGeometryFunctions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/0 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/1e-4 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/1e-5 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/3e-4 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/6e-4 L2Reg Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 1e-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 1e-5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 3e-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size 6e-4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/Accuracy vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/continuousEnv/1000-12000 DataSize continuousEnv Accuracy vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/Graphs/continuousEnv/1000-12000 DataSize continuousEnv Loss vs training_set_size.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/all_data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/continuousEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/continuous_data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/demo/12000 Data Points 0.993 Accuracy  Chasing Demo.mp4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/evaluate.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/evaluateNeuralNetwork.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/gridEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/mainDiscrete.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/new_continuous_data.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/policyNet.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/policyValueNet.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/prepareData.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/prepareDataContinuousEnv.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/toSeparateFiles/visualize.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/play.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/play.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/calculateAngleFunction.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/discreteGridPolicyFunctions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/discreteGridWrapperFunctions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sheepWolf/envDiscreteGrid.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test1DEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test1DEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testAngleCalculation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testDiscreteGridPolicy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testDiscreteGridWrapperFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testDiscreteGridWrapperFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testEnvMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testEnvMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testGetNonUniformPriorAtSpecificState.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testMCTS.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testMCTS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testMCTSInMujoco.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testRunPolicyIn1DEnv.py" beforeDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <splitter split-orientation="horizontal" split-proportion="0.55205995">
+      <split-first>
+        <leaf>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_17.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="840">
+                  <caret line="42" selection-start-line="42" selection-end-line="42" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_18.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="40">
+                  <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/src/play.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="411">
+                  <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
+                  <folding>
+                    <element signature="e#0#18#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>locatePrey</find>
+      <find>locatePulledAgent</find>
+      <find>RandomActionPolicy</find>
+      <find>locateMaster</find>
+      <find>puller2</find>
+    </findStrings>
+    <replaceStrings>
+      <replace />
+      <replace>getPreyPos</replace>
+      <replace>getPulledAgentPosition</replace>
+      <replace>RandomPolicy</replace>
+      <replace>getMasterPos</replace>
+      <replace>pullingAgent</replace>
+    </replaceStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/data</dir>
+    </dirStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/wrapperFunctions.py" />
+        <option value="$PROJECT_DIR$/src/try.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_17.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_18.py" />
+        <option value="$PROJECT_DIR$/exec/drawDiscreteGridChasing.py" />
+        <option value="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" />
+        <option value="$PROJECT_DIR$/src/play.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="width" value="1440" />
+    <option name="height" value="900" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="constrainedChasingEscapingEnv" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="visualize" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python&#10;Redshift" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings is-module-sdk="true">
+        <option name="myUseModuleSdk" value="true" />
+      </console-settings>
+    </option>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python tests.pytest for testDiscreteGridEnv.TestEnvironment">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="true" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="drawDiscreteGridChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/drawDiscreteGridChasing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="drawDiscreteGridChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="try" type="PythonConfigurationType" factoryName="Python">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/try.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="true" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest for testDiscreteGridEnv.TestEnvironment" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;testDiscreteGridEnv.TestEnvironment&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest in testDiscreteGridEnv.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/testDiscreteGridEnv.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.try" />
+      <item itemvalue="Python.drawDiscreteGridChasing" />
+      <item itemvalue="Python tests.pytest in testDiscreteGridEnv.py" />
+      <item itemvalue="Python tests.pytest for testDiscreteGridEnv.TestEnvironment" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.pytest for testDiscreteGridEnv.TestEnvironment" />
+        <item itemvalue="Python tests.pytest in testDiscreteGridEnv.py" />
+        <item itemvalue="Python.drawDiscreteGridChasing" />
+        <item itemvalue="Python.drawDiscreteGridChasing" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="" />
+      <created>1561405020540</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1561405020540</updated>
+      <workItem from="1561405023773" duration="1307000" />
+      <workItem from="1561409639837" duration="16822000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TestHistory">
+    <history-entry file="pytest_in_testDiscreteGridEnv_py - 2019.06.24 at 12h 51m 15s.xml">
+      <configuration name="pytest in testDiscreteGridEnv.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_testDiscreteGridEnv_py - 2019.06.24 at 22h 22m 24s.xml">
+      <configuration name="pytest in testDiscreteGridEnv.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_for_testDiscreteGridEnv_TestEnvironment - 2019.06.24 at 22h 23m 06s.xml">
+      <configuration name="pytest for testDiscreteGridEnv.TestEnvironment" configurationId="tests" />
+    </history-entry>
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="18129000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.0518732" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.07891492" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="12" weight="0.27620223" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" />
+      <window_info anchor="right" id="R Graphics" order="4" />
+      <window_info anchor="right" id="R Packages" order="5" />
+      <window_info anchor="right" id="Database" order="6" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$drawDiscreteGridChasing.coverage" NAME="drawDiscreteGridChasing Coverage Results" MODIFIED="1561439289927" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_in_testDiscreteGridEnv_py.coverage" NAME="pytest in testDiscreteGridEnv.py Coverage Results" MODIFIED="1561440123805" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$try.coverage" NAME="try Coverage Results" MODIFIED="1561420827963" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testDiscreteGridEnv_TestEnvironment.coverage" NAME="pytest for testDiscreteGridEnv.TestEnvironment Coverage Results" MODIFIED="1561440168031" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$drawDiscreteGridChasing__1_.coverage" NAME="drawDiscreteGridChasing Coverage Results" MODIFIED="1561406020552" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-274">
+          <caret line="7" column="23" selection-start-line="7" selection-start-column="23" selection-end-line="7" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test1DEnv.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="12" column="44" selection-start-line="12" selection-start-column="26" selection-end-line="12" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testWrapperFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measurementFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-78" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/try.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="509">
+          <caret line="124" column="10" lean-forward="true" selection-start-line="21" selection-end-line="124" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#2559#2561#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.sql">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-350">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/wrapperFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-80">
+          <caret line="7" column="24" selection-start-line="7" selection-start-column="24" selection-end-line="7" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testDiscreteGridEnv.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-740">
+          <caret line="7" column="21" selection-start-line="7" selection-start-column="21" selection-end-line="7" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testPolicies_IssueShaozhe.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_17.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="840">
+          <caret line="42" selection-start-line="42" selection-end-line="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="65" lean-forward="true" selection-start-line="65" selection-end-line="65" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#78#450#0" />
+            <element signature="e#482#1004#0" />
+            <element signature="e#1035#1135#0" />
+            <element signature="e#1169#1569#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/drawDiscreteGridChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3580">
+          <caret line="128" lean-forward="true" selection-start-line="128" selection-end-line="128" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_18.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="40">
+          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/play.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="411">
+          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

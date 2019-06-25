@@ -11,7 +11,6 @@ class GetAgentPosFromState:
 
         return agentPos
 
-
 class GetStateFromTrajectory:
     def __init__(self, timeStep, stateIndex):
         self.timeStep = timeStep

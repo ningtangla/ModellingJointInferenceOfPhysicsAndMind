@@ -12,25 +12,26 @@ from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromSt
 @ddt
 class TestEnvironment(unittest.TestCase):
 	def setUp(self):
-		self.actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1),(0, 0)]
+		self.actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
 		self.lowerBoundAngle = 0
 		self.upperBoundAngle = np.pi/2
-
 		self.wolfID = 0
 		self.sheepID = 1
 		self.masterID = 2
 		self.positionIndex = [0, 1]
 
-		self.locateWolf = GetAgentPosFromState(self.wolfID, self.positionIndex)
-		self.locateSheep = GetAgentPosFromState(self.sheepID, self.positionIndex)
-		self.locateMaster = GetAgentPosFromState(self.masterID, self.positionIndex)
+		self.getPredatorPos = GetAgentPosFromState(self.wolfID, self.positionIndex)
+		self.getPreyPos = GetAgentPosFromState(self.sheepID, self.positionIndex)
+		self.getMasterPos = GetAgentPosFromState(self.masterID, self.positionIndex)
 
 		self.samplePulledForceDirection = SamplePulledForceDirection(computeAngleBetweenVectors, self.actionSpace, self.lowerBoundAngle, self.upperBoundAngle)
 
 		self.lowerBoundary = 1
 
 		self.adjustingParam = 2
-		self.getPullingForce = GetPullingForce(self.adjustingParam, roundNumber)
+		self.getPullingForceValue = GetPullingForceValue(self.adjustingParam, roundNumber)
+		self.getPulledAgentForce = GetPulledAgentForce(self.getMasterPos, self.getPredatorPos, self.samplePulledForceDirection, self.getPullingForceValue)
+
 
 	@data(
 		((-2, -1), {(-1, 0): 0.5, (0, -1): 0.5}),
@@ -58,10 +59,6 @@ class TestEnvironment(unittest.TestCase):
 		for action in truePulledActionCount.keys():
 			self.assertAlmostEqual(truePulledActionCount[action], pulledActionList.count(action), delta = 200)
 
-
-# param = 2
-# force = math.ceil(distance / self.adjustingParam + 1)
-
 	@data(
 		((3,4), 4),
 		((1,1), 2),
@@ -70,54 +67,55 @@ class TestEnvironment(unittest.TestCase):
 	)
 	@unpack
 	def testPullingForce(self, relativeLocation, trueForce):
-		force = self.getPullingForce(relativeLocation)
+		force = self.getPullingForceValue(relativeLocation)
 		self.assertEqual(force, trueForce)
 
 
-	
-	@data(
-		((5, 5), (1, 0), [(5,2), (2,3), (3,1)], {(5,1): 0.5, (4,2): 0.5}),
-		((6, 6), (0, -1), [(2,1), (2,3), (3,3)], {(4,1): 0.5, (2,2): 0.5}),
-		((5, 5), (1, 0), [(4, 2), (2,3), (5,5)], {(5,2): 0.5, (5,5): 0.5}),
-	
-		((5, 5), (1, 0), [(5, 1), (2, 3), (3, 1)], {(4, 1): 1}),
-		((6, 6), (0,-1), [(2, 1), (2, 3), (3, 1)], {(4, 1):1}),
-		((5, 5), (0, 1), [(5, 4), (4, 5), (5, 5)], {(5, 5):1})
-	)
-	@unpack
-	def testPulledAgentTransition(self, gridSize, action, state, trueNextStateProb):
-		stayWithinBoundary = StayWithinBoundary(gridSize, self.lowerBoundary)
-	
-		getWolfTransition = PulledAgentTransition(stayWithinBoundary, self.samplePulledForceDirection, self.locateMaster, self.locateWolf, self.getPullingForce)
-	
-		iterationTime = 10000
-		trueNextStateProbPair = zip(trueNextStateProb.keys(), trueNextStateProb.values())
-		trueNextStateCount = {action: trueNextStateProb * iterationTime
-		for action, trueNextStateProb in trueNextStateProbPair}
-		nextStateList = [getWolfTransition(action, state) for _ in range(iterationTime)]
-		for action in trueNextStateCount.keys():
-			self.assertAlmostEqual(trueNextStateCount[action], nextStateList.count(action), delta = 200)
-	
 
 	@data(
-		((5,5), (1,0), [(2,3),(5,1),(3,1)], (5,1)),
-		((6, 6), (0, -1), [(2,3), (2,1), (3,1)] , (2, 1)),
-		((3, 3), (1, 0), [(2,3),(2, 2), (3,1)], (3, 2))
+		([(5,2), (2,3), (3,1)], {(-2,0): 0.5, (0, -2): 0.5}),
+		([(2,1), (2,3), (3,3)], {(2,0): 0.5, (0,2): 0.5})
 		)
 	@unpack
-	def testPlainTransition(self, gridSize, action, state, trueNextState):
-		stayWithinBoundary = StayWithinBoundary(gridSize, self.lowerBoundary)
+	def testPulledAgentForce(self, state, truePulledActionProb):
 
-		transitPlainAgent = PlainTransition(stayWithinBoundary, self.locateSheep)
-		nextState = transitPlainAgent(action, state)
-		self.assertEqual(nextState, trueNextState)
+		iterationTime = 10000
+
+		truePulledAction = {force: truePulledActionProb[force] * iterationTime for force in truePulledActionProb.keys()}
+
+		forceList = [tuple(self.getPulledAgentForce(state)) for _ in range(iterationTime)]
+
+		for agentForce in truePulledAction.keys():
+			self.assertAlmostEqual(truePulledAction[agentForce], forceList.count(agentForce), delta = 200)
+
+
+
+	@data(
+		((1,1), [(5,2), (2,3), (3,1)],
+			{(4, 3): 0.5, (5, 1): 0.5}),
+		((1,1), [(2,1), (2,3), (3,3)],
+			{(5, 2): 0.5, (3, 4): 0.5})
+		)
+	@unpack
+	def testTransition(self, predatorAction, state, truePredatorNextStateProb):
+		stayWithinBoundary = StayWithinBoundary((5,5), 1)
+		transitPredator = TransitAgent(stayWithinBoundary, self.getPulledAgentForce,self.getPredatorPos)
+
+		iterationTime = 10000
+		predatorNextStateList = [transitPredator(predatorAction, state) for _ in range(iterationTime)]
+
+		truePredatorNextState = {predatorState: truePredatorNextStateProb[predatorState] * iterationTime for predatorState in truePredatorNextStateProb.keys()}
+
+		for nextState in truePredatorNextState.keys():
+			self.assertAlmostEqual(truePredatorNextState[nextState], predatorNextStateList.count(nextState), delta = 200)
+
 
 
 	@data(((5,5), (1,6), (1,5)),
 		((5,5), (-2,2), (1,2)),
 		((6,6), (0,7), (1,6)))
 	@unpack
-	def testBoundaryTransition(self, gridSize, nextIntendedState, trueNextState):
+	def testBoundaryStaying(self, gridSize, nextIntendedState, trueNextState):
 		stayWithinBoundary = StayWithinBoundary(gridSize, self.lowerBoundary)
 		nextState = stayWithinBoundary(nextIntendedState)
 		self.assertEqual(nextState, trueNextState )
@@ -128,7 +126,7 @@ class TestEnvironment(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    envTest = unittest.TestLoader().loadTestsFromTestCase(TestEnvironment)
-    unittest.TextTestRunner(verbosity=2).run(envTest)
+	envTest = unittest.TestLoader().loadTestsFromTestCase(TestEnvironment)
+	unittest.TextTestRunner(verbosity=2).run(envTest)
 
 
