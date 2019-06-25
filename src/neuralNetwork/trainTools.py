@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 
 class coefficientCotroller():
@@ -48,3 +49,13 @@ class TrainReporter():
 			print("#{} {}".format(stepNum, evalDict))
 			if self.tensorBoardSummaryOn:
 				writer.add_summary(summary, stepNum)
+
+
+class learningRateModifier():
+	def __init__(self, initLearningRate, decayRate, decayStep):
+		self.initLearningRate = initLearningRate
+		self.decayRate = decayRate
+		self.decayStep = decayStep
+
+	def __call__(self, globalStep):
+		return self.initLearningRate * np.power(self.decayRate, globalStep / self.decayStep)
