@@ -24,8 +24,8 @@ class ActionToOneHot:
         self.actionSpace = actionSpace
 
     def __call__(self, action):
-        oneHotAction = [1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index in
-                        range(len(self.actionSpace))]
+        oneHotAction = np.asarray([1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index
+                                   in range(len(self.actionSpace))])
 
         return oneHotAction
 

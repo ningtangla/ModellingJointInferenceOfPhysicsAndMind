@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class GetAgentPosFromState:
     def __init__(self, agentId, posIndex):
         self.agentId = agentId
@@ -22,6 +23,7 @@ class GetStateFromTrajectory:
 
         return state
 
+
 class GetAgentPosFromTrajectory:
     def __init__(self, getAgentPosFromState, getStateFromTrajectory):
         self.getAgentPosFromState = getAgentPosFromState
@@ -32,6 +34,7 @@ class GetAgentPosFromTrajectory:
         agentPos = self.getAgentPosFromState(state)
 
         return agentPos
+
 
 class GetAgentActionFromTrajectory:
     def __init__(self, timeStep, actionIndex, agentId):

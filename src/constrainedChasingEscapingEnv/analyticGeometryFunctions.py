@@ -25,8 +25,3 @@ def computeAngleBetweenVectors(vector1, vector2):
     else:
         angle = np.nan
     return angle
-
-def computeVectorNorm(vector):
-    L2Norm = np.linalg.norm(vector, ord = 2)
-    return L2Norm
-

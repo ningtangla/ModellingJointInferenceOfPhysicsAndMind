@@ -32,6 +32,7 @@ class HeatSeekingDiscreteDeterministicPolicy:
         action = random.choice(optimalActionList)
         return action
 
+
 class HeatSeekingContinuesDeterministicPolicy:
     def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
         self.getPredatorPos = getPredatorPos
@@ -39,13 +40,13 @@ class HeatSeekingContinuesDeterministicPolicy:
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-
         action = np.array(self.getPreyPos(state)) - np.array(self.getPredatorPos(state))
         actionL2Norm = np.linalg.norm(action, ord = 2)
         if actionL2Norm != 0:
             action = action / actionL2Norm
             action *= self.actionMagnitude
         return action
+
 
 class ActHeatSeeking:
     def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
@@ -69,6 +70,7 @@ class ActHeatSeeking:
         unchosenActions = [action for action, index in zip(self.actionSpace, unchosenFilter) if not index]
 
         return [chosenActions, unchosenActions]  
+
 
 class HeatSeekingDiscreteStochasticPolicy:
     def __init__(self, rationalityParam, actHeatSeeking, locateChasingAgent, locateEscapingAgent):

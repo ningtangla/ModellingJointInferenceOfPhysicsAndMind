@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class coefficientCotroller():
+class CoefficientController():
 	def __init__(self, initActionCoeff, initValueCoeff, threshold=0):
 		self.actionCoeff = initActionCoeff
 		self.valueCoeff = initValueCoeff

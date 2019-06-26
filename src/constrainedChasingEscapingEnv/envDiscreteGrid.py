@@ -2,6 +2,7 @@ import numpy as np
 import math 
 from random import randint
 
+
 class Reset:
     def __init__(self, gridSize, lowerGridBound, agentCount):
         self.gridX, self.gridY = gridSize
@@ -11,6 +12,7 @@ class Reset:
     def __call__(self):
         startState = [(randint(self.lowerGridBound, self.gridX), randint(self.lowerGridBound, self.gridY)) for _ in range(self.agentCount)]
         return startState
+
 
 class StayWithinBoundary:
     def __init__(self, gridSize, lowerBoundary):
@@ -97,6 +99,7 @@ class PulledAgentTransition:
         nextIntendedState = np.array(pulledAgentState) + pullingResultAction + np.array(action)
         pulledAgentNextState = self.stayWithinBoundary(nextIntendedState)
         return pulledAgentNextState
+
 
 class PlainTransition:
     def __init__(self, stayWithinBoundary, locateCurrentAgent):

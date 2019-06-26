@@ -29,8 +29,8 @@ class ActionToOneHot:
         self.actionSpace = actionSpace
 
     def __call__(self, action):
-        oneHotAction = [1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index in
-                        range(len(self.actionSpace))]
+        oneHotAction = np.asarray([1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index
+                                   in range(len(self.actionSpace))])
 
         return oneHotAction
 
@@ -57,7 +57,7 @@ class PreProcessTrajectories:
 
     def __call__(self, trajectories):
         stateActionValueTriples = [triple for trajectory in trajectories for triple in trajectory]
-        triplesFiltered = list(filter(lambda triple: triple[self.actionIndex] is not None, stateActionValueTriples))
+        triplesFiltered = list(filter(lambda triple: triple[self.actionIndex] is not None, stateActionValueTriples))    # should I remove this None condition? because it will remove the terminal points--so we don't get Value prediction for those points.
         print("{} data points remain after filtering".format(len(triplesFiltered)))
         triplesProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
                                      for state, actions, value in triplesFiltered]
@@ -67,8 +67,8 @@ class PreProcessTrajectories:
 
 def main():
     # Get dataset for training
-    # dataSetDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trajectories"
-    dataSetDirectory = "../../data/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trajectories"
+    dataSetDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trajectories"
+    # dataSetDirectory = "../../data/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trajectories"
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 10
@@ -96,7 +96,7 @@ def main():
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
 
-    decay = 0.99
+    decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
     allValues = [accumulateRewards(trajectory) for trajectory in dataSetTrajectories]
@@ -127,7 +127,7 @@ def main():
     generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [10]
+    allTrainSteps = [0, 50000]
     batchSize = None
     terminalThreshold = 1e-6
     lossHistorySize = 10

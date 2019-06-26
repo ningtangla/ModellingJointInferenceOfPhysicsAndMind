@@ -43,7 +43,6 @@ class NNValueFunction:
     def __call__(self, leafNode):
         state = self.getStateFromNode(leafNode)
         approximateValueFunction = ApproximateValueFunction(self.trainedModel)
-
         value = approximateValueFunction(state)
 
         return value

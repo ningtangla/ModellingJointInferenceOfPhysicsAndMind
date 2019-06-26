@@ -1,12 +1,4 @@
 import numpy as np
-<<<<<<< HEAD
-
-def computeDistanceFromState(state):
-    pos1 = np.asarray(state)[0][2:4]
-    pos2 = np.asarray(state)[1][2:4]
-
-    return np.sqrt(np.sum(np.square(pos1 - pos2)))
-=======
 import pandas as pd
 
 class MultiAgentSampleTrajectory:
@@ -31,20 +23,19 @@ class MultiAgentSampleTrajectory:
             if self.isTerminal(self.currentState):
                 break
         return locationDataFrame
->>>>>>> develop
+
 
 class SampleTrajectory:
-    def __init__(self, maxRunningSteps, transit, isTerminal, reset, maxInitDistance):
+    def __init__(self, maxRunningSteps, transit, isTerminal, reset):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
         self.isTerminal = isTerminal
         self.reset = reset
-        self.maxInitDistance = maxInitDistance
 
     def __call__(self, policy):
         state = self.reset()
 
-        while self.isTerminal(state) or computeDistanceFromState(state) > self.maxInitDistance:
+        while self.isTerminal(state):
             state = self.reset()
 
         trajectory = []

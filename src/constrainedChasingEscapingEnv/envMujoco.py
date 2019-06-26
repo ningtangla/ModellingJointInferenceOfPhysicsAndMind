@@ -2,6 +2,7 @@ import mujoco_py as mujoco
 import os
 import numpy as np
 
+
 class Reset():
     def __init__(self, modelName, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         dirName = os.path.dirname(__file__)

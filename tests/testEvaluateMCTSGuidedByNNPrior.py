@@ -1,19 +1,15 @@
 import sys
 import os
+dirName = os.path.dirname(__file__)
 sys.path.append('..')
-sys.path.append(os.path.join('..', 'src'))
-sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
-sys.path.append(os.path.join('..', 'src', 'algorithms'))
-sys.path.append(os.path.join('..', 'src', 'neuralNetwork'))
-sys.path.append(os.path.join('..', 'exec', 'testMCTSUniformVsNNPriorChaseMujoco'))
 
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 
-from exec.testMCTSUniformVsNNPriorChaseMujoco.testMCTSUniformVsNNPriorChaseMujoco import GetNonUniformPriorAtSpecificState, GenerateTrajectories
-from src.algorithms.mcts import GetActionPrior
-from exec.testMCTSUniformVsNNPriorChaseMujoco.trainNeuralNet import ActionToOneHot, PreProcessTrajectories
+from exec.testMCTSUniformVsNNPriorSheepChaseWolfMujoco.testMCTSUniformVsNNPriorSheepChaseWolfMujoco import \
+    GetNonUniformPriorAtSpecificState
+from exec.testMCTSUniformVsNNPriorSheepChaseWolfMujoco.trainNeuralNet import ActionToOneHot, PreProcessTrajectories
 
 
 @ddt
@@ -33,31 +29,34 @@ class TestNNMCTS(unittest.TestCase):
         actionPriorNonUniform[preferredAction] = priorForPreferredAction
         getNonUniformPrior = lambda state: actionPriorNonUniform
 
-        getUniformPrior = GetActionPrior(actionSpace)
+        uniformPrior = {action: 1/len(actionSpace) for action in actionSpace}
+        getUniformPrior = lambda state: uniformPrior
         specificState = [[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]
         getNonUniformPriorAtSpecificState = GetNonUniformPriorAtSpecificState(getNonUniformPrior, getUniformPrior, specificState)
-
         actionPrior = getNonUniformPriorAtSpecificState(state)
+
         self.assertAlmostEqual(actionPrior[action], groundTruthActionPriorForAction)
 
 
-    @data(((10, 0), [1, 0, 0, 0, 0, 0, 0, 0]), ((7, 7), [0, 1, 0, 0, 0, 0, 0, 0]), ((1, 2), [0, 0, 0, 0, 0, 0, 0, 0]),
-          ((-7, -7), [0, 0, 0, 0, 0, 1, 0, 0]))
+    @data(((10, 0), np.asarray([1, 0, 0, 0, 0, 0, 0, 0])), ((7, 7), np.asarray([0, 1, 0, 0, 0, 0, 0, 0])),
+          ((1, 2), np.asarray([0, 0, 0, 0, 0, 0, 0, 0])), ((-7, -7), np.asarray([0, 0, 0, 0, 0, 1, 0, 0])))
     @unpack
     def testActionToOneHot(self, action, groundTruthOneHotAction):
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         actionToOneHot = ActionToOneHot(actionSpace)
         oneHotAction = actionToOneHot(action)
+        truthValue = np.array_equal(oneHotAction, groundTruthOneHotAction)
 
-        self.assertEqual(oneHotAction, groundTruthOneHotAction)
+        self.assertTrue(truthValue)
 
 
-    @data(([[([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]], [(10, 0), (0, 0)]), ([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]], None)]],
-          [([-4, 0, -4, 0, 0, 0, 4, 0, 4, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0])]),
-          ([[([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]], [(10, 0), (0, 0)]),
-             ([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]], [(10, 0), (0, 0)])]],
-           [([-4, 0, -4, 0, 0, 0, 4, 0, 4, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
-            ([-3, 0, -3, 0, 0, 0, 4, 0, 4, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0])]))
+    @data(([[(np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [(10, 0), (0, 0)]),
+             ([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]], None)]],
+          [(np.asarray([-4, 0, -4, 0, 0, 0, 4, 0, 4, 0, 0, 0]), np.asarray([1, 0, 0, 0, 0, 0, 0, 0]))]),
+          ([[(np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [(10, 0), (0, 0)]),
+             (np.asarray([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [(10, 0), (0, 0)])]],
+           [(np.asarray([-4, 0, -4, 0, 0, 0, 4, 0, 4, 0, 0, 0]), np.asarray([1, 0, 0, 0, 0, 0, 0, 0])),
+            (np.asarray([-3, 0, -3, 0, 0, 0, 4, 0, 4, 0, 0, 0]), np.asarray([1, 0, 0, 0, 0, 0, 0, 0]))]))
     @unpack
     def testPreProcessTrajectories(self, trajectories, groundTruthStateActionPairsProcessed):
         sheepId = 0
@@ -67,7 +66,14 @@ class TestNNMCTS(unittest.TestCase):
         preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot)
         stateActionPairsProcessed = preProcessTrajectories(trajectories)
 
-        self.assertEqual(stateActionPairsProcessed, groundTruthStateActionPairsProcessed)
+        compareTuples = lambda tuple1, tuple2: all(np.array_equal(element1, element2) for element1, element2
+                                                   in zip(tuple1, tuple2))
+        processedAndGroundTruthPairs = zip(stateActionPairsProcessed, groundTruthStateActionPairsProcessed)
+        truthValue = all(compareTuples(processedPair, groundTruthPair) for processedPair, groundTruthPair in
+                         processedAndGroundTruthPairs)
+
+        self.assertTrue(truthValue)
+
 
 if __name__ == "__main__":
     unittest.main()
