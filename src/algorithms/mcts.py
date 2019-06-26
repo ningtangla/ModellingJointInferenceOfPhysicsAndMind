@@ -102,6 +102,7 @@ def backup(value, nodeList):
         node.sumValue += value
         node.numVisited += 1
 
+
 def selectGreedyAction(root):
     visits = np.array([child.numVisited for child in root.children])
     maxIndices = np.argwhere(visits == np.max(visits)).flatten()
@@ -109,10 +110,12 @@ def selectGreedyAction(root):
     action = list(root.children[selectedIndex].id.keys())[0]
     return action
 
+
 def establishPlainActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     actionProbs = visits / np.sum(visits)
-    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    actions = [list(child.id.keys())[0] for child in root.children]
+    actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
 
@@ -120,8 +123,10 @@ def establishSoftmaxActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     expVisits = np.exp(visits)
     actionProbs = expVisits / np.sum(expVisits)
-    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    actions = [list(child.id.keys())[0] for child in root.children]
+    actionDist = dict(zip(actions, actionProbs))
     return actionDist
+
 
 class MCTS:
     def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputActionOrDistribution):
