@@ -9,7 +9,7 @@ import wrapperFunctions
 import numpy as np
 import pandas as pd
 from measurementFunctions import calculateCrossEntropy
-from analyticGeometryFunctions import transitePolarToCartesian
+from analyticGeometryFunctions import transitePolarToCartesian, computeVectorNorm, computeAngleBetweenVectors
 from pylab import plt
 import policies
 import mcts
@@ -109,18 +109,23 @@ def main():
     killZoneRadius = 25
 
     # mcts policy
-    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex)
+    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex)
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos)
-    transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(state, [np.array(action), wolfDriectChasingPolicy(state)])
-    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos,
+                                                                              computeAngleBetweenVectors)
+    transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
+    sheepTransition = lambda state, action: transition(np.array(state),
+                                                       [np.array(action), wolfDriectChasingPolicy(state)])
 
-    rewardFunction = lambda state, action: 1
+    initPosition = np.array([[30, 30], [20, 20]])
+    initNoise = [0, 0]
+    reset = env.Reset(numOfAgent, initPosition, initNoise)
+    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius, computeVectorNorm)
 
+    # mcts policy
     cInit = 1
-    cBase = 1
+    cBase = 100
     calculateScore = mcts.CalculateScore(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
@@ -131,11 +136,13 @@ def main():
 
     maxRollOutSteps = 10
     rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
+    rewardFunction = lambda state, action: 1
     heuristic = lambda state: 0
-    nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
+    estimateValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
-    numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
+    numSimulations = 200
+    mctsPolicyDistOutput = mcts.MCTS(numSimulations, selectChild, expand, estimateValue, mcts.backup,
+                                     mcts.establishSoftmaxActionDist)
 
     # neuralNetworkModel
     modelDir = "savedModels"
@@ -144,7 +151,7 @@ def main():
     if not os.path.exists(modelPath):
         print("Model {} does not exist".format(modelPath))
         exit(1)
-    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0, regularizationFactor=0, valueRelativeErrBound=0.0)
+    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.0)
     emptyModel = generateModel([64]*4)
     trainedModel = net.restoreVariables(emptyModel, modelPath)
     nnPolicy = net.ApproximateActionPrior(trainedModel, sheepActionSpace)
@@ -173,7 +180,7 @@ def main():
     if not os.path.exists(adPath):
         os.makedirs(adPath)
     getSavePath = GetSavePath(adPath, extension, fixedParameters)
-    generateDistribution = GenerateDistribution(mctsPolicy, nnPolicy, constructTestState, getSavePath, numTrials)
+    generateDistribution = GenerateDistribution(mctsPolicyDistOutput, nnPolicy, constructTestState, getSavePath, numTrials)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateDistribution)
 
     loadData = LoadTrajectories(getSavePath)
