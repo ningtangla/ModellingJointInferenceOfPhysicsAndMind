@@ -21,9 +21,9 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
 from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, restoreVariables, ApproximateActionPrior, \
     ApproximateValueFunction, ApproximatePolicy
-from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, \
+from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, \
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState, GetAgentPosFromTrajectory, \
     GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 

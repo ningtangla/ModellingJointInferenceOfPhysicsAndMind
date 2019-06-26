@@ -11,7 +11,7 @@ from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren,
     MCTS, backup
 from src.play import SampleTrajectory
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from exec.evaluationFunctions import GetSavePath
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 

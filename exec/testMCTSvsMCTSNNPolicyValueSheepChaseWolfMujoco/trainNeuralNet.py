@@ -5,7 +5,7 @@ sys.path.append(os.path.join(dirName, '..', '..'))
 
 from exec.evaluationFunctions import GetSavePath
 from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, Train, saveVariables
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter
