@@ -1,10 +1,14 @@
-import os
+import sys
+sys.path.append("..")
+sys.path.append("../../src/neuralNetwork")
+sys.path.append("../../src/constrainedChasingEscapingEnv")
+sys.path.append("../../src/algorithms")
+sys.path.append("../../src")
 import numpy as np
 from collections import Counter
 import pickle
-import matplotlib.pyplot as plt
-from exec.evaluationFunctions import GetSavePath
-from src.constrainedChasingEscapingEnv.measurementFunctions import calculateCrossEntropy
+from evaluationFunctions import GetSavePath
+from measurementFunctions import calculateCrossEntropy
 
 
 def multiDistCrossEntropy(dists):
@@ -17,7 +21,7 @@ def multiDistCrossEntropy(dists):
 
 def inspectDataSet():
     extension = ".pickle"
-    dataSetsDir = 'data/trainingDataForNN/dataSets'
+    dataSetsDir = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/dataSets'
     getDataSetPath = GetSavePath(dataSetsDir, extension)
 
     initPosition = np.array([[30, 30], [20, 20]])
@@ -25,8 +29,8 @@ def inspectDataSet():
     numSimulations = 200
     maxRunningSteps = 30
     numTrajs = 1000
-    # numTrajs = 200
     numDataPoints = 29000
+    # numTrajs = 200
     # numDataPoints = 5800
     useStdReward = True
     cBase = 100
@@ -41,19 +45,15 @@ def inspectDataSet():
     varDict["cBase"] = cBase
     savePath = getDataSetPath(varDict)
 
+    dataSize = 3000
     with open(savePath, "rb") as f:
         dataSet = pickle.load(f)
-    dataPoints = list(zip(*list(dataSet.values())))
-    dataSize = len(dataPoints)
+    dataPoints = list(zip(*list(dataSet.values())))[:dataSize]
 
     counter = Counter()
     for s, a, ad, v in dataPoints:
         sTuple = tuple(s)
         counter[sTuple] += 1
-
-    for state, rep in counter.most_common(15):
-        print(state)
-        print(rep)
 
     reps = np.array(list(counter.values()))
     meanRep = np.mean(reps)
@@ -63,6 +63,11 @@ def inspectDataSet():
     maxRep = np.max(reps)
     print("mean {} std {} min {} med {} max {}".format(meanRep, stdRep, minRep, medRep, maxRep))
 
+    k = 15
+    print("----Top {} most common states:".format(k))
+    for state, rep in counter.most_common(k):
+        print("State: {}, rep: {}".format(state, rep))
+
     stateSumEntropies = []
     for state in counter:
         actionDists = []
@@ -70,8 +75,8 @@ def inspectDataSet():
             if tuple(s) == state:
                 actionDists.append(ad)
         stateSumEntropies.append(multiDistCrossEntropy(actionDists))
-    print(len(stateSumEntropies))
-    print(np.sum(reps))
+    assert(len(stateSumEntropies) == len(counter))
+    assert(np.sum(reps) == dataSize)
     print(np.sum(stateSumEntropies) / np.sum(reps))
 
 
