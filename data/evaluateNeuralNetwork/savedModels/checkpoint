@@ -1,2 +1,0 @@
-model_checkpoint_path: "/home/enminz/Research/chasingTargetSupervisedLearning/./savedModels/581120data_64x4_minibatch_50.0kIter_contState_actionDist"
-all_model_checkpoint_paths: "/home/enminz/Research/chasingTargetSupervisedLearning/./savedModels/581120data_64x4_minibatch_50.0kIter_contState_actionDist"

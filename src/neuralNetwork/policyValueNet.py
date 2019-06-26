@@ -23,7 +23,7 @@ class GenerateModelSeparateLastLayer:
 				state_ = tf.placeholder(tf.float32, [None, self.numStateSpace], name="state_")
 				actionLabel_ = tf.placeholder(tf.int32, [None, self.numActionSpace], name="actionLabel_")
 				valueLabel_ = tf.placeholder(tf.float32, [None, 1], name="valueLabel_")
-				updatedLearningRate_ = tf.placeholder(tf.float32, [None, 1], name="updatedLearningRate_")
+				learningRate_ = tf.constant(1e-4, dtype=tf.float32)
 				actionLossCoef_ = tf.constant(50, dtype=tf.float32)
 				valueLossCoef_ = tf.constant(1, dtype=tf.float32)
 				tf.add_to_collection("inputs", state_)
@@ -31,7 +31,7 @@ class GenerateModelSeparateLastLayer:
 				tf.add_to_collection("inputs", valueLabel_)
 				tf.add_to_collection("lossCoefs", actionLossCoef_)
 				tf.add_to_collection("lossCoefs", valueLossCoef_)
-				tf.add_to_collection("learningRate", updatedLearningRate_)
+				tf.add_to_collection("learningRate", learningRate_)
 
 			with tf.name_scope("hidden"):
 				initWeight = tf.random_uniform_initializer(-0.03, 0.03)
@@ -106,7 +106,7 @@ class GenerateModelSeparateLastLayer:
 				tf.summary.scalar("l2RegLoss", l2RegularizationLoss_)
 				lossSummary = tf.summary.scalar("loss", loss_)
 
-				optimizer = tf.train.AdamOptimizer(updatedLearningRate_, name='adamOpt_')
+				optimizer = tf.train.AdamOptimizer(learningRate_, name='adamOpt_')
 				gradVarPairs_ = optimizer.compute_gradients(loss_)
 				trainOp = optimizer.apply_gradients(gradVarPairs_)
 				tf.add_to_collection(tf.GraphKeys.TRAIN_OP, trainOp)
@@ -151,7 +151,7 @@ class Train:
 		graph = model.graph
 		state_, actionLabel_, valueLabel_ = graph.get_collection_ref("inputs")
 		actionLossCoef_, valueLossCoef_ = graph.get_collection_ref("lossCoefs")
-		updatedLearningRate_ = graph.get_collection_ref("learningRate")
+		learningRate_ = graph.get_collection_ref("learningRate")[0]
 		loss_ = graph.get_collection_ref("loss")[0]
 		actionLoss_ = graph.get_collection_ref("actionLoss")[0]
 		valueLoss_ = graph.get_collection_ref("valueLoss")[0]
@@ -160,7 +160,7 @@ class Train:
 		trainOp = graph.get_collection_ref(tf.GraphKeys.TRAIN_OP)[0]
 		fullSummaryOp = graph.get_collection_ref('summaryOps')[0]
 		trainWriter = graph.get_collection_ref('writers')[0]
-		fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_}, trainOp, fullSummaryOp]
+		fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_, "learningRate": learningRate_}, trainOp, fullSummaryOp]
 
 		evalDict = None
 		trainingDataList = list(zip(*trainingData))
@@ -172,10 +172,8 @@ class Train:
 				stateBatch, actionLabelBatch, valueLabelBatch = sampleData(trainingDataList, self.batchSize)
 			actionLossCoef, valueLossCoef = self.coefficientController(evalDict)
 			updatedLearningRate = self.lrModifier(stepNum)
-			feedDict = {state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef,
-			            updatedLearningRate_: updatedLearningRate}
+			feedDict = {state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef, learningRate_: updatedLearningRate}
 			evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
-			evalDict.update({"learningRate": updatedLearningRate_})
 
 			self.reporter(evalDict, stepNum, trainWriter, summary)
 
