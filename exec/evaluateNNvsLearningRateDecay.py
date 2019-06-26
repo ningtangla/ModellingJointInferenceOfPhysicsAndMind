@@ -137,8 +137,6 @@ def main():
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput, dataSet)
     generateDataFrameForDrawing = GenerateDataFrameForDrawing('trainingDataSize', 'totalLoss', 'decayRate', 'decayStep')
     dfs = generateDataFrameForDrawing(resultDF)
-    with open(os.path.join(dataDir, "2019-06-24.pkl"), 'wb') as f:
-        pickle.dump(resultDF, f)
     plt.savefig(os.path.join(dataDir, "effect_learningRateDecay_on_NNPerformance.png"))
 
 if __name__ == "__main__":
