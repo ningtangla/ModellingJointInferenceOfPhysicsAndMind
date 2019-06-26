@@ -63,12 +63,14 @@ class GenerateDataFrameForDrawing:
         for outerkey, subDF in df.groupby(self.subplotVariableName):
             subplot = figure.add_subplot(1, totalPlot, numplot)
             for innerkey, lineDF in subDF.groupby(self.lineVariableName):
+                plt.xlabel(self.xVariableName)
+                plt.ylabel(self.yVariableName)
+                plt.ylim((0.5, 1))
                 plotDF = lineDF.reset_index()
                 plotDF.plot(x=self.xVariableName, y=self.yVariableName,
                             ax=subplot, title="{}:{}".format(self.subplotVariableName, outerkey), label=innerkey)
             numplot += 1
-        plt.xlabel(self.xVariableName)
-        plt.ylabel(self.yVariableName)
+        plt.subplots_adjust(wspace=0.4)
 
 
 
@@ -102,9 +104,9 @@ def main():
 
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [100, 200, 300, 400]
-    independentVariables['decayRate'] = [0.95]
-    independentVariables['decayStep'] = [10, 100, 1000]
+    independentVariables['trainingDataSize'] = [1000, 2000, 3000, 4000, 5000]
+    independentVariables['decayRate'] = [0.9, 0.95, 0.98, 1]
+    independentVariables['decayStep'] = [10, 50, 100, 1000, 10000]
 
     # generate NN
     trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
@@ -133,9 +135,11 @@ def main():
     getSavePath = GetSavePath(trainingOutputPath, extension)
     generateTrainingOutput = GenerateTrainingLoss(getSavePath, model, generateTrain, generateLRModifier)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput, dataSet)
-    generateDataFrameForDrawing = GenerateDataFrameForDrawing('trainingDataSize', 'actionLoss', 'decayRate', 'decayStep')
+    generateDataFrameForDrawing = GenerateDataFrameForDrawing('trainingDataSize', 'totalLoss', 'decayRate', 'decayStep')
     dfs = generateDataFrameForDrawing(resultDF)
-    plt.show()
+    with open(os.path.join(dataDir, "2019-06-24.pkl"), 'wb') as f:
+        pickle.dump(resultDF, f)
+    plt.savefig(os.path.join(dataDir, "effect_learningRateDecay_on_NNPerformance.png"))
 
 if __name__ == "__main__":
     main()
