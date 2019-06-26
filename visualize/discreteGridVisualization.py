@@ -56,12 +56,12 @@ class DrawCircles:
         return game
 
 
-
 class InitializeGame:
     def __init__(self, screenWidth, screenHeight, caption):
         self.screenWidth = screenWidth
         self.screenHeight = screenHeight
         self.caption = caption
+
     def __call__(self):
         pygame.init()
         game = pygame.display.set_mode((self.screenWidth, self.screenHeight))

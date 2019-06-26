@@ -1,8 +1,10 @@
 import numpy as np
 import random
 
+
 def stationaryAgentPolicy(state):
     return (0, 0)
+
 
 class RandomPolicy:
     def __init__(self, actionSpace):
@@ -11,6 +13,7 @@ class RandomPolicy:
         actionIndex = np.random.randint(len(self.actionSpace))
         action = self.actionSpace[actionIndex]
         return action
+
 
 class HeatSeekingDiscreteDeterministicPolicy:
     def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
@@ -28,6 +31,7 @@ class HeatSeekingDiscreteDeterministicPolicy:
         action = random.choice(optimalActionList)
         return action
 
+
 class HeatSeekingContinuesDeterministicPolicy:
     def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
         self.getPredatorPos = getPredatorPos
@@ -42,6 +46,7 @@ class HeatSeekingContinuesDeterministicPolicy:
             action = action / actionL2Norm
             action *= self.actionMagnitude
         return action
+
 
 class ActHeatSeeking:
     def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
@@ -64,6 +69,7 @@ class ActHeatSeeking:
         unchosenActions = [action for action, index in zip(self.actionSpace, unchosenFilter) if not index]
 
         return [chosenActions, unchosenActions]  
+
 
 class HeatSeekingDiscreteStochasticPolicy:
     def __init__(self, rationalityParam, actHeatSeeking, getPredatorPos, getPreyPos):

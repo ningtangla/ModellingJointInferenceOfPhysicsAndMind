@@ -10,6 +10,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, Ra
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, HeatSeekingContinuesDeterministicPolicy, ActHeatSeeking, HeatSeekingDiscreteStochasticPolicy
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+
 @ddt
 class TestContinuesStatePolicies(unittest.TestCase):
     def setUp(self):
@@ -47,7 +48,7 @@ class TestContinuesStatePolicies(unittest.TestCase):
         pass
 
 @ddt
-class TestPolicyFunctions(unittest.TestCase):
+class TestHeatSeekingDiscreteStochasticPolicy(unittest.TestCase):
     def setUp(self):
         self.actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
         self.rationalityParam = 0.9
@@ -110,13 +111,12 @@ class TestPolicyFunctions(unittest.TestCase):
             self.assertAlmostEqual(trueActionCount[action],intendedActionList.count(action), delta=200)
 
 
-
     def tearDown(self):
         pass
 
 
 @ddt
-class TestPolicyFunctionsRandomOrder(unittest.TestCase):
+class TestHeatSeekingDiscreteStochasticPolicyRandomOrder(unittest.TestCase):
     def setUp(self):
         self.actionSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
         self.rationalityParam = 0.9

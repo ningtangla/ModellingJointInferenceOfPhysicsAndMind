@@ -1,16 +1,15 @@
 import numpy as np 
-import math 
 from random import randint
 from wrapperFunctions import rearrangeList
 
 class Reset:
-    def __init__(self, gridSize, lowerGridBound, agentCount):
+    def __init__(self, gridSize, lowerBound, agentCount):
         self.gridX, self.gridY = gridSize
-        self.lowerGridBound = lowerGridBound
+        self.lowerBound = lowerBound
         self.agentCount = agentCount
 
     def __call__(self):
-        startState = [(randint(self.lowerGridBound, self.gridX), randint(self.lowerGridBound, self.gridY)) for _ in range(self.agentCount)]
+        startState = [(randint(self.lowerBound, self.gridX), randint(self.lowerBound, self.gridY)) for _ in range(self.agentCount)]
         return startState
 
 class StayWithinBoundary:
@@ -30,46 +29,40 @@ class StayWithinBoundary:
             nextY = self.gridY
         return nextX, nextY
 
-def roundNumber(number):
-    if number - math.floor(number) < 0.5:
-        return math.floor(number)
-    return math.ceil(number)
-
 class GetPullingForceValue:
-    def __init__(self, adjustingParam, roundNumber):
-        self.adjustingParam = adjustingParam
-        self.roundNumber = roundNumber
-    def __call__(self, relativeLocation):
-        relativeLocationArray = np.array(relativeLocation)
+    def __init__(self, distanceForceRatio):
+        self.distanceForceRatio = distanceForceRatio
+
+    def __call__(self, pullersRelativeLocation):
+        relativeLocationArray = np.array(pullersRelativeLocation)
         distance = np.sqrt(relativeLocationArray.dot(relativeLocationArray))
-        force = self.roundNumber(distance / self.adjustingParam + 1)
+        force = int(np.round(distance / self.distanceForceRatio + 1))
         return force
 
 class SamplePulledForceDirection:
     def __init__(self, calculateAngle, forceSpace, lowerBoundAngle, upperBoundAngle):
-
         self.calculateAngle = calculateAngle
         self.forceSpace = forceSpace
         self.lowerBoundAngle = lowerBoundAngle
         self.upperBoundAngle = upperBoundAngle
         
-    def __call__(self, pullingDirection):
+    def __call__(self, pullersRelativeLocation):
         
-        if np.all(np.array(pullingDirection) == np.array((0, 0))):
+        if np.all(np.array(pullersRelativeLocation) == np.array((0, 0))):
             return 0, 0
-        
-        forceActionAngle = {mvmtVector: self.calculateAngle(pullingDirection, mvmtVector) for mvmtVector in self.forceSpace}
+
+        forceAndRelativeLocAngle = [self.calculateAngle(pullersRelativeLocation, forceDirection) for forceDirection in self.forceSpace]
 
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
-        forceAnglePair = zip(self.forceSpace, forceActionAngle.values())
-        
-        angleFilter = {force: angleWithinRange(angle) for force, angle in forceAnglePair}
+        angleFilter = [angleWithinRange(angle) for angle in forceAndRelativeLocAngle]
 
-        pulledActions = [action for action, index in zip(angleFilter.keys(), angleFilter.values()) if index]
-        pulledActionsLikelihood = [1 / len(pulledActions)] * len(pulledActions)
-        pulledActionSampleIndex = list(np.random.multinomial(1, pulledActionsLikelihood)).index(1)
-        pulledAction = pulledActions[pulledActionSampleIndex]
-        return pulledAction
+        forceDirections = [force for force, index in zip(self.forceSpace, angleFilter) if index]
+
+        forceDirectionsLikelihood = [1 / len(forceDirections)] * len(forceDirections)
+        forceDirectionSampleIndex = list(np.random.multinomial(1, forceDirectionsLikelihood)).index(1)
+        sampledForceDirection = forceDirections[forceDirectionSampleIndex]
+
+        return sampledForceDirection
 
 class GetPulledAgentForce:
     def __init__(self, getPullingAgentPosition, getPulledAgentPosition, samplePulledForceDirection, getPullingForceValue):
@@ -81,23 +74,28 @@ class GetPulledAgentForce:
     def __call__(self, state):
         pullingAgentState = self.getPullingAgentPosition(state)
         pulledAgentState = self.getPulledAgentPosition(state)
-        pullingDirection = np.array(pullingAgentState) - np.array(pulledAgentState)
-        pulledDirection = self.samplePulledForceDirection(pullingDirection)
-        pullingForceValue = self.getPullingForceValue(pullingDirection)
-        pullingResultAction = np.array(pulledDirection) * pullingForceValue
 
-        return pullingResultAction
+        pullersRelativeLocation = np.array(pullingAgentState) - np.array(pulledAgentState)
 
-class GetAgentsForce: # ordered by index
+        pulledDirection = self.samplePulledForceDirection(pullersRelativeLocation)
+        pullingForceValue = self.getPullingForceValue(pullersRelativeLocation)
+
+        pulledAgentForce = np.array(pulledDirection) * pullingForceValue
+
+        return pulledAgentForce
+
+class GetAgentsForce:
     def __init__(self, getPulledAgentForce, pulledAgentIndex, noPullingAgentIndex, pullingAgentIndex):
         self.getPulledAgentForce = getPulledAgentForce
         self.pulledAgentIndex = pulledAgentIndex
         self.noPullingAgentIndex = noPullingAgentIndex
         self.pullingAgentIndex = pullingAgentIndex
+
     def __call__(self, state):
         pulledAgentForce = np.array(self.getPulledAgentForce(state))
         pullingAgentForce = -pulledAgentForce
         noPullAgentForce = (0,0)
+
         unorderedAgentsForce = [pulledAgentForce, noPullAgentForce, pullingAgentForce]
         agentsIDOrder = [self.pulledAgentIndex, self.noPullingAgentIndex, self.pullingAgentIndex]
         agentsForce = rearrangeList(unorderedAgentsForce, agentsIDOrder)
@@ -107,6 +105,7 @@ class Transition:
     def __init__(self, stayWithinBoundary, getAgentsForce):
         self.stayWithinBoundary = stayWithinBoundary
         self.getAgentsForce = getAgentsForce
+
     def __call__(self, actionList, state):
         agentsForce = self.getAgentsForce(state)
         agentsIntendedState = np.array(state) + np.array(agentsForce) + np.array(actionList)

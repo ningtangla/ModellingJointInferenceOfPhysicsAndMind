@@ -65,8 +65,8 @@ def main():
     reset = Reset(gridSize, lowerGridBound, agentCount)
     stayWithinBoundary = StayWithinBoundary(gridSize, lowerGridBound)
 
-    adjustingParam = 3
-    getPullingForceValue = GetPullingForceValue(adjustingParam, roundNumber)
+    distanceForceRatio = 5
+    getPullingForceValue = GetPullingForceValue(distanceForceRatio)
     samplePulledForceDirection = SamplePulledForceDirection(computeAngleBetweenVectors, actionSpace, lowerBoundAngle, upperBoundAngle)
 
     getPulledAgentForce = GetPulledAgentForce(getPullingAgentPos, getPulledAgentPos, samplePulledForceDirection, getPullingForceValue)
@@ -83,13 +83,12 @@ def main():
     print(locationDf)
 
 
-
     BLACK = (  0,   0,   0)
     WHITE = (255, 255, 255)
+
     BLUE =  (  0,   0, 255)
     PINK = ( 250,   0, 255)
     GREEN = (0, 255, 0)
-
 
     screenWidth = 800
     screenHeight = 800
@@ -99,8 +98,9 @@ def main():
 
     pointExtendTime = 100
     FPS = 60
-    # colorList = [BLUE, PINK, GREEN]
     colorList = [BLACK,BLACK,BLACK]
+    colorList = [BLUE, PINK, GREEN]
+
     pointWidth = 10
     modificationRatio = 3
 
@@ -116,7 +116,7 @@ def main():
     backgroundColor= WHITE
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
-    drawPointsFromLocationDfandSaveImage =  DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
+    drawPointsFromLocationDfandSaveImage = DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
     drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber, saveImage = True)
 
 
