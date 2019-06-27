@@ -117,10 +117,6 @@ def main():
     transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
     sheepTransition = lambda state, action: transition(np.array(state),
                                                        [np.array(action), wolfDriectChasingPolicy(state)])
-
-    initPosition = np.array([[30, 30], [20, 20]])
-    initNoise = [0, 0]
-    reset = env.Reset(numOfAgent, initPosition, initNoise)
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius, computeVectorNorm)
 
     # mcts policy
