@@ -198,6 +198,7 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
 
 	stateBatch, actionLabelBatch, valueLabelBatch = testData
 	evalDict, summary = model.run(fetches, feed_dict={state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch})
+	evalDict['totalLoss'] = evalDict['actionLoss'] + evalDict['valueLoss']
 	if summaryOn:
 		testWriter.add_summary(summary, stepNum)
 	return evalDict
