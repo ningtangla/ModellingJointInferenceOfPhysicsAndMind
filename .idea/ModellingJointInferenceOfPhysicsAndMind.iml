@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/constrainedChasingEscapingEnv" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/visualize" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/inferDiscreteGridChasing" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -5,6 +5,12 @@ import random
 def stationaryAgentPolicy(state):
     return (0, 0)
 
+class RandomActionLikelihood:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+    def __call__(self, state):
+        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+        return likelihood
 
 class RandomPolicy:
     def __init__(self, actionSpace):
@@ -92,5 +98,5 @@ class HeatSeekingDiscreteStochasticPolicy:
         heatSeekingSampleLikelihood = list(heatSeekingActionLikelihood.values())
         heatSeekingActionIndex = list(np.random.multinomial(1, heatSeekingSampleLikelihood)).index(1)
         chasingAction = list(heatSeekingActionLikelihood.keys())[heatSeekingActionIndex]
-        
+
         return chasingAction

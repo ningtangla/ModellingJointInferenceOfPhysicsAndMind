@@ -65,7 +65,7 @@ def main():
     reset = Reset(gridSize, lowerGridBound, agentCount)
     stayWithinBoundary = StayWithinBoundary(gridSize, lowerGridBound)
 
-    distanceForceRatio = 5
+    distanceForceRatio = 20
     getPullingForceValue = GetPullingForceValue(distanceForceRatio)
     samplePulledForceDirection = SamplePulledForceDirection(computeAngleBetweenVectors, actionSpace, lowerBoundAngle, upperBoundAngle)
 
