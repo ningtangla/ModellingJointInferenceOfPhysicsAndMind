@@ -29,21 +29,25 @@ class testInference(unittest.TestCase):
         positionIndex = [0, 1]
         rationalityParam = 0.9
 
-        self.getWolfPosition = lambda wolfID: GetAgentPosFromState(wolfID, positionIndex)
-        self.getSheepPosition = lambda sheepID: GetAgentPosFromState(sheepID, positionIndex)
+        self.getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
 
-        self.getWolfActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam,self.getWolfProperAction, getWolfPos, getSheepPos)
-        self.getSheepActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam,self.getSheepProperAction,getWolfPos, getSheepPos)
+        self.getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam,self.getWolfProperAction, getWolfPos, getSheepPos)
+
         self.getMasterActionLikelihood = RandomActionLikelihood(self.actionSpace)
 
-        self.inferPolicyLikelihood = InferPolicyLikelihood(positionIndex, rationalityParam, self.actionSpace, self.getWolfPosition, self.getSheepPosition,self.getWolfActionLikelihood, self.getSheepActionLikelihood,self.getMasterActionLikelihood)
+        self.getPolicyDistribution = GetPolicyDistribution(self.getAgentPosition, self.getHeatSeekingActionLikelihood,self.getMasterActionLikelihood)
 
-        self.getPulledAgentPos = lambda pulledAgentID: GetAgentPosFromState(pulledAgentID, positionIndex)
-        self.getPullingAgentPos = lambda pullingAgentID: GetAgentPosFromState(pullingAgentID, positionIndex)
+        self.inferPolicyLikelihood = InferPolicyLikelihood(self.getPolicyDistribution)
 
         self.getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(computeAngleBetweenVectors, self.forceSpace,self.lowerBoundAngle, self.upperBoundAngle)
 
-        self.inferForceLikelihood = InferForceLikelihood(positionIndex, self.forceSpace, self.getPulledAgentPos, self.getPullingAgentPos, self.getPulledAgentForceLikelihood)
+        self.getPulledAgentForceDistribution = GetPulledAgentForceDistribution(self.getAgentPosition, self.getPulledAgentForceLikelihood)
+
+        self.inferForceLikelihood = InferForceLikelihood(self.getPulledAgentForceDistribution)
+
+
+    def checkIndex(self):
+        self.assertEqual(self.index, 6* 6* 125* 12)
 
     @data(([(2,2), (3,3), (4,5)],
            ((0, 1), (-1, 0), (-1, 0)),
@@ -76,11 +80,6 @@ class testInference(unittest.TestCase):
            ((1, 0), (0, 0), (-1, 0)),
            (2, 1, 0),  #pulling, noPull, pulled
            0.5
-           ),
-          ([(2, 2), (3, 3), (4, 5)],
-           ((0, 0), (-1, 0), (-1, 0)),
-           (1, 2, 0),  #noPull, pulling, pulled
-           0
            ),
           ([(2, 2), (3, 3), (4, 5)],
            ((0, 0), (1, 0), (-1, 0)),

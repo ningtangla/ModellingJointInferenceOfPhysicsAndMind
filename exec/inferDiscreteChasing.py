@@ -20,36 +20,28 @@ def main():
 
     lowerBoundAngle = 0
     upperBoundAngle = np.pi / 2
-    getWolfProperAction = ActHeatSeeking(actionSpace, computeAngleBetweenVectors, lowerBoundAngle, upperBoundAngle)
-    getSheepProperAction = ActHeatSeeking(actionSpace, computeAngleBetweenVectors, lowerBoundAngle, upperBoundAngle)
+    actHeatSeeking = ActHeatSeeking(actionSpace, computeAngleBetweenVectors, lowerBoundAngle, upperBoundAngle)
 
     positionIndex = [0, 1]
     rationalityParam = 0.9
     actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
 
-    getWolfPosition = lambda wolfID: GetAgentPosFromState(wolfID, positionIndex)
-    getSheepPosition = lambda sheepID: GetAgentPosFromState(sheepID, positionIndex)
+    getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
 
-
-    getWolfActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam, getWolfProperAction, getWolfPos, getSheepPos)
-    getSheepActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam, getSheepProperAction, getWolfPos, getSheepPos)
+    getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam,actHeatSeeking, getWolfPos, getSheepPos)
     getMasterActionLikelihood = RandomActionLikelihood(actionSpace)
 
+    getPolicyDistribution = GetPolicyDistribution(getAgentPosition, getHeatSeekingActionLikelihood, getMasterActionLikelihood)
 
-    inferPolicyLikelihood = InferPolicyLikelihood(positionIndex, rationalityParam, actionSpace,
-                                                  getWolfPosition, getSheepPosition,
-                                                  getWolfActionLikelihood, getSheepActionLikelihood,
-                                                  getMasterActionLikelihood)
+    inferPolicyLikelihood = InferPolicyLikelihood(getPolicyDistribution)
 
-    getPulledAgentPos = lambda pulledAgentID: GetAgentPosFromState(pulledAgentID, positionIndex)
-    getPullingAgentPos = lambda pullingAgentID: GetAgentPosFromState(pullingAgentID, positionIndex)
 
-    getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(computeAngleBetweenVectors, forceSpace,
-                                                                   lowerBoundAngle, upperBoundAngle)
 
-    inferForceLikelihood = InferForceLikelihood(positionIndex, forceSpace,
-                                                getPulledAgentPos, getPullingAgentPos,
-                                                getPulledAgentForceLikelihood)
+    getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(computeAngleBetweenVectors, forceSpace, lowerBoundAngle, upperBoundAngle)
+
+    getPulledAgentForceDistribution = GetPulledAgentForceDistribution(getAgentPosition, getPulledAgentForceLikelihood)
+
+    inferForceLikelihood = InferForceLikelihood(getPulledAgentForceDistribution)
 
     inferOneStepDiscreteChasing = InferOneStepDiscreteChasing(chasingAgents, pullingAgents,
                                                               actionSpace, forceSpace, createIndex,
@@ -61,25 +53,7 @@ def main():
     nextState = [(2, 3), (1, 3), (4, 5)]
     inferenceDf = inferOneStepDiscreteChasing(state, nextState)
 
-    #inferenceDf.to_excel("df.xlsx")
-
-    print(inferenceDf.head())
-
-    #state = [(2,2), (3,3), (4,5)]
-
-    # allAgentsActions = ((0, 1), (-1, 0), (-1, 0))
-    # chasingIndices = (1, 0, 2) # ('sheep', 'wolf', 'master')
-    # print(inferPolicyLikelihood(state, allAgentsActions, chasingIndices))
-
-    # pullingIndices = (2, 1, 0) #  pulling,  noPull, pulled
-    # allAgentsForces = ((1, 0), (0, 0), (-1, 0))
-    #
-    # print(inferForceLikelihood(state, allAgentsForces, pullingIndices))
-    #
-    # observedNextState =
-    #
-    # print(inferTransitionLikelihood(state, allAgentsActions, allAgentsForces, observedNextState))
-    # #?? reach the boundary
+    inferenceDf.to_csv("oneStepResult.csv")
 
 if __name__ == '__main__':
     main()

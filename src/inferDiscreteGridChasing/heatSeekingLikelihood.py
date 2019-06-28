@@ -4,6 +4,7 @@ import numpy as np
 class RandomActionLikelihood:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
+
     def __call__(self, state):
         likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
         return likelihood

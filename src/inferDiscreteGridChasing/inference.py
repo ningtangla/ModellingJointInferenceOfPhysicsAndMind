@@ -7,40 +7,39 @@ def createIndex(chasingAgents, pullingAgents, actionSpace, forceSpace):
     chasingSpace = list(itertools.permutations(chasingAgents))
     pullingSpace = list(itertools.permutations(pullingAgents))
     actionHypo = list(itertools.product(actionSpace, actionSpace, actionSpace))
-    forceHypo = list(itertools.product(forceSpace, forceSpace, forceSpace))
+
+    zeroArray = lambda force: np.all(np.array(force) == 0)
+    forceChoices = [force for force in forceSpace if not zeroArray(force)]
+    forceComboList = [list(itertools.permutations([(0, 0), force, tuple(-np.array(force))])) for force in forceChoices] #nested list
+    forceCombo = [agentsForce for forceList in forceComboList for agentsForce in forceList] # with duplicates
+    forceHypo = list(set(forceCombo))
 
     iterables = [chasingSpace, pullingSpace, actionHypo, forceHypo]
     index = pd.MultiIndex.from_product(iterables, names=['chasingAgents', 'pullingAgents',
                                                          'action','force'])
-    return index
+    return index # length = 54000
 
-class InferPolicyLikelihood:
-    def __init__(self, positionIndex, rationalityParam, actionSpace,
-                 getWolfPosition, getSheepPosition,
-                 getWolfActionLikelihood, getSheepActionLikelihood,
+
+
+class GetPolicyDistribution:
+    def __init__(self,  getAgentPosition,
+                 getHeatSeekingActionLikelihood,
                  getMasterActionLikelihood):
 
-        self.positionIndex = positionIndex
-        self.rationalityParam = rationalityParam
-        self.actionSpace = actionSpace
-
-        self.getWolfPositionFunc = getWolfPosition
-        self.getSheepPositionFunc = getSheepPosition
-
-        self.getWolfActionLikelihoodFunc = getWolfActionLikelihood
-        self.getSheepActionLikelihoodFunc = getSheepActionLikelihood
+        self.getAgentPosition = getAgentPosition
+        self.getHeatSeekingActionLikelihood = getHeatSeekingActionLikelihood
 
         self.getMasterActionLikelihood = getMasterActionLikelihood
 
-    def __call__(self, state, allAgentsAction, chasingIndices):
+    def __call__(self, state, chasingIndices):
         wolfID = chasingIndices.index(0)
         sheepID = chasingIndices.index(1)
 
-        getWolfPos = self.getWolfPositionFunc(wolfID)
-        getSheepPos = self.getSheepPositionFunc(sheepID)
+        getWolfPos = self.getAgentPosition(wolfID)
+        getSheepPos = self.getAgentPosition(sheepID)
 
-        getWolfActionLikelihood = self.getWolfActionLikelihoodFunc(getWolfPos, getSheepPos)
-        getSheepActionLikelihood = self.getSheepActionLikelihoodFunc(getWolfPos, getSheepPos)
+        getWolfActionLikelihood = self.getHeatSeekingActionLikelihood(getWolfPos, getSheepPos)
+        getSheepActionLikelihood = self.getHeatSeekingActionLikelihood(getWolfPos, getSheepPos)
 
         unorderedLikelihood = [getWolfActionLikelihood, getSheepActionLikelihood, self.getMasterActionLikelihood]
         orderedLikelihood = [unorderedLikelihood[index] for index in chasingIndices]
@@ -48,53 +47,66 @@ class InferPolicyLikelihood:
         getActionLikelihood = lambda state: [computeLikelihood(state) for computeLikelihood in orderedLikelihood]
         actionLikelihoodList = getActionLikelihood(state)
 
+        return actionLikelihoodList
+
+
+class InferPolicyLikelihood:
+    def __init__(self, getPolicyDistribution):
+        self.getPolicyDistribution = getPolicyDistribution
+
+    def __call__(self, state, allAgentsAction, chasingIndices):
+
+        actionLikelihoodList = self.getPolicyDistribution(state, chasingIndices)
         targetActionLikelihood = [actionLikelihood[action] for actionLikelihood, action in
                                   zip(actionLikelihoodList, allAgentsAction)]
-
         policyLikelihood = np.product(targetActionLikelihood)
 
         return policyLikelihood
 
-class InferForceLikelihood:
-    def __init__(self, positionIndex, forceSpace, getPulledAgentPosFunc, getPullingAgentPosFunc,
-                 getPulledAgentForceLikelihood):
-        self.positionIndex = positionIndex
-        self.forceSpace = forceSpace
-
-        self.getPulledAgentPosFunc = getPulledAgentPosFunc
-        self.getPullingAgentPosFunc = getPullingAgentPosFunc
-
+class GetPulledAgentForceDistribution:
+    def __init__(self, getAgentPosition,getPulledAgentForceLikelihood):
+        self.getAgentPosition = getAgentPosition
         self.getPulledAgentForceLikelihood = getPulledAgentForceLikelihood
 
-    def __call__(self, state, allAgentsForce, pullingIndices):
+    def __call__(self, state, pullingIndices):
         pulledAgentID = pullingIndices.index(0)
-        noPullAgentID = pullingIndices.index(1)
         pullingAgentID = pullingIndices.index(2)
 
-        pulledAgentForce = allAgentsForce[pulledAgentID]
-        pullingAgentForce = allAgentsForce[pullingAgentID]
-
-        if not np.all(np.array(pulledAgentForce) + np.array(pullingAgentForce) == 0):
-            return 0
-
-        noPullAgentForce = allAgentsForce[noPullAgentID]
-        if not np.all(np.array(noPullAgentForce) == 0):
-            noPullAgentForceProb = 0
-        else:
-            noPullAgentForceProb = 1
-
-        getPulledAgentPos = self.getPulledAgentPosFunc(pulledAgentID)
-        getPullingAgentPos = self.getPullingAgentPosFunc(pullingAgentID)
+        getPulledAgentPos = self.getAgentPosition(pulledAgentID)
+        getPullingAgentPos = self.getAgentPosition(pullingAgentID)
 
         pulledAgentState = getPulledAgentPos(state)
         pullingAgentState = getPullingAgentPos(state)
-
 
         pullersRelativeLocation = np.array(pullingAgentState) - np.array(pulledAgentState)
 
         pulledAgentForceLikelihood= self.getPulledAgentForceLikelihood(pullersRelativeLocation)
 
+        return pulledAgentForceLikelihood
+
+
+
+class InferForceLikelihood:
+    def __init__(self, getPulledAgentForceDistribution):
+
+        self.getPulledAgentForceDistribution = getPulledAgentForceDistribution
+
+    def __call__(self, state, allAgentsForce, pullingIndices):
+
+        pulledAgentID = pullingIndices.index(0)
+        noPullAgentID = pullingIndices.index(1)
+
+        pulledAgentForce = allAgentsForce[pulledAgentID]
+        pulledAgentForceLikelihood = self.getPulledAgentForceDistribution(state, pullingIndices)
+
         targetPulledAgentForceLikelihood = pulledAgentForceLikelihood[pulledAgentForce]
+
+        noPullAgentForce = allAgentsForce[noPullAgentID]
+
+        if not np.all(np.array(noPullAgentForce) == 0):
+            noPullAgentForceProb = 0
+        else:
+            noPullAgentForceProb = 1
 
         forceLikelihood = targetPulledAgentForceLikelihood * noPullAgentForceProb
 
@@ -124,16 +136,15 @@ class InferOneStepDiscreteChasing:
         self.inferPolicyLikelihood = inferPolicyLikelihood
         self.inferForceLikelihood = inferForceLikelihood
         self.inferTransitionLikelihood = inferTransitionLikelihood
-# pandas.index.get_level_values("levelName")
 
     def __call__(self, state, nextState):
         hypothesisSpace = createIndex(self.chasingAgents, self.pullingAgents, self.actionSpace, self.forceSpace)
         inferenceDf = pd.DataFrame([[state]]* len(hypothesisSpace), index=hypothesisSpace, columns=['state'])
 
-        chasingIndicesList = [index[0] for index in hypothesisSpace]
-        pullingIndicesList = [index[1] for index in hypothesisSpace]
-        actionList = [index[2] for index in hypothesisSpace]
-        forceList = [index[3] for index in hypothesisSpace]
+        chasingIndicesList = hypothesisSpace.get_level_values('chasingAgents')
+        pullingIndicesList = hypothesisSpace.get_level_values('pullingAgents')
+        actionList = hypothesisSpace.get_level_values('action')
+        forceList = hypothesisSpace.get_level_values('force')
 
         policyLikelihood = [self.inferPolicyLikelihood(state, allAgentsActions, chasingIndices)
                             for allAgentsActions, chasingIndices in zip(actionList, chasingIndicesList)]
@@ -150,6 +161,8 @@ class InferOneStepDiscreteChasing:
                              for allAgentsActions, allAgentsForces in zip(actionList, forceList)]
 
         inferenceDf['expectedNextState'] = expectedNextStateList
+
+        inferenceDf['nextState'] = nextState
 
         transitionLikelihood = [self.inferTransitionLikelihood(nextState, state) for nextState in expectedNextStateList]
         inferenceDf['transitionLikelihood'] = transitionLikelihood
