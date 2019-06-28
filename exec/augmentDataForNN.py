@@ -62,7 +62,7 @@ class GenerateSymmetricData():
 def main():
     stateKey = 'state'
     actionLabelKey = 'actionDist'
-    dataDir = '../data/augmentedDataForNN'
+    dataDir = '../data/augmentDataForNN'
     originalDataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
     dataSetPath = os.path.join(dataDir, "dataSets", originalDataSetName)
     if not os.path.exists(dataSetPath):
