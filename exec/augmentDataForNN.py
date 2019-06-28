@@ -63,7 +63,7 @@ def main():
     stateKey = 'state'
     actionLabelKey = 'actionDist'
     dataDir = '../data/augmentedDataForNN'
-    originalDataSetName = "initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=5800_numSimulations=200_numTrajs=200_rolloutSteps=10_standardizedReward=True.pickle"
+    originalDataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
     dataSetPath = os.path.join(dataDir, "dataSets", originalDataSetName)
     if not os.path.exists(dataSetPath):
         print("No dataSet in:\n{}".format(dataSetPath))
