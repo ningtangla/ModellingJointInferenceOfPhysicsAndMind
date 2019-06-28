@@ -71,11 +71,11 @@ class DrawStatistic:
         self.yName = yVaraibleName
 
     def __call__(self, df):
+        plotDF = df.reset_index()
+        plotDF.plot(x=self.xName, y=self.yName)
         plt.xlabel(self.xName)
         plt.ylabel(self.yName)
         plt.title("{} vs {} episode length".format(self.xName, self.yName))
-        plotDF = df.reset_index()
-        plotDF.plot(x=self.xName, y=self.yName)
 
 
 def main():
@@ -114,7 +114,7 @@ def main():
 
     # Train Models
     trainingDataDir = os.path.join(dataDir, "dataSets")
-    dataSetName = "initPos=[30,30,20,20]_maxRunningSteps=30_numDataPoints=5800_numSimulations=200_numTrajs=200_rolloutSteps=10_standardizedReward=True.pickle"
+    dataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
     dataSetPath = os.path.join(trainingDataDir, dataSetName)
     if not os.path.exists(dataSetPath):
         print("No dataSet in:\n{}".format(dataSetPath))
@@ -129,7 +129,7 @@ def main():
     fixedParameters['regularizationFactor'] = 0
     fixedParameters['valueRelativeErrBound'] = 0.1
     fixedParameters['iteration'] = 100000
-    fixedParameters['batchSize'] = 0
+    fixedParameters['batchSize'] = 4096
     fixedParameters['reportInterval'] = 1000
     fixedParameters['lossChangeThreshold'] = 1e-8
     fixedParameters['lossHistorySize'] = 10
@@ -142,7 +142,8 @@ def main():
 
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [100, 200, 300]
+    independentVariables['trainingDataSize'] = [10000, 30000, 60000]
+    # independentVariables['batchSize'] = fixedParameters['batchSize']
 
     # generate NN
     trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
@@ -164,8 +165,13 @@ def main():
     generatePolicy = lambda trainedModel: net.ApproximatePolicy(trainedModel, sheepActionSpace)
 
     # sample trajectories
-    maxRunningSteps = 100
+    maxRunningSteps = 30
     sampleTrajectory = play.SampleTrajectory(maxRunningSteps, sheepTransition, isTerminal, reset)
+
+    # random policy performance
+    # randomPolicy = lambda state: sheepActionSpace[np.random.choice(range(8))]
+    # trajectories = [len(sampleTrajectory(randomPolicy)) for _ in range(1000)]
+    # print(sum(trajectories)/1000)
 
     levelNames = list(independentVariables.keys())
     levelValues = list(independentVariables.values())
@@ -182,7 +188,7 @@ def main():
         os.mkdir(evaluationTrajectoryOutputPath)
     getSavePathForTrajectory = GetSavePath(evaluationTrajectoryOutputPath, extension)
 
-    numTrials = 100
+    numTrials = 1000
     generateTrainingOutput = GenerateTrainedModel(getSavePathForModel, getSavePathForTrajectory, model, train,
                                                   generatePolicy, sampleTrajectory, numTrials)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput, dataSet)
