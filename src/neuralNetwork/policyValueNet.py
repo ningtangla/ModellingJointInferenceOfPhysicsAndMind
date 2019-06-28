@@ -137,7 +137,7 @@ class GenerateModelSeparateLastLayer:
             tf.add_to_collection("writers", trainWriter)
             tf.add_to_collection("writers", testWriter)
 
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(max_to_keep=None)
             tf.add_to_collection("saver", saver)
 
             model = tf.Session(graph=graph)
@@ -292,7 +292,6 @@ class ApproximateValueFunction:
         graph = self.policyValueNet.graph
         state_ = graph.get_collection_ref("inputs")[0]
         valuePrediction_ = graph.get_collection_ref("valuePrediction")[0]
-        print("STATEBATCH: ", stateBatch, "TYPE: ", type(stateBatch))
         valuePrediction = self.policyValueNet.run(valuePrediction_, feed_dict={state_: stateBatch})
         if scalarOutput:
             valuePrediction = valuePrediction[0][0]

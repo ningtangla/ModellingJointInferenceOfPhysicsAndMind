@@ -31,7 +31,7 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 def drawPerformanceLine(dataDf, axForDraw, steps):
     for key, grp in dataDf.groupby('sheepPolicyName'):
         grp.index = grp.index.droplevel('sheepPolicyName')
-        grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(steps))
+        grp.plot(ax=axForDraw, label=key, y='mean', title='TrainSteps: {}'.format(steps))
         axForDraw.set_ylim([0, 0.4])
 
 
@@ -91,12 +91,12 @@ def main():
     tf.set_random_seed(128)
 
     # manipulated variables (and some other parameters that are commonly varied)
-    numTrials = 2#50
+    numTrials = 200
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['trainSteps'] = [10]#[0, 10, 20, 50]
-    manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN', 'MCTS']
-    manipulatedVariables['numSimulations'] = [1, 2]#[50, 200, 800]
+    manipulatedVariables['trainSteps'] = [0, 50, 100, 500]#[0, 10, 50, 100, 500]#, 1000, 5000, 50000]
+    manipulatedVariables['sheepPolicyName'] = ['NN', 'MCTSNN', 'MCTS', 'MCTSNNValueOnly', 'MCTSNNPriorOnly']
+    manipulatedVariables['numSimulations'] = [50, 200, 800]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -110,7 +110,7 @@ def main():
     numAgents = 2
     qPosInitNoise = 9.7
     qVelInitNoise = 0
-    reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)                            ###########
+    reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
@@ -186,9 +186,17 @@ def main():
                                                           getExpandNNPrior(trainedModel),
                                                           NNValueFunction(trainedModel, getStateFromNode), backup,
                                                           selectGreedyAction)
+    getMCTSNNValueOnly = lambda numSimulations, trainedModel: MCTS(numSimulations, selectChild,
+                                                          getExpandUniformPrior(trainedModel),
+                                                          NNValueFunction(trainedModel, getStateFromNode), backup,
+                                                          selectGreedyAction)
+    getMCTSNNPriorOnly = lambda numSimulations, trainedModel: MCTS(numSimulations, selectChild,
+                                                                   getExpandNNPrior(trainedModel), rollout, backup,
+                                                                   selectGreedyAction)
     getRandom = lambda numSimulations, trainedModel: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
     getNN = lambda numSimulations, trainedModel: ApproximatePolicy(trainedModel, actionSpace)
-    getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN}
+    getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN,
+                        'MCTSNNValueOnly': getMCTSNNValueOnly, 'MCTSNNPriorOnly': getMCTSNNPriorOnly}
 
     # sample trajectory
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)

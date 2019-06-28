@@ -127,7 +127,7 @@ def main():
     generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [0, 50000]
+    allTrainSteps = [10, 50, 100, 500, 1000, 5000]
     batchSize = None
     terminalThreshold = 1e-6
     lossHistorySize = 10
@@ -135,7 +135,7 @@ def main():
     initValueCoeff = 1
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientController(initActionCoeff, initValueCoeff)
-    reportInterval = 100
+    reportInterval = 500
 
     getTrain = lambda trainSteps: Train(trainSteps, batchSize, terminalController, coefficientController,
                                         TrainReporter(trainSteps, reportInterval))
