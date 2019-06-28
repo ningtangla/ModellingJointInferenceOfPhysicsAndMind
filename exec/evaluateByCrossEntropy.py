@@ -18,6 +18,9 @@ import math
 from collections import OrderedDict
 from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
 import pickle
+import matplotlib.style
+import matplotlib as mpl
+mpl.style.use('bmh')
 
 
 class GenerateDistribution:
@@ -67,9 +70,18 @@ class DrawHeatMap:
         OrderedSubDFs = [df for subDF in subDFs for key, df in subDF.groupby(self.groupByVariableNames[1])]
         for subDF in OrderedSubDFs:
             subplot = figure.add_subplot(self.subplotIndex[0], self.subplotIndex[1], numOfplot)
-            plotDF = subDF.reset_index()
-            plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
+            resetDF = subDF.reset_index()[[self.subplotIndexName[0], self.subplotIndexName[1], colName]]
+            plotDF = resetDF.pivot(index=self.subplotIndexName[1], columns=self.subplotIndexName[0], values=colName)
+            cValues = plotDF.values
+            xticks = plotDF.columns.values
+            yticks = plotDF.index.values
+            ax = subplot.pcolormesh(xticks, yticks, cValues, cmap='jet', vmin=0, vmax=10)
+            plt.xlabel(self.subplotIndexName[0])
+            plt.ylabel(self.subplotIndexName[1])
+            plt.colorbar(ax)
+            # plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
             numOfplot = numOfplot + 1
+        plt.suptitle("CrossEntropy Between MCTS and NN")
         plt.subplots_adjust(wspace=0.8, hspace=0.4)
 
 
@@ -92,7 +104,7 @@ def main():
     # env
     wolfID = 1
     sheepID = 0
-    posIndex = 0
+    posIndex = [0, 1]
     numOfAgent = 2
     numPosEachAgent = 2
     numStateSpace = numOfAgent * numPosEachAgent
@@ -136,7 +148,7 @@ def main():
     heuristic = lambda state: 0
     estimateValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
-    numSimulations = 200
+    numSimulations = 600
     mctsPolicyDistOutput = mcts.MCTS(numSimulations, selectChild, expand, estimateValue, mcts.backup,
                                      mcts.establishSoftmaxActionDist)
 
@@ -146,7 +158,6 @@ def main():
     modelPath = os.path.join(dataDir, modelDir, modelName)
     if not os.path.exists(modelPath):
         print("Model {} does not exist".format(modelPath))
-        exit(1)
     generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.0)
     emptyModel = generateModel([64]*4)
     trainedModel = net.restoreVariables(emptyModel, modelPath)
