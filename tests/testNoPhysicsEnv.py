@@ -7,7 +7,7 @@ sys.path.append('..')
 
 # Local import
 from src.constrainedChasingEscapingEnv.envNoPhysics import Reset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeVectorNorm
 
 @ddt

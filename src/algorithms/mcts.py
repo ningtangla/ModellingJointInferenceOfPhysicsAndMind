@@ -2,7 +2,7 @@ import numpy as np
 from anytree import AnyNode as Node
 
 
-class CalculateScore:
+class CalculateScore:   # rename to something like ScoreChild
     def __init__(self, cInit, cBase):
         self.cInit = cInit
         self.cBase = cBase
@@ -76,35 +76,31 @@ class RollOut:
         self.rolloutHeuristic = rolloutHeuristic
 
     def __call__(self, leafNode):
-        reachedTerminal = False
         currentState = list(leafNode.id.values())[0]
         totalRewardForRollout = 0
+
         for rolloutStep in range(self.maxRolloutStep):
             action = self.rolloutPolicy(currentState)
             totalRewardForRollout += self.rewardFunction(currentState, action)
-            
             if self.isTerminal(currentState):
-                reachedTerminal = True
                 break
-
             nextState = self.transitionFunction(currentState, action)
             currentState = nextState
 
-        if not reachedTerminal:
-            heuristicReward = self.rolloutHeuristic(currentState)
-            totalRewardForRollout += heuristicReward
+        heuristicReward = self.rolloutHeuristic(currentState)
+        totalRewardForRollout += heuristicReward
 
         return totalRewardForRollout
 
 
-def backup(value, nodeList):
-    for node in nodeList:
+def backup(value, nodeList):    # maybe the name for this should specify that this is not a very generic function and
+    for node in nodeList:       # specific to this file
         node.sumValue += value
         node.numVisited += 1
 
-def selectGreedyAction(root):
+def selectGreedyAction(root):   # remove
     visits = np.array([child.numVisited for child in root.children])
-    maxIndices = np.argwhere(visits == np.max(visits)).flatten()
+    maxIndices = np.argwhere(visits == np.max(visits)).flatten()    # keep these lines
     selectedIndex = np.random.choice(maxIndices)
     action = list(root.children[selectedIndex].id.keys())[0]
     return action
@@ -130,7 +126,7 @@ class MCTS:
         self.expand = expand
         self.estimateValue = estimateValue
         self.backup = backup
-        self.outputActionOrDistribution = outputActionOrDistribution
+        self.outputActionOrDistribution = outputActionOrDistribution    # change this.
 
     def __call__(self, currentState):
         root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
@@ -150,7 +146,7 @@ class MCTS:
             self.backup(value, nodePath)
 
         mctsOutput = self.outputActionOrDistribution(root)
-        return mctsOutput
+        return mctsOutput    # return actionDistribution
 
 
 def main():

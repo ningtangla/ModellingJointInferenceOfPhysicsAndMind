@@ -1,4 +1,5 @@
 *.pyc
-.DS.Store
+*.DS_Store
 .idea
 __pycache__
+data

@@ -6,8 +6,8 @@ import unittest
 from ddt import ddt, unpack, data
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.measurementFunctions import ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition, calculateCrossEntropy
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetStateFromTrajectory, GetAgentPosFromState, GetAgentPosFromTrajectory
+from src.constrainedChasingEscapingEnv.measure import ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition, calculateCrossEntropy
+from src.constrainedChasingEscapingEnv.wrappers import GetStateFromTrajectory, GetAgentPosFromState, GetAgentPosFromTrajectory
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.envMujoco import TransitionFunction, IsTerminal
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors

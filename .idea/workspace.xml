@@ -1,7 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< Updated upstream
     <list default="true" id="47533536-b2d1-4baa-8caf-57290092fe0a" name="Default" comment="" />
+=======
+    <list default="true" id="47533536-b2d1-4baa-8caf-57290092fe0a" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/prepareNeuralNetData.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/prepareNeuralNetData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/testMCTSUniformVsNNPriorSheepChaseWolfMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/testMCTSUniformVsNNPriorSheepChaseWolfMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trainNeuralNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trainNeuralNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/mcts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/mcts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testEnvMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testEnvMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testMeasurementFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testMeasurementFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testNoPhysicsEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testNoPhysicsEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testPolicies_IssueShaozhe.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testPolicies_IssueShaozhe.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testRewardFunction.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testRewardFunction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testWrapperFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testWrapperFunctions.py" afterDir="false" />
+    </list>
+>>>>>>> Stashed changes
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,11 +33,16 @@
       <file leaf-file-name="envMujoco.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="735">
               <caret line="49" column="33" selection-start-line="49" selection-start-column="33" selection-end-line="49" selection-end-column="33" />
               <folding>
                 <element signature="e#0#26#0" expanded="true" />
               </folding>
+=======
+            <state relative-caret-position="630">
+              <caret line="42" column="33" selection-start-line="42" selection-start-column="33" selection-end-line="42" selection-end-column="33" />
+>>>>>>> Stashed changes
             </state>
           </provider>
         </entry>
@@ -55,8 +79,13 @@
       <file leaf-file-name="testEnvMujoco.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tests/testEnvMujoco.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="133">
               <caret line="65" selection-start-line="65" selection-end-line="65" />
+=======
+            <state relative-caret-position="163">
+              <caret line="67" selection-start-line="67" selection-end-line="67" />
+>>>>>>> Stashed changes
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -73,7 +102,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/rough.py" />
-        <option value="$PROJECT_DIR$/tests/testEnvMujoco.py" />
         <option value="$PROJECT_DIR$/exec/evaluationFunctions.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/trainNeuralNet.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/prepareNeuralNetData.py" />
@@ -81,6 +109,10 @@
         <option value="$PROJECT_DIR$/tests/testNNMCTS.py" />
         <option value="$PROJECT_DIR$/src/sheepWolf/envMujoco.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" />
+        <option value="$PROJECT_DIR$/src/algorithms/mcts.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" />
+        <option value="$PROJECT_DIR$/tests/testEnvMujoco.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py" />
       </list>
     </option>
   </component>
@@ -161,6 +193,7 @@
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
+<<<<<<< Updated upstream
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -170,6 +203,17 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info active="true" anchor="bottom" id="Terminal" order="7" visible="true" weight="0.4064838" />
+=======
+      <window_info anchor="bottom" id="Version Control" order="9" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32917705" />
+      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.382793" />
+>>>>>>> Stashed changes
       <window_info anchor="bottom" id="Python Console" order="7" />
     </layout>
     <layout-to-restore>
@@ -196,6 +240,7 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
+<<<<<<< Updated upstream
     <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="780">
@@ -230,6 +275,8 @@
     <entry file="file://$PROJECT_DIR$/src/algorithms/offlineA2CMonteCarloAdvantageDiscrete.py" />
     <entry file="file://$PROJECT_DIR$/exec/testSheepFirstStepInEscapeMujoco.py" />
     <entry file="file://$PROJECT_DIR$/exec/testMCTSvsRandomInSheepEscapeMujoco.py" />
+=======
+>>>>>>> Stashed changes
     <entry file="file://$PROJECT_DIR$/exec/testMCTSQEffectMujoco.py" />
     <entry file="file://$PROJECT_DIR$/tests/exists.pickle" />
     <entry file="file://$PROJECT_DIR$/env/xmls/twoAgents.xml">
@@ -282,6 +329,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/prepareNeuralNetData.py" />
     <entry file="file://$PROJECT_DIR$/src/sheepWolf/measurementFunctions.py" />
+<<<<<<< Updated upstream
     <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="435">
@@ -289,6 +337,8 @@
         </state>
       </provider>
     </entry>
+=======
+>>>>>>> Stashed changes
     <entry file="file://$PROJECT_DIR$/src/play.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="495">
@@ -310,6 +360,17 @@
           </folding>
         </state>
       </provider>
+<<<<<<< Updated upstream
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/rough.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/trainNeuralNet.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/prepareNeuralNetData.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testSheepFirstStepInEscapeMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsRandomInSheepEscapeMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSQEffectMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+=======
     </entry>
     <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" />
     <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/rough.py" />
@@ -332,16 +393,6 @@
     <entry file="file://$PROJECT_DIR$/tests/test1DEnv.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testEnvMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="65" selection-start-line="65" selection-end-line="65" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/testMCTS.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -350,5 +401,121 @@
     <entry file="file://$PROJECT_DIR$/tests/testMCTSInMujoco.py" />
     <entry file="file://$PROJECT_DIR$/src/sheepWolf/envMujoco.py" />
     <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1920">
+          <caret line="128" column="86" selection-start-line="128" selection-start-column="86" selection-end-line="128" selection-end-column="86" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="61" lean-forward="true" selection-start-line="10" selection-start-column="61" selection-end-line="10" selection-end-column="61" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/trainTools.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/prepareNeuralNetData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="2" column="10" selection-start-line="2" selection-start-column="10" selection-end-line="2" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1101">
+          <caret line="18" column="78" selection-start-line="18" selection-start-column="53" selection-end-line="18" selection-end-column="78" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="283">
+          <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testEnvMujoco.py">
+>>>>>>> Stashed changes
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="163">
+          <caret line="67" selection-start-line="67" selection-end-line="67" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/wrappers.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
+        <state relative-caret-position="133">
+          <caret line="65" selection-start-line="65" selection-end-line="65" />
+=======
+        <state relative-caret-position="405">
+          <caret line="27" column="40" selection-start-line="27" selection-start-column="40" selection-end-line="27" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-590">
+>>>>>>> Stashed changes
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+<<<<<<< Updated upstream
+    <entry file="file://$PROJECT_DIR$/tests/testMCTS.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testRunPolicyIn1DEnv.py" />
+    <entry file="file://$PROJECT_DIR$/tests/testNNMCTS.py" />
+    <entry file="file://$PROJECT_DIR$/tests/testMCTSInMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/src/sheepWolf/envMujoco.py" />
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/testMCTSUniformVsNNPriorChaseMujoco.py" />
+=======
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="31" selection-start-line="31" selection-end-line="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="630">
+          <caret line="42" column="33" selection-start-line="42" selection-start-column="33" selection-end-line="42" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+>>>>>>> Stashed changes
   </component>
 </project>
