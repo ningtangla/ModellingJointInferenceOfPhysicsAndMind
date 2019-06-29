@@ -49,23 +49,21 @@ if __name__ == '__main__':
     dataSetDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trajectories"
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
-    dataSetMaxRunningSteps = 200
-    dataSetNumSimulations = 10
-    dataSetNumTrials = 10
-    dataSetInitPosition = np.array([[30, 30], [200, 200]])
+    dataSetMaxRunningSteps = 30
+    dataSetNumSimulations = 200
+    dataSetNumTrials = 2
     dataSetSheepPolicyName = 'mcts'
-    dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps, 'posInit': dataSetInitPosition,
+    dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'sheepPolicyName': dataSetSheepPolicyName}
     dataSetPath = getDataSetPath(dataSetConditionVariables)
-
     dataSetTrajectories = loadData(dataSetPath)
 
     # pre-process the trajectories
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    actionToOneHot = ActionToOneHot(actionSpace)
     sheepId = 0
     actionIndex = 1
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    actionToOneHot = ActionToOneHot(actionSpace)
     preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot)
     stateActionPairsProcessed = preProcessTrajectories(dataSetTrajectories)
 
@@ -85,16 +83,17 @@ if __name__ == '__main__':
 
     # train model
     trainSteps = 10000
-    reportInterval = 500
     lossChangeThreshold = 1e-8
     lossHistorySize = 10
+    reportInterval = 500
+
     train = Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
                   summaryOn=False, testData=None)
 
     trainedModel = train(modelToTrain, trainData)
 
     # get path to save trained model
-    modelTrainConditions = {'maxRunningSteps': dataSetMaxRunningSteps, 'posInit': dataSetInitPosition,
+    modelTrainConditions = {'maxRunningSteps': dataSetMaxRunningSteps,
                             'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                             'learnRate': learningRate, 'trainSteps': trainSteps}
     modelSaveDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trainedModels"

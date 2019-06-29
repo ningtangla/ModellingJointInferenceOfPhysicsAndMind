@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
@@ -50,18 +51,16 @@ class SampleTrajectory:
 
     def __call__(self, policy):
         state = self.reset()
-
         while self.isTerminal(state):
             state = self.reset()
-
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
             if self.isTerminal(state):
                 trajectory.append((state, None))
                 break
 
-            if renderOn:
-                render(state)
+            if self.renderOn:
+                self.render(state)
             action = policy(state)
             trajectory.append((state, action))
             nextState = self.transit(state, action)
@@ -71,10 +70,8 @@ class SampleTrajectory:
 
 
 if __name__ == '__main__':
-
     numOfAgent = 2
-    numOfOneAgentState = 2
-    maxRunningSteps = 200
+    maxRunningSteps = 1000
 
     sheepId = 0
     wolfId = 1
@@ -84,7 +81,8 @@ if __name__ == '__main__':
     xBoundary = [0, 640]
     yBoundary = [0, 480]
 
-    initPosition = np.array([[30, 30], [200, 200]])
+    # initPosition = np.array([[30, 30], [200, 200]])
+    initPosition = np.array([[200, 200], [30, 30]])
     # initPosition = np.array([[np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])], [np.random.uniform(xBoundary[0], xBoundary[1]), np.random.uniform(yBoundary[0], yBoundary[1])]])
     initPositionNoise = [0, 0]
 
@@ -108,9 +106,13 @@ if __name__ == '__main__':
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
+    wolfActionSpace = [(6, 0), (5, 5), (0, 6), (-5, 5), (-10, 0), (-5, -5), (0, -10), (5, -5)]
 
-    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
+    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
+    actionMagnitude = 8
+
+    wolfPolicy = HeatSeekingContinuesDeterministicPolicy(getPredatorPos, getPreyPos, actionMagnitude)
     # select child
     cInit = 1
     cBase = 100
@@ -146,7 +148,7 @@ if __name__ == '__main__':
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit,
                       rewardFunction, isTerminal, rolloutHeuristic)
 
-    numSimulations = 10
+    numSimulations = 200
     sheepPolicy = MCTS(numSimulations, selectChild, expand,
                        rollout, backup, selectGreedyAction)
 
