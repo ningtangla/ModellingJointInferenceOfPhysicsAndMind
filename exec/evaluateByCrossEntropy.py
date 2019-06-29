@@ -44,7 +44,7 @@ class GenerateDistribution:
             return None
         testState = self.constructTestState([wolfX, wolfY], [sheepX, sheepY])
         if len(testState) == 0:
-            zombieDistribution = [1 / 8 for cnt in range(8)]
+            zombieDistribution = [0, 1, 0]
             data = [{"NNActionDistribution": zombieDistribution, 'mctsActionDistribution': zombieDistribution} for cnt in range(self.numTrials)]
         else:
             evaluateStates = [testState for cnt in range(self.numTrials)]
@@ -58,10 +58,11 @@ class GenerateDistribution:
 
 
 class DrawHeatMap:
-    def __init__(self, groupByVariableNames, subplotIndex, subplotIndexName):
+    def __init__(self, groupByVariableNames, subplotIndex, subplotIndexName, extent):
         self.groupByVariableNames = groupByVariableNames
         self.subplotIndex = subplotIndex
         self.subplotIndexName = subplotIndexName
+        self.extent = extent
 
     def __call__(self, dataDF, colName):
         figure = plt.figure(figsize=(12, 10))
@@ -75,10 +76,12 @@ class DrawHeatMap:
             cValues = plotDF.values
             xticks = plotDF.columns.values
             yticks = plotDF.index.values
-            ax = subplot.pcolormesh(xticks, yticks, cValues, cmap='jet', vmin=0, vmax=10)
+            newDf = pd.DataFrame(cValues, index=yticks, columns=xticks)
+            image = subplot.imshow(newDf, vmin=0, vmax=10,
+                              origin="lower", extent=self.extent)
+            plt.colorbar(image, fraction=0.046, pad=0.04)
             plt.xlabel(self.subplotIndexName[0])
             plt.ylabel(self.subplotIndexName[1])
-            plt.colorbar(ax)
             # plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
             numOfplot = numOfplot + 1
         plt.suptitle("CrossEntropy Between MCTS and NN")
@@ -193,7 +196,8 @@ def main():
     loadData = LoadTrajectories(getSavePath)
     computeStatistic = ComputeStatistics(loadData, numTrials, calculateCrossEntropy)
     statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
-    drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'])
+    drawingExtent = tuple(xBoundary) + tuple(yBoundary)
+    drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'], drawingExtent)
     drawHeatMap(statisticDf, "mean")
     figureDir = "Graphs"
     figurePath = os.path.join(dataDir, figureDir)
