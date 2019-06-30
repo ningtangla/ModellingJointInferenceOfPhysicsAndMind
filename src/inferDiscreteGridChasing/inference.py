@@ -10,14 +10,16 @@ def createIndex(chasingAgents, pullingAgents, actionSpace, forceSpace):
 
     zeroArray = lambda force: np.all(np.array(force) == 0)
     forceChoices = [force for force in forceSpace if not zeroArray(force)]
-    forceComboList = [list(itertools.permutations([(0, 0), force, tuple(-np.array(force))])) for force in forceChoices] #nested list
+    forceComboList = [list(itertools.permutations([(0, 0), force, tuple(-np.array(force))])) for force in forceChoices]
+
+    #nested list
     forceCombo = [agentsForce for forceList in forceComboList for agentsForce in forceList] # with duplicates
     forceHypo = list(set(forceCombo))
 
     iterables = [chasingSpace, pullingSpace, actionHypo, forceHypo]
     index = pd.MultiIndex.from_product(iterables, names=['chasingAgents', 'pullingAgents',
                                                          'action','force'])
-    return index # length = 54000
+    return index
 
 
 
@@ -124,22 +126,17 @@ def inferTransitionLikelihood(expectedNextState, observedNextState):
 
 
 class InferOneStepDiscreteChasing:
-    def __init__(self, chasingAgents, pullingAgents, actionSpace, forceSpace, createIndex,
-                 inferPolicyLikelihood, inferForceLikelihood, inferTransitionLikelihood):
-        self.chasingAgents = chasingAgents
-        self.pullingAgents = pullingAgents
-        self.actionSpace = actionSpace
-        self.forceSpace = forceSpace
-
-        self.createIndex = createIndex
+    def __init__(self, inferPolicyLikelihood, inferForceLikelihood, inferTransitionLikelihood):
 
         self.inferPolicyLikelihood = inferPolicyLikelihood
         self.inferForceLikelihood = inferForceLikelihood
         self.inferTransitionLikelihood = inferTransitionLikelihood
 
-    def __call__(self, state, nextState):
-        hypothesisSpace = createIndex(self.chasingAgents, self.pullingAgents, self.actionSpace, self.forceSpace)
-        inferenceDf = pd.DataFrame([[state]]* len(hypothesisSpace), index=hypothesisSpace, columns=['state'])
+    def __call__(self, state, nextState, inferenceDf):
+
+        hypothesisSpace = inferenceDf.index
+
+        inferenceDf['state'] = [state]* len(hypothesisSpace)
 
         chasingIndicesList = hypothesisSpace.get_level_values('chasingAgents')
         pullingIndicesList = hypothesisSpace.get_level_values('pullingAgents')
@@ -154,22 +151,31 @@ class InferOneStepDiscreteChasing:
                             for allAgentsForces, pullingIndices in zip(forceList, pullingIndicesList)]
         inferenceDf['forceLikelihood'] = forceLikelihood
 
-        getExpectedNextState = lambda state, allAgentsActions, allAgentsForces: [np.array(agentState) + np.array(action) + np.array(force)
-                     for agentState, action, force in zip(state, allAgentsActions, allAgentsForces)]
+        getExpectedNextState = lambda state, allAgentsActions, allAgentsForces: [np.array(agentState) + np.array(action) + np.array(force) for agentState, action, force in zip(state, allAgentsActions, allAgentsForces)]
 
         expectedNextStateList = [getExpectedNextState(state, allAgentsActions, allAgentsForces)
                              for allAgentsActions, allAgentsForces in zip(actionList, forceList)]
 
         inferenceDf['expectedNextState'] = expectedNextStateList
 
-        inferenceDf['nextState'] = nextState
+        inferenceDf['nextState'] = [nextState]* len(hypothesisSpace)
 
-        transitionLikelihood = [self.inferTransitionLikelihood(nextState, state) for nextState in expectedNextStateList]
+        transitionLikelihood = [self.inferTransitionLikelihood(expectedNextState, nextState) for expectedNextState in expectedNextStateList]
+
         inferenceDf['transitionLikelihood'] = transitionLikelihood
 
-        posterior = [singlePolicyLike* singleForceLike* singleTransitionLike for singlePolicyLike, singleForceLike, singleTransitionLike
-                     in zip(policyLikelihood, forceLikelihood, transitionLikelihood)]
+
+        posterior = [singlePrior * singlePolicyLike* singleForceLike* singleTransitionLike for singlePrior, singlePolicyLike, singleForceLike, singleTransitionLike
+                     in zip(inferenceDf['prior'], policyLikelihood, forceLikelihood, transitionLikelihood)]
+
+
         inferenceDf['posterior'] = posterior
+
+
+        normalizedPosterior = [singlePosterior/ sum(posterior) for singlePosterior in posterior]
+        inferenceDf['normalizedPosterior'] = normalizedPosterior
+
+        inferenceDf['marginalizedPosterior'] = inferenceDf.groupby(['chasingAgents', 'pullingAgents'])['normalizedPosterior'].transform('mean')
 
         return inferenceDf
 

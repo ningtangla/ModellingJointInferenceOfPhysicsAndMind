@@ -8,6 +8,7 @@ from heatSeekingLikelihood import *
 from analyticGeometryFunctions import computeAngleBetweenVectors
 from inference import *
 from wrapperFunctions import *
+from wrappers import *
 
 pd.set_option('display.max_columns', 50)
 
@@ -15,7 +16,7 @@ pd.set_option('display.max_columns', 50)
 def main():
     chasingAgents = [0, 1, 2]
     pullingAgents = [0, 1, 2]
-    actionSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
+    actionSpace = [(-1, 0), (1, 0), (0, 1), (0, -1)]
     forceSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
 
     lowerBoundAngle = 0
@@ -24,7 +25,6 @@ def main():
 
     positionIndex = [0, 1]
     rationalityParam = 0.9
-    actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
 
     getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
 
@@ -36,36 +36,35 @@ def main():
     inferPolicyLikelihood = InferPolicyLikelihood(getPolicyDistribution)
 
 
-
     getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(computeAngleBetweenVectors, forceSpace, lowerBoundAngle, upperBoundAngle)
 
     getPulledAgentForceDistribution = GetPulledAgentForceDistribution(getAgentPosition, getPulledAgentForceLikelihood)
 
     inferForceLikelihood = InferForceLikelihood(getPulledAgentForceDistribution)
 
-    inferOneStepDiscreteChasing = InferOneStepDiscreteChasing(chasingAgents, pullingAgents,
-                                                              actionSpace, forceSpace, createIndex,
-                                                              inferPolicyLikelihood,
-                                                              inferForceLikelihood,
-                                                              inferTransitionLikelihood)
+    inferOneStepDiscreteChasing = InferOneStepDiscreteChasing(inferPolicyLikelihood, inferForceLikelihood, inferTransitionLikelihood)
 
-    state = [(2, 2), (3, 3), (4, 5)]
-    nextState = [(2, 3), (1, 3), (4, 5)]
-    inferenceDf = inferOneStepDiscreteChasing(state, nextState)
+    isTerminal = IsTerminal(0.4, ['chasingAgents', 'pullingAgents'])
 
-    inferenceDf.to_csv("oneStepResult.csv")
+    inferDiscreteChasing = InferDiscreteChasing(chasingAgents, pullingAgents, actionSpace, forceSpace,
+                 createIndex, isTerminal, inferOneStepDiscreteChasing)
+
+    trajectory = [[(7, 3), (5, 4), (4, 8)],
+                  [(6, 4), (4, 4), (4, 8)],
+                  [(4, 4), (3, 4), (5, 7)],
+                  [(3, 5), (2, 4), (6, 6)],
+                  [(3, 5), (2, 3), (6, 6)],
+                  [(4, 4), (2, 2), (5, 7)],
+                  [(5, 3), (2, 3), (4, 8)]]
+
+#
+    inferenceDf = inferDiscreteChasing(trajectory)
+
+    inferenceDf.to_csv("chasingInference.csv")
+
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
 
 
 

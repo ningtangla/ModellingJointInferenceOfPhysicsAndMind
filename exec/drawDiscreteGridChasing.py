@@ -21,7 +21,10 @@ pd.set_option('display.max_columns', 50)
 def main():
 
     rationalityParam = 0.9
-    actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
+    # actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
+
+    actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1)]
+
     gridSize = (10,10)
     iterationNumber = 50
     agentNames = ["Wolf", "Sheep", "Master"]
@@ -79,9 +82,11 @@ def main():
 
     getMultiAgentSampleTrajectory = MultiAgentSampleTrajectory(agentNames, iterationNumber, isTerminal, reset)
 
-    locationDf = getMultiAgentSampleTrajectory(policy, transition)
-    print(locationDf)
+    trajectory = getMultiAgentSampleTrajectory(policy, transition)
 
+
+    print(trajectory)
+    print(len(trajectory))
 
     BLACK = (  0,   0,   0)
     WHITE = (255, 255, 255)
@@ -117,7 +122,7 @@ def main():
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
     drawPointsFromLocationDfandSaveImage = DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
-    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber, saveImage = True)
+    drawPointsFromLocationDfandSaveImage(trajectory, iterationNumber, saveImage = False)
 
 
 if __name__ == '__main__':
