@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 import random
 
-
 class GenerateModel:
     def __init__(self, numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.01, seed=128):
         self.numStateSpace = numStateSpace
@@ -141,7 +140,6 @@ class GenerateModel:
                     tf.add_to_collection("allGradNorm", allGradNorm_)
                     tf.summary.histogram("allGradients", allGradTensor_)
                     tf.summary.scalar("allGradNorm", allGradNorm_)
-
             fullSummary = tf.summary.merge_all()
             evalSummary = tf.summary.merge([lossSummary, actionLossSummary, valueLossSummary,
                                             actionAccuracySummary, valueAccuracySummary])

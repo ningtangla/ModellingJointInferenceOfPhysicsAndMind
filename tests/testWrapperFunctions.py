@@ -6,12 +6,21 @@ import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
-    GetAgentActionFromTrajectory
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
+    GetAgentActionFromTrajectory, rearrangeList
 
 
 @ddt
 class TestWrapperFunctions(unittest.TestCase):
+    @data(
+        (['a', 'b', 'c'], [2, 0, 1], ['b', 'c', 'a']),
+        (['wolf', 'sheep', 'master'],[1, 0, 2], ['sheep', 'wolf', 'master'])
+    )
+    @unpack
+    def testRearrangingList(self, originalList, order, trueArrangedList):
+        arrangedList = rearrangeList(originalList, order)
+        self.assertEqual(arrangedList, trueArrangedList)
+
     @data((0, [2, 3], np.asarray([[1, 2, 1, 2, 0, 0], [3, 4, 3, 4, 0, 0]]), np.asarray([1, 2])),
           (1, [2, 3], np.asarray([[1, 2, 1, 2, 0, 0], [3, 4, 3, 4, 0, 0]]), np.asarray([3, 4])))
     @unpack

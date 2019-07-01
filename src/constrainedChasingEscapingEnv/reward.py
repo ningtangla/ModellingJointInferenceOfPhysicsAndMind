@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class RewardFunctionCompete():
     def __init__(self, aliveBonus, deathPenalty, isTerminal):
         self.aliveBonus = aliveBonus
@@ -15,16 +16,16 @@ class RewardFunctionCompete():
 
 
 class HeuristicDistanceToTarget:
-    def __init__(self, weight, getTargetPosition, getCurrentPosition):
+    def __init__(self, weight, getPredatorPosition, getPreyPosition):
         self.weight = weight
-        self.getTargetPosition = getTargetPosition
-        self.getCurrentPosition = getCurrentPosition
+        self.getPredatorPosition = getPredatorPosition
+        self.getPreyPosition = getPreyPosition
 
     def __call__(self, state):
-        terminalPosition = self.getTargetPosition(state)
-        currentPosition = self.getCurrentPosition(state)
+        predatorPos = self.getPredatorPosition(state)
+        preyPos = self.getPreyPosition(state)
 
-        distance = np.linalg.norm(currentPosition - terminalPosition, ord = 2)
+        distance = np.linalg.norm(predatorPos - preyPos, ord = 2)
         reward = -self.weight * distance
 
         return reward

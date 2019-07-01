@@ -5,90 +5,91 @@ sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import numpy as np
 import pandas as pd
-import mcts
 import envNoPhysics as env
 import wrapperFunctions
 import policyValueNet as net
 import policies
 import os
-import subprocess
 import play
 from collections import OrderedDict
 import pickle
 import math
-from analyticGeometryFunctions import transitePolarToCartesian
+from analyticGeometryFunctions import transitePolarToCartesian, \
+    computeAngleBetweenVectors, computeVectorNorm
 from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
+import trainTools
+from pylab import plt
+tfseed=128
 
 
-def makeVideo(videoName, path):
-    absolutePath = os.path.join(os.getcwd(), path)
-    os.chdir(absolutePath)
-    fps = 5
-    crf = 25
-    resolution = '1920x1080'
-    cmd = 'ffmpeg -r {} -s {} -i %d.png -vcodec libx264 -crf {} -pix_fmt yuv420p {}'.format(fps, resolution, crf, videoName).split(" ")
-    subprocess.call(cmd)
-    if os.path.exists(videoName):
-        [os.remove(file) if file.endswith(".png") else 0 for file in os.listdir(os.getcwd())]
-    else:
-        print("Demo generate Failed, needs to be done manually")
-
-
-        # if renderOn:
-        #     extendedBound = 10
-        #     screen = pg.display.set_mode([xBoundary[1], yBoundary[1] + extendedBound])
-        #     render = envRender.Render(screen, self.savePath, 500)
-        #     for trajIndex in range(len(demoStates)):
-        #         for stepIndex in range(len(demoStates[trajIndex])):
-        #             render(demoStates[trajIndex][stepIndex], trajIndex)
-        #     if self.saveVideo:
-        #         videoName = "mean_{}_{}_trajectories_nn_demo.mp4".format(evalResults['mean'], trajNum)
-        #         makeVideo(videoName, self.savePath)
-
-
-class GenerateTrajectory():
-    def __init__(self, sampleTrajectory, getSavePath, numTrials):
-        self.sampleTrajectory = sampleTrajectory
-        self.getSavePath = getSavePath
+class GenerateTrainedModel:
+    def __init__(self, getSavePathForModel, getSavePathForTrajectory, model,
+                 train, generatePolicy, sampleTrajectory, numTrials):
+        self.getSavePathForModel = getSavePathForModel
+        self.getSavePathForTrajectory = getSavePathForTrajectory
+        self.train = train
+        self.model = model
+        self.generatePolicy = generatePolicy
+        self.play = sampleTrajectory
         self.numTrials = numTrials
 
-    def __call__(self, df):
-        policyDict = df.index.get_level_values('policy')[0]
-        policyName, policy = policyDict
+    def __call__(self, df, dataSet):
+        trainDataSize = df.index.get_level_values('trainingDataSize')[0]
+        trainDataType = df.index.get_level_values('trainingDataType')[0]
+        trainData = [dataSet[varName][:trainDataSize] for varName in
+                     ['state', trainDataType, 'value']]
         indexLevelNames = df.index.names
-        parameters = {levelName: df.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-        saveFileName = self.getSavePath(parameters)
-        trajs = [self.sampleTrajectory(policy) for cnt in range(self.numTrials)]
-        file = open(saveFileName, "wb")
-        pickle.dump(trajs, file)
-        file.close()
-        return trajs
+        parameters = {levelName: df.index.get_level_values(levelName)[0] for
+                      levelName in indexLevelNames}
+        saveModelDir = self.getSavePathForModel(parameters)
+        sortedParameters = sorted(parameters.items())
+        nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for
+                                parameter in sortedParameters]
+        modelName = '_'.join(nameValueStringPairs).replace(" ", "")
+        modelPath = os.path.join(saveModelDir, modelName)
+        if os.path.exists(saveModelDir): # To Do, check if it works for model names
+            trainedModel = net.restoreVariables(self.model, modelPath)
+        else:
+            trainedModel = self.train(self.model, trainData)
+            net.saveVariables(trainedModel, modelPath)
+        saveTrajName = self.getSavePathForTrajectory(parameters)
+        if os.path.exists(saveTrajName):
+            print("Traj exists {}".format(saveTrajName))
+            with open(saveTrajName, "rb") as f:
+                trajectories = pickle.load(f)
+        else:
+            nnPolicy = self.generatePolicy(trainedModel)
+            trajectories = [self.play(nnPolicy) for _ in range(self.numTrials)]
+            with open(saveTrajName, 'wb') as f:
+                pickle.dump(trajectories, f)
+        return pd.Series({"Trajectory": trajectories})
 
 
-def evaluateEpisodes(trajectories):
-    episodeLength = [len(traj) for traj in trajectories]
-    avgLen = np.mean(episodeLength)
-    stdLen = np.std(episodeLength)
-    minLen = np.min(episodeLength)
-    maxLen = np.max(episodeLength)
-    medLen = np.median(episodeLength)
-    return pd.Series({"mean": avgLen, "var": stdLen, "min": minLen, "max": maxLen, "median": medLen})
+class DrawStatistic:
+    def __init__(self, xVariableName, yVaraibleName):
+        self.xName = xVariableName
+        self.yName = yVaraibleName
+
+    def __call__(self, df):
+        plotDF = df.reset_index()
+        plotDF.plot(x=self.xName, y=self.yName)
+        plt.xlabel(self.xName)
+        plt.ylabel(self.yName)
+        plt.title("{} vs {} episode length".format(self.xName, self.yName))
 
 
-if __name__ == "__main__":
+def main():
     dataDir = "../data/evaluateByEpisodeLength"
 
     # env
-    wolfID = 1
     sheepID = 0
-    posIndex = 0
+    wolfID = 1
+    posIndex = [0, 1]
     numOfAgent = 2
-    numPosEachAgent = 2
-    numStateSpace = numOfAgent * numPosEachAgent
-    numActionSpace = 8
     sheepSpeed = 20
     wolfSpeed = sheepSpeed * 0.95
-    degrees = [math.pi / 2, 0, math.pi, -math.pi / 2, math.pi / 4, -math.pi * 3 / 4, -math.pi / 4, math.pi * 3 / 4]
+    degrees = [math.pi/2,0,math.pi,-math.pi/2,
+               math.pi/4,-math.pi*3/4,-math.pi/4,math.pi*3/4]
     sheepActionSpace = [tuple(np.round(sheepSpeed * transitePolarToCartesian(degree))) for degree in degrees]
     wolfActionSpace = [tuple(np.round(wolfSpeed * transitePolarToCartesian(degree))) for degree in degrees]
     print(sheepActionSpace)
@@ -97,76 +98,114 @@ if __name__ == "__main__":
     yBoundary = [0, 180]
     killZoneRadius = 25
 
-    # mcts policy
-    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
-    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos)
-    transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(np.array(state), [np.array(action), wolfDriectChasingPolicy(state)])
-    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
+    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex)
+    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex)
+    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary,
+                                                                 yBoundary)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(
+        wolfActionSpace, getWolfPos, getSheepPos, computeAngleBetweenVectors)
+    transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
+    sheepTransition = lambda state, action: transition(np.array(state),
+                                                       [np.array(action),
+                                                        wolfDriectChasingPolicy(state)])
 
-    rewardFunction = lambda state, action: 1
+    reset = env.Reset(xBoundary, yBoundary, numOfAgent)
+    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius, computeVectorNorm)
 
-    cInit = 1
-    cBase = 1
-    calculateScore = mcts.CalculateScore(cInit, cBase)
-    selectChild = mcts.SelectChild(calculateScore)
-
-    mctsUniformActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
-    getActionPrior = mctsUniformActionPrior
-    initializeChildren = mcts.InitializeChildren(sheepActionSpace, sheepTransition, getActionPrior)
-    expand = mcts.Expand(isTerminal, initializeChildren)
-
-    maxRollOutSteps = 5
-    rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
-    heuristic = lambda state: 0
-    nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
-
-    numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
-
-    # neuralNetwork Policy
-    modelDir = "savedModels"
-    modelName = "60000data_64x4_minibatch_100kIter_contState_actionDist"
-    modelPath = os.path.join(dataDir, modelDir, modelName)
-    if not os.path.exists(modelPath):
-        print("Model {} does not exist".format(modelPath))
+    # Train Models
+    trainingDataDir = os.path.join(dataDir, "dataSets")
+    dataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
+    dataSetPath = os.path.join(trainingDataDir, dataSetName)
+    if not os.path.exists(dataSetPath):
+        print("No dataSet in:\n{}".format(dataSetPath))
         exit(1)
-    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0,
-                                                       regularizationFactor=0, valueRelativeErrBound=0.0)
-    emptyModel = generateModel([64] * 4)
-    trainedModel = net.restoreVariables(emptyModel, modelPath)
-    nnPolicy = net.ApproximatePolicy(trainedModel, sheepActionSpace)
+    with open(dataSetPath, "rb") as f:
+        dataSet = pickle.load(f)
 
-    reset = lambda: [np.array([10, 10]), np.array([20, 20])]
-    maxTrajLen = 100
-    sampleTrajectory = play.SampleTrajectoryWithActionDist(maxTrajLen, sheepTransition, isTerminal, reset, play.agentDistToGreedyAction)
+    fixedParameters = OrderedDict()
+    fixedParameters['numStateSpace'] = 4
+    fixedParameters['numActionSpace'] = 8
+    fixedParameters['learningRate'] = 1e-4
+    fixedParameters['regularizationFactor'] = 0
+    fixedParameters['valueRelativeErrBound'] = 0.1
+    fixedParameters['iteration'] = 100000
+    fixedParameters['batchSize'] = 4096
+    fixedParameters['reportInterval'] = 1000
+    fixedParameters['lossChangeThreshold'] = 1e-8
+    fixedParameters['lossHistorySize'] = 10
+    fixedParameters['initActionCoefficient'] = (1, 1)
+    fixedParameters['initValueCoefficient'] = (1, 1)
+    fixedParameters['neuronsPerLayer'] = 64
+    fixedParameters['netLayers'] = 4
+    fixedParameters['decayRate'] = 1
+    fixedParameters['decayStep'] = 1
 
     independentVariables = OrderedDict()
-    independentVariables['policy'] = [('NN',nnPolicy), ('mcts',mctsPolicy)]
+    independentVariables['trainingDataType'] = ['actionDist']
+    independentVariables['trainingDataSize'] = [10000, 30000, 60000]
+    # independentVariables['batchSize'] = fixedParameters['batchSize']
 
+    # generate NN
+    trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
+                                                                 , fixedParameters['lossChangeThreshold'])
+    coefficientController = trainTools.coefficientCotroller(fixedParameters['initActionCoefficient']
+                                                            , fixedParameters['initValueCoefficient'])
+    trainReporter = trainTools.TrainReporter(fixedParameters['iteration']
+                                             , fixedParameters['reportInterval'])
+    lrModifier = trainTools.learningRateModifier(fixedParameters['learningRate'], fixedParameters['decayRate']
+                                                 , fixedParameters['decayStep'])
+    train =net.Train(fixedParameters['iteration'], fixedParameters['batchSize'], lrModifier
+                                                 , trainTerminalController, coefficientController, trainReporter)
+    generateModel = net.GenerateModelSeparateLastLayer(fixedParameters['numStateSpace'],
+                                                       fixedParameters['numActionSpace'],
+                                                       fixedParameters['regularizationFactor'],
+                                                       fixedParameters['valueRelativeErrBound'],
+                                                       seed=tfseed)
+    model = generateModel([fixedParameters['neuronsPerLayer']] * fixedParameters['netLayers'])
+    generatePolicy = lambda trainedModel: net.ApproximatePolicy(trainedModel, sheepActionSpace)
+
+    # sample trajectories
+    maxRunningSteps = 30
+    sampleTrajectory = play.SampleTrajectory(maxRunningSteps, sheepTransition, isTerminal, reset)
+
+    # random policy performance
+    # randomPolicy = lambda state: sheepActionSpace[np.random.choice(range(8))]
+    # trajectories = [len(sampleTrajectory(randomPolicy)) for _ in range(1000)]
+    # print(sum(trajectories)/1000)
 
     levelNames = list(independentVariables.keys())
     levelValues = list(independentVariables.values())
-    MultiIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
-    toSplitFrame = pd.DataFrame(index=MultiIndex)
+    levelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    toSplitFrame = pd.DataFrame(index=levelIndex)
 
-    trajDir = "trajectores"
-    trajPath = os.path.join(dataDir, trajDir)
-    if not os.path.exists(modelPath):
-        os.mkdir(trajPath)
     extension = ".pickle"
-    getSavePath = GetSavePath(trajPath, extension)
-    numTrials = 20
-    generateTrajectory = GenerateTrajectory(sampleTrajectory, getSavePath, numTrials)
-    resultDF = toSplitFrame.groupby(levelNames).apply(generateTrajectory)
+    trainedModelOutputPath = os.path.join(dataDir, "trainedModel")
+    if not os.path.exists(trainedModelOutputPath):
+        os.mkdir(trainedModelOutputPath)
+    getSavePathForModel = GetSavePath(trainedModelOutputPath, "")
+    evaluationTrajectoryOutputPath = os.path.join(dataDir, "trajectories")
+    if not os.path.exists(evaluationTrajectoryOutputPath):
+        os.mkdir(evaluationTrajectoryOutputPath)
+    getSavePathForTrajectory = GetSavePath(evaluationTrajectoryOutputPath, extension)
 
-    loadTrajctories = LoadTrajectories(getSavePath)
-    computeStatistic = ComputeStatistics(loadTrajctories, numTrials, evaluateEpisodes)
-    statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
-    saveFileName = "mcts_simulation={}_vs_{}.pkl".format(numSimulations, modelName)
-    path = os.path.join(dataDir, saveFileName)
-    file = open(path, "wb")
-    pickle.dump(statisticDf, file)
-    file.close()
+    numTrials = 1000
+    generateTrainingOutput = GenerateTrainedModel(getSavePathForModel, getSavePathForTrajectory, model, train,
+                                                  generatePolicy, sampleTrajectory, numTrials)
+    resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput, dataSet)
+
+    loadTrajectories = LoadTrajectories(getSavePathForTrajectory)
+    computeStatistic = ComputeStatistics(loadTrajectories, numTrials, len)
+    statDF = toSplitFrame.groupby(levelNames).apply(computeStatistic)
+    print(statDF)
+
+    xVariableName = "trainingDataSize"
+    yVaraibleName = "mean"
+    drawer = DrawStatistic(xVariableName, yVaraibleName)
+    drawer(statDF)
+    figureName = "effect_trainingDataSize_on_NNPerformance.png"
+    figurePath = os.path.join(dataDir, figureName)
+    plt.savefig(figurePath)
+
+
+if __name__ == "__main__":
+    main()

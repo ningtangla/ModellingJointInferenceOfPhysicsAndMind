@@ -2,7 +2,7 @@ import numpy as np
 from anytree import AnyNode as Node
 
 
-class CalculateScore:
+class ScoreChild:
     def __init__(self, cInit, cBase):
         self.cInit = cInit
         self.cBase = cBase
@@ -35,6 +35,7 @@ class SelectChild:
         selectedChild = currentNode.children[selectedChildIndex]
         return selectedChild
 
+
 class InitializeChildren:
     def __init__(self, actionSpace, transition, getActionPrior):
         self.actionSpace = actionSpace
@@ -66,6 +67,7 @@ class Expand:
 
         return leafNode
 
+
 class RollOut:
     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
         self.transitionFunction = transitionFunction
@@ -76,39 +78,27 @@ class RollOut:
         self.rolloutHeuristic = rolloutHeuristic
 
     def __call__(self, leafNode):
-        reachedTerminal = False
         currentState = list(leafNode.id.values())[0]
         totalRewardForRollout = 0
+
         for rolloutStep in range(self.maxRolloutStep):
             action = self.rolloutPolicy(currentState)
             totalRewardForRollout += self.rewardFunction(currentState, action)
-            
             if self.isTerminal(currentState):
-                reachedTerminal = True
                 break
-
             nextState = self.transitionFunction(currentState, action)
             currentState = nextState
 
-        if not reachedTerminal:
-            heuristicReward = self.rolloutHeuristic(currentState)
-            totalRewardForRollout += heuristicReward
+        heuristicReward = self.rolloutHeuristic(currentState)
+        totalRewardForRollout += heuristicReward
 
         return totalRewardForRollout
 
 
-def backup(value, nodeList):
+def backup(value, nodeList):#anytree lib
     for node in nodeList:
         node.sumValue += value
         node.numVisited += 1
-
-
-def selectGreedyAction(root):
-    visits = np.array([child.numVisited for child in root.children])
-    maxIndices = np.argwhere(visits == np.max(visits)).flatten()
-    selectedIndex = np.random.choice(maxIndices)
-    action = list(root.children[selectedIndex].id.keys())[0]
-    return action
 
 
 def establishPlainActionDist(root):
@@ -129,13 +119,13 @@ def establishSoftmaxActionDist(root):
 
 
 class MCTS:
-    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputActionOrDistribution):
+    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
         self.numSimulation = numSimulation
         self.selectChild = selectChild
         self.expand = expand
         self.estimateValue = estimateValue
         self.backup = backup
-        self.outputActionOrDistribution = outputActionOrDistribution
+        self.outputDistribution = outputDistribution
 
     def __call__(self, currentState):
         root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
@@ -154,8 +144,8 @@ class MCTS:
             value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
 
-        mctsOutput = self.outputActionOrDistribution(root)
-        return mctsOutput
+        actionDistribution = self.outputDistribution(root)
+        return actionDistribution
 
 
 def main():

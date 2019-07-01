@@ -1,16 +1,51 @@
 import numpy as np
 
+
 class Reset():
-    def __init__(self, numOfAgent, initPosition, initPositionNoise):
-        self.numOfAgent = numOfAgent
-        self.initPosition = initPosition
-        self.initPositionNoiseLow, self.initPositionNoiseHigh = initPositionNoise
+    def __init__(self, xBoundary, yBoundary, numOfAgent):
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.numOfAgnet = numOfAgent
 
     def __call__(self):
-        initPositionNoise = np.random.uniform(
-            low=-self.initPositionNoiseLow, high=self.initPositionNoiseHigh, size=self.numOfAgent)
-        initState = [positions +
-                     initPositionNoise for positions in self.initPosition]
+        xMin, xMax = self.xBoundary
+        yMin, yMax = self.yBoundary
+        initState = [[np.random.uniform(xMin, xMax),
+                      np.random.uniform(yMin, yMax)]
+                     for _ in range(self.numOfAgnet)]
+        return initState
+
+
+def samplePosition(xBoundary, yBoundary):
+    positionX = np.random.uniform(xBoundary[0], xBoundary[1])
+    positionY = np.random.uniform(yBoundary[0], yBoundary[1])
+    position = [positionX, positionY]
+    return position
+
+
+class RandomReset():
+    def __init__(self, numOfAgent, xBoundary, yBoundary, isTerminal):
+        self.numOfAgent = numOfAgent
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.isTerminal = isTerminal
+
+    def __call__(self):
+        terminal = True
+        while terminal:
+            initState = [samplePosition(self.xBoundary, self.yBoundary) for i in range(self.numOfAgent)]
+            initState = np.array(initState)
+            terminal = self.isTerminal(initState)
+        return initState
+
+
+class FixedReset():
+    def __init__(self, initPositionList):
+        self.initPositionList = initPositionList
+
+    def __call__(self, trialIndex):
+        initState = self.initPositionList[trialIndex]
+        initState = np.array(initState)
         return initState
 
 
@@ -27,17 +62,17 @@ class TransiteForNoPhysics():
 
 
 class IsTerminal():
-    def __init__(self, getPredatorPos, getPreyPos, minDistance, computeDistance):
+    def __init__(self, getPredatorPos, getPreyPos, minDistance):
         self.getPredatorPos = getPredatorPos
         self.getPreyPos = getPreyPos
         self.minDistance = minDistance
-        self.computeDistance = computeDistance
 
     def __call__(self, state):
         terminal = False
         preyPosition = self.getPreyPos(state)
         predatorPosition = self.getPredatorPos(state)
-        if self.computeDistance(np.array(preyPosition) - np.array(predatorPosition)) <= self.minDistance:
+        L2Normdistance = np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
+        if L2Normdistance <= self.minDistance:
             terminal = True
         return terminal
 
