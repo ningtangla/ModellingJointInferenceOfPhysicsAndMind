@@ -77,11 +77,29 @@ class PlotHistograms:
 
         for ax, (name, value) in zip(axs, valueDict.items()):
             summary = self.summarizeStats(value)
-            ax.set_title("{}\n$\mu=${:.4f} $\sigma=${:.4f}\nrange=[{:.4f}, {:.4f}]"
+            ax.set_title("{}\n$\mu=${:.4f} $\sigma=${:.4f}"
                          .format(name, summary["mean"], summary["std"], summary["min"], summary["max"]))
             ax.hist(value.flatten(), density=1)
         plt.suptitle("Histograms of {}".format(valueName))
         plt.subplots_adjust(wspace=self.wspace, hspace=self.hspace)
+        if savePath is not None:
+            plt.savefig(savePath)
+        plt.show()
+
+
+class PlotBoxes:
+    def __init__(self, figSize, useLogScale=False):
+        self.figSize = figSize
+        self.useLogScale = useLogScale
+
+    def __call__(self, valueName, valueDict, savePath):
+        fig, ax = plt.subplots(figsize=self.figSize)
+        data = list(valueDict.values())
+        labels = list(valueDict.keys())
+        ax.set_yscale('log')
+        ax.boxplot(data, labels=labels, meanline=True)
+        ax.set_title("Box plots of {}".format(valueName))
+        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
         if savePath is not None:
             plt.savefig(savePath)
         plt.show()
@@ -129,15 +147,21 @@ def main():
     gtActions_, gtValues_ = g.get_collection("groundTruths")
     feedDict = {states_: trainData[0], gtActions_: trainData[1], gtValues_: trainData[2]}
 
-
     keyword = "gradient"
     valueDict = fetchTensorValuesAcrossCollections(keyword, feedDict)
+    flattenedValueDict = {name: value.flatten() for name, value in valueDict.items()}
+    absValueDict = {name: np.abs(value) for name, value in valueDict.items()}
 
     figSize = (15, 10)
+    useLogScale = True
+    plotBoxes = PlotBoxes(figSize, useLogScale)
     plotHists = PlotHistograms(figSize, summarizeStats)
 
-    savePath = None
-    plotHists(keyword + 's', valueDict, savePath)
+    boxPlotSavePath = "sampleGradientBoxPlot.png"
+    plotBoxes(keyword, absValueDict, boxPlotSavePath)
+
+    histPlotSavePath = "sampleGradientPlot.png"
+    plotHists(keyword, flattenedValueDict, histPlotSavePath)
 
 
 if __name__ == "__main__":
