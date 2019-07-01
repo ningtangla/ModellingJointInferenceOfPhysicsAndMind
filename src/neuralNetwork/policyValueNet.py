@@ -140,7 +140,6 @@ class GenerateModel:
                     tf.add_to_collection("allGradNorm", allGradNorm_)
                     tf.summary.histogram("allGradients", allGradTensor_)
                     tf.summary.scalar("allGradNorm", allGradNorm_)
-
             fullSummary = tf.summary.merge_all()
             evalSummary = tf.summary.merge([lossSummary, actionLossSummary, valueLossSummary,
                                             actionAccuracySummary, valueAccuracySummary])
