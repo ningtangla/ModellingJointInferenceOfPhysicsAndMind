@@ -15,6 +15,39 @@ class Reset():
         return initState
 
 
+def samplePosition(xBoundary, yBoundary):
+    positionX = np.random.uniform(xBoundary[0], xBoundary[1])
+    positionY = np.random.uniform(yBoundary[0], yBoundary[1])
+    position = [positionX, positionY]
+    return position
+
+
+class RandomReset():
+    def __init__(self, numOfAgent, xBoundary, yBoundary, isTerminal):
+        self.numOfAgent = numOfAgent
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.isTerminal = isTerminal
+
+    def __call__(self):
+        terminal = True
+        while terminal:
+            initState = [samplePosition(self.xBoundary, self.yBoundary) for i in range(self.numOfAgent)]
+            initState = np.array(initState)
+            terminal = self.isTerminal(initState)
+        return initState
+
+
+class FixedReset():
+    def __init__(self, initPositionList):
+        self.initPositionList = initPositionList
+
+    def __call__(self, trialIndex):
+        initState = self.initPositionList[trialIndex]
+        initState = np.array(initState)
+        return initState
+
+
 class TransiteForNoPhysics():
     def __init__(self, stayInBoundaryByReflectVelocity):
         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity

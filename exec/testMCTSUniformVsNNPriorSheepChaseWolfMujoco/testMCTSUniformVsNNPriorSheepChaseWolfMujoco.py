@@ -31,6 +31,7 @@ def drawPerformanceLine(dataDf, axForDraw, trainSteps):
         grp.index = grp.index.droplevel('sheepPolicyName')
         grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(trainSteps))
 
+
 class GetMCTS:
     def __init__(self, selectChild, rollout, backup, selectNextAction, getActionPriorFunction):
         self.selectChild = selectChild
@@ -59,7 +60,6 @@ class GetActionDistNeuralNet:
         state_ = graph.get_collection_ref("inputs")[0]
         actionDistribution = self.model.run(actionDistribution_, feed_dict={state_: [stateFlat]})[0]
         actionDistributionDict = dict(zip(self.actionSpace, actionDistribution))
-
         return actionDistributionDict
 
 
@@ -128,7 +128,7 @@ class GenerateTrajectories:
 
         endTime = time.time()
         print("Time for policy {}, numSimulations {}, trainSteps {} = {}".format(sheepPolicyName, numSimulations,
-                                                                                 trainSteps, (endTime-startTime)))
+                                                                                 trainSteps, (endTime - startTime)))
 
         return None
 
