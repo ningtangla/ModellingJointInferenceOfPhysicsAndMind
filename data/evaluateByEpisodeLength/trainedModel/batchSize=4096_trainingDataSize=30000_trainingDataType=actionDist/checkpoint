@@ -1,0 +1,3 @@
+model_checkpoint_path: "batchSize=4096_trainingDataSize=30000_trainingDataType=actionDist"
+all_model_checkpoint_paths: "../batchSize=4096_trainingDataSize=10000_trainingDataType=actionDist/batchSize=4096_trainingDataSize=10000_trainingDataType=actionDist"
+all_model_checkpoint_paths: "batchSize=4096_trainingDataSize=30000_trainingDataType=actionDist"

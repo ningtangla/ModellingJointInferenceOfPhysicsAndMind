@@ -66,15 +66,19 @@ class GenerateTrainedModel:
 
 
 class DrawStatistic:
-    def __init__(self, xVariableName, yVaraibleName):
+    def __init__(self, xVariableName, yVaraibleName, lineVariable):
         self.xName = xVariableName
         self.yName = yVaraibleName
+        self.lineName = lineVariable
 
     def __call__(self, df):
-        plotDF = df.reset_index()
-        plotDF.plot(x=self.xName, y=self.yName)
+        fig, ax = plt.subplots()
+        for key, subDF in df.groupby(self.lineName):
+            plotDF = subDF.reset_index()
+            plotDF.plot(x=self.xName, y=self.yName, ax=ax, label=key)
         plt.xlabel(self.xName)
         plt.ylabel(self.yName)
+        plt.legend(loc='best')
         plt.title("{} vs {} episode length".format(self.xName, self.yName))
 
 
@@ -113,7 +117,7 @@ def main():
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius, computeVectorNorm)
 
     # Train Models
-    trainingDataDir = os.path.join(dataDir, "dataSets")
+    trainingDataDir = os.path.join(dataDir, "augmentedDataSets")
     dataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
     dataSetPath = os.path.join(trainingDataDir, dataSetName)
     if not os.path.exists(dataSetPath):
@@ -131,7 +135,7 @@ def main():
     fixedParameters['iteration'] = 100000
     fixedParameters['batchSize'] = 4096
     fixedParameters['reportInterval'] = 1000
-    fixedParameters['lossChangeThreshold'] = 1e-8
+    fixedParameters['lossChangeThreshold'] = 1e-6
     fixedParameters['lossHistorySize'] = 10
     fixedParameters['initActionCoefficient'] = (1, 1)
     fixedParameters['initValueCoefficient'] = (1, 1)
@@ -139,23 +143,28 @@ def main():
     fixedParameters['netLayers'] = 4
     fixedParameters['decayRate'] = 1
     fixedParameters['decayStep'] = 1
+    fixedParameters['validationSize'] = 100
+    fixedParameters['testDataSize'] = 10000
+    fixedParameters['testDataType'] = 'actionDist'
 
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
     independentVariables['trainingDataSize'] = [10000, 30000, 60000]
-    # independentVariables['batchSize'] = fixedParameters['batchSize']
+    independentVariables['batchSize'] = [0, 4096]
 
     # generate NN
     trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
-                                                                 , fixedParameters['lossChangeThreshold'])
+                                                                 , fixedParameters['lossChangeThreshold'], fixedParameters['validationSize'])
     coefficientController = trainTools.coefficientCotroller(fixedParameters['initActionCoefficient']
                                                             , fixedParameters['initValueCoefficient'])
     trainReporter = trainTools.TrainReporter(fixedParameters['iteration']
                                              , fixedParameters['reportInterval'])
     lrModifier = trainTools.learningRateModifier(fixedParameters['learningRate'], fixedParameters['decayRate']
                                                  , fixedParameters['decayStep'])
+    testData = [dataSet[varName][-fixedParameters['testDataSize']:] for varName in
+                     ['state', fixedParameters['testDataType'], 'value']]
     train =net.Train(fixedParameters['iteration'], fixedParameters['batchSize'], lrModifier
-                                                 , trainTerminalController, coefficientController, trainReporter)
+                                                 , trainTerminalController, coefficientController, trainReporter, testData)
     generateModel = net.GenerateModelSeparateLastLayer(fixedParameters['numStateSpace'],
                                                        fixedParameters['numActionSpace'],
                                                        fixedParameters['regularizationFactor'],
@@ -200,7 +209,8 @@ def main():
 
     xVariableName = "trainingDataSize"
     yVaraibleName = "mean"
-    drawer = DrawStatistic(xVariableName, yVaraibleName)
+    lineVariable = "batchSize"
+    drawer = DrawStatistic(xVariableName, yVaraibleName, lineVariable)
     drawer(statDF)
     figureName = "effect_trainingDataSize_on_NNPerformance.png"
     figurePath = os.path.join(dataDir, figureName)
