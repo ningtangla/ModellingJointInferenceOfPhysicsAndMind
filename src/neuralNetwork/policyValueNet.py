@@ -133,7 +133,9 @@ class GenerateModel:
                 tf.add_to_collection("trainOp", trainOp)
 
                 with tf.name_scope("inspectGrad"):
-                    gradients_ = [tf.reshape(grad, [1, -1]) for (grad, _) in gradVarPairs_]
+                    for grad_, var_ in gradVarPairs_:
+                        tf.add_to_collection(var_.name + "_gradient", grad_)
+                    gradients_ = [tf.reshape(grad_, [1, -1]) for (grad_, _) in gradVarPairs_]
                     allGradTensor_ = tf.concat(gradients_, 1)
                     allGradNorm_ = tf.norm(allGradTensor_)
                     tf.add_to_collection("allGradNorm", allGradNorm_)
