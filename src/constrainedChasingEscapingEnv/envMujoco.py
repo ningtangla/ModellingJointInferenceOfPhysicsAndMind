@@ -25,7 +25,7 @@ class Reset():
 
         xPos = np.concatenate(self.simulation.data.body_xpos[-self.numAgent: , :numQPosEachAgent])
 
-        agentQPos = lambda agentIndex: qPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)]        # maybe we should replace this with getter functions
+        agentQPos = lambda agentIndex: qPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)]
         agentXPos = lambda agentIndex: xPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)]
         agentQVel = lambda agentIndex: qVel[numQVelEachAgent * agentIndex : numQVelEachAgent * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
