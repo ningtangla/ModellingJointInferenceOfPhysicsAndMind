@@ -139,13 +139,14 @@ class GenerateModelSeparateLastLayer:
 
 
 class Train:
-    def __init__(self, maxStepNum, batchSize, lrModifier, terimnalController, coefficientController, trainReporter):
+    def __init__(self, maxStepNum, batchSize, lrModifier, terimnalController, coefficientController, trainReporter, testData):
         self.maxStepNum = maxStepNum
         self.batchSize = batchSize
         self.lrModifier = lrModifier
         self.reporter = trainReporter
         self.terminalController = terimnalController
         self.coefficientController = coefficientController
+        self.testData = testData
 
     def __call__(self, model, trainingData):
         graph = model.graph
@@ -174,10 +175,10 @@ class Train:
             updatedLearningRate = self.lrModifier(stepNum)
             feedDict = {state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef, learningRate_: updatedLearningRate}
             evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
-
+            validationDict = evaluate(model, self.testData)
             self.reporter(evalDict, stepNum, trainWriter, summary)
 
-            if self.terminalController(evalDict, stepNum):
+            if self.terminalController(evalDict, validationDict, stepNum):
                 break
 
         return model

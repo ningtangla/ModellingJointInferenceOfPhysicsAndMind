@@ -20,21 +20,35 @@ class coefficientCotroller():
 
 
 class TrainTerminalController():
-    def __init__(self, lossHistorySize, terminalThreshold):
+    def __init__(self, lossHistorySize, terminalThreshold, validationSize):
         self.lossHistorySize = lossHistorySize
         self.lossHistory = np.ones(self.lossHistorySize)
         self.actionAccuracyHistory = np.zeros(self.lossHistorySize)
         self.valueAccuracyHistory = np.zeros(self.lossHistorySize)
         self.terminalThresHold = terminalThreshold
+        self.validationSize = validationSize
+        self.validationHistory = np.ones(validationSize)
+        self.validationCount = 0
 
-    def __call__(self, evalDict, stepNum):
+    def __call__(self, evalDict, validationDict, stepNum):
+        # loss change terminal
         self.lossHistory[stepNum % self.lossHistorySize] = evalDict["loss"]
         lossChange = np.mean(np.abs(self.lossHistory - np.min(self.lossHistory)))
         self.actionAccuracyHistory[stepNum % self.lossHistorySize] = evalDict["actionAcc"]
         self.valueAccuracyHistory[stepNum % self.lossHistorySize] = evalDict["valueAcc"]
-
         if lossChange < self.terminalThresHold:
             return True
+        # early stop terminal
+        lastValidationLoss = None
+        if stepNum >= self.validationSize:
+            lastValidationLoss = np.mean(self.validationHistory)
+        self.validationHistory[stepNum % self.validationSize] = validationDict['totalLoss']
+        if lastValidationLoss is not None and lastValidationLoss < np.mean(self.validationHistory):
+            self.validationCount += 1
+        else:
+            self.validationCount = 0
+        # if self.validationCount >= 10:
+            # return True
         return False
 
 
