@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 import unittest
 from ddt import ddt, data, unpack
-from src.play import SampleTrajectory, SampleTrajectoryWithActionDist, agentDistToGreedyAction, worldDistToAction
+from src.play import SampleTrajectory, agentDistToGreedyAction, worldDistToAction
 from src.simple1DEnv import TransitionFunction, Terminal
 
 
@@ -16,18 +16,6 @@ class TestPlay(unittest.TestCase):
         self.isTerminal = Terminal(self.target_state)
         self.reset = lambda: 0
 
-    @data(([0], [(0, 0)]*5),
-          ([1, -1], [(0, 1), (1, -1), (0, 1), (1, -1), (0, 1)]),
-          ([1, 1, 1, 1, 1], [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1)]),
-          ([7], [(0, 7), (7, None)]),
-          ([2, 0, 3, 0, 0, 2], [(0, 2), (2, 3), (5, 2), (7, None)]))
-    @unpack
-    def testSampleTrajectory(self, policyArray, groundTruthTraj):
-        maxRunningSteps = 5
-        sampleTraj = SampleTrajectory(maxRunningSteps, self.transition, self.isTerminal, self.reset)
-        policy = lambda i: policyArray[i]
-        traj = sampleTraj(policy)
-        self.assertEqual(traj, groundTruthTraj)
 
     @data(({0: 1}, 0),
           ({1: 0.2, 0: 0.3, -1: 0.5}, -1),
@@ -78,10 +66,10 @@ class TestPlay(unittest.TestCase):
           ([{2: 0.9, -2: 0.1}, {0: 1}, {3: 0.4, 2: 0.2, 1: 0.2}, {0: 1}, {0: 1}, {2: 0.99, 4: 0.01}],
            [(0, 2, {2: 0.9, -2: 0.1}), (2, 3, {3: 0.4, 2: 0.2, 1: 0.2}), (5, 2, {2: 0.99, 4: 0.01}), (7, None, None)]))
     @unpack
-    def testSampleTrajectoryWithActionDist(self, policyArray, groundTruthTraj):
+    def testSampleTrajectory(self, policyArray, groundTruthTraj):
         maxRunningSteps = 5
         distToAction = agentDistToGreedyAction
-        sampleTraj = SampleTrajectoryWithActionDist(maxRunningSteps, self.transition, self.isTerminal, self.reset, distToAction)
+        sampleTraj = SampleTrajectory(maxRunningSteps, self.transition, self.isTerminal, self.reset, distToAction)
         policy = lambda i: policyArray[i]
         traj = sampleTraj(policy)
         self.assertEqual(traj, groundTruthTraj)

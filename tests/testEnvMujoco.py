@@ -29,15 +29,15 @@ class TestEnvMujoco(unittest.TestCase):
         self.getWolfPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
         self.isTerminal = IsTerminal(self.killzoneRadius, self.getSheepPos, self.getWolfPos)
 
-    # @data(([0, 0, 0, 0], [0, 0, 0, 0], np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]])),
-    #       ([1, 2, 3, 4], [0, 0, 0, 0], np.asarray([[1, 2, 1, 2, 0, 0], [3, 4, 3, 4, 0, 0]])),
-    #       ([1, 2, 3, 4], [5, 6, 7, 8], np.asarray([[1, 2, 1, 2, 5, 6], [3, 4, 3, 4, 7, 8]])))
-    # @unpack
-    # def testReset(self, qPosInit, qVelInit, groundTruthReturnedInitialState):
-    #     reset = Reset(self.simulation, qPosInit, qVelInit, self.numAgent)
-    #     returnedInitialState = reset()
-    #     truthValue = returnedInitialState == groundTruthReturnedInitialState
-    #     self.assertTrue(truthValue.all())
+    @data(([0, 0, 0, 0], [0, 0, 0, 0], np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]])),
+          ([1, 2, 3, 4], [0, 0, 0, 0], np.asarray([[1, 2, 1, 2, 0, 0], [3, 4, 3, 4, 0, 0]])),
+          ([1, 2, 3, 4], [5, 6, 7, 8], np.asarray([[1, 2, 1, 2, 5, 6], [3, 4, 3, 4, 7, 8]])))
+    @unpack
+    def testReset(self, qPosInit, qVelInit, groundTruthReturnedInitialState):
+        reset = Reset(self.simulation, qPosInit, qVelInit, self.numAgent)
+        returnedInitialState = reset()
+        truthValue = returnedInitialState == groundTruthReturnedInitialState
+        self.assertTrue(truthValue.all())
 
 
     @data((np.asarray([[1, 2, 1, 2, 0, 0], [4, 5, 4, 5, 0, 0]]), [[1, 1], [1, 1]]),
@@ -45,7 +45,7 @@ class TestEnvMujoco(unittest.TestCase):
           (np.asarray([[-6, 8, -6, 8, 0, 0], [6, -8, 6, -8, 0, 0]]), [[-1, 1], [1, -1]]))
     @unpack
     def testQPositionChangesInDirectionOfActionAfterTransition(self, oldState, allAgentsActions):
-        transitionFunction = TransitionFunction(self.simulation, self.isTerminal, False, self.numSimulationFrames)
+        transitionFunction = TransitionFunction(self.simulation, self.isTerminal, self.numSimulationFrames)
         newState = transitionFunction(oldState, allAgentsActions)
         differenceBetweenStates = newState - oldState
         differenceBetweenQPositions = differenceBetweenStates[:, :2].flatten()
@@ -59,22 +59,24 @@ class TestEnvMujoco(unittest.TestCase):
           (np.asarray([[-6, 8, -6, 8, 0, 0], [6, -8, 6, -8, 0, 0]]), np.asarray([[-1, 1], [1, -1]])))
     @unpack
     def testXPosEqualsQPosAfterTransition(self, state, allAgentsActions):
-        transitionFunction = TransitionFunction(self.simulation, self.isTerminal, False, self.numSimulationFrames)
+        transitionFunction = TransitionFunction(self.simulation, self.isTerminal, self.numSimulationFrames)
         newState = transitionFunction(state, allAgentsActions)
         newXPos = newState[:, 2:4]
         newQPos = newState[:, :2]
         truthValue = newQPos == newXPos
         self.assertTrue(truthValue.all())
-    #
-    #
-    # @data((0.2, np.asarray([[0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 0, 0]]), False),
-    #       (1, np.asarray([[-0.5, -0.5, -0.5, -0.5, 0, 0], [0, 0, 0, 0, 0, 0]]), True),
-    #       (0.5, np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), False))       # add cases where it is close to the boundary
-    # @unpack
-    # def testIsTerminal(self, minXDis, state, groundTruthTerminal):
-    #     isTerminal = IsTerminal(minXDis, self.getSheepPos, self.getWolfPos)
-    #     terminal = isTerminal(state)
-    #     self.assertEqual(terminal, groundTruthTerminal)
+
+
+    @data((0.2, np.asarray([[0, 0, 0, 0, 0, 0], [0.21, 0, 0.21, 0, 0, 0]]), False),
+          (1, np.asarray([[-0.5, -0.5, -0.5, -0.5, 0, 0], [0, 0, 0, 0, 0, 0]]), True),
+          (0.5, np.asarray([[10, -10, 10, -10, 0, 0], [-10, 10, -10, 10, 0, 0]]), False),
+          (0.5, np.asarray([[10, -10, 10, -10, 0, 0], [10.4, -10, 10.4, -10, 0, 0]]), True))
+    @unpack
+    def testIsTerminal(self, minXDis, state, groundTruthTerminal):
+        isTerminal = IsTerminal(minXDis, self.getSheepPos, self.getWolfPos)
+        terminal = isTerminal(state)
+        self.assertEqual(terminal, groundTruthTerminal)
+
 
 if __name__ == "__main__":
     unittest.main()

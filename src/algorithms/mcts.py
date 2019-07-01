@@ -2,7 +2,7 @@ import numpy as np
 from anytree import AnyNode as Node
 
 
-class CalculateScore:   # rename to something like ScoreChild
+class ScoreChild:
     def __init__(self, cInit, cBase):
         self.cInit = cInit
         self.cBase = cBase
@@ -34,6 +34,7 @@ class SelectChild:
         selectedChildIndex = np.random.choice(maxIndex)
         selectedChild = currentNode.children[selectedChildIndex]
         return selectedChild
+
 
 class InitializeChildren:
     def __init__(self, actionSpace, transition, getActionPrior):
@@ -93,17 +94,11 @@ class RollOut:
         return totalRewardForRollout
 
 
-def backup(value, nodeList):    # maybe the name for this should specify that this is not a very generic function and
-    for node in nodeList:       # specific to this file
+def backup(value, nodeList):
+    for node in nodeList:
         node.sumValue += value
         node.numVisited += 1
 
-def selectGreedyAction(root):   # remove
-    visits = np.array([child.numVisited for child in root.children])
-    maxIndices = np.argwhere(visits == np.max(visits)).flatten()    # keep these lines
-    selectedIndex = np.random.choice(maxIndices)
-    action = list(root.children[selectedIndex].id.keys())[0]
-    return action
 
 def establishPlainActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
@@ -120,13 +115,13 @@ def establishSoftmaxActionDist(root):
     return actionDist
 
 class MCTS:
-    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputActionOrDistribution):
+    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
         self.numSimulation = numSimulation
         self.selectChild = selectChild
         self.expand = expand
         self.estimateValue = estimateValue
         self.backup = backup
-        self.outputActionOrDistribution = outputActionOrDistribution    # change this.
+        self.outputDistribution = outputDistribution
 
     def __call__(self, currentState):
         root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
@@ -145,8 +140,9 @@ class MCTS:
             value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
 
-        mctsOutput = self.outputActionOrDistribution(root)
-        return mctsOutput    # return actionDistribution
+        actionDistribution = self.outputDistribution(root)
+
+        return actionDistribution
 
 
 def main():
