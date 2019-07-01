@@ -2,6 +2,7 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
+import copy
 
 
 class GetSavePath:
@@ -11,8 +12,8 @@ class GetSavePath:
         self.fixedParameters = fixedParameters
 
     def __call__(self, parameters):
-        parameters.update(self.fixedParameters)
-        sortedParameters = sorted(parameters.items())
+        allParameters = dict(list(parameters.items()) + list(self.fixedParameters.items()))
+        sortedParameters = sorted(allParameters.items())
         nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
@@ -39,9 +40,8 @@ class LoadTrajectories:
 
 
 class ComputeStatistics:
-    def __init__(self, getTrajectories, numTrials, measurementFunction):
+    def __init__(self, getTrajectories, measurementFunction):
         self.getTrajectories = getTrajectories
-        self.numTrials = numTrials
         self.measurementFunction = measurementFunction
 
     def __call__(self, oneConditionDf):

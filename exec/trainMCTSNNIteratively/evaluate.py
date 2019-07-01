@@ -13,32 +13,37 @@ from matplotlib import pyplot as plt
 import time
 
 from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
-from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, Expand, MCTS, backup
+from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, Expand, MCTS, \
+    backup, RollOut
 from src.play import SampleTrajectory
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
 from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, restoreVariables, ApproximateActionPrior, \
-    ApproximateValueFunction
+    ApproximateValueFunction, ApproximatePolicy
 from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, \
     GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from exec.trainMCTSNNIteratively.wrappers import getStateFromNode, GetApproximateValueFromNode
+from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 
 
-def drawPerformanceLine(dataDf, axForDraw, iteration):
-    dataDf.plot(ax=axForDraw, title='numSimulations={}'.format(iteration), y='mean', yerr='std', marker='o')
+def drawPerformanceLine(dataDf, axForDraw, numSimulations, trainSteps):
+    for key, grp in dataDf.groupby('modelLearnRate'):
+        grp.index = grp.index.droplevel('modelLearnRate')
+        grp.plot(ax=axForDraw, title='numSimulations={}, trainSteps={}'.format(numSimulations, trainSteps), y='mean',
+                 yerr='std', marker='o', label='learnRate={}'.format(key))
 
 
-class RestoreNNModelFromIteration:
+class RestoreNNModel:
     def __init__(self, getModelSavePath, NNModel, restoreVariables):
         self.getModelSavePath = getModelSavePath
         self.NNmodel = NNModel
         self.restoreVariables = restoreVariables
 
-    def __call__(self, iteration):
-        modelPath = self.getModelSavePath({'iteration': iteration})
+    def __call__(self, iteration, learnRate):
+        modelPath = self.getModelSavePath({'iteration': iteration, 'learnRate': learnRate})
         restoredNNModel = self.restoreVariables(self.NNmodel, modelPath)
 
         return restoredNNModel
@@ -64,11 +69,11 @@ class GetPolicy:
 
 
 class GenerateTrajectories:
-    def __init__(self, getSampleTrajectory, numTrials, getSavePath, restoreNNModelFromIteration, getPolicy, saveData):
+    def __init__(self, getSampleTrajectory, numTrials, getSavePath, restoreNNModel, getPolicy, saveData):
         self.getSampleTrajectory = getSampleTrajectory
         self.numTrials = numTrials
         self.getSavePath = getSavePath
-        self.restoreNNModelFromIteration = restoreNNModelFromIteration
+        self.restoreNNModel = restoreNNModel
         self.getPolicy = getPolicy
         self.saveData = saveData
 
@@ -76,8 +81,9 @@ class GenerateTrajectories:
         startTime = time.time()
         iteration = oneConditionDf.index.get_level_values('iteration')[0]
         numSimulations = oneConditionDf.index.get_level_values('numSimulations')[0]
+        learnRate = oneConditionDf.index.get_level_values('modelLearnRate')[0]
 
-        NNModel = self.restoreNNModelFromIteration(iteration)
+        NNModel = self.restoreNNModel(iteration, learnRate)
         policy = self.getPolicy(NNModel, numSimulations)
 
         indexLevelNames = oneConditionDf.index.names
@@ -101,11 +107,12 @@ def main():
     tf.set_random_seed(128)
 
     # manipulated variables (and some other parameters that are commonly varied)
-    numTrials = 20
+    numTrials = 50
     maxRunningSteps = 2
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = []
+    manipulatedVariables['iteration'] = [0, 50, 200, 400, 800, 999]
     manipulatedVariables['numSimulations'] = [75]
+    manipulatedVariables['modelLearnRate'] = [1e-10, 1e-6, 1e-8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -114,6 +121,9 @@ def main():
 
     # generate a set of starting conditions to maintain consistency across all the conditions
     allQPosInit = np.random.uniform(-9.7, 9.7, (numTrials, 4))
+    # pickleIn = open('allQPosInit.pickle', 'rb')
+    # allQPosInit = pickle.load(pickleIn)
+    # pickleIn.close()
 
     # functions for MCTS
     envModelName = 'twoAgents'
@@ -141,25 +151,35 @@ def main():
     calculateScore = CalculateScore(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
+    aliveBonus = -0.05
+    deathPenalty = 1
+    reward = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+
+    rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    rolloutHeuristicWeight = 0
+    maxRolloutSteps = 10
+    rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getSheepXPos, getWolfXPos)
+    rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, reward, isTerminal, rolloutHeuristic)
+
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
     # neural network model
     numStateSpace = 12
-    learningRate = 0.0001
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
-    generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
+    # generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
+    generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, 0.0001, regularizationFactor)     # temporary modification
 
     trainMaxRunningSteps = 10
     trainQPosInit = (0, 0, 0, 0)
     trainQPosInitNoise = 9.7
-    trainNumSimulations = 100
-    trainSteps = 100
+    trainNumSimulations = 75
+    trainSteps = 50
     trainNumTrialsEachIteration = 1
-    trainFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'qPosInit': trainQPosInit, 'trainSteps': trainSteps,
+    trainFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'trainSteps': trainSteps, 'qPosInit': trainQPosInit,
                             'qPosInitNoise': trainQPosInitNoise, 'numSimulations': trainNumSimulations,
-                            'learnRate': learningRate, 'numTrialsEachIteration': trainNumTrialsEachIteration}
+                            'numTrialsEachIteration': trainNumTrialsEachIteration}  # 'learnRate': learningRate
     NNModelSaveDirectory = "../../data/trainMCTSNNIteratively/trainedNNModels"
     NNModelSaveExtension = ''
     getModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, trainFixedParameters)
@@ -171,8 +191,11 @@ def main():
 
     # wrapper function for policy
     getApproximateValue = lambda NNModel: GetApproximateValueFromNode(getStateFromNode, ApproximateValueFunction(NNModel))
+    getMCTSNNPriorOnly = lambda NNModel, numSimulations: MCTS(numSimulations, selectChild, getExpandNNPrior(NNModel),
+                                                              rollout, backup, selectGreedyAction)
     getMCTSNN = lambda NNModel, numSimulations: MCTS(numSimulations, selectChild, getExpandNNPrior(NNModel),
                                                      getApproximateValue(NNModel), backup, selectGreedyAction)
+    getNN = lambda NNModel, numSimulations: ApproximatePolicy(NNModel, actionSpace)
     getStationaryAgentPolicy = lambda NNModel, numSimulations: stationaryAgentPolicy                                    # should I do this just to keep the interface symmetric?
     getPolicy = GetPolicy(getMCTSNN, getStationaryAgentPolicy)
 
@@ -186,19 +209,26 @@ def main():
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'modelLearnRate': learningRate,
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, #'modelLearnRate': learningRate,
                                  'modelNumTrialsEachIteration': trainNumTrialsEachIteration, 'numTrials': numTrials,
-                                 'trainNumSimulations': trainNumSimulations}
+                                 'trainNumSimulations': trainNumSimulations, 'trainQPosInitNoise': trainQPosInitNoise}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     # function to generate trajectories
-    restoreNNModelFromIteration = RestoreNNModelFromIteration(getModelSavePath, generatePolicyNet(hiddenWidths),
+    restoreNNModelFromIteration = RestoreNNModel(getModelSavePath, generatePolicyNet(hiddenWidths),
                                                               restoreVariables)
     generateTrajectories = GenerateTrajectories(getSampleTrajectory, numTrials, getTrajectorySavePath,
                                                 restoreNNModelFromIteration, getPolicy, saveData)
 
     # run all trials and save trajectories
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
+
+    # restoredModelAt25 = restoreNNModelFromIteration(25)
+    # NNPrior = ApproximateActionPrior(restoredModelAt25, actionSpace)
+    # for trial in range(numTrials):
+    #     reset = getResetFromTrial(trial)
+    #     state = reset()
+    #     NNPrior(state)
 
     # measurement Function
     initTimeStep = 0
@@ -213,7 +243,7 @@ def main():
 
     # compute statistics on the trajectories
     loadTrajectories = LoadTrajectories(getTrajectorySavePath)
-    computeStatistics = ComputeStatistics(loadTrajectories, numTrials, measurementFunction)
+    computeStatistics = ComputeStatistics(loadTrajectories, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
     # plot the statistics
@@ -226,7 +256,7 @@ def main():
         grp.index = grp.index.droplevel('numSimulations')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
         axForDraw.set_ylim(ymin=0, ymax=0.4)
-        drawPerformanceLine(grp, axForDraw, key)
+        drawPerformanceLine(grp, axForDraw, key, trainSteps)
         plotCounter += 1
 
     plt.legend(loc='best')

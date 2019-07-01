@@ -1,6 +1,3 @@
-# a lot of the code for this file is similar to that of evaluate.py (like a lot of lambda functions).
-# Should we put them in wrappers.py?
-
 import sys
 import os
 DIRNAME = os.path.dirname(__file__)
@@ -136,7 +133,7 @@ def main():
     tf.set_random_seed(128)
 
     # commonly varied parameters
-    numIterations = 20
+    numIterations = 1000
     numTrialsEachIteration = 1
 
     # functions for MCTS
@@ -171,11 +168,9 @@ def main():
 
     # neural network model
     numStateSpace = 12
-    learningRate = 0.0001
+    learningRates = [1e-8, 1e-6, 1e-10]
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
-    generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
-    NNModel = generatePolicyNet(hiddenWidths)
 
     maxRunningSteps = 10
     numSimulations = 75                                                                                                 # should we change this number?
@@ -212,7 +207,7 @@ def main():
     preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot, addValuesToTrajectory)
 
     # function to train NN model
-    trainSteps = 100
+    trainSteps = 50
     batchSize = None
     terminalThreshold = 1e-6
     lossHistorySize = 10
@@ -226,8 +221,8 @@ def main():
     train = Train(trainSteps, batchSize, terminalController, coefficientController, trainReporter)
 
     # NN model save path
-    trainFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit, 'qPosInitNoise': qPosInitNoise,
-                            'numSimulations': numSimulations, 'learnRate': learningRate, 'trainSteps': trainSteps,
+    trainFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInitNoise': qPosInitNoise, 'qPosInit': qPosInit,
+                            'numSimulations': numSimulations, 'trainSteps': trainSteps,
                             'numTrialsEachIteration': numTrialsEachIteration}
     NNModelSaveDirectory = "../../data/trainMCTSNNIteratively/trainedNNModels"
     if not os.path.exists(NNModelSaveDirectory):
@@ -238,7 +233,7 @@ def main():
     # trajectory save path
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit,
                                  'qPosInitNoise': qPosInitNoise, 'numSimulations': numSimulations,
-                                 'learnRate': learningRate, 'trainSteps': trainSteps,
+                                 'trainSteps': trainSteps,
                                  'numTrialsEachIteration': numTrialsEachIteration}
     trajectorySaveDirectory = "../../data/trainMCTSNNIteratively/trajectories/training"
     if not os.path.exists(trajectorySaveDirectory):
@@ -249,11 +244,19 @@ def main():
     # play and train NN iteratively
     playToTrain = PlayToTrain(sampleTrajectory, numTrialsEachIteration, getTrajectorySavePath, getPolicy, saveData)
     trainToPlay = TrainToPlay(train, getModelSavePath)
-    for iteration in range(numIterations):
-        trajectories = playToTrain(NNModel, {'iteration': iteration})
-        trainData = preProcessTrajectories(trajectories)
-        updatedNNModel = trainToPlay(NNModel, trainData, {'iteration': iteration})
-        NNModel = updatedNNModel
+    replayBuffer = []
+
+
+    for learningRate in learningRates:
+        generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate,
+                                                           regularizationFactor)
+        NNModel = generatePolicyNet(hiddenWidths)
+        for iteration in range(numIterations):
+            trajectories = playToTrain(NNModel, {'iteration': iteration, 'learnRate': learningRate})
+            trainData = preProcessTrajectories(trajectories)
+
+            updatedNNModel = trainToPlay(NNModel, trainData, {'iteration': iteration, 'learnRate': learningRate})
+            NNModel = updatedNNModel
 
 
 if __name__ == '__main__':

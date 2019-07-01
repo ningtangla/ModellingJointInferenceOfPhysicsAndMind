@@ -2,16 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="47533536-b2d1-4baa-8caf-57290092fe0a" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/NNPolicyVaryHyperParametersSheepChaseWolfMujoco.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/checkpoint" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/checkpoint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=75_numTrials=1500_output=policyValue_qPosInit=(0,0,0,0)_trainSteps=10.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=75_numTrials=1500_output=policyValue_qPosInit=(0,0,0,0)_trainSteps=10.data-00000-of-00001" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=75_numTrials=1500_output=policyValue_qPosInit=(0,0,0,0)_trainSteps=10.index" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=75_numTrials=1500_output=policyValue_qPosInit=(0,0,0,0)_trainSteps=10.index" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=75_numTrials=1500_output=policyValue_qPosInit=(0,0,0,0)_trainSteps=10.meta" beforeDir="false" afterPath="$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainedModels/learnRate=0.0001_maxRunningSteps=10_numSimulations=75_numTrials=1500_output=policyValue_qPosInit=(0,0,0,0)_trainSteps=10.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluationFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/testEvaluateMCTSGuidedByNNPrior.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testEvaluateMCTSGuidedByNNPrior.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,46 +18,34 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="NNPolicyVaryHyperParametersSheepChaseWolfMujoco.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/NNPolicyVaryHyperParametersSheepChaseWolfMujoco.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-2512">
+              <caret line="169" column="53" selection-start-line="169" selection-start-column="53" selection-end-line="169" selection-end-column="53" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="trainMCTSNNIteratively.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="281">
-              <caret line="180" column="24" selection-start-line="180" selection-start-column="24" selection-end-line="180" selection-end-column="24" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="1221">
+              <caret line="158" column="95" selection-start-line="158" selection-start-column="4" selection-end-line="158" selection-end-column="95" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="evaluate.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py">
+      <file leaf-file-name="evaluationFunctions.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="107" column="49" lean-forward="true" selection-start-line="107" selection-start-column="49" selection-end-line="107" selection-end-column="49" />
+            <state relative-caret-position="132">
+              <caret line="14" column="91" selection-start-line="14" selection-start-column="91" selection-end-line="14" selection-end-column="91" />
               <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" column="5" selection-start-line="4" selection-start-column="5" selection-end-line="4" selection-end-column="5" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="envMujoco.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="990">
-              <caret line="66" column="34" selection-start-line="66" selection-start-column="34" selection-end-line="66" selection-end-column="34" />
-              <folding>
-                <element signature="e#0#26#0" expanded="true" />
+                <element signature="e#0#9#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -78,9 +62,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>fileDir</find>
-      <find>getActionPrior</find>
-      <find>getAct</find>
       <find>actionp</find>
       <find>getActionPriorUni</find>
       <find>trainSteps</find>
@@ -100,6 +81,17 @@
       <find>saver</find>
       <find>getState</find>
       <find>GetMCTS</find>
+      <find>numSim</find>
+      <find>compute</find>
+      <find>computeS</find>
+      <find>MCTSNN</find>
+      <find>trainQPos</find>
+      <find>modelLea</find>
+      <find>terminalTh</find>
+      <find>None</find>
+      <find>eval</find>
+      <find>sheep</find>
+      <find>sheepTra</find>
     </findStrings>
     <replaceStrings>
       <replace>dirName</replace>
@@ -135,21 +127,30 @@
         <option value="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/prepareNeuralNetData.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/testMCTSUniformVsNNPriorSheepChaseWolfMujoco.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSUniformVsNNPriorSheepChaseWolfMujoco.py" />
-        <option value="$PROJECT_DIR$/exec/evaluationFunctions.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trainNeuralNet.py" />
         <option value="$PROJECT_DIR$/tests/testEvaluteMCTSGuidedByNNPrior_IssueNishaed.py" />
         <option value="$PROJECT_DIR$/tests/testEvaluateMCTSPolicyValue.py" />
-        <option value="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py" />
         <option value="$PROJECT_DIR$/src/algorithms/mcts.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco.py" />
         <option value="$PROJECT_DIR$/tests/testEvaluateMCTSGuidedByNNPrior.py" />
-        <option value="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" />
         <option value="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/wrappers.py" />
         <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/wrappers.py" />
         <option value="$PROJECT_DIR$/tests/testTrainMCTSNNIteratively.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" />
+        <option value="$USER_HOME$/ModellingJointInferenceOfPhysicsAndMind-refactor-src/src/algorithms/mcts.py" />
+        <option value="$USER_HOME$/ModellingJointInferenceOfPhysicsAndMind-refactor-src/src/play.py" />
+        <option value="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" />
         <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" />
+        <option value="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py" />
+        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" />
+        <option value="$PROJECT_DIR$/exec/testNNPolicyVaryLearnRateBatchSizeTrainSteps/trainNeuralNet.py" />
+        <option value="$PROJECT_DIR$/exec/testNNPolicyVaryLearnRateBatchSizeTrainSteps/trainNeuralNets.py" />
+        <option value="$PROJECT_DIR$/exec/testNNPolicyHyperParametersSheepChaseWolfMujoco/testNNPolicyHyperParametersSheepChaseWolfMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/testNNPolicyHyperParametersSheepChaseWolfMujoco/trainNeuralNets.py" />
+        <option value="$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/testNNPolicyHyperParametersSheepChaseWolfMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/evaluationFunctions.py" />
+        <option value="$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/trainNeuralNets.py" />
+        <option value="$PROJECT_DIR$/src/replayBuffer.py" />
       </list>
     </option>
   </component>
@@ -171,6 +172,22 @@
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="exec" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="exec" type="462c0819:PsiDirectoryNode" />
+              <item name="NNPolicyVaryHyperParametersSheepChaseWolfMujoco" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -182,11 +199,15 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data/testNNPolicyVaryLearnRateBatchSizeTrainSteps/trajectories/train" />
+      <recent name="$PROJECT_DIR$/exec/testNNPolicyVaryLearnRateBatchSizeTrainSteps" />
+      <recent name="$PROJECT_DIR$/data/testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco/trajectories/train" />
+      <recent name="$PROJECT_DIR$/exec/testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco" />
+      <recent name="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/exec/trainMCTSNNIteratively" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -216,9 +237,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.21775898" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.21775898" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32917705" />
@@ -226,7 +246,7 @@
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.25062343" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="8" visible="true" weight="0.319202" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -250,21 +270,21 @@
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.24947146" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="10" />
-      <window_info anchor="bottom" id="Version Control" order="3" />
       <window_info anchor="bottom" id="Run" order="6" />
-      <window_info anchor="bottom" id="Python Console" order="0" />
-      <window_info anchor="bottom" id="Message" order="4" />
+      <window_info anchor="bottom" id="Find" order="5" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.4" />
       <window_info anchor="bottom" id="Terminal" order="1" visible="true" weight="0.32917705" />
       <window_info anchor="bottom" id="Event Log" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="5" />
+      <window_info anchor="bottom" id="Version Control" order="3" />
       <window_info id="Favorites" order="0" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="4" />
+      <window_info anchor="bottom" id="Python Console" order="0" />
     </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -276,49 +296,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/sheepWolf/envMujoco.py" />
-    <entry file="file://$PROJECT_DIR$/tests/testSheepWolfMeasurementFunctions.py" />
-    <entry file="file://$PROJECT_DIR$/src/sheepWolf/sheepWolfWrapperFunctions.py" />
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trainNeuralNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="747">
-          <caret line="92" column="23" selection-start-line="92" selection-start-column="23" selection-end-line="92" selection-end-column="23" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testNNMCTS.py" />
-    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="38" column="106" selection-start-line="38" selection-start-column="106" selection-end-line="38" selection-end-column="106" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/testMCTSUniformVsNNPriorSheepChaseWolfMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="148" column="16" selection-start-line="148" selection-start-column="16" selection-end-line="148" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorChaseMujoco/rough.py" />
-    <entry file="file://$PROJECT_DIR$/src/sheepWolf/sheepWolfWrapperFunctions.py" />
-    <entry file="file://$PROJECT_DIR$/tests/test1DEnv.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testMCTS.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testRunPolicyIn1DEnv.py" />
     <entry file="file://$PROJECT_DIR$/tests/testNNMCTS.py" />
     <entry file="file://$PROJECT_DIR$/tests/testMCTSInMujoco.py" />
     <entry file="file://$PROJECT_DIR$/src/sheepWolf/envMujoco.py" />
@@ -381,13 +358,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/trainTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="40" column="49" selection-start-line="40" selection-start-column="23" selection-end-line="40" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/prepareNeuralNetData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="217">
@@ -430,9 +400,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
           <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -466,9 +433,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="163">
           <caret line="65" selection-start-line="65" selection-end-line="65" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -476,9 +440,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
           <caret line="2" column="16" lean-forward="true" selection-start-line="2" selection-start-column="16" selection-end-line="2" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -496,9 +457,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="863">
           <caret line="58" column="104" lean-forward="true" selection-start-line="55" selection-start-column="10" selection-end-line="58" selection-end-column="104" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -506,9 +464,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="208">
           <caret line="62" selection-start-line="60" selection-end-line="62" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -526,36 +481,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-830">
-          <caret line="6" column="90" selection-start-line="6" selection-start-column="84" selection-end-line="6" selection-end-column="90" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="110">
-          <caret line="142" column="14" selection-end-line="256" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="926">
-          <caret line="279" column="37" selection-start-line="279" selection-start-column="37" selection-end-line="279" selection-end-column="37" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/wrappers.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -563,29 +488,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="358">
           <caret line="93" column="35" lean-forward="true" selection-start-line="93" selection-start-column="35" selection-end-line="93" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="546">
-          <caret line="124" lean-forward="true" selection-start-line="124" selection-end-line="124" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -596,30 +498,152 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+    <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="990">
-          <caret line="66" column="34" selection-start-line="66" selection-start-column="34" selection-end-line="66" selection-end-column="34" />
+        <state relative-caret-position="265">
+          <caret line="139" column="16" selection-start-line="139" selection-start-column="16" selection-end-line="139" selection-end-column="16" />
           <folding>
-            <element signature="e#0#26#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py">
+    <entry file="file://$USER_HOME$/ModellingJointInferenceOfPhysicsAndMind-refactor-src/src/algorithms/mcts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="180" column="24" selection-start-line="180" selection-start-column="24" selection-end-line="180" selection-end-column="24" />
+        <state relative-caret-position="2250">
+          <caret line="151" lean-forward="true" selection-start-line="151" selection-end-line="151" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-497">
+          <caret line="36" column="47" selection-start-line="36" selection-start-column="47" selection-end-line="36" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="41">
+          <caret line="108" column="27" selection-start-line="108" selection-start-column="27" selection-end-line="108" selection-end-column="27" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/resultsMeanOnly.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco/prepareNeuralNetData.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/result.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$USER_HOME$/ModellingJointInferenceOfPhysicsAndMind-refactor-src/src/play.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="840">
+          <caret line="56" column="23" selection-start-line="56" selection-start-column="23" selection-end-line="56" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="107" column="49" lean-forward="true" selection-start-line="107" selection-start-column="49" selection-end-line="107" selection-end-column="49" />
+        <state relative-caret-position="1837">
+          <caret line="258" column="59" selection-start-line="258" selection-start-column="59" selection-end-line="258" selection-end-column="59" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco/trainNeuralNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-215">
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco/trajectories/train/maxRunningSteps=10_numSimulations=75_numTrials=1500_qPosInit=(0,0,0,0)_sheepPolicyName=MCTS.pickle">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trainNeuralNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="131" column="14" selection-start-line="131" selection-start-column="14" selection-end-line="131" selection-end-column="14" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/trainTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="332">
+          <caret line="40" column="49" selection-start-line="40" selection-start-column="23" selection-end-line="40" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/prepareNeuralNetData.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/trajectories/train/maxRunningSteps=10_numSimulations=75_numTrials=1500_qPosInit=(0,0,0,0)_sheepPolicyName=MCTS.pickle">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="545">
+          <caret line="179" column="74" selection-start-line="179" selection-start-column="64" selection-end-line="179" selection-end-column="74" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1221">
+          <caret line="158" column="95" selection-start-line="158" selection-start-column="4" selection-end-line="158" selection-end-column="95" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="132">
+          <caret line="14" column="91" selection-start-line="14" selection-start-column="91" selection-end-line="14" selection-end-column="91" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/testNNPolicyHyperParametersSheepChaseWolfMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="321">
+          <caret line="35" selection-start-line="30" selection-end-line="35" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/replayBuffer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="4" lean-forward="true" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepChaseWolfMujoco/NNPolicyVaryHyperParametersSheepChaseWolfMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2512">
+          <caret line="169" column="53" selection-start-line="169" selection-start-column="53" selection-end-line="169" selection-end-column="53" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>

@@ -67,8 +67,9 @@ class PreProcessTrajectories:
 
 def main():
     # Get dataset for training
-    dataSetDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trajectories"
-    # dataSetDirectory = "../../data/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trajectories"
+    DIRNAME = os.path.dirname(__file__)
+    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data',
+                                    'testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco', 'trajectories', 'train')
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 10
@@ -121,14 +122,14 @@ def main():
     # initialise model for training
     numStateSpace = 12
     numActionSpace = len(actionSpace)
-    learningRate = 0.0001
+    learningRates = [1e-4, 1e-6, 1e-8, 1e-10, 1e-12]
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
     generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [10, 50, 100, 500, 1000, 5000]
-    batchSize = None
+    allTrainSteps = [1, 1000, 5000, 25000]
+    batchSizes = [16, 64, 256]
     terminalThreshold = 1e-6
     lossHistorySize = 10
     initActionCoeff = 1
