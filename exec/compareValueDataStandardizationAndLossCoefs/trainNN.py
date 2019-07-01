@@ -9,7 +9,7 @@ import numpy as np
 import os
 from collections import OrderedDict
 import pickle
-import policyValueNet as net
+import flexiblePolicyValueNet as net
 import trainTools
 from evaluationFunctions import GetSavePath
 
@@ -43,16 +43,20 @@ class ApplyFunction:
         neuronsPerLayer = int(round(netNeurons/netLayers))
         reportInterval = df.index.get_level_values('reportInterval')[0]
 
+        sampleData = net.sampleData
         trainTerminalController = trainTools.TrainTerminalController(lossHistorySize, lossChangeThreshold)
-        coefficientController = trainTools.coefficientCotroller(initCoeffs, initCoeffs)
+        coefficientController = trainTools.CoefficientCotroller(initCoeffs, initCoeffs)
+        decayRate = 1
+        decayStep = 10000
+        learningRateModifier = trainTools.LearningRateModifier(learningRate, decayRate, decayStep)
         trainReporter = trainTools.TrainReporter(maxStepNum, reportInterval)
-        train = net.Train(maxStepNum, batchSize, trainTerminalController, coefficientController, trainReporter)
+        train = net.Train(maxStepNum, batchSize, sampleData, learningRateModifier, trainTerminalController, coefficientController, trainReporter)
 
-        generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor, valueRelativeErrBound=valueRelativeErrBound, seed=tfseed)
-        model = generateModel([neuronsPerLayer] * netLayers)
+        generateModel = net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor, valueRelativeErrBound=valueRelativeErrBound, seed=tfseed)
+        model = generateModel([neuronsPerLayer] * (netLayers-1), [neuronsPerLayer], [neuronsPerLayer])
         trainedModel = train(model, trainData)
         trainDataValueType = "standardized" if useStandardizedReward else "unstandardized"
-        modelName = "{}data_{}x{}_{}kIter_{}Value_initCoefs={}".format(len(trainData[0]), neuronsPerLayer, netLayers, round(maxStepNum / 1000), trainDataValueType, initCoeffs)
+        modelName = "newNet_{}data_{}x{}_{}kIter_{}Value_initCoefs={}".format(len(trainData[0]), neuronsPerLayer, netLayers, round(maxStepNum / 1000), trainDataValueType, initCoeffs)
         modelName = modelName.replace(' ', '')
         if self.saveModelDir is not None:
             savePath = os.path.join(os.getcwd(), self.saveModelDir, modelName)
@@ -68,8 +72,8 @@ def main(tfseed=128):
     maxRollOutSteps = 10
     numSimulations = 200
     maxRunningSteps = 30
-    numTrajs = 2
-    numDataPoints = 58
+    numTrajs = 200
+    numDataPoints = 5800
     cBase = 100
     pathVarDict = {}
     pathVarDict["initPos"] = list(initPosition.flatten())
@@ -78,7 +82,7 @@ def main(tfseed=128):
     pathVarDict["maxRunningSteps"] = maxRunningSteps
     pathVarDict["numTrajs"] = numTrajs
     pathVarDict["numDataPoints"] = numDataPoints
-    pathVarDict["cBase"] = cBase
+    # pathVarDict["cBase"] = cBase
 
     independentVariables = OrderedDict()
     independentVariables['useStandardizedReward'] = [True]
@@ -89,7 +93,7 @@ def main(tfseed=128):
     independentVariables['learningRate'] = [1e-4]
     independentVariables['regularizationFactor'] = [0]
     independentVariables['valueRelativeErrBound'] = [0.1]
-    independentVariables['iteration'] = [10000]
+    independentVariables['iteration'] = [1000]
     independentVariables['batchSize'] = [0]
     independentVariables['reportInterval'] = [1000]
     independentVariables['lossChangeThreshold'] = [0]

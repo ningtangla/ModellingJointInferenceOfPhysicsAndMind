@@ -32,7 +32,6 @@ class ApplyFunction:
         testData = [dataSet[varName][:testDataSize] for varName in ['state', trainDataActionType, 'value']]
         numStateSpace = df.index.get_level_values('numStateSpace')[0]
         numActionSpace = df.index.get_level_values('numActionSpace')[0]
-        learningRate = df.index.get_level_values('learningRate')[0]
         regularizationFactor = df.index.get_level_values('regularizationFactor')[0]
         valueRelativeErrBound = df.index.get_level_values('valueRelativeErrBound')[0]
         maxStepNum = df.index.get_level_values('iteration')[0]
@@ -41,8 +40,8 @@ class ApplyFunction:
         netLayers = df.index.get_level_values('netLayers')[0]
         neuronsPerLayer = int(round(netNeurons/netLayers))
 
-        generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor, valueRelativeErrBound=valueRelativeErrBound, seed=tfseed)
-        model = generateModel([neuronsPerLayer] * netLayers)
+        generateModel = net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor, valueRelativeErrBound=valueRelativeErrBound, seed=tfseed)
+        model = generateModel([neuronsPerLayer] * (netLayers-1), [neuronsPerLayer], [neuronsPerLayer])
 
         trainDataValueType = "standardized" if useStandardizedReward else "unstandardized"
         modelName = "{}data_{}x{}_{}kIter_{}Value_initCoefs={}".format(len(trainData[0]), neuronsPerLayer, netLayers, round(maxStepNum / 1000), trainDataValueType, initCoeffs)
@@ -86,7 +85,6 @@ def main(tfseed=128):
     independentVariables['testDataSize'] = [2800]
     independentVariables['numStateSpace'] = [4]
     independentVariables['numActionSpace'] = [8]
-    independentVariables['learningRate'] = [1e-4]
     independentVariables['regularizationFactor'] = [0]
     independentVariables['valueRelativeErrBound'] = [0.1]
     independentVariables['iteration'] = [50000]
