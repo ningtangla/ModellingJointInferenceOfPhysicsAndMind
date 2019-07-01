@@ -92,14 +92,14 @@ class RollOut:
             nextState = self.transitionFunction(currentState, action)
             currentState = nextState
 
-        if not reachedTerminal:
+        if not reachedTerminal:#refactor, put it into rolloutHeuristic
             heuristicReward = self.rolloutHeuristic(currentState)
             totalRewardForRollout += heuristicReward
 
         return totalRewardForRollout
 
 
-def backup(value, nodeList):
+def backup(value, nodeList):#anytree lib
     for node in nodeList:
         node.sumValue += value
         node.numVisited += 1
@@ -115,6 +115,7 @@ def selectGreedyAction(root):
 def establishPlainActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     actionProbs = visits / np.sum(visits)
+    #lambda child : child.id.key()
     actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
     return actionDist
 
@@ -123,6 +124,7 @@ def establishSoftmaxActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     expVisits = np.exp(visits)
     actionProbs = expVisits / np.sum(expVisits)
+    #
     actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
     return actionDist
 
@@ -151,7 +153,7 @@ class MCTS:
             leafNode = self.expand(currentNode)
             value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
-
+        #keep output same 
         mctsOutput = self.outputActionOrDistribution(root)
         return mctsOutput
 

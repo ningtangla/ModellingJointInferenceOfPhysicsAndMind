@@ -1,12 +1,8 @@
 *.pyc
-<<<<<<< HEAD
 __pycache__
 *.DS_Store
 tbdata
 .lan
 *.local
-=======
 .DS.Store
 .idea
-__pycache__
->>>>>>> mctsMujocoSingleAgent

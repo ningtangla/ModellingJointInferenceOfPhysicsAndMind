@@ -1,6 +1,7 @@
 import numpy as np 
 import math 
 from random import randint
+from wrapperFunctions import rearrangeList
 
 class Reset:
     def __init__(self, gridSize, lowerGridBound, agentCount):
@@ -36,6 +37,7 @@ def roundNumber(number):
 
 class GetPullingForceValue:
     def __init__(self, adjustingParam, roundNumber):
+        #name 
         self.adjustingParam = adjustingParam
         self.roundNumber = roundNumber
     def __call__(self, relativeLocation):
@@ -46,7 +48,7 @@ class GetPullingForceValue:
 
 class SamplePulledForceDirection:
     def __init__(self, calculateAngle, forceSpace, lowerBoundAngle, upperBoundAngle):
-
+        # order
         self.calculateAngle = calculateAngle
         self.forceSpace = forceSpace
         self.lowerBoundAngle = lowerBoundAngle
@@ -61,7 +63,8 @@ class SamplePulledForceDirection:
 
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
         forceAnglePair = zip(self.forceSpace, forceActionAngle.values())
-        
+       
+       #simplify
         angleFilter = {force: angleWithinRange(angle) for force, angle in forceAnglePair}
 
         pulledActions = [action for action, index in zip(angleFilter.keys(), angleFilter.values()) if index]
@@ -87,24 +90,30 @@ class GetPulledAgentForce:
 
         return pullingResultAction
 
-class GetNoForceAgentForce:
-    def __init__(self, getPullingAgentPosition, getPulledAgentPosition):
-        self.getPullingAgentPosition = getPullingAgentPosition
-        self.getPulledAgentPosition = getPulledAgentPosition
+class GetAgentsForce: # ordered by index
+    def __init__(self, getPulledAgentForce, pulledAgentIndex, noPullingAgentIndex, pullingAgentIndex):
+        self.getPulledAgentForce = getPulledAgentForce
+        self.pulledAgentIndex = pulledAgentIndex
+        self.noPullingAgentIndex = noPullingAgentIndex
+        self.pullingAgentIndex = pullingAgentIndex
     def __call__(self, state):
-        return 0, 0
+        pulledAgentForce = np.array(self.getPulledAgentForce(state))
+        pullingAgentForce = -pulledAgentForce
+        noPullAgentForce = (0,0)
+        unorderedAgentsForce = [pulledAgentForce, noPullAgentForce, pullingAgentForce]
+        agentsIDOrder = [self.pulledAgentIndex, self.noPullingAgentIndex, self.pullingAgentIndex]
+        agentsForce = rearrangeList(unorderedAgentsForce, agentsIDOrder)
+        return agentsForce
 
-class TransitAgent:
-    def __init__(self, stayWithinBoundary, getAgentForce, locateAgent):
+class Transition:
+    def __init__(self, stayWithinBoundary, getAgentsForce):
         self.stayWithinBoundary = stayWithinBoundary
-        self.getAgentForce = getAgentForce
-        self.locateAgent = locateAgent
-    def __call__(self, action, state):
-        agentForce = self.getAgentForce(state)
-        currentState = self.locateAgent(state)
-        nextIntendedState = np.array(currentState) + np.array(agentForce) + np.array(action)
-        nextState = self.stayWithinBoundary(nextIntendedState)
-        return nextState
+        self.getAgentsForce = getAgentsForce
+    def __call__(self, actionList, state):
+        agentsForce = self.getAgentsForce(state)
+        agentsIntendedState = np.array(state) + np.array(agentsForce) + np.array(actionList)
+        agentsNextState = [self.stayWithinBoundary(intendedState) for intendedState in agentsIntendedState]
+        return agentsNextState
 
 
 class IsTerminal:

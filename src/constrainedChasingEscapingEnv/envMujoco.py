@@ -6,6 +6,7 @@ import numpy as np
 class Reset():
     def __init__(self, modelName, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         dirName = os.path.dirname(__file__)
+        #parse from outside
         model = mujoco.load_model_from_path(os.path.join(dirName, '..', '..', 'env', 'xmls', '{}.xml'.format(modelName)))
         self.simulation = mujoco.MjSim(model)
         self.qPosInit = np.asarray(qPosInit)
@@ -41,6 +42,7 @@ class TransitionFunction:
         self.numQPos = len(self.simulation.data.qpos)
         self.numQVel = len(self.simulation.data.qvel)
         self.renderOn = renderOn
+        # out
         if self.renderOn:
             self.viewer = mujoco.MjViewer(self.simulation)
             self.frames = []
