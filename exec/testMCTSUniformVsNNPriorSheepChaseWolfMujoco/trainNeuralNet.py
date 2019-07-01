@@ -5,7 +5,7 @@ sys.path.append(os.path.join(dirName, '..', '..'))
 
 from exec.evaluationFunctions import GetSavePath
 from src.neuralNetwork.policyNet import GenerateModel, Train, saveVariables
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 
 import random
 import numpy as np

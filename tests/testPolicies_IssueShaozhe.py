@@ -8,7 +8,7 @@ from ddt import ddt, data, unpack
 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, HeatSeekingContinuesDeterministicPolicy, ActHeatSeeking, HeatSeekingDiscreteStochasticPolicy
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 @ddt
 class TestContinuesStatePolicies(unittest.TestCase):
