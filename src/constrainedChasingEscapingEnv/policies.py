@@ -5,11 +5,16 @@ import random
 def stationaryAgentPolicy(state):
     return (0, 0)
 
+class RandomActionLikelihood:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+    def __call__(self, state):
+        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+        return likelihood
 
 class RandomPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
-
     def __call__(self, state):
         actionIndex = np.random.randint(len(self.actionSpace))
         action = self.actionSpace[actionIndex]
@@ -32,6 +37,7 @@ class HeatSeekingDiscreteDeterministicPolicy:
         action = random.choice(optimalActionList)
         return action
 
+
 class HeatSeekingContinuesDeterministicPolicy:
     def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
         self.getPredatorPos = getPredatorPos
@@ -39,13 +45,13 @@ class HeatSeekingContinuesDeterministicPolicy:
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-
         action = np.array(self.getPreyPos(state)) - np.array(self.getPredatorPos(state))
         actionL2Norm = np.linalg.norm(action, ord = 2)
         if actionL2Norm != 0:
             action = action / actionL2Norm
             action *= self.actionMagnitude
         return action
+
 
 class ActHeatSeeking:
     def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
@@ -59,7 +65,6 @@ class ActHeatSeeking:
                                               for mvmtVector in self.actionSpace}
 
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
-        
         movementAnglePair = zip(self.actionSpace, heatActionAngle.values())
 
         angleFilter = {movement: angleWithinRange(angle) for movement, angle in movementAnglePair}
@@ -70,18 +75,19 @@ class ActHeatSeeking:
 
         return [chosenActions, unchosenActions]  
 
+
 class HeatSeekingDiscreteStochasticPolicy:
-    def __init__(self, rationalityParam, actHeatSeeking, locateChasingAgent, locateEscapingAgent):
+    def __init__(self, rationalityParam, actHeatSeeking, getPredatorPos, getPreyPos):
         self.rationalityParam = rationalityParam
         self.actHeatSeeking = actHeatSeeking
-        self.locateChasingAgent = locateChasingAgent
-        self.locateEscapingAgent = locateEscapingAgent
+        self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
 
     def __call__(self, state):
-        chasingAgentPosition = self.locateChasingAgent(state)
-        escapingAgentPosition = self.locateEscapingAgent(state)
+        predatorPosition = self.getPredatorPos(state)
+        preyPosition = self.getPreyPos(state)
 
-        heatSeekingDirection = np.array(escapingAgentPosition) - np.array(chasingAgentPosition)
+        heatSeekingDirection = np.array(preyPosition) - np.array(predatorPosition)
         chosenActions, unchosenActions = self.actHeatSeeking(heatSeekingDirection)
 
         chosenActionsLikelihood = {action: self.rationalityParam / len(chosenActions) for action in chosenActions}
@@ -91,5 +97,5 @@ class HeatSeekingDiscreteStochasticPolicy:
         heatSeekingSampleLikelihood = list(heatSeekingActionLikelihood.values())
         heatSeekingActionIndex = list(np.random.multinomial(1, heatSeekingSampleLikelihood)).index(1)
         chasingAction = list(heatSeekingActionLikelihood.keys())[heatSeekingActionIndex]
-        
+
         return chasingAction

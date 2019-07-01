@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class coefficientCotroller():
+class CoefficientCotroller():
     def __init__(self, initCoeffs, afterCoeffs, threshold=0):
         self.actionCoeff, self.valueCoeff = initCoeffs
         self.afterActionCoeff, self.afterValueCoeff = afterCoeffs
@@ -65,7 +65,7 @@ class TrainReporter():
                 writer.add_summary(summary, stepNum)
 
 
-class learningRateModifier():
+class LearningRateModifier():
     def __init__(self, initLearningRate, decayRate, decayStep):
         self.initLearningRate = initLearningRate
         self.decayRate = decayRate
