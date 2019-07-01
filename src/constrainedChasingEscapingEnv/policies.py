@@ -1,8 +1,16 @@
 import numpy as np
 import random
 
+
 def stationaryAgentPolicy(state):
     return (0, 0)
+
+class RandomActionLikelihood:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+    def __call__(self, state):
+        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+        return likelihood
 
 class RandomPolicy:
     def __init__(self, actionSpace):
@@ -11,6 +19,7 @@ class RandomPolicy:
         actionIndex = np.random.randint(len(self.actionSpace))
         action = self.actionSpace[actionIndex]
         return action
+
 
 class HeatSeekingDiscreteDeterministicPolicy:
     def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
@@ -28,6 +37,7 @@ class HeatSeekingDiscreteDeterministicPolicy:
         action = random.choice(optimalActionList)
         return action
 
+
 class HeatSeekingContinuesDeterministicPolicy:
     def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
         self.getPredatorPos = getPredatorPos
@@ -42,6 +52,7 @@ class HeatSeekingContinuesDeterministicPolicy:
             action = action / actionL2Norm
             action *= self.actionMagnitude
         return action
+
 
 class ActHeatSeeking:
     def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
@@ -65,6 +76,7 @@ class ActHeatSeeking:
 
         return [chosenActions, unchosenActions]  
 
+
 class HeatSeekingDiscreteStochasticPolicy:
     def __init__(self, rationalityParam, actHeatSeeking, getPredatorPos, getPreyPos):
         self.rationalityParam = rationalityParam
@@ -86,5 +98,5 @@ class HeatSeekingDiscreteStochasticPolicy:
         heatSeekingSampleLikelihood = list(heatSeekingActionLikelihood.values())
         heatSeekingActionIndex = list(np.random.multinomial(1, heatSeekingSampleLikelihood)).index(1)
         chasingAction = list(heatSeekingActionLikelihood.keys())[heatSeekingActionIndex]
-        
+
         return chasingAction

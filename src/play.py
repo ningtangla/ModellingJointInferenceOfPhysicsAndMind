@@ -20,15 +20,18 @@ class MultiAgentSampleTrajectory:
         if self.currentState is None:
             self.currentState = self.reset()
 
-        locationDataFrame = pd.DataFrame([[agentState] for agentState in self.currentState], index=self.agentNames)
+        trajectory = [self.currentState]
+
         for i in range(self.iterationNumber):
             allAgentNextAction = multiAgentPolicy(self.currentState)
             nextState = multiAgentTransition(allAgentNextAction, self.currentState)
-            locationDataFrame[i + 1] = nextState
+            trajectory.append(nextState)
+
             self.currentState = nextState
             if self.isTerminal(self.currentState):
                 break
-        return locationDataFrame
+
+        return trajectory
 
 class SampleTrajectory:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, maxInitDistance):

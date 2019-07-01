@@ -21,7 +21,10 @@ pd.set_option('display.max_columns', 50)
 def main():
 
     rationalityParam = 0.9
-    actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
+    # actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1), (0, 0)]
+
+    actionSpace = [(-1, 0), (1,0), (0, 1), (0, -1)]
+
     gridSize = (10,10)
     iterationNumber = 50
     agentNames = ["Wolf", "Sheep", "Master"]
@@ -65,8 +68,8 @@ def main():
     reset = Reset(gridSize, lowerGridBound, agentCount)
     stayWithinBoundary = StayWithinBoundary(gridSize, lowerGridBound)
 
-    adjustingParam = 3
-    getPullingForceValue = GetPullingForceValue(adjustingParam, roundNumber)
+    distanceForceRatio = 20
+    getPullingForceValue = GetPullingForceValue(distanceForceRatio)
     samplePulledForceDirection = SamplePulledForceDirection(computeAngleBetweenVectors, actionSpace, lowerBoundAngle, upperBoundAngle)
 
     getPulledAgentForce = GetPulledAgentForce(getPullingAgentPos, getPulledAgentPos, samplePulledForceDirection, getPullingForceValue)
@@ -79,17 +82,18 @@ def main():
 
     getMultiAgentSampleTrajectory = MultiAgentSampleTrajectory(agentNames, iterationNumber, isTerminal, reset)
 
-    locationDf = getMultiAgentSampleTrajectory(policy, transition)
-    print(locationDf)
+    trajectory = getMultiAgentSampleTrajectory(policy, transition)
 
 
+    print(trajectory)
+    print(len(trajectory))
 
     BLACK = (  0,   0,   0)
     WHITE = (255, 255, 255)
+
     BLUE =  (  0,   0, 255)
     PINK = ( 250,   0, 255)
     GREEN = (0, 255, 0)
-
 
     screenWidth = 800
     screenHeight = 800
@@ -99,8 +103,9 @@ def main():
 
     pointExtendTime = 100
     FPS = 60
-    # colorList = [BLUE, PINK, GREEN]
     colorList = [BLACK,BLACK,BLACK]
+    colorList = [BLUE, PINK, GREEN]
+
     pointWidth = 10
     modificationRatio = 3
 
@@ -116,8 +121,8 @@ def main():
     backgroundColor= WHITE
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
-    drawPointsFromLocationDfandSaveImage =  DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
-    drawPointsFromLocationDfandSaveImage(locationDf, iterationNumber, saveImage = True)
+    drawPointsFromLocationDfandSaveImage = DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
+    drawPointsFromLocationDfandSaveImage(trajectory, iterationNumber, saveImage = False)
 
 
 if __name__ == '__main__':
