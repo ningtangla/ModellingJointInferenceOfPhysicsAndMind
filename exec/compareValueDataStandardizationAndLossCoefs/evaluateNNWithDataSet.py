@@ -1,8 +1,9 @@
 import sys
-sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/constrainedChasingEscapingEnv")
-sys.path.append("../src/algorithms")
-sys.path.append("../src")
+sys.path.append("..")
+sys.path.append("../../src/neuralNetwork")
+sys.path.append("../../src/constrainedChasingEscapingEnv")
+sys.path.append("../../src/algorithms")
+sys.path.append("../../src")
 import pandas as pd
 import numpy as np
 import os
@@ -31,19 +32,20 @@ class ApplyFunction:
         testData = [dataSet[varName][:testDataSize] for varName in ['state', trainDataActionType, 'value']]
         numStateSpace = df.index.get_level_values('numStateSpace')[0]
         numActionSpace = df.index.get_level_values('numActionSpace')[0]
-        learningRate = df.index.get_level_values('learningRate')[0]
         regularizationFactor = df.index.get_level_values('regularizationFactor')[0]
         valueRelativeErrBound = df.index.get_level_values('valueRelativeErrBound')[0]
         maxStepNum = df.index.get_level_values('iteration')[0]
+        initCoeffs = df.index.get_level_values('initCoeffs')[0]
         netNeurons = df.index.get_level_values('netNeurons')[0]
         netLayers = df.index.get_level_values('netLayers')[0]
         neuronsPerLayer = int(round(netNeurons/netLayers))
 
-        generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor, valueRelativeErrBound=valueRelativeErrBound, seed=tfseed)
-        model = generateModel([neuronsPerLayer] * netLayers)
+        generateModel = net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor, valueRelativeErrBound=valueRelativeErrBound, seed=tfseed)
+        model = generateModel([neuronsPerLayer] * (netLayers-1), [neuronsPerLayer], [neuronsPerLayer])
 
         trainDataValueType = "standardized" if useStandardizedReward else "unstandardized"
-        modelName = "{}data_{}x{}_{}kIter_{}Value".format(len(trainData[0]), neuronsPerLayer, netLayers, round(maxStepNum / 1000), trainDataValueType)
+        modelName = "{}data_{}x{}_{}kIter_{}Value_initCoefs={}".format(len(trainData[0]), neuronsPerLayer, netLayers, round(maxStepNum / 1000), trainDataValueType, initCoeffs)
+        modelName = modelName.replace(' ', '')
         modelPath = os.path.join(os.getcwd(), self.saveModelDir, modelName)
         trainedModel = net.restoreVariables(model, modelPath)
 
@@ -56,7 +58,7 @@ class ApplyFunction:
 
 
 def main(tfseed=128):
-    dataSetsDir = '../data/trainingDataForNN/dataSets'
+    dataSetsDir = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/dataSets'
     extension = ".pickle"
     getDataSetPath = GetSavePath(dataSetsDir, extension)
 
@@ -66,6 +68,7 @@ def main(tfseed=128):
     maxRunningSteps = 30
     numTrajs = 200
     numDataPoints = 5800
+    cBase = 100
     pathVarDict = {}
     pathVarDict["initPos"] = list(initPosition.flatten())
     pathVarDict["rolloutSteps"] = maxRollOutSteps
@@ -73,24 +76,19 @@ def main(tfseed=128):
     pathVarDict["maxRunningSteps"] = maxRunningSteps
     pathVarDict["numTrajs"] = numTrajs
     pathVarDict["numDataPoints"] = numDataPoints
+    # pathVarDict["cBase"] = cBase
 
     independentVariables = OrderedDict()
-    independentVariables['useStandardizedReward'] = [True, False]
+    independentVariables['useStandardizedReward'] = [True]
     independentVariables['trainingDataActionType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [3000]  # [5000, 15000, 30000, 45000, 60000]
+    independentVariables['trainingDataSize'] = [3000]
     independentVariables['testDataSize'] = [2800]
     independentVariables['numStateSpace'] = [4]
     independentVariables['numActionSpace'] = [8]
-    independentVariables['learningRate'] = [1e-4]
     independentVariables['regularizationFactor'] = [0]
     independentVariables['valueRelativeErrBound'] = [0.1]
     independentVariables['iteration'] = [50000]
-    independentVariables['batchSize'] = [3000]
-    independentVariables['reportInterval'] = [1000]
-    independentVariables['lossChangeThreshold'] = [1e-8]
-    independentVariables['lossHistorySize'] = [10]
-    independentVariables['initActionCoefficient'] = [1]
-    independentVariables['initValueCoefficient'] = [1]
+    independentVariables['initCoeffs'] = [(1, 1), (10, 1), (50, 1)]
     independentVariables['netNeurons'] = [256]
     independentVariables['netLayers'] = [4]
 
@@ -99,31 +97,39 @@ def main(tfseed=128):
     levelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=levelIndex)
 
-    saveModelDir = "../data/neuralNetworkGraphVariables"
+    saveModelDir = "../../data/compareValueDataStandardizationAndLossCoefs/trainedModels"
     applyFunctoin = ApplyFunction(saveModelDir)
     evalResults = toSplitFrame.groupby(levelNames).apply(applyFunctoin, getDataSetPath, pathVarDict, None, tfseed)
 
-    evalResultsDir = "../data/evaluateNNWithDataSet_standardizedValueDataVSunstandardizedValueData"
+    numCondtions = 3
+    for i in range(numCondtions):
+        print(evalResults.iloc[i])
+
+    evalResultsDir = "../../data/compareValueDataStandardizationAndLossCoefs/evalWithDataSetResults"
     if not os.path.exists(evalResultsDir):
         os.makedirs(evalResultsDir)
-    evalResultsFileName = "evalResults.pickle"
+    evalResultsFileName = "diffLossCoefs.pickle"
     evalResultsPath = os.path.join(evalResultsDir, evalResultsFileName)
     with open(evalResultsPath, 'wb') as f:
         pickle.dump(evalResults, f)
+    print("Evaluation results saved in {}".format(evalResultsPath))
 
-    unstandardizedStats = [evalResults.iloc[0][i] for i in range(1, 8, 2)]
-    standardizedStats = [evalResults.iloc[1][i] for i in range(1, 8, 2)]
+    stats1 = [evalResults.iloc[0][i] for i in range(1, 8, 2)]
+    stats2 = [evalResults.iloc[1][i] for i in range(1, 8, 2)]
+    stats3 = [evalResults.iloc[2][i] for i in range(1, 8, 2)]
 
     barWidth = 0.25
-    r1 = np.arange(len(unstandardizedStats))
+    r1 = np.arange(len(stats1))
     r2 = [x + barWidth for x in r1]
-    plt.bar(r1, unstandardizedStats, width=barWidth, label='unstandardized reward')
-    plt.bar(r2, standardizedStats, width=barWidth, label='standardized reward')
+    r3 = [x + barWidth for x in r2]
+    plt.bar(r1, stats1, width=barWidth, label='(1, 1)')
+    plt.bar(r2, stats2, width=barWidth, label='(10, 1)')
+    plt.bar(r3, stats3, width=barWidth, label='(50, 1)')
     plt.xlabel('measures on training data')
-    plt.xticks([r + barWidth / 2.0 for r in range(len(unstandardizedStats))], ['actionLoss', 'actionAcc', 'valueLoss', 'valueAcc'])
-    title = 'NN trained with unstandardized value data vs standardized value data'
+    plt.xticks([r + barWidth / 2.0 for r in range(len(stats1))], ['actionLoss', 'actionAcc', 'valueLoss', 'valueAcc'])
+    title = 'NN trained with different loss coefficients'
     plt.title(title)
-    plt.legend()
+    plt.legend(title="loss coefficients")
     figPath = os.path.join(evalResultsDir, title + ".png")
     plt.savefig(figPath)
 

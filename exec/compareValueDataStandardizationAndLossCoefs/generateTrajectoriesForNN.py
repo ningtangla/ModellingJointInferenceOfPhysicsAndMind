@@ -1,8 +1,9 @@
 import sys
-sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/constrainedChasingEscapingEnv")
-sys.path.append("../src/algorithms")
-sys.path.append("../src")
+sys.path.append("..")
+sys.path.append("../../src/neuralNetwork")
+sys.path.append("../../src/constrainedChasingEscapingEnv")
+sys.path.append("../../src/algorithms")
+sys.path.append("../../src")
 import os
 import numpy as np
 import pickle
@@ -12,6 +13,7 @@ import policies
 import wrapperFunctions
 import mcts
 import play
+from analyticGeometryFunctions import computeAngleBetweenVectors, computeVectorNorm
 from evaluationFunctions import GetSavePath
 
 
@@ -19,30 +21,29 @@ def main():
     # env
     sheepID = 0
     wolfID = 1
-    posIndex = 0
+    posIndex = [0, 1]
     numOfAgent = 2
-    numPosEachAgent = 2
     actionSpace = [(0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)]
     numActionSpace = len(actionSpace)
     xBoundary = [0, 180]
     yBoundary = [0, 180]
     killZoneRadius = 5
 
-    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex)
+    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex)
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfPos, getSheepPos)
-    transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfPos, getSheepPos, computeAngleBetweenVectors)
+    transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
     sheepTransition = lambda state, action: transition(np.array(state), [np.array(action), wolfDriectChasingPolicy(state)])
 
     initPosition = np.array([[30, 30], [20, 20]])
     initNoise = [0, 0]
     reset = env.Reset(numOfAgent, initPosition, initNoise)
-    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
+    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius, computeVectorNorm)
 
     # mcts policy
     cInit = 1
-    cBase = 1
+    cBase = 100
     calculateScore = mcts.CalculateScore(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
@@ -68,11 +69,11 @@ def main():
     sampleTrajWithActionDist = play.SampleTrajectoryWithActionDist(maxRunningSteps, transition, isTerminal, reset, worldDist2Action)
     policyDistOutput = lambda state: [mctsPolicyDistOutput(state), wolfDriectChasingPolicy(state)]
 
-    numTrajs = 200
+    numTrajs = 2
     trajs = [sampleTrajWithActionDist(policyDistOutput) for _ in range(numTrajs)]
     print("Avg traj length = {}".format(np.mean([len(traj) for traj in trajs])))
 
-    dataDirectory = '../data/trainingDataForNN/trajectories'
+    dataDirectory = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/trajectories'
     if not os.path.exists(dataDirectory):
         os.makedirs(dataDirectory)
     extension = '.pickle'
@@ -83,6 +84,7 @@ def main():
     varDict["numSimulations"] = numSimulations
     varDict["maxRunningSteps"] = maxRunningSteps
     varDict["numTrajs"] = numTrajs
+    varDict["cBase"] = 100
     savePath = getSavePath(varDict)
 
     saveOn = True

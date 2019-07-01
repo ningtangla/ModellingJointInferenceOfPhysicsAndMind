@@ -1,5 +1,5 @@
 import sys
-sys.path.append("..")
+sys.path.append("../..")
 import os
 import numpy as np
 import random
@@ -53,9 +53,10 @@ def main():
     maxRollOutSteps = 10
     numSimulations = 200
     maxRunningSteps = 30
-    numTrajs = 200
+    numTrajs = 2
+    cBase = 100
 
-    trajectoriesDir = '../data/trainingDataForNN/trajectories'
+    trajectoriesDir = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/trajectories'
     extension = '.pickle'
     getTrajectoriesPath = GetSavePath(trajectoriesDir, extension)
     pathVarDict = {}
@@ -64,6 +65,7 @@ def main():
     pathVarDict["numSimulations"] = numSimulations
     pathVarDict["maxRunningSteps"] = maxRunningSteps
     pathVarDict["numTrajs"] = numTrajs
+    pathVarDict["cBase"] = cBase
     trajectoriesPath = getTrajectoriesPath(pathVarDict)
 
     with open(trajectoriesPath, "rb") as f:
@@ -93,7 +95,7 @@ def main():
     dataSetVarValues = [list(values) for values in zip(*dataWithLabelsAndProbs)]
     dataSet = dict(zip(dataSetVarNames, dataSetVarValues))
 
-    dataSetsDir = '../data/trainingDataForNN/dataSets'
+    dataSetsDir = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/dataSets'
     if not os.path.exists(dataSetsDir):
         os.makedirs(dataSetsDir)
     getDataSetPath = GetSavePath(dataSetsDir, extension)
