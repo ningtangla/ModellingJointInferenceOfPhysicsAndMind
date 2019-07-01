@@ -6,7 +6,7 @@ import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
     GetAgentActionFromTrajectory, rearrangeList
 
 

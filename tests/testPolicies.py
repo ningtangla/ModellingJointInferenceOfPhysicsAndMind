@@ -8,11 +8,11 @@ from ddt import ddt, data, unpack
 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, HeatSeekingContinuesDeterministicPolicy, ActHeatSeeking, HeatSeekingDiscreteStochasticPolicy
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 @ddt
-class TestContinuesStatePolicies(unittest.TestCase):
+class TestContinuesActionPolicies(unittest.TestCase):
     def setUp(self):
         self.actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         self.xPosIndex = [2, 3]
@@ -50,7 +50,7 @@ class TestContinuesStatePolicies(unittest.TestCase):
 
 
 @ddt
-class TestDiscreteStatePolicies(unittest.TestCase):
+class TestDiscreteActionPolicies(unittest.TestCase):
     def setUp(self):
         self.actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         self.sheepId = 0

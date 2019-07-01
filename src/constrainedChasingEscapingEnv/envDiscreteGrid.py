@@ -2,6 +2,7 @@ import numpy as np
 from random import randint
 from wrapperFunctions import rearrangeList
 
+
 class Reset:
     def __init__(self, gridSize, lowerBound, agentCount):
         self.gridX, self.gridY = gridSize
@@ -11,6 +12,7 @@ class Reset:
     def __call__(self):
         startState = [(randint(self.lowerBound, self.gridX), randint(self.lowerBound, self.gridY)) for _ in range(self.agentCount)]
         return startState
+
 
 class StayWithinBoundary:
     def __init__(self, gridSize, lowerBoundary):
@@ -30,20 +32,11 @@ class StayWithinBoundary:
         return nextX, nextY
 
 class GetPullingForceValue:
-<<<<<<< HEAD
-    def __init__(self, adjustingParam, roundNumber):
-        #name 
-        self.adjustingParam = adjustingParam
-        self.roundNumber = roundNumber
-    def __call__(self, relativeLocation):
-        relativeLocationArray = np.array(relativeLocation)
-=======
     def __init__(self, distanceForceRatio):
         self.distanceForceRatio = distanceForceRatio
 
     def __call__(self, pullersRelativeLocation):
         relativeLocationArray = np.array(pullersRelativeLocation)
->>>>>>> inferenceOfToyPhysicsAndMind
         distance = np.sqrt(relativeLocationArray.dot(relativeLocationArray))
         force = int(np.floor(distance / self.distanceForceRatio + 1))
         return force
@@ -51,10 +44,6 @@ class GetPullingForceValue:
 
 class SamplePulledForceDirection:
     def __init__(self, calculateAngle, forceSpace, lowerBoundAngle, upperBoundAngle):
-<<<<<<< HEAD
-        # order
-=======
->>>>>>> inferenceOfToyPhysicsAndMind
         self.calculateAngle = calculateAngle
         self.forceSpace = forceSpace
         self.lowerBoundAngle = lowerBoundAngle
@@ -68,12 +57,6 @@ class SamplePulledForceDirection:
                                     self.forceSpace]
 
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
-<<<<<<< HEAD
-        forceAnglePair = zip(self.forceSpace, forceActionAngle.values())
-       
-       #simplify
-        angleFilter = {force: angleWithinRange(angle) for force, angle in forceAnglePair}
-=======
         angleFilter = [angleWithinRange(angle) for angle in forceAndRelativeLocAngle]
 
         forceDirections = [force for force, index in zip(self.forceSpace, angleFilter) if index]
@@ -83,7 +66,6 @@ class SamplePulledForceDirection:
         sampledForceDirection = forceDirections[forceDirectionSampleIndex]
 
         return sampledForceDirection
->>>>>>> inferenceOfToyPhysicsAndMind
 
 
 class GetPulledAgentForce:

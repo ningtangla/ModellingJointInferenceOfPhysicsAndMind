@@ -7,7 +7,7 @@ from ddt import ddt, data, unpack
 
 from src.constrainedChasingEscapingEnv.envDiscreteGrid import *
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 
 
 @ddt

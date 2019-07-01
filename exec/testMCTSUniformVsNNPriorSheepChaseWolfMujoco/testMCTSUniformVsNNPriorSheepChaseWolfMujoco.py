@@ -20,9 +20,9 @@ from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
 from src.neuralNetwork.policyNet import GenerateModel, restoreVariables
-from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetweenActualAndOptimalNextPosition, \
+from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, \
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState, GetAgentPosFromTrajectory, \
     GetStateFromTrajectory
 
 

@@ -45,7 +45,6 @@ class HeatSeekingContinuesDeterministicPolicy:
         self.actionMagnitude = actionMagnitude
 
     def __call__(self, state):
-
         action = np.array(self.getPreyPos(state)) - np.array(self.getPredatorPos(state))
         actionL2Norm = np.linalg.norm(action, ord = 2)
         if actionL2Norm != 0:

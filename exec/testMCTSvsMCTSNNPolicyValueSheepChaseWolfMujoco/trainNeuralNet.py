@@ -5,7 +5,7 @@ sys.path.append(os.path.join(dirName, '..', '..'))
 
 from exec.evaluationFunctions import GetSavePath
 from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, Train, saveVariables
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter
@@ -29,8 +29,8 @@ class ActionToOneHot:
         self.actionSpace = actionSpace
 
     def __call__(self, action):
-        oneHotAction = [1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index in
-                        range(len(self.actionSpace))]
+        oneHotAction = np.asarray([1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index
+                                   in range(len(self.actionSpace))])
 
         return oneHotAction
 
@@ -57,7 +57,7 @@ class PreProcessTrajectories:
 
     def __call__(self, trajectories):
         stateActionValueTriples = [triple for trajectory in trajectories for triple in trajectory]
-        triplesFiltered = list(filter(lambda triple: triple[self.actionIndex] is not None, stateActionValueTriples))
+        triplesFiltered = list(filter(lambda triple: triple[self.actionIndex] is not None, stateActionValueTriples))    # should I remove this None condition? because it will remove the terminal points--so we don't get Value prediction for those points.
         print("{} data points remain after filtering".format(len(triplesFiltered)))
         triplesProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
                                      for state, actions, value in triplesFiltered]
@@ -67,8 +67,9 @@ class PreProcessTrajectories:
 
 def main():
     # Get dataset for training
-    # dataSetDirectory = "../../data/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/trajectories"
-    dataSetDirectory = "../../data/testMCTSUniformVsNNPriorSheepChaseWolfMujoco/trajectories"
+    DIRNAME = os.path.dirname(__file__)
+    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data',
+                                    'testNNPolicyVaryBatchSizeAndLearnRateSheepChaseWolfMujoco', 'trajectories', 'train')
     dataSetExtension = '.pickle'
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 10
@@ -96,7 +97,7 @@ def main():
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
 
-    decay = 0.99
+    decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
     allValues = [accumulateRewards(trajectory) for trajectory in dataSetTrajectories]
@@ -121,21 +122,21 @@ def main():
     # initialise model for training
     numStateSpace = 12
     numActionSpace = len(actionSpace)
-    learningRate = 0.0001
+    learningRates = [1e-4, 1e-6, 1e-8, 1e-10, 1e-12]
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
     generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
-    allTrainSteps = [10]
-    batchSize = None
+    allTrainSteps = [1, 1000, 5000, 25000]
+    batchSizes = [16, 64, 256]
     terminalThreshold = 1e-6
     lossHistorySize = 10
     initActionCoeff = 1
     initValueCoeff = 1
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientController(initActionCoeff, initValueCoeff)
-    reportInterval = 100
+    reportInterval = 500
 
     getTrain = lambda trainSteps: Train(trainSteps, batchSize, terminalController, coefficientController,
                                         TrainReporter(trainSteps, reportInterval))
