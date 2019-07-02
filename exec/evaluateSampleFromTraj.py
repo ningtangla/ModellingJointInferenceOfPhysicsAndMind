@@ -37,8 +37,7 @@ class GenerateTrainedModel:
 
     def __call__(self, df, dataSet):
         trainDataSize = df.index.get_level_values('trainingDataSize')[0]
-        trainDataType = df.index.get_level_values('trainingDataType')[0]
-        batchSize = df.index.get_level_values('batchSize')[0]
+        trajNum, stepNum = df.index.get_level_values('batchSize')[0]
         preference = df.index.get_level_values('preference')[0]
         trainData = dataSet[:trainDataSize]
         indexLevelNames = df.index.names
@@ -53,7 +52,7 @@ class GenerateTrainedModel:
         if os.path.exists(saveModelDir):
             trainedModel = net.restoreVariables(self.model, modelPath)
         else:
-            sample = self.generateSample(preference, batchSize)
+            sample = self.generateSample(preference, trajNum, stepNum)
             train = self.generateTrain(sample)
             trainedModel = train(self.model, trainData)
             net.saveVariables(trainedModel, modelPath)
@@ -86,6 +85,14 @@ class DrawStatistic:
         plt.legend(loc='best')
         plt.title("{} vs {} episode length".format(self.xName, self.yName))
 
+
+def getTestData(rawData, stateIndex, distIndex, valueIndex, dataID):
+    points = [step for traj in rawData for step in traj]
+    flattenPoints = [[np.array(point[stateIndex]).flatten(),
+                      list(point[distIndex][dataID].values()),
+                      point[valueIndex]] for point in points]
+    processedData = zip(*flattenPoints)
+    return processedData
 
 def main():
     dataDir = "../data/evaluateSampleFromTraj"
@@ -150,15 +157,14 @@ def main():
     fixedParameters['decayRate'] = 1
     fixedParameters['decayStep'] = 1
     fixedParameters['validationSize'] = 100
-    fixedParameters['testDataSize'] = 100
     fixedParameters['testDataType'] = 'actionDist'
 
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [1000]
+    independentVariables['trainingDataSize'] = [1000, 1500]
     independentVariables['batchSize'] = [(100, 1), (50, 2), (20, 5)]
     independentVariables['augmented'] = ['no']
-    independentVariables['preference'] = [True, False]
+    independentVariables['preference'] = [False]
 
     # generate NN
     trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
@@ -169,17 +175,21 @@ def main():
                                              , fixedParameters['reportInterval'])
     lrModifier = trainTools.LearningRateModifier(fixedParameters['learningRate'], fixedParameters['decayRate']
                                                  , fixedParameters['decayStep'])
-    testData = [dataSet[varName][-fixedParameters['testDataSize']:] for varName in
-                     ['state', fixedParameters['testDataType'], 'value']]
     trajStateIndex = 0
     trajActionDistIndex = 2
     trajValueIndex = 3
-    generateSample = lambda preference, batchSize: \
+    validationData= getTestData(dataSet[-fixedParameters['validationSize']:],
+                           trajStateIndex, trajActionDistIndex,
+                           trajValueIndex, sheepID)
+    generateSample = lambda preference, trajNum, stepNum: \
         trainTools.SampleBatchFromTrajectory(sheepID, preference, trajStateIndex,
                                              trajActionDistIndex, trajValueIndex,
-                                             batchSize[0], batchSize[1])
-    generateTrain = lambda sample: net.Train(fixedParameters['iteration'], 1, sample, lrModifier
-                                                 , trainTerminalController, coefficientController, trainReporter, testData)
+                                             trajNum, stepNum)
+    generateTrain = lambda sample: net.Train(fixedParameters['iteration'], 1,
+                                             sample, lrModifier,
+                                            trainTerminalController,
+                                             coefficientController,
+                                             trainReporter, validationData)
     generateModel = net.GenerateModel(fixedParameters['numStateSpace'],
                                     fixedParameters['numActionSpace'],
                                     fixedParameters['regularizationFactor'],
@@ -227,10 +237,10 @@ def main():
 
     xVariableName = "trainingDataSize"
     yVaraibleName = "mean"
-    lineVariable = "batchSize"
+    lineVariable = ["batchSize"]
     drawer = DrawStatistic(xVariableName, yVaraibleName, lineVariable)
     drawer(statDF)
-    figureName = "effect_trainingDataSize_on_NNPerformance.png"
+    figureName = "effect_{}_on_NNPerformance.png".format(xVariableName)
     figurePath = os.path.join(dataDir, figureName)
     plt.savefig(figurePath)
 
