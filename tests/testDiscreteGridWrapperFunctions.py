@@ -4,7 +4,7 @@ sys.path.append('../src/sheepWolf')
 import unittest
 from ddt import ddt, data, unpack
 
-from discreteGridWrapperFunctions import LocateAgent
+from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromTrajectory
 
 
 @ddt
@@ -13,12 +13,12 @@ class TestWrapperFunc(unittest.TestCase):
           (0, [0,1], [[1,2],[3,4]], [1,2]))
     @unpack
     def testAgentPositionRetrieval(self, agentID, positionIndex, state, trueAgentPosition):
-        getAgentPosition = LocateAgent(agentID, positionIndex)
+        getAgentPosition = GetAgentPosFromTrajectory(agentID, positionIndex)
         agentPosition = getAgentPosition(state)
         self.assertEqual(agentPosition, trueAgentPosition)
 
     def tearDown(self):
-    	pass
+        pass
 
 
 if __name__ == "__main__":
