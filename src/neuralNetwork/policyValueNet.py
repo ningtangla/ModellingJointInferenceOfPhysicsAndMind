@@ -162,7 +162,7 @@ class GenerateModel:
 
 
 class Train:
-    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter):
+    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter, validationData):
         self.maxStepNum = maxStepNum
         self.batchSize = batchSize
         self.sampleData = sampleData
@@ -170,6 +170,7 @@ class Train:
         self.terminalController = terimnalController
         self.coefficientController = coefficientController
         self.reporter = trainReporter
+        self.validationData = validationData
 
     def __call__(self, model, trainingData):
         graph = model.graph
@@ -200,7 +201,7 @@ class Train:
             feedDict = {state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch,
                         learningRate_: learningRate, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
             evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
-            validationDict = evaluate(model, self.testData)
+            validationDict = evaluate(model, self.validationData)
             self.reporter(evalDict, stepNum, trainWriter, summary)
 
             if self.terminalController(evalDict, validationDict, stepNum):
