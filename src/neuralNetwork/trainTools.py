@@ -42,7 +42,7 @@ class TrainTerminalController():
         lastValidationLoss = None
         if stepNum >= self.validationSize:
             lastValidationLoss = np.mean(self.validationHistory)
-        self.validationHistory[stepNum % self.validationSize] = validationDict['totalLoss']
+        self.validationHistory[stepNum % self.validationSize] = validationDict['loss']
         if lastValidationLoss is not None and lastValidationLoss < np.mean(self.validationHistory):
             self.validationCount += 1
         else:

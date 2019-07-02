@@ -221,7 +221,7 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
     valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
     evalSummaryOp = graph.get_collection_ref('summaryOps')[1]
     testWriter = graph.get_collection_ref('writers')[1]
-    fetches = [{"actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
+    fetches = [{"loss":loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
                evalSummaryOp]
 
     stateBatch, actionBatch, valueBatch = testData
