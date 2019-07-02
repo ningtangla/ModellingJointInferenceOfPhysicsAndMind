@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+import random
 
 
 class CoefficientCotroller():
@@ -73,3 +73,28 @@ class LearningRateModifier():
 
     def __call__(self, globalStep):
         return self.initLearningRate * np.power(self.decayRate, globalStep / self.decayStep)
+
+
+class SampleBatchFromTrajectory():
+    def __init__(self, dataID, preference, stateIndex, distributionIndex, valueIndex, trajNum, stepNum):
+        self.dataID = dataID
+        self.preference = preference
+        self.stateIndex =stateIndex
+        self.distIndex = distributionIndex
+        self.valueIndex = valueIndex
+        self.trajNum = trajNum
+        self.stepNum = stepNum
+
+    def __call__(self, trajactories, size):
+        if self.preference:
+            trajectoryLength = [len(traj) for traj in trajactories]
+            mean = np.mean(trajectoryLength)
+            trajectoryValue = [length/mean for length in trajectoryLength]
+            trajValueNorm = np.linalg.norm(trajectoryValue, ord=0)
+            trajProb = trajectoryValue / trajValueNorm
+        else:
+            trajProb = [1/len(trajactories) for _ in range(len(trajactories))]
+        sampledTrajs = np.random.choice(a=trajactories, size=self.trajNum, p=trajProb)
+        points = np.concatenate([random.sample(traj, self.stepNum) for traj in sampledTrajs])
+        flattenPoints = [[np.array(point[self.stateIndex]).flatten(), point[self.distIndex][self.dataID].values(), point[self.valueIndex]] for point in points]
+        return zip(*flattenPoints)
