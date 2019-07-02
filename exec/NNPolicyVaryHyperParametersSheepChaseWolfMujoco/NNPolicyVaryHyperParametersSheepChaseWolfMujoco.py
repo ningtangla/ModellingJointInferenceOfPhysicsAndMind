@@ -10,12 +10,11 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
-from src.play import SampleTrajectory
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromTrajectory, GetStateFromTrajectory, \
+from src.play import SampleTrajectory, worldDistToAction, agentDistToGreedyAction
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromTrajectory, GetStateFromTrajectory, \
     GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.constrainedChasingEscapingEnv.measurementFunctions import ComputeOptimalNextPos, \
-    DistanceBetweenActualAndOptimalNextPosition
+from src.constrainedChasingEscapingEnv.measure import ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition
 from exec.evaluationFunctions import LoadTrajectories, ComputeStatistics
 
 import random
@@ -25,6 +24,7 @@ import functools as ft
 from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
+from mujoco_py import load_model_from_path, MjSim
 
 
 def loadData(path):
@@ -168,8 +168,8 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [16, 64, 256, 512, 10000]
-    manipulatedVariables['learningRate'] = [1e-4, 1e-6, 1e-2, 1e-8, 1e-10]
-    manipulatedVariables['trainSteps'] = [1, 10, 100, 1000]
+    manipulatedVariables['learningRate'] = [1e-4, 1e-2]#[1e-4, 1e-6, 1e-2, 1e-8, 1e-10]
+    manipulatedVariables['trainSteps'] = [1, 10, 100, 1000, 10000]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -275,23 +275,26 @@ def main():
 
     # sample trajectory for evaluation
     evalMaxRunningSteps = 2
-    evalEnvModelName = 'twoAgents'
+    dirName = os.path.dirname(__file__)
+    evalEnvModelPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    evalModel = load_model_from_path(evalEnvModelPath)
+    evalSimulation = MjSim(evalModel)
     evalKillzoneRadius = 0.5
     evalIsTerminal = IsTerminal(evalKillzoneRadius, getSheepPos, getWolfPos)
-    evalRenderOn = False
     evalNumSimulationFrames = 20
-    transit = TransitionFunction(evalEnvModelName, evalIsTerminal, evalRenderOn, evalNumSimulationFrames)
+    transit = TransitionFunction(evalSimulation, evalIsTerminal, evalNumSimulationFrames)
     evalQVelInit = (0, 0, 0, 0)
     evalNumAgent = 2
     evalQPosInitNoise = 0
     evalQVelInitNoise = 0
     allEvalQPosInit = np.random.uniform(-9.7, 9.7, (evalNumTrials, 4))
-    getResetFromQPosInit = lambda evalQPosInit: Reset(evalEnvModelName, evalQPosInit, evalQVelInit, evalNumAgent,
+    getResetFromQPosInit = lambda evalQPosInit: Reset(evalSimulation, evalQPosInit, evalQVelInit, evalNumAgent,
                                                       evalQPosInitNoise, evalQVelInitNoise)
     getQPosInitFromTrialIndex = lambda trialIndex: allEvalQPosInit[trialIndex]
     getResetFromTrialIndex = lambda trialIndex: getResetFromQPosInit(getQPosInitFromTrialIndex(trialIndex))
+    distToAction = lambda worldDist: worldDistToAction(agentDistToGreedyAction, worldDist)
     getSampleTrajectory = lambda trialIndex: SampleTrajectory(evalMaxRunningSteps, transit, evalIsTerminal,
-                                                              getResetFromTrialIndex(trialIndex))
+                                                              getResetFromTrialIndex(trialIndex), distToAction)
 
     # get save path for trajectories
     sheepPolicyName = 'NN'
@@ -347,8 +350,8 @@ def main():
     numRows = 1
     plotCounter = 1
 
-    for trainSteps, grpTrainSteps in statisticsDf.groupby('trainSteps'):
-        grpTrainSteps.index = grpTrainSteps.index.droplevel('trainSteps')
+    for trainSteps, grpTrainSteps in statisticsDf.groupby('learningRate'):
+        grpTrainSteps.index = grpTrainSteps.index.droplevel('learningRate')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
         axForDraw.set_ylim(0, 0.4)
         plt.ylabel('Distance between optimal and actual next position of sheep')
