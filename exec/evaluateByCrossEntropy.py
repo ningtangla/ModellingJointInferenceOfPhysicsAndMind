@@ -5,11 +5,11 @@ sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import policyValueNet as net
 import envNoPhysics as env
-import wrapperFunctions
+import wrappers
 import numpy as np
 import pandas as pd
-from measurementFunctions import calculateCrossEntropy
-from analyticGeometryFunctions import transitePolarToCartesian, computeVectorNorm, computeAngleBetweenVectors
+from measure import calculateCrossEntropy
+from analyticGeometryFunctions import transitePolarToCartesian, computeAngleBetweenVectors
 from pylab import plt
 import policies
 import mcts
@@ -124,20 +124,20 @@ def main():
     killZoneRadius = 25
 
     # mcts policy
-    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex)
-    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex)
+    getSheepPos = wrappers.GetAgentPosFromState(sheepID, posIndex)
+    getWolfPos = wrappers.GetAgentPosFromState(wolfID, posIndex)
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
     wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos,
                                                                               computeAngleBetweenVectors)
     transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
     sheepTransition = lambda state, action: transition(np.array(state),
                                                        [np.array(action), wolfDriectChasingPolicy(state)])
-    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius, computeVectorNorm)
+    isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
 
     # mcts policy
     cInit = 1
     cBase = 100
-    calculateScore = mcts.CalculateScore(cInit, cBase)
+    calculateScore = mcts.ScoreChild(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
     mctsUniformActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
@@ -161,8 +161,8 @@ def main():
     modelPath = os.path.join(dataDir, modelDir, modelName)
     if not os.path.exists(modelPath):
         print("Model {} does not exist".format(modelPath))
-    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.0)
-    emptyModel = generateModel([64]*4)
+    generateModel = net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.0)
+    emptyModel = generateModel([64, 64, 64], [64], [64])
     trainedModel = net.restoreVariables(emptyModel, modelPath)
     nnPolicy = net.ApproximateActionPrior(trainedModel, sheepActionSpace)
 
@@ -194,7 +194,7 @@ def main():
     resultDF = toSplitFrame.groupby(levelNames).apply(generateDistribution)
 
     loadData = LoadTrajectories(getSavePath)
-    computeStatistic = ComputeStatistics(loadData, numTrials, calculateCrossEntropy)
+    computeStatistic = ComputeStatistics(loadData, calculateCrossEntropy)
     statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
     drawingExtent = tuple(xBoundary) + tuple(yBoundary)
     drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'], drawingExtent)
