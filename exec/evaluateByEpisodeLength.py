@@ -23,12 +23,12 @@ tfseed=128
 
 
 class GenerateTrainedModel:
-    def __init__(self, getSavePathForModel, getSavePathForTrajectory, model,
+    def __init__(self, getSavePathForModel, getSavePathForTrajectory, getModel,
                  generateTrain, generatePolicy, sampleTrajectory, numTrials):
         self.getSavePathForModel = getSavePathForModel
         self.getSavePathForTrajectory = getSavePathForTrajectory
         self.generateTrain = generateTrain
-        self.model = model
+        self.getModel =getModel
         self.generatePolicy = generatePolicy
         self.play = sampleTrajectory
         self.numTrials = numTrials
@@ -37,6 +37,7 @@ class GenerateTrainedModel:
         trainDataSize = df.index.get_level_values('trainingDataSize')[0]
         trainDataType = df.index.get_level_values('trainingDataType')[0]
         batchSize = df.index.get_level_values('batchSize')[0]
+        trainingStep = df.index.get_level_values('trainingStep')[0]
         trainData = [dataSet[varName][:trainDataSize] for varName in
                      ['state', trainDataType, 'value']]
         indexLevelNames = df.index.names
@@ -48,11 +49,12 @@ class GenerateTrainedModel:
                                 parameter in sortedParameters]
         modelName = '_'.join(nameValueStringPairs).replace(" ", "")
         modelPath = os.path.join(saveModelDir, modelName)
+        model = self.getModel()
         if os.path.exists(saveModelDir):
-            trainedModel = net.restoreVariables(self.model, modelPath)
+            trainedModel = net.restoreVariables(model, modelPath)
         else:
-            train = self.generateTrain(batchSize)
-            trainedModel = train(self.model, trainData)
+            train = self.generateTrain(trainingStep, batchSize)
+            trainedModel = train(model, trainData)
             net.saveVariables(trainedModel, modelPath)
         saveTrajName = self.getSavePathForTrajectory(parameters)
         if os.path.exists(saveTrajName):
@@ -68,20 +70,26 @@ class GenerateTrainedModel:
 
 
 class DrawStatistic:
-    def __init__(self, xVariableName, yVaraibleName, lineVariable):
+    def __init__(self, xVariableName, yVaraibleName, lineVariable,
+                 subplotVariable):
         self.xName = xVariableName
         self.yName = yVaraibleName
         self.lineName = lineVariable
+        self.subplotVariable = subplotVariable
 
     def __call__(self, df):
-        fig, ax = plt.subplots()
-        for key, subDF in df.groupby(self.lineName):
-            plotDF = subDF.reset_index()
-            plotDF.plot(x=self.xName, y=self.yName, ax=ax, label=key)
-        plt.xlabel(self.xName)
-        plt.ylabel(self.yName)
-        plt.legend(loc='best')
-        plt.title("{} vs {} episode length".format(self.xName, self.yName))
+        figure = plt.figure(figsize=(12, 10))
+        numOfPlot = 1
+        for subkey, subDF in df.groupby(self.subplotVariable):
+            for linekey, lineDF in subDF.groupby(self.lineName):
+                ax = figure.add_subplots(4, 1, numOfPlot)
+                plotDF = lineDF.reset_index()
+                plotDF.plot(x=self.xName, y=self.yName, ax=ax, label=linekey)
+            plt.xlabel(self.xName)
+            plt.ylabel(self.yName)
+            plt.legend(loc='best')
+            numOfPlot += 1
+        plt.suptitle("{} vs {} episode length".format(self.xName, self.yName))
 
 
 def main():
@@ -131,10 +139,8 @@ def main():
     fixedParameters = OrderedDict()
     fixedParameters['numStateSpace'] = 4
     fixedParameters['numActionSpace'] = 8
-    fixedParameters['learningRate'] = 1e-4
     fixedParameters['regularizationFactor'] = 0
     fixedParameters['valueRelativeErrBound'] = 0.1
-    fixedParameters['iteration'] = 100000
     fixedParameters['reportInterval'] = 1000
     fixedParameters['lossChangeThreshold'] = 1e-6
     fixedParameters['lossHistorySize'] = 10
@@ -155,6 +161,8 @@ def main():
     independentVariables['trainingDataSize'] = [10000, 30000, 60000]
     independentVariables['batchSize'] = [0, 1024, 4096]
     independentVariables['augmented'] = ['no']
+    independentVariables['learningRate'] = [1e-4]
+    independentVariables['trainingStep'] = [1000, 5000, 10000, 50000]
 
     # generate NN
     trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
@@ -163,18 +171,18 @@ def main():
                                                             , fixedParameters['initValueCoefficient'])
     trainReporter = trainTools.TrainReporter(fixedParameters['iteration']
                                              , fixedParameters['reportInterval'])
-    lrModifier = trainTools.LearningRateModifier(fixedParameters['learningRate'], fixedParameters['decayRate']
+    lrModifier = trainTools.LearningRateModifier(independentVariables['learningRate'], fixedParameters['decayRate']
                                                  , fixedParameters['decayStep'])
     testData = [dataSet[varName][-fixedParameters['testDataSize']:] for varName in
                      ['state', fixedParameters['testDataType'], 'value']]
-    generateTrain = lambda batchSize: net.Train(fixedParameters['iteration'], batchSize, net.sampleData, lrModifier
+    generateTrain = lambda trainingStep, batchSize: net.Train(trainingStep, batchSize, net.sampleData, lrModifier
                                                  , trainTerminalController, coefficientController, trainReporter, testData)
     generateModel = net.GenerateModel(fixedParameters['numStateSpace'],
                                     fixedParameters['numActionSpace'],
                                     fixedParameters['regularizationFactor'],
                                     fixedParameters['valueRelativeErrBound'],
                                     seed=tfseed)
-    model = generateModel([fixedParameters['neuronsPerLayer']*fixedParameters['sharedLayers']],
+    getModel = lambda: generateModel([fixedParameters['neuronsPerLayer']*fixedParameters['sharedLayers']],
                           [fixedParameters['neuronsPerLayer']]*fixedParameters['actionLayers'],
                           [fixedParameters['neuronsPerLayer']]*fixedParameters['valueLayers'])
     generatePolicy = lambda trainedModel: net.ApproximatePolicy(trainedModel, sheepActionSpace)
@@ -205,19 +213,23 @@ def main():
     getSavePathForTrajectory = GetSavePath(evaluationTrajectoryOutputPath, extension)
 
     numTrials = 1000
-    generateTrainingOutput = GenerateTrainedModel(getSavePathForModel, getSavePathForTrajectory, model, generateTrain,
+    generateTrainingOutput = GenerateTrainedModel(getSavePathForModel, getSavePathForTrajectory, getModel, generateTrain,
                                                   generatePolicy, sampleTrajectory, numTrials)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput, dataSet)
+
+    with open(os.path.join(dataDir, "temp.pkl"), 'wb')as f:
+        pickle.dump(resultDF, f)
 
     loadTrajectories = LoadTrajectories(getSavePathForTrajectory)
     computeStatistic = ComputeStatistics(loadTrajectories, len)
     statDF = toSplitFrame.groupby(levelNames).apply(computeStatistic)
     print(statDF)
 
-    xVariableName = "trainingDataSize"
+    xVariableName = "trainingStep"
     yVaraibleName = "mean"
     lineVariable = "batchSize"
-    drawer = DrawStatistic(xVariableName, yVaraibleName, lineVariable)
+    subplotVariable = "trainingDataSize"
+    drawer = DrawStatistic(xVariableName, yVaraibleName, lineVariable, subplotVariable)
     drawer(statDF)
     figureName = "effect_trainingDataSize_on_NNPerformance.png"
     figurePath = os.path.join(dataDir, figureName)
