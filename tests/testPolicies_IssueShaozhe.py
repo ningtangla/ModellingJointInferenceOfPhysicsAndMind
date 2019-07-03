@@ -1,15 +1,19 @@
 import sys
 import os
-sys.path.append('..')
+DIRNAME = os.path.dirname(__file__)
+sys.path.append(os.path.join(DIRNAME, '..'))
 
 import unittest
 import numpy as np
 from ddt import ddt, data, unpack
 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
-from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, HeatSeekingContinuesDeterministicPolicy, ActHeatSeeking, HeatSeekingDiscreteStochasticPolicy
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, ActHeatSeeking, \
+    HeatSeekingDiscreteStochasticPolicy
 from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+
+
 @ddt
 class TestContinuesStatePolicies(unittest.TestCase):
     def setUp(self):
@@ -21,30 +25,30 @@ class TestContinuesStatePolicies(unittest.TestCase):
         self.getWolfXPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
 
 
-    @data((np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), np.asarray((0, 0))),
-          (np.asarray([[-8, 6, -8, 6, 0, 0], [4, -3, 4, -3, 0, 0]]), np.asarray((0, 0))),
-          (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), np.asarray((0, 0))))
+    @data((np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), {(0, 0): 1}),
+          (np.asarray([[-8, 6, -8, 6, 0, 0], [4, -3, 4, -3, 0, 0]]), {(0, 0): 1}),
+          (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), {(0, 0): 1}))
     @unpack
-    def testStationaryAgentPolicy(self, state, groundTruthAction):
-        action = stationaryAgentPolicy(state)
-
-        truthValue = np.array_equal(action, groundTruthAction)
+    def testStationaryAgentPolicy(self, state, groundTruthActionDist):
+        actionDist = stationaryAgentPolicy(state)
+        truthValue = actionDist == groundTruthActionDist
         self.assertTrue(truthValue)
 
 
-    @data((np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), 10, np.asarray((10, 0))),
-          (np.asarray([[-8, 6, -8, 6, 0, 0], [-4, 3, -4, 3, 0, 0]]), 5, np.asarray((4, -3))),
-          (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), 1, np.asarray((0, -1))))
+    @data((np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), 10, {(10, 0): 1}),
+          (np.asarray([[-8, 6, -8, 6, 0, 0], [-4, 3, -4, 3, 0, 0]]), 5, {(4, -3): 1}),
+          (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), 1, {(0, -1): 1}))
     @unpack
-    def testHeatSeekingContinuesDeterministicPolicy(self, state, actionMagnitude, groundTruthWolfAction):
+    def testHeatSeekingContinuesDeterministicPolicy(self, state, actionMagnitude, groundTruthWolfActionDist):
         heatSeekingPolicy = HeatSeekingContinuesDeterministicPolicy(self.getSheepXPos, self.getWolfXPos,
                                                                           actionMagnitude)
-        action = heatSeekingPolicy(state)
-        truthValue = np.allclose(action, groundTruthWolfAction)
+        actionDist = heatSeekingPolicy(state)
+        truthValue = actionDist == groundTruthWolfActionDist
         self.assertTrue(truthValue)
 
     def tearDown(self):
         pass
+
 
 @ddt
 class TestPolicyFunctions(unittest.TestCase):
@@ -67,13 +71,14 @@ class TestPolicyFunctions(unittest.TestCase):
 
     @data(((3,2),[(1,0), (0,1)],[(-1, 0), (0, -1), (0, 0)]),
            ((0,-1), [(0, -1)],[(-1, 0), (1, 0), (0, 1), (0, 0)]))
-    @unpack 
+    @unpack
     def testHeatSeekingProperAction(self, heatSeekingDirection, trueChosenActions, trueUnchosenActions):
         actionLists = self.actHeatSeeking(heatSeekingDirection)
         chosenActions = actionLists[0]
         unchosenActions = actionLists[1]
         self.assertEqual(chosenActions, trueChosenActions)
         self.assertEqual(unchosenActions, trueUnchosenActions)
+
 
     @data(
         ([(2, 3),(4, 2)], {(-1, 0): 0.1/3, (1,0): 0.45, (0, 1): 0.1/3, (0, -1): 0.45, (0,0): 0.1/3}),
@@ -95,15 +100,16 @@ class TestPolicyFunctions(unittest.TestCase):
 
         for action in trueActionCount.keys():
             self.assertAlmostEqual(trueActionCount[action],intendedActionList.count(action), delta=200)
-    
+
+
     def testRandomPolicy(self):
         state = [[1,2], [2,3], [3,4]]
         randomPolicy = RandomPolicy(self.actionSpace)
 
         iterationTime = 10000
         trueActionCount = {action: 1/len(self.actionSpace) * iterationTime for action in self.actionSpace}
-        intendedActionList = [randomPolicy(state) for _ in range(iterationTime)] 
-        
+        intendedActionList = [randomPolicy(state) for _ in range(iterationTime)]
+
         for action in trueActionCount.keys():
             self.assertAlmostEqual(trueActionCount[action],intendedActionList.count(action), delta=200)
 

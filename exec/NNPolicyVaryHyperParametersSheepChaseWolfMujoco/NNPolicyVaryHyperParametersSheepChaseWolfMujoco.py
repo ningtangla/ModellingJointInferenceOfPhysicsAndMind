@@ -41,11 +41,11 @@ def saveData(data, path):
     pklFile.close()
 
 
-def drawPerformanceLine(dataDf, axForDraw, trainSteps):
-    for learningRate, grpLearningRate in dataDf.groupby('learningRate'):
-        grpLearningRate = grpLearningRate.droplevel('learningRate')
-        grpLearningRate.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean',
-                             title='TrainSteps: {}'.format(trainSteps), marker='o', logx=True)
+def drawPerformanceLine(dataDf, axForDraw, miniBatchSize):
+    for learningRate, grp in dataDf.groupby('learningRate'):
+        grp = grp.droplevel('learningRate')
+        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean',
+                             title='miniBatchSize: {}'.format(miniBatchSize), marker='o', logx=True)
 
 
 class ActionToOneHot:
@@ -168,8 +168,8 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [16, 64, 256, 512, 10000]
-    manipulatedVariables['learningRate'] = [1e-4, 1e-2]#[1e-4, 1e-6, 1e-2, 1e-8, 1e-10]
-    manipulatedVariables['trainSteps'] = [1, 10, 100, 1000, 10000]
+    manipulatedVariables['learningRate'] = [1e-4, 1e-6, 1e-2, 1e-8, 1e-10]
+    manipulatedVariables['trainSteps'] = [1, 10, 100, 1000, 10000, 100000]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -346,16 +346,16 @@ def main():
 
     # plot the results
     fig = plt.figure()
-    numColumns = len(manipulatedVariables['trainSteps'])
+    numColumns = len(manipulatedVariables['miniBatchSize'])
     numRows = 1
     plotCounter = 1
 
-    for trainSteps, grpTrainSteps in statisticsDf.groupby('learningRate'):
-        grpTrainSteps.index = grpTrainSteps.index.droplevel('learningRate')
+    for miniBatchSize, grp in statisticsDf.groupby('miniBatchSize'):
+        grp.index = grp.index.droplevel('miniBatchSize')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
         axForDraw.set_ylim(0, 0.4)
         plt.ylabel('Distance between optimal and actual next position of sheep')
-        drawPerformanceLine(grpTrainSteps, axForDraw, trainSteps)
+        drawPerformanceLine(grp, axForDraw, miniBatchSize)
         plotCounter += 1
 
     plt.legend(loc='best')

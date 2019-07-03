@@ -1,13 +1,14 @@
 import sys
 import os
-sys.path.append('..')
+DIRNAME = os.path.dirname(__file__)
+sys.path.append(os.path.join(DIRNAME, '..'))
 
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState, GetStateFromTrajectory, GetAgentPosFromTrajectory, \
-    GetAgentActionFromTrajectory
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState, GetStateFromTrajectory, \
+    GetAgentPosFromTrajectory, GetAgentActionFromTrajectory
 
 
 @ddt
@@ -23,12 +24,18 @@ class TestWrapperFunctions(unittest.TestCase):
         self.assertTrue(truthValue)
 
 
-    @data((0, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-           np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]])),
-          (1, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-           np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]])))
+    @data((0, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))],
+                [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                 {(0, 0): 0}]),
+               (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))],
+                [{(10, 0): 0, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 1, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                 {(0, 0): 0}])], np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]])),
+          (1, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))],
+                [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                 {(0, 0): 0}]),
+               (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))],
+                [{(10, 0): 0, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 1, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                 {(0, 0): 0}])], np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]])))
     @unpack
     def testGetStateFromTrajectory(self, timeStep, trajectory, groundTruthState):
         stateIndex = 0
@@ -39,12 +46,18 @@ class TestWrapperFunctions(unittest.TestCase):
         self.assertTrue(truthValue)
 
 
-    @data((0, 0, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-           np.asarray([3, 4])),
-          (1, 1, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-           np.asarray([-6, 8])))
+    @data((0, 0, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))],
+                   [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 1}]),
+                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))],
+                   [{(10, 0): 0, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 1, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 0}])], np.asarray([3, 4])),
+          (1, 1, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))],
+                   [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 1}]),
+                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))],
+                   [{(10, 0): 0, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 1, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 0}])], np.asarray([-6, 8])))
     @unpack
     def testGetAgentPosFromTrajectory(self, agentId, timeStep, trajectory, groundTruthAgentPos):
         xPosIndex = [2, 3]
@@ -58,12 +71,18 @@ class TestWrapperFunctions(unittest.TestCase):
         self.assertTrue(truthValue)
 
 
-    @data((1, 1, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-           np.asarray((0, 0))),
-          (0, 0, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-           np.asarray((10, 0))))
+    @data((1, 1, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))],
+                   [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 1}]),
+                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))],
+                  [{(10, 0): 0, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 1, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                   {(0, 0): 1}])], np.asarray((0, 0))),
+          (0, 0, [(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))],
+                   [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 1}]),
+                  (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))],
+                   [{(10, 0): 1, (0, 10): 0, (-10, 0): 0, (0, -10): 0, (7, 7): 0, (7, -7): 0, (-7, 7): 0, (-7, -7): 0},
+                    {(0, 0): 1}])], np.asarray((10, 0))))
     @unpack
     def testGetAgentActionFromTrajectory(self, timeStep, agentId, trajectory, groundTruthAgentAction):
         actionIndex = 1
@@ -72,6 +91,7 @@ class TestWrapperFunctions(unittest.TestCase):
 
         truthValue = np.array_equal(agentAction, groundTruthAgentAction)
         self.assertTrue(truthValue)
+
 
 if __name__ == "__main__":
     unittest.main()

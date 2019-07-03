@@ -3,7 +3,7 @@ import random
 
 
 def stationaryAgentPolicy(state):
-    return (0, 0)
+    return {(0, 0): 1}
 
 
 class RandomPolicy:
@@ -11,9 +11,9 @@ class RandomPolicy:
         self.actionSpace = actionSpace
 
     def __call__(self, state):
-        actionIndex = np.random.randint(len(self.actionSpace))
-        action = self.actionSpace[actionIndex]
-        return action
+        actionDist = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+
+        return actionDist
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
@@ -30,7 +30,9 @@ class HeatSeekingDiscreteDeterministicPolicy:
         angleBetweenVectors = {action: self.computeAngleBetweenVectors(heatSeekingVector, np.array(action)) for action in self.actionSpace}
         optimalActionList = [action for action in angleBetweenVectors.keys() if angleBetweenVectors[action] == min(angleBetweenVectors.values())]
         action = random.choice(optimalActionList)
-        return action
+        actionDist = {action: 1}
+
+        return actionDist
 
 
 class HeatSeekingContinuesDeterministicPolicy:
@@ -41,11 +43,14 @@ class HeatSeekingContinuesDeterministicPolicy:
 
     def __call__(self, state):
         action = np.array(self.getPreyPos(state)) - np.array(self.getPredatorPos(state))
-        actionL2Norm = np.linalg.norm(action, ord = 2)
+        actionL2Norm = np.linalg.norm(action, ord=2)
         if actionL2Norm != 0:
             action = action / actionL2Norm
             action *= self.actionMagnitude
-        return action
+
+        actionTuple = tuple(action)
+        actionDist = {actionTuple: 1}
+        return actionDist
 
 
 class ActHeatSeeking:
