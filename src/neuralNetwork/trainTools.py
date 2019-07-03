@@ -39,14 +39,14 @@ class TrainTerminalController():
         if lossChange < self.terminalThresHold:
             return True
         # early stop terminal
-        lastValidationLoss = None
-        if stepNum >= self.validationSize:
-            lastValidationLoss = np.mean(self.validationHistory)
-        self.validationHistory[stepNum % self.validationSize] = validationDict['loss']
-        if lastValidationLoss is not None and lastValidationLoss < np.mean(self.validationHistory):
-            self.validationCount += 1
-        else:
-            self.validationCount = 0
+        # lastValidationLoss = None
+        # if stepNum >= self.validationSize:
+        #     lastValidationLoss = np.mean(self.validationHistory)
+        # self.validationHistory[stepNum % self.validationSize] = validationDict['loss']
+        # if lastValidationLoss is not None and lastValidationLoss < np.mean(self.validationHistory):
+        #     self.validationCount += 1
+        # else:
+        #     self.validationCount = 0
         # if self.validationCount >= 10:
             # return True
         return False
@@ -85,7 +85,7 @@ class SampleBatchFromTrajectory():
         self.trajNum = trajNum
         self.stepNum = stepNum
 
-    def __call__(self, trajactories, size):
+    def __call__(self, trajactories, size=None):
         if self.preference:
             trajectoryLength = [len(traj) for traj in trajactories]
             mean = np.mean(trajectoryLength)
@@ -94,7 +94,10 @@ class SampleBatchFromTrajectory():
             trajProb = trajectoryValue / trajValueNorm
         else:
             trajProb = [1/len(trajactories) for _ in range(len(trajactories))]
-        sampledTrajs = np.random.choice(a=trajactories, size=self.trajNum, p=trajProb)
+        choices = np.random.choice(len(trajactories), size=self.trajNum, p=trajProb)
+        sampledTrajs = [trajactories[index] for index in choices]
         points = np.concatenate([random.sample(traj, self.stepNum) for traj in sampledTrajs])
-        flattenPoints = [[np.array(point[self.stateIndex]).flatten(), point[self.distIndex][self.dataID].values(), point[self.valueIndex]] for point in points]
+        if np.ndim(points) > 2: #TODO: check why the previous sentence generate different dim
+            points = points[0]
+        flattenPoints = [[np.array(point[self.stateIndex]).flatten(), list(point[self.distIndex][self.dataID].values()), point[self.valueIndex]] for point in points]
         return zip(*flattenPoints)
