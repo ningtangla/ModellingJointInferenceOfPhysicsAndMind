@@ -46,7 +46,7 @@ class SampleTrajectory:
                 break
             actionDist = policy(state)
             action = self.distToAction(actionDist)
-            trajectory.append((state, action, actionDist))
+            trajectory.append((state, action))#, actionDist))
             nextState = self.transit(state, action)
             state = nextState
 

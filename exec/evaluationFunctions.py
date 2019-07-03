@@ -1,8 +1,7 @@
 import os
-import pickle
 import numpy as np
 import pandas as pd
-import copy
+import glob
 
 
 class GetSavePath:
@@ -15,27 +14,27 @@ class GetSavePath:
         allParameters = dict(list(parameters.items()) + list(self.fixedParameters.items()))
         sortedParameters = sorted(allParameters.items())
         nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
+
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
-        fileName = fileName.replace("\n", "")
-        fileName = fileName.replace("[", "(")
-        fileName = fileName.replace("]", ")")
+
         path = os.path.join(self.dataDirectory, fileName)
 
         return path
 
 
 class LoadTrajectories:
-    def __init__(self, getSavePath):
+    def __init__(self, getSavePath, loadFromPickle):
         self.getSavePath = getSavePath
+        self.loadFromPickle = loadFromPickle
 
     def __call__(self, oneConditionDf):
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-        savePath = self.getSavePath(parameters)
-        pickleIn = open(savePath, 'rb')
-        trajectories = pickle.load(pickleIn)
-        pickleIn.close()
+        parameters['sampleIndex'] = '*'
+        genericSavePath = self.getSavePath(parameters)
+        filesNames = glob.glob(genericSavePath)
+        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
 
         return trajectories
 
@@ -50,4 +49,5 @@ class ComputeStatistics:
         allMeasurements = [self.measurementFunction(trajectory) for trajectory in allTrajectories]
         measurementMean = np.mean(allMeasurements)
         measurementStd = np.std(allMeasurements)
+
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
