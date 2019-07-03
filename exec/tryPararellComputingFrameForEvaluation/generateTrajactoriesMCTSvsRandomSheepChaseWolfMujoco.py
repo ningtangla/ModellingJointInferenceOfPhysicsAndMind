@@ -32,13 +32,6 @@ class GenerateTrajectory:
 
     def __call__(self, oneCondition, sampleIndex):
         parameters = oneCondition
-        parameters['sampleIndex'] = sampleIndex
-        trajectorySavePath = self.getSavePath(parameters) 
-         
-        if not os.path.isfile(trajectorySavePath):
-            policy = self.getPolicyFromParameter(parameters)
-            trajectory = self.sampleTrajectory(policy)
-            self.saveData(trajectory, trajectorySavePath)
         return None
 
 def main():
@@ -98,10 +91,13 @@ def main():
 
     # All agents' policies
     mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
-    randomPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    sheepPolicies = {'mcts': mcts, 'random': randomPolicy}
+    random = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    sheepPolicies = {'mcts': mcts, 'random': random}
+    condition = json.loads(sys.argv[1])
+    sheepPolicyName = condition['sheepPolicyName']
     wolfPolicy = lambda state: stationaryAgentPolicy(state)
-    getPolicyFromParameter = lambda parameters: lambda state: [sheepPolicies[parameters['sheepPolicyName']](state), wolfPolicy(state)]
+    sheepPolicy = lambda state: sheepPolicies[sheepPolicyName](state)
+    policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
     # sampleTrajectory
     distToAction = lambda worldDist: worldDistToAction(agentDistToGreedyAction, worldDist)
@@ -116,15 +112,17 @@ def main():
 
     extension = '.pickle'
     getSavePath = GetSavePath(saveDirectory, extension)
-    
-    # generateTrajectory
-    generateTrajectory = GenerateTrajectory(sampleTrajectory, getPolicyFromParameter, getSavePath, saveData) 
-   
+     
     beginTime = time.time()
-    oneCondition = json.loads(sys.argv[1])
-    sampleIndex = int(sys.argv[2])
-    trajectory = generateTrajectory(oneCondition, sampleIndex)
     
+    parametersForPath = condition
+    sampleIndex = int(sys.argv[2]) 
+    parametersForPath['sampleIndex'] = sampleIndex
+    trajectorySavePath = getSavePath(parametersForPath) 
+     
+    if not os.path.isfile(trajectorySavePath):
+        trajectory = sampleTrajectory(policy)
+        saveData(trajectory, trajectorySavePath)
     processTime = time.time() - beginTime
     print(processTime)
 
