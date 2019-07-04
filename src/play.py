@@ -26,12 +26,12 @@ class MultiAgentSampleTrajectory:
         return trajectory
 
 class SampleTrajectory:
-    def __init__(self, maxRunningSteps, transit, isTerminal, reset, distToAction):
+    def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
         self.isTerminal = isTerminal
         self.reset = reset
-        self.distToAction = distToAction
+        self.chooseAction = chooseAction
 
     def __call__(self, policy):
         state = self.reset()
@@ -44,16 +44,16 @@ class SampleTrajectory:
             if self.isTerminal(state):
                 trajectory.append((state, None, None))
                 break
-            actionDist = policy(state)
-            action = self.distToAction(actionDist)
-            trajectory.append((state, action))#, actionDist))
+            actionDists = policy(state)
+            action = [self.chooseAction(actionDist) for actionDist in actionDists]
+            trajectory.append((state, action))#, actionDists))
             nextState = self.transit(state, action)
             state = nextState
 
         return trajectory
 
 
-def agentDistToGreedyAction(actionDist):
+def chooseGreedyAction(actionDist):
     actions = list(actionDist.keys())
     probs = list(actionDist.values())
     maxIndices = np.argwhere(probs == np.max(probs)).flatten()
@@ -62,6 +62,3 @@ def agentDistToGreedyAction(actionDist):
     return selectedAction
 
 
-def worldDistToAction(agentDistToAction, worldDist):
-    worldAction = [agentDistToAction(dist) if type(dist) is dict else dist for dist in worldDist]
-    return worldAction

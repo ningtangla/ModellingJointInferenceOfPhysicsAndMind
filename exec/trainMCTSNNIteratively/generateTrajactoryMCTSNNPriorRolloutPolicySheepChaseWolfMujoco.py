@@ -12,7 +12,7 @@ import mujoco_py as mujoco
 from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, RollOut, Expand, \
     MCTS, backup, establishPlainActionDist
-from src.play import SampleTrajectory, agentDistToGreedyAction, worldDistToAction
+from src.play import SampleTrajectory, chooseGreedyAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from exec.evaluationFunctions import GetSavePath
@@ -29,7 +29,6 @@ def main():
     qPosInit = (0, 0, 0, 0)
     numSimulations = 75
 
-    # functions for MCTS
     dirName = os.path.dirname(__file__)
     evalEnvModelPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
     evalModel = mujoco.load_model_from_path(evalEnvModelPath)
@@ -53,7 +52,9 @@ def main():
     renderOn = False
     numSimulationFrames = 20
     transit = TransitionFunction(evalSimulation, isTerminal, numSimulationFrames)
-    sheepTransit = lambda state, action: transit(state, [action, stationaryAgentPolicy(state)])
+    wolfPolicyInSheepSimulation = lambda state: stationaryAgentPolicy(state)
+    policyInSheepSimulation = lambda state, sheepSelfAction: [sheepSelfAction, wolfPolicyInSheepSimulation(state)])
+    transitInSheepSimulation = lambda state, sheepSelfAction: transit(policyInSheepSimulation(state, sheepSelfAction))
 
     aliveBonus = -0.05
     deathPenalty = 1
@@ -63,49 +64,48 @@ def main():
     cBase = 100
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
-
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    actionPriorUniform = {action: 1/len(actionSpace) for action in actionSpace}
-    getActionPriorUniform = lambda state: actionPriorUniform
-
-    initializeChildren = InitializeChildren(actionSpace, sheepTransit, getActionPriorUniform)
-    expand = Expand(isTerminal, initializeChildren)
+    
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
+                                        'trainedNNModels')
+    if not os.path.exists(NNModelSaveDirectory):
+        os.makedirs(NNModelSaveDirectory)
+    NNModelSaveExtension = ''
+    getModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, trainFixedParameters)
+    
+    parametersForNNPath = json.loads(sys.argv[1])
+    NNModel = 
+    approximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, actionSpace)
+    initializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, transitInSheepSimulation, approximateActionPrior(NNModel))
+    expandNNPrior = lambda NNModel: Expand(isTerminal, initializeChildrenNNPrior(NNModel))
 
     numActionSpace = len(actionSpace)
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-
     rolloutHeuristicWeight = 0
     maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-    rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
+    rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepSimulation, rewardFunction, isTerminal, rolloutHeuristic)
 
     # All agents' policies
-    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
-    random = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    sheepPolicies = {'mcts': mcts, 'random': random}
-    condition = json.loads(sys.argv[1])
-    sheepPolicyName = condition['sheepPolicyName']
+    mctsNNPriorRolloutValue = MCTS(numSimulations, selectChild, expandNNPrior, rollout, backup, establishPlainActionDist)
+    sheepPolicy = lambda state: mctsNNPriorRolloutValue(state)
     wolfPolicy = lambda state: stationaryAgentPolicy(state)
-    sheepPolicy = lambda state: sheepPolicies[sheepPolicyName](state)
     policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
     # sampleTrajectory
-    distToAction = lambda worldDist: worldDistToAction(agentDistToGreedyAction, worldDist)
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, distToAction)
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
  
     # savePath
-    saveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNIteratively',
+    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
                                       'trajectory')
 
-    if not os.path.exists(saveDirectory):
-        os.makedirs(saveDirectory)
+    if not os.path.exists(trajectorySaveDirectory):
+        os.makedirs(trajectorySaveDirectory)
 
     extension = '.pickle'
-    getSavePath = GetSavePath(saveDirectory, extension)
+    getSavePath = GetSavePath(trajectorySaveDirectory, extension)
      
     beginTime = time.time()
     
-    parametersForPath = condition
     sampleIndex = int(sys.argv[2]) 
     parametersForPath['sampleIndex'] = sampleIndex
     trajectorySavePath = getSavePath(parametersForPath) 
