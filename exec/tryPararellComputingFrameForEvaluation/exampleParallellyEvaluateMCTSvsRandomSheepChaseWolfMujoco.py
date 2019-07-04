@@ -9,7 +9,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from collections import OrderedDict
 from subprocess import Popen, PIPE
-
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
 
 class SampleTrajectoriesParallel:
