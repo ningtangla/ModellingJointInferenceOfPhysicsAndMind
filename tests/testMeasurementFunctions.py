@@ -43,20 +43,21 @@ class TestMeasurementFunctions(unittest.TestCase):
         self.getInitStateFromTrajectory = GetStateFromTrajectory(0, self.stateIndex)
         self.computeOptimalNextPos = ComputeOptimalNextPos(self.getInitStateFromTrajectory, self.getOptimalAction,
                                                            self.sheepTransit, self.getSheepXPos)
-    # @data(([(np.asarray([[3, 4, 3, 4, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))])],
-    #        np.asarray((-7, 7))),
-    #       ([(np.asarray([[3, 3, 3, 3, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
-    #         (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
-    #        np.asarray((7, 7))))
-    # @unpack
-    # def testComputeOptimalNextPos(self, trajectory, optimalAction):
-    #     optimalNextPos = self.computeOptimalNextPos(trajectory)
-    #     getSheepInitPosFromTrajectory = GetAgentPosFromTrajectory(self.getSheepXPos, self.getInitStateFromTrajectory)
-    #     displacement = optimalNextPos - getSheepInitPosFromTrajectory(trajectory)
-    #     hadamardProductDisplacementAndOptimalAction = np.multiply(np.asarray(displacement), np.asarray(optimalAction))
-    #
-    #     truthValue = all(i > 0 for i in hadamardProductDisplacementAndOptimalAction)
-    #     self.assertTrue(truthValue)
+
+    @data(([(np.asarray([[3, 4, 3, 4, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))])],
+           np.asarray((-7, 7))),
+          ([(np.asarray([[3, 3, 3, 3, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),
+            (np.asarray([[0, 0, 0, 0, 0, 0], [-6, 8, -6, 8, 0, 0]]), [np.asarray((7, 7)), np.asarray((0, 0))])],
+           np.asarray((7, 7))))
+    @unpack
+    def testComputeOptimalNextPos(self, trajectory, optimalAction):
+        optimalNextPos = self.computeOptimalNextPos(trajectory)
+        getSheepInitPosFromTrajectory = GetAgentPosFromTrajectory(self.getSheepXPos, self.getInitStateFromTrajectory)
+        displacement = optimalNextPos - getSheepInitPosFromTrajectory(trajectory)
+        hadamardProductDisplacementAndOptimalAction = np.multiply(np.asarray(displacement), np.asarray(optimalAction))
+
+        truthValue = all(i > 0 for i in hadamardProductDisplacementAndOptimalAction)
+        self.assertTrue(truthValue)
 
 
     @data(([(np.asarray([[3, 4, 3, 4, 0, 0], [4, 4, 4, 4, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))]),

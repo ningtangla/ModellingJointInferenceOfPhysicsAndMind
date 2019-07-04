@@ -42,11 +42,11 @@ class SampleTrajectory:
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
             if self.isTerminal(state):
-                trajectory.append((state, None))#, None))
+                trajectory.append((state, None, None))
                 break
             actionDist = policy(state)
             action = self.distToAction(actionDist)
-            trajectory.append((state, action))#, actionDist))
+            trajectory.append((state, action, actionDist))
             nextState = self.transit(state, action)
             state = nextState
 
