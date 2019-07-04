@@ -2,15 +2,15 @@ import numpy as np
 
 
 class ComputeOptimalNextPos:
-    def __init__(self, getInitStateFromTrajectory, optimalPolicy, transit, getAgentPosFromState):
+    def __init__(self, getInitStateFromTrajectory, getOptimalAction, transit, getAgentPosFromState):
         self.getInitStateFromTrajectory = getInitStateFromTrajectory
-        self.optimalPolicy = optimalPolicy
+        self.getOptimalAction = getOptimalAction
         self.transit = transit
         self.getAgentPosFromState = getAgentPosFromState
 
     def __call__(self, trajectory):
         initState = self.getInitStateFromTrajectory(trajectory)
-        optimalAction = self.optimalPolicy(initState)
+        optimalAction = self.getOptimalAction(initState)
         nextState = self.transit(initState, optimalAction)
         nextPos = self.getAgentPosFromState(nextState)
 

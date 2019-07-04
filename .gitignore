@@ -7,4 +7,9 @@ tbdata
 *.local
 .DS.Store
 .idea
+<<<<<<< HEAD
 data
+=======
+.DS_Store
+tbdata
+>>>>>>> mctsMujocoSingleAgent
