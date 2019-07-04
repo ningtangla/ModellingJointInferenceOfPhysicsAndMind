@@ -20,10 +20,11 @@ from analyticGeometryFunctions import transitePolarToCartesian, \
 from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
 import trainTools
 from pylab import plt
-TFSEED=128
+TFSEED = 128
 
 
 class GenerateTrainedModel:
+
     def __init__(self, getSavePathForModel, getSavePathForTrajectory, getModel,
                  generateTrain, generatePolicy, generateTrainReporter,
                  sampleTrajectory, numTrials):
@@ -31,7 +32,7 @@ class GenerateTrainedModel:
         self.getSavePathForTrajectory = getSavePathForTrajectory
         self.generateTrain = generateTrain
         self.generateTrainReporter = generateTrainReporter
-        self.getModel =getModel
+        self.getModel = getModel
         self.generatePolicy = generatePolicy
         self.play = sampleTrajectory
         self.numTrials = numTrials
@@ -42,15 +43,21 @@ class GenerateTrainedModel:
         batchSize = df.index.get_level_values('batchSize')[0]
         trainingStep = df.index.get_level_values('trainingStep')[0]
         reporter = self.generateTrainReporter(trainingStep)
-        trainData = [dataSet[varName][:trainDataSize] for varName in
-                     ['state', trainDataType, 'value']]
+        trainData = [
+            dataSet[varName][:trainDataSize]
+            for varName in ['state', trainDataType, 'value']
+        ]
         indexLevelNames = df.index.names
-        parameters = {levelName: df.index.get_level_values(levelName)[0] for
-                      levelName in indexLevelNames}
+        parameters = {
+            levelName: df.index.get_level_values(levelName)[0]
+            for levelName in indexLevelNames
+        }
         saveModelDir = self.getSavePathForModel(parameters)
         sortedParameters = sorted(parameters.items())
-        nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for
-                                parameter in sortedParameters]
+        nameValueStringPairs = [
+            parameter[0] + '=' + str(parameter[1])
+            for parameter in sortedParameters
+        ]
         modelName = '_'.join(nameValueStringPairs).replace(" ", "")
         modelPath = os.path.join(saveModelDir, modelName)
         model = self.getModel()
@@ -62,7 +69,7 @@ class GenerateTrainedModel:
             net.saveVariables(trainedModel, modelPath)
         saveTrajName = self.getSavePathForTrajectory(parameters)
         if os.path.exists(saveTrajName):
-            print("Traj exists {}".format(saveTrajName))
+            # print("Traj exists {}".format(saveTrajName))
             with open(saveTrajName, "rb") as f:
                 trajectories = pickle.load(f)
         else:
@@ -74,38 +81,46 @@ class GenerateTrainedModel:
 
 
 def main():
-    dataDir = "../data/evaluateByEpisodeLength" #用os
+    dataDir = os.path.join('..', 'data', 'evaluateByEpisodeLength')
 
     # env
     sheepID = 0
-    wolfID = 1
     posIndex = [0, 1]
-    numOfAgent = 2
-    sheepSpeed = 20
-    wolfSpeed = sheepSpeed * 0.95
-    degrees = [math.pi/2,0,math.pi,-math.pi/2,
-               math.pi/4,-math.pi*3/4,-math.pi/4,math.pi*3/4]
-    sheepActionSpace = [tuple(np.round(sheepSpeed * transitePolarToCartesian(degree))) for degree in degrees]
-    wolfActionSpace = [tuple(np.round(wolfSpeed * transitePolarToCartesian(degree))) for degree in degrees]
-    print(sheepActionSpace)
-    print(wolfActionSpace)
+    getSheepPos = wrappers.GetAgentPosFromState(sheepID, posIndex)
+    wolfID = 1
+    getWolfPos = wrappers.GetAgentPosFromState(wolfID, posIndex)
     xBoundary = [0, 180]
     yBoundary = [0, 180]
-    killZoneRadius = 25
-
-    getSheepPos = wrappers.GetAgentPosFromState(sheepID, posIndex)
-    getWolfPos = wrappers.GetAgentPosFromState(wolfID, posIndex)
-    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary,
-                                                                 yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(
+    checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(
+        xBoundary, yBoundary)
+    degrees = [
+        math.pi / 2, 0, math.pi, -math.pi / 2, math.pi / 4, -math.pi * 3 / 4,
+        -math.pi / 4, math.pi * 3 / 4
+    ]
+    establishAction = lambda speed, degree: \
+        tuple(np.round(speed * transitePolarToCartesian(degree)))
+    sheepSpeed = 20
+    sheepActionSpace = [
+        establishAction(sheepSpeed, degree) for degree in degrees
+    ]
+    wolfSpeed = sheepSpeed * 0.95
+    wolfActionSpace = [establishAction(wolfSpeed, degree) for degree in degrees]
+    imaginedWolfAction = policies.HeatSeekingDiscreteDeterministicPolicy(
         wolfActionSpace, getWolfPos, getSheepPos, computeAngleBetweenVectors)
     transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(np.array(state),
-                                                       [np.array(action),
-                                                        wolfDriectChasingPolicy(state)]) #refactor
-
+    sheepTransition = lambda state, sheepAction: transition(
+        np.array(state), [np.array(sheepAction),
+                          imaginedWolfAction(state)])
+    numOfAgent = 2
     reset = env.Reset(xBoundary, yBoundary, numOfAgent)
+    killZoneRadius = 25
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
+    # sample trajectories
+    maxRunningSteps = 30
+    distoAction = lambda actionDist: play.worldDistToAction(
+        play.agentDistToGreedyAction, actionDist)  #TODO: Refractor
+    sampleTrajectory = play.SampleTrajectory(maxRunningSteps, sheepTransition,
+                                             isTerminal, reset, distoAction)
 
     # Train Models
     trainingDataDir = os.path.join(dataDir, "augmentedDataSets")
@@ -128,63 +143,60 @@ def main():
         dataSet = pickle.load(f)
 
     # 改回名称
-    fixedParameters = OrderedDict()
-    fixedParameters['numStateSpace'] = 4
-    fixedParameters['numActionSpace'] = 8
-    fixedParameters['regularizationFactor'] = 0
-    fixedParameters['valueRelativeErrBound'] = 0.1
-    fixedParameters['reportInterval'] = 1000
-    fixedParameters['lossChangeThreshold'] = 1e-6
-    fixedParameters['lossHistorySize'] = 10
-    fixedParameters['initActionCoefficient'] = (1, 1)
-    fixedParameters['initValueCoefficient'] = (1, 1)
-    fixedParameters['neuronsPerLayer'] = 64
-    fixedParameters['sharedLayers'] = 3
-    fixedParameters['actionLayers'] = 1
-    fixedParameters['valueLayers'] = 1
-    fixedParameters['decayRate'] = 1
-    fixedParameters['decayStep'] = 1
-    fixedParameters['validationSize'] = 100
-    fixedParameters['testDataSize'] = 10000
-    fixedParameters['testDataType'] = 'actionDist'
+    numStateSpace = 4
+    numActionSpace = 8
+    regularizationFactor = 0
+    valueRelativeErrBound = 0.1
+    reportInterval = 1000
+    lossChangeThreshold = 1e-6
+    lossHistorySize = 10
+    initActionCoefficient = (1, 1)
+    initValueCoefficient = (1, 1)
+    neuronsPerLayer = 64
+    sharedLayers = 3
+    actionLayers = 1
+    valueLayers = 1
+    decayRate = 1
+    decayStep = 1
+    validationSize = 100
+    testDataSize = 10000
+    learningRate = 1e-4
+    testDataType = 'actionDist'
 
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
     independentVariables['trainingDataSize'] = [10000, 30000, 60000]
     independentVariables['batchSize'] = [0, 1024, 4096]
-    independentVariables['augmented'] = ['yes']
-    independentVariables['learningRate'] = [1e-4]
+    independentVariables['augmented'] = ['no']
+    independentVariables['learningRate'] = [learningRate]
     independentVariables['trainingStep'] = [1000, 5000, 10000, 50000]
-    print(independentVariables['augmented'])
-    print(dataSetPath)
 
     # generate NN
-    trainTerminalController = trainTools.TrainTerminalController(fixedParameters['lossHistorySize']
-                                                                 , fixedParameters['lossChangeThreshold'], fixedParameters['validationSize'])
-    coefficientController = trainTools.CoefficientCotroller(fixedParameters['initActionCoefficient']
-                                                            , fixedParameters['initValueCoefficient'])
-    generateTrainReporter = lambda trainingStep: trainTools.TrainReporter(trainingStep,
-                                             fixedParameters['reportInterval'])
-    lrModifier = trainTools.LearningRateModifier(independentVariables['learningRate'][0], fixedParameters['decayRate']
-                                                 , fixedParameters['decayStep'])
-    testData = [dataSet[varName][-fixedParameters['testDataSize']:] for varName in
-                     ['state', fixedParameters['testDataType'], 'value']]
-    generateTrain = lambda trainingStep, batchSize, trainReporter: net.Train(trainingStep, batchSize, net.sampleData, lrModifier
-                                                 , trainTerminalController, coefficientController, trainReporter, testData)
-    generateModel = net.GenerateModel(fixedParameters['numStateSpace'],
-                                    fixedParameters['numActionSpace'],
-                                    fixedParameters['regularizationFactor'],
-                                    fixedParameters['valueRelativeErrBound'],
-                                    seed=TFSEED)
-    getModel = lambda: generateModel([fixedParameters['neuronsPerLayer']*fixedParameters['sharedLayers']],
-                          [fixedParameters['neuronsPerLayer']]*fixedParameters['actionLayers'],
-                          [fixedParameters['neuronsPerLayer']]*fixedParameters['valueLayers'])
-    generatePolicy = lambda trainedModel: net.ApproximatePolicy(trainedModel, sheepActionSpace)
-
-    # sample trajectories
-    maxRunningSteps = 30
-    distoAction = lambda actionDist: play.worldDistToAction(play.agentDistToGreedyAction, actionDist) #改
-    sampleTrajectory = play.SampleTrajectory(maxRunningSteps, sheepTransition, isTerminal, reset, distoAction)
+    trainTerminalController = trainTools.TrainTerminalController(
+        lossHistorySize, lossChangeThreshold, validationSize)
+    coefficientController = trainTools.CoefficientCotroller(
+        initActionCoefficient, initValueCoefficient)
+    generateTrainReporter = lambda trainingStep: trainTools.TrainReporter(
+        trainingStep, reportInterval)
+    lrModifier = trainTools.LearningRateModifier(learningRate, decayRate,
+                                                 decayStep)
+    testData = [
+        dataSet[varName][-testDataSize:]
+        for varName in ['state', testDataType, 'value']
+    ]
+    generateTrain = lambda trainingStep, batchSize, trainReporter: net.Train(
+        trainingStep, batchSize, net.sampleData, lrModifier,
+        trainTerminalController, coefficientController, trainReporter, testData)
+    generateModel = net.GenerateModel(numStateSpace,
+                                      numActionSpace,
+                                      regularizationFactor,
+                                      valueRelativeErrBound,
+                                      seed=TFSEED)
+    getModel = lambda: generateModel([neuronsPerLayer * sharedLayers],
+                                     [neuronsPerLayer] * actionLayers,
+                                     [neuronsPerLayer] * valueLayers)
+    generatePolicy = lambda trainedModel: net.ApproximatePolicy(
+        trainedModel, sheepActionSpace)
 
     levelNames = list(independentVariables.keys())
     levelValues = list(independentVariables.values())
@@ -199,20 +211,19 @@ def main():
     evaluationTrajectoryOutputPath = os.path.join(dataDir, "trajectories")
     if not os.path.exists(evaluationTrajectoryOutputPath):
         os.mkdir(evaluationTrajectoryOutputPath)
-    getSavePathForTrajectory = GetSavePath(evaluationTrajectoryOutputPath, extension)
+    getSavePathForTrajectory = GetSavePath(evaluationTrajectoryOutputPath,
+                                           extension)
 
     numTrials = 1000
-    generateTrainingOutput = GenerateTrainedModel(getSavePathForModel, getSavePathForTrajectory, getModel, generateTrain,
-                                                  generatePolicy, generateTrainReporter,
-                                                  sampleTrajectory, numTrials)
-    resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput, dataSet)
-
+    generateTrainingOutput = GenerateTrainedModel(
+        getSavePathForModel, getSavePathForTrajectory, getModel, generateTrain,
+        generatePolicy, generateTrainReporter, sampleTrajectory, numTrials)
+    resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput,
+                                                      dataSet)
 
     loadTrajectories = LoadTrajectories(getSavePathForTrajectory)
     computeStatistic = ComputeStatistics(loadTrajectories, len)
     statDF = toSplitFrame.groupby(levelNames).apply(computeStatistic)
-    with open(os.path.join(dataDir, "temp.pkl"), 'wb')as f:
-        pickle.dump(statDF, f)
     print(statDF)
 
     xStatistic = "trainingStep"
@@ -221,13 +232,17 @@ def main():
     subplotStatistic = "trainingDataSize"
     figure = plt.figure(figsize=(12, 10))
     subplotDFs = statDF.groupby(subplotStatistic)
-    for index in range(len(subplotDFs)):
-        subplotKey, subPlotDF = subplotDFs[index]
+    numOfPlot = 1
+    for subplotKey, subPlotDF in statDF.groupby(subplotStatistic):
         for linekey, lineDF in subPlotDF.groupby(lineStatistic):
-            ax = figure.add_subplots(len(subplotDFs), 1, index+1)
+            ax = figure.add_subplot(1, len(subplotDFs), numOfPlot)
             plotDF = lineDF.reset_index()
-            plotDF.plot(x=xStatistic, y=yStatistic, ax=ax, label=linekey)
-            ax.title(subplotKey)
+            plotDF.plot(x=xStatistic,
+                        y=yStatistic,
+                        ax=ax,
+                        label=linekey,
+                        title=subplotKey)
+        numOfPlot += 1
     plt.legend(loc='best')
     plt.suptitle("{} vs {} episode length".format(xStatistic, yStatistic))
     figureName = "effect_trainingDataSize_on_NNPerformance.png"
