@@ -1,15 +1,16 @@
 import sys
-sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/constrainedChasingEscapingEnv")
-sys.path.append("../src/algorithms")
-sys.path.append("../src")
+import os
+src = os.path.join('..', 'src')
+sys.path.append(src)
+sys.path.append(os.path.join(src, 'neuralNetwork'))
+sys.path.append(os.path.join(src, 'constrainedChasingEscapingEnv'))
+sys.path.append(os.path.join(src, 'algorithms'))
 import numpy as np
 import pandas as pd
 import envNoPhysics as env
 import wrappers
 import policyValueNet as net
 import policies
-import os
 import play
 from collections import OrderedDict
 import pickle
@@ -19,7 +20,7 @@ from analyticGeometryFunctions import transitePolarToCartesian, \
 from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
 import trainTools
 from pylab import plt
-tfseed=128
+TFSEED=128
 
 
 class GenerateTrainedModel:
@@ -95,7 +96,7 @@ def getTestData(rawData, stateIndex, distIndex, valueIndex, dataID):
     return processedData
 
 def main():
-    dataDir = "../data/evaluateSampleFromTraj"
+    dataDir = os.path.join("..", 'data', 'evaluateSampleFromTraj')
 
     # env
     sheepID = 0
@@ -130,8 +131,18 @@ def main():
 
     # Train Models
     trainingDataDir = os.path.join(dataDir, "trainingTrajectories")
-    dataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numSimulations=200_numTrajs=2500_rolloutSteps=10_withReward.pickle"
-    dataSetPath = os.path.join(trainingDataDir, dataSetName)
+    dataSetParameter = OrderedDict()
+    dataSetParameter['cBase'] = 100
+    dataSetParameter['initPos'] = 'Random'
+    dataSetParameter['maxRunningSteps'] = 30
+    dataSetParameter['numDataPoints'] = 68181
+    dataSetParameter['numSimulations'] = 200
+    dataSetParameter['numTrajs'] = 2500
+    dataSetParameter['rolloutSteps'] = 10
+    dataSetParameter['standardizedReward'] = 'True'
+    dataSetExtension = '.pickle'
+    getSavePathForDataSet = GetSavePath(trainingDataDir, dataSetExtension)
+    dataSetPath = getSavePathForDataSet(dataSetParameter)
     if not os.path.exists(dataSetPath):
         print("No dataSet in:\n{}".format(dataSetPath))
         exit(1)
@@ -194,7 +205,7 @@ def main():
                                     fixedParameters['numActionSpace'],
                                     fixedParameters['regularizationFactor'],
                                     fixedParameters['valueRelativeErrBound'],
-                                    seed=tfseed)
+                                    seed=TFSEED)
     model = generateModel([fixedParameters['neuronsPerLayer']*fixedParameters['sharedLayers']],
                           [fixedParameters['neuronsPerLayer']]*fixedParameters['actionLayers'],
                           [fixedParameters['neuronsPerLayer']]*fixedParameters['valueLayers'])
