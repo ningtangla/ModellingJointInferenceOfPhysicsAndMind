@@ -1,17 +1,25 @@
 import sys
 import os
-sys.path.append('..')
+DIRNAME = os.path.dirname(__file__)
+sys.path.append(os.path.join(DIRNAME, '..'))
 
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 import pandas as pd
+import pickle
 
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories
 
 
 @ddt
 class TestExecEvaluationFunctions(unittest.TestCase):
+    def loadFromPickle(self, fileName):
+        pickleIn = open(fileName, 'rb')
+        object = pickle.load(pickleIn)
+        pickleIn.close()
+        return object
+
     @data(('..', '.txt', {'qPosInit': (1, 2, 3, 4), 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
            '../numSimulations=12_numTrials=23_qPosInit=(1,2,3,4)_trainSteps=2.txt'),
           ('', '.pickle', {'qPosInit': [1, 2, 3, 4], 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
@@ -32,15 +40,13 @@ class TestExecEvaluationFunctions(unittest.TestCase):
         self.assertEqual(path, groundTruthPath)
 
 
-    @data((pd.DataFrame(index=pd.MultiIndex.from_tuples([(100, (-4, 0, 4, 0))],
-                                                        names=['numTrials', 'qPosInit'])), {'maxRunningSteps': 15,
-                                                                                            'numSimulations': 200,
-                                                                                            'sheepPolicyName': 'MCTS'}))
+    @data((pd.DataFrame(index=pd.MultiIndex.from_tuples([(100, (-4, 0, 4, 0))], names=['numTrials', 'qPosInit'])),
+           {'maxRunningSteps': 15, 'numSimulations': 200, 'sheepPolicyName': 'MCTS'}))
     @unpack
     def testLoadTrajectoriesNumTrials(self, oneConditionDf, fixedParameters):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
 
-        loadTrajectories = LoadTrajectories(getSavePath)
+        loadTrajectories = LoadTrajectories(getSavePath, self.loadFromPickle)
         loadedTrajectories = loadTrajectories(oneConditionDf)
         numTrials = len(loadedTrajectories)
 
@@ -56,7 +62,7 @@ class TestExecEvaluationFunctions(unittest.TestCase):
     def testLoadTrajectoriesQPosInit(self, oneConditionDf, fixedParameters):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
 
-        loadTrajectories = LoadTrajectories(getSavePath)
+        loadTrajectories = LoadTrajectories(getSavePath, self.loadFromPickle)
         loadedTrajectories = loadTrajectories(oneConditionDf)
         initTimeStep = 0
         stateIndex = 0
@@ -70,6 +76,7 @@ class TestExecEvaluationFunctions(unittest.TestCase):
         allTruthValues = np.asarray([np.all(qPosInit == groundTruthQPosInit) for qPosInit in allQPosInit])
 
         self.assertTrue(np.all(allTruthValues))
+
 
 if __name__ == "__main__":
     unittest.main()

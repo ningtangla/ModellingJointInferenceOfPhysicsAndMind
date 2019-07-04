@@ -10,7 +10,7 @@ class GetSavePath:
         self.extension = extension
         self.fixedParameters = fixedParameters
 
-    def __call__(self, parameters):
+    def __call__(self, parameters, ):
         allParameters = dict(list(parameters.items()) + list(self.fixedParameters.items()))
         sortedParameters = sorted(allParameters.items())
         nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]

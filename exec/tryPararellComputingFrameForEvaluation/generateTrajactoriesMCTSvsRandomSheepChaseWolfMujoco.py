@@ -23,6 +23,23 @@ def saveData(data, path):
     pickle.dump(data, pklFile)
     pklFile.close()
 
+class GenerateTrajectory:
+    def __init__(self, sampleTrajectory, getPolicyFromParameter, getSavePath, saveData):
+        self.sampleTrajectory = sampleTrajectory
+        self.getPolicyFromParameter = getPolicyFromParameter
+        self.getSavePath = getSavePath
+        self.saveData = saveData
+
+    def __call__(self, oneCondition, sampleIndex):
+        parameters = oneCondition
+        parameters['sampleIndex'] = sampleIndex
+        trajectorySavePath = self.getSavePath(parameters) 
+         
+        if not os.path.isfile(trajectorySavePath):
+            policy = self.getPolicyFromParameter(parameters)
+            trajectory = self.sampleTrajectory(policy)
+            self.saveData(trajectory, trajectorySavePath)
+        return None
 
 def main():
     maxRunningSteps = 20
@@ -113,6 +130,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
         trajectory = sampleTrajectory(policy)
         saveData(trajectory, trajectorySavePath)
+    
     processTime = time.time() - beginTime
     print(processTime)
 
