@@ -5,8 +5,8 @@ import numpy as np
 from ddt import ddt, data, unpack
 from anytree import AnyNode as Node
 
-from src.algorithms.mcts import CalculateScore, SelectChild, Expand, RollOut, backup, InitializeChildren  
-from src.algorithms.mcts import selectGreedyAction, establishPlainActionDist, establishSoftmaxActionDist
+from src.algorithms.mcts import ScoreChild, SelectChild, Expand, RollOut, backup, InitializeChildren  
+from src.algorithms.mcts import establishPlainActionDist, establishSoftmaxActionDist
 from src.simple1DEnv import TransitionFunction, RewardFunction, Terminal
 
 
@@ -29,9 +29,9 @@ class TestMCTS(unittest.TestCase):
 
         self.c_init = 0
         self.c_base = 1
-        self.calculateScore = CalculateScore(self.c_init, self.c_base)
+        self.scoreChild = ScoreChild(self.c_init, self.c_base)
 
-        self.selectChild = SelectChild(self.calculateScore)
+        self.selectChild = SelectChild(self.scoreChild)
          
         init_state = 3
         level1_0_state = self.transition(init_state, action=0)
@@ -55,7 +55,7 @@ class TestMCTS(unittest.TestCase):
     def testCalculateScore(self, parent_visit_number, self_visit_number, sumValue, actionPrior, groundtruth_score):
         curr_node = Node(numVisited = parent_visit_number)
         child = Node(numVisited = self_visit_number, sumValue = sumValue, actionPrior = actionPrior)
-        score = self.calculateScore(curr_node, child)
+        score = self.scoreChild(curr_node, child)
         self.assertEqual(score, groundtruth_score)
 
     @data((1, 1, 1, 1, 100))
@@ -158,34 +158,6 @@ class TestMCTS(unittest.TestCase):
         
         self.assertTrue(np.all(cal_sumValues == new_sumValues))
         self.assertTrue(np.all(cal_visit_nums == new_visit_nums))
-
-    @data(([0], [0], 0),
-          ([-1, 0, 1], [10, 8, 20], 1),
-          ([(1, 0), (0, 1), (-1, 0), (0, -1)], [25, 28, 500, 1], (-1, 0)),
-          ([(-1, 0), (0, -1), (1, 0), (0, 1)], [500, 1, 25, 28], (-1, 0)))
-    @unpack
-    def testselectGreedyAction(self, actions, numVisits, greedyAction):
-        root = Node(id={None: None})
-        for a, v in zip(actions, numVisits):
-            Node(parent=root, id={a: None}, numVisited=v)
-        self.assertEqual(selectGreedyAction(root), greedyAction)
-
-    @data(([0, 1], [0, 0], [0, 1], 1000, 300),
-          ([-1, 0, 1], [5, 2, 5], [-1, 1], 1000, 300),
-          ([(1, 0), (0, 1), (-1, 0), (0, -1)], [25, 28, 28, 1], [(0, 1), (-1, 0)], 1000, 300),
-          ([(1, 0), (0, 1), (-1, 0), (0, -1)], [25, 25, 25, 25], [(1, 0), (0, 1), (-1, 0), (0, -1)], 1000, 150))
-    @unpack
-    def testRandomnessInselectGreedyAction(self, actions, numVisits, greedyActions, rep, minSelected):
-        root = Node(id={None: None})
-        for a, v in zip(actions, numVisits):
-            Node(parent=root, id={a: None}, numVisited=v)
-        counter = {action: 0 for action in greedyActions}
-        for _ in range(rep):
-            selectedAction = selectGreedyAction(root)
-            counter[selectedAction] += 1
-        self.assertEqual(sum(counter.values()), rep)
-        for action in counter:
-            self.assertGreater(counter[action], minSelected)
 
     @data(([0], [1], {0: 1}),
           ([-1, 0, 1], [25, 50, 25], {-1: 0.25, 0: 0.5, 1: 0.25}),

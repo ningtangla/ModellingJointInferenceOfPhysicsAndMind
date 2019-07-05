@@ -4,21 +4,16 @@ import pandas as pd
 sys.path.append('../src/constrainedChasingEscapingEnv')
 sys.path.append('../visualize')
 sys.path.append('../src')
-def rearrangeList(inputList, order):
-    inputArray = np.array(inputList)
-    orderArray = np.array(order)
-    sortingIndex = orderArray.argsort()
-    sortedFunctions = list(inputArray[sortingIndex])
-    return sortedFunctions
+
 
 from envDiscreteGrid import *
-from wrapperFunctions import *
+from state import *
 from policies import *
 from analyticGeometryFunctions import computeAngleBetweenVectors
 
 from discreteGridVisualization import *
 
-from play import MultiAgentSampleTrajectory
+from episode import MultiAgentSampleTrajectory
 
 pd.set_option('display.max_columns', 50)
 
@@ -57,7 +52,11 @@ def main():
 
     unorderedPolicy = [getWolfPolicy, getSheepPolicy, getMasterPolicy]
     agentID = [wolfID, sheepID, masterID]
+
+    rearrangeList = lambda unorderedList, order: list(np.array(unorderedList)[np.array(order).argsort()])
     allAgentPolicy = rearrangeList(unorderedPolicy, agentID) # sheepPolicy, masterPolicy, wolfPolicy
+
+
     policy = lambda state: [getAction(state) for getAction in allAgentPolicy] # result of policy function is [sheepAct, masterAct, wolfAct]
 
     pulledAgentID = 0

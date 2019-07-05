@@ -3,9 +3,9 @@ import numpy as np
 from ddt import ddt, data, unpack
 import sys
 import os
-sys.path.append('..')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors, computeVectorNorm 
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import transiteCartesianToPolar, transitePolarToCartesian, computeAngleBetweenVectors, computeVectorNorm
 
 
 @ddt
@@ -20,9 +20,9 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
     @unpack
     def testTransitePolarToCartesian(self, angle, groundTruthCoordinates):
         returnedValue = transitePolarToCartesian(angle)
-        self.assertAlmostEqual(returnedValue.all(), groundTruthCoordinates.all(), places=3)
+        self.assertTrue(np.allclose(returnedValue, groundTruthCoordinates, rtol=0.01))
 
-    @data((np.array([1, 1]), np.array([1, 1]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571), (np.array([0, 0]), np.array([1, 1]), np.nan))
+    @data((np.array([1, 1]), np.array([1, 1]), 0), (np.array([1, 0]), np.array([0, 1]), 1.571), (np.array([0, 0]), np.array([1, 1]), np.nan), (np.array([1, 1]), np.array([80, 80]), 0))
     @unpack
     def testComputeAngleBetweenVectors(self, vector1, vector2, groundTruthAngle):
         returnedValue = computeAngleBetweenVectors(vector1, vector2)
@@ -32,7 +32,7 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
             self.assertTrue(np.isnan(returnedValue))
 
     @data((np.asarray([1, 2]), np.sqrt(5)),
-          (np.asarray([-10, 10]), 10*np.sqrt(2)))
+          (np.asarray([-10, 10]), 10 * np.sqrt(2)))
     @unpack
     def testComputeDistance(self, vector, groundTruthDistance):
         norm = computeVectorNorm(vector)

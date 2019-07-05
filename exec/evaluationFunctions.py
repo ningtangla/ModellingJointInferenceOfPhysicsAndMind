@@ -1,7 +1,7 @@
 import os
-import pickle
 import numpy as np
 import pandas as pd
+import glob
 
 
 class GetSavePath:
@@ -11,8 +11,8 @@ class GetSavePath:
         self.fixedParameters = fixedParameters
 
     def __call__(self, parameters):
-        parameters.update(self.fixedParameters)
-        sortedParameters = sorted(parameters.items())
+        allParameters = dict(list(parameters.items()) + list(self.fixedParameters.items()))
+        sortedParameters = sorted(allParameters.items())
         nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
@@ -22,26 +22,30 @@ class GetSavePath:
 
         return path
 
+def readParametersFromDf(oneConditionDf): 
+    indexLevelNames = oneConditionDf.index.names
+    parameters = {levelName: str(oneConditionDf.index.get_level_values(levelName)[0]) for levelName in indexLevelNames}
+    return parameters
 
 class LoadTrajectories:
-    def __init__(self, getSavePath):
+    def __init__(self, getSavePath, loadFromPickle, readParametersFromDf):
         self.getSavePath = getSavePath
+        self.loadFromPickle = loadFromPickle
+        self.readParametersFromDf = readParametersFromDf
 
     def __call__(self, oneConditionDf):
-        indexLevelNames = oneConditionDf.index.names
-        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-        savePath = self.getSavePath(parameters)
-        pickleIn = open(savePath, 'rb')
-        trajectories = pickle.load(pickleIn)
-        pickleIn.close()
+        parameters = self.readParametersFromDf(oneConditionDf)
+        parameters['sampleIndex'] = '*'
+        genericSavePath = self.getSavePath(parameters)
+        filesNames = glob.glob(genericSavePath)
+        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
 
         return trajectories
 
 
 class ComputeStatistics:
-    def __init__(self, getTrajectories, numTrials, measurementFunction):
+    def __init__(self, getTrajectories, measurementFunction):
         self.getTrajectories = getTrajectories
-        self.numTrials = numTrials
         self.measurementFunction = measurementFunction
 
     def __call__(self, oneConditionDf):

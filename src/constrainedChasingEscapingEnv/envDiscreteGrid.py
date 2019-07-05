@@ -1,6 +1,6 @@
 import numpy as np 
 from random import randint
-from wrapperFunctions import rearrangeList
+
 
 class Reset:
     def __init__(self, gridSize, lowerBound, agentCount):
@@ -11,6 +11,7 @@ class Reset:
     def __call__(self):
         startState = [(randint(self.lowerBound, self.gridX), randint(self.lowerBound, self.gridY)) for _ in range(self.agentCount)]
         return startState
+
 
 class StayWithinBoundary:
     def __init__(self, gridSize, lowerBoundary):
@@ -100,6 +101,8 @@ class GetAgentsForce:
 
         unorderedAgentsForce = [pulledAgentForce, noPullAgentForce, pullingAgentForce]
         agentsIDOrder = [self.pulledAgentIndex, self.noPullingAgentIndex, self.pullingAgentIndex]
+
+        rearrangeList = lambda unorderedList, order: list(np.array(unorderedList)[np.array(order).argsort()])
         agentsForce = rearrangeList(unorderedAgentsForce, agentsIDOrder)
         return agentsForce
 
