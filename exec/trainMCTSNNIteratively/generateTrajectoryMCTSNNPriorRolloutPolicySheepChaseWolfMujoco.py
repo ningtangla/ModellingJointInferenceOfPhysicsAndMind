@@ -124,5 +124,24 @@ def main():
     processTime = time.time() - beginTime
     print(processTime)
 
+
 if __name__ == "__main__":
     main()
+    # release from memory
+    # delete from disk
+    # rerun small code--track memory and disk space
+    # intermediate
+    # everything in main file will remain. Only functions will get released
+    # memory issue or disk issue? disk--delete stuff. Memory--optimize code.
+    # python libraries to read cpu use, memory use, disk use. after 10 iterations, the mean memory should be similar.
+    # reduce numSim.
+    # MANIPULATE NUMSIM AND time to generate 1 step of trajectory using NN value and prior; estimate at trajectory level.
+    # plot for one iteration of alphazero
+    # after this do memory and disk
+    # 1 2 4 8 16
+    # expectation after you run code
+
+    # for iteration level time measurement, we can: 1) remove rollout, 2) manipulate numSim, 3) manipulate maxRunningSteps
+    # 4) numTrialsPerIteration
+
+    # reduce numSim--2; 100 iterations. memory, cpu, hard disk.

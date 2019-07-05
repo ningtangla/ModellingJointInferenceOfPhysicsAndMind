@@ -116,7 +116,7 @@ class IterativePlayAndTrain:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrajectoriesPerIteration'] = [2]#[256]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [256]
     manipulatedVariables['miniBatchSize'] = [512]
     manipulatedVariables['learningRate'] = [0.01]
 
@@ -198,7 +198,7 @@ def main():
                                                     processTrajectoryForNN)
 
     # replay buffer
-    windowSize = 50#5000
+    windowSize = 5000
     saveToBuffer = SaveToBuffer(windowSize)
     getUniformSamplingProbabilities = lambda buffer: [(1/len(buffer)) for _ in buffer]
     getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
@@ -226,7 +226,7 @@ def main():
                                                       terminalController, coefficientController,
                                                       trainReporter)
     # functions to iteratively play and train the NN
-    numIterations = 50#150
+    numIterations = 40#150
     iterativePlayAndTrain = IterativePlayAndTrain(windowSize, numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
                        preProcessTrajectories, saveToBuffer, getSampleBatchFromBuffer, getTrainNN)
     performanceDf = toSplitFrame.groupby(levelNames).apply(iterativePlayAndTrain) 
