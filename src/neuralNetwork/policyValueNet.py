@@ -41,7 +41,7 @@ class GenerateModel:
                 activation_ = states_
                 for i in range(len(sharedWidths)):
                     fcLayer = tf.layers.Dense(units=sharedWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fcLayer{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
                     tf.add_to_collection("weights", fcLayer.kernel)
                     tf.add_to_collection("biases", fcLayer.bias)
@@ -52,13 +52,13 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(actionLayerWidths)):
                     fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fcLayer{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
                     tf.add_to_collection("weights", fcLayer.kernel)
                     tf.add_to_collection("biases", fcLayer.bias)
                     tf.add_to_collection("activations", activation_)
                 outputFCLayer = tf.layers.Dense(units=self.numActionSpace, activation=None, kernel_initializer=initWeight,
-                                                bias_initializer=initBias, name="fcLayer{}".format(len(actionLayerWidths) + 1))
+                                                bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
                 outputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collection("weights", outputFCLayer.kernel)
                 tf.add_to_collection("biases", outputFCLayer.bias)
@@ -74,14 +74,14 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(valueLayerWidths)):
                     fcLayer = tf.layers.Dense(units=valueLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fcLayer{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
                     tf.add_to_collection("weights", fcLayer.kernel)
                     tf.add_to_collection("biases", fcLayer.bias)
                     tf.add_to_collection("activations", activation_)
 
                 outputFCLayer = tf.layers.Dense(units=1, activation=None, kernel_initializer=initWeight,
-                                                bias_initializer=initBias, name="fcLayer{}".format(len(valueLayerWidths) + 1))
+                                                bias_initializer=initBias, name="fc{}".format(len(valueLayerWidths) + 1))
                 outputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collection("weights", outputFCLayer.kernel)
                 tf.add_to_collection("biases", outputFCLayer.bias)
@@ -131,7 +131,7 @@ class GenerateModel:
 
                 with tf.name_scope("inspectGrad"):
                     for grad_, var_ in gradVarPairs_:
-                        tf.add_to_collection(var_.name + "_gradient", grad_)
+                        tf.add_to_collection(var_.name + "/gradient", grad_)
                     gradients_ = [tf.reshape(grad_, [1, -1]) for (grad_, _) in gradVarPairs_]
                     allGradTensor_ = tf.concat(gradients_, 1)
                     allGradNorm_ = tf.norm(allGradTensor_)
