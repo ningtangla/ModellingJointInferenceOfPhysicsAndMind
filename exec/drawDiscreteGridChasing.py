@@ -4,7 +4,12 @@ import pandas as pd
 sys.path.append('../src/constrainedChasingEscapingEnv')
 sys.path.append('../visualize')
 sys.path.append('../src')
-
+def rearrangeList(inputList, order):
+    inputArray = np.array(inputList)
+    orderArray = np.array(order)
+    sortingIndex = orderArray.argsort()
+    sortedFunctions = list(inputArray[sortingIndex])
+    return sortedFunctions
 
 from envDiscreteGrid import *
 from wrapperFunctions import *

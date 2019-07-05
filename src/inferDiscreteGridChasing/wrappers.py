@@ -1,13 +1,11 @@
 import pandas as pd
 
-
-class IsTerminal:
-    def __init__(self, thresholdPosterior, comparisonIndex):
+class IsInferenceTerminal:
+    def __init__(self, thresholdPosterior):
         self.thresholdPosterior = thresholdPosterior
-        self.comparisonIndex = comparisonIndex
 
     def __call__(self, inferenceDf):
-        rank = inferenceDf.groupby(self.comparisonIndex).sum().reset_index()
+        rank = inferenceDf.groupby(['chasingAgents', 'pullingAgents']).sum().reset_index()
         largestPosterior = max(rank['normalizedPosterior'])
         if largestPosterior >= self.thresholdPosterior:
             return True
@@ -17,14 +15,14 @@ class IsTerminal:
 
 class InferDiscreteChasingAndDrawDemo:
     def __init__(self, chasingAgents, pullingAgents, actionSpace, forceSpace,
-                 createIndex, isTerminal, inferOneStepDiscreteChasing,
+                 createIndex, isInferenceTerminal, inferOneStepDiscreteChasing,
                  drawInferenceResult):
         self.chasingAgents = chasingAgents
         self.pullingAgents = pullingAgents
         self.actionSpace = actionSpace
         self.forceSpace = forceSpace
 
-        self.isTerminal = isTerminal
+        self.isInferenceTerminal = isInferenceTerminal
         self.createIndex = createIndex
         self.inferOneStepDiscreteChasing = inferOneStepDiscreteChasing
 
@@ -48,13 +46,12 @@ class InferDiscreteChasingAndDrawDemo:
 
             self.drawInferenceResult(index+1, nextState, inferenceDf, saveImage=True)
 
-            if self.isTerminal(inferenceDf):
+            if self.isInferenceTerminal(inferenceDf):
                 break
 
             inferenceDf['prior'] = inferenceDf['marginalizedPosterior']
 
-        inferenceDf = inferenceDf[["prior", "state", "policyLikelihood", "forceLikelihood",
-                                   "calculatedNextState", "expectedNextState",  "nextState", "transitionLikelihood",
+        inferenceDf = inferenceDf[["prior", "state", "nextState", "policyLikelihood", "transitionLikelihood",
                                    "posterior", "normalizedPosterior", "marginalizedPosterior"]]
 
         return inferenceDf

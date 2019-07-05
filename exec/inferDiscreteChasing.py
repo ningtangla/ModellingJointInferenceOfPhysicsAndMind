@@ -13,48 +13,33 @@ from discreteGridInferenceVisualization import *
 
 pd.set_option('display.max_columns', 50)
 
-
 def main():
-    chasingAgents = [0, 1, 2]
-    pullingAgents = [0, 1, 0]
     actionSpace = [(-1, 0), (1, 0), (0, 1), (0, -1)]
-    forceSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
-
     lowerBoundAngle = 0
     upperBoundAngle = np.pi / 2
-    actHeatSeeking = ActHeatSeeking(actionSpace, computeAngleBetweenVectors, lowerBoundAngle, upperBoundAngle)
-
+    actHeatSeeking = ActHeatSeeking(actionSpace, lowerBoundAngle, upperBoundAngle, computeAngleBetweenVectors)
     positionIndex = [0, 1]
-    rationalityParam = 0.9
-
     getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
+    rationalityParam = 0.9
+    getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam, actHeatSeeking, getWolfPos, getSheepPos)
+    getWolfActionProb = GetWolfActionProb(getAgentPosition, getHeatSeekingActionLikelihood)
+    getSheepActionProb = GetSheepActionProb(getAgentPosition, getHeatSeekingActionLikelihood)
+    getRandomActionLikelihood = GetRandomActionLikelihood(actionSpace)
+    getMasterActionProb = GetMasterActionProb(getRandomActionLikelihood)
+    getAgentsActionProb = [getWolfActionProb, getSheepActionProb, getMasterActionProb]
+    getPolicyLikelihood = lambda chasingIndices, state, allAgentsAction: np.product([getActionProb(chasingIndices, state, allAgentsAction) for getActionProb in getAgentsActionProb] )
 
-    getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam,actHeatSeeking, getWolfPos, getSheepPos)
-    getMasterActionLikelihood = RandomActionLikelihood(actionSpace)
-    getPolicyDistribution = GetPolicyDistribution(getAgentPosition, getHeatSeekingActionLikelihood, getMasterActionLikelihood)
-
-    inferPolicyLikelihood = InferPolicyLikelihood(getPolicyDistribution)
-
-
-    getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(computeAngleBetweenVectors, forceSpace, lowerBoundAngle, upperBoundAngle)
-    getPulledAgentForceDistribution = GetPulledAgentForceDistribution(getAgentPosition, getPulledAgentForceLikelihood)
-
-    inferForceLikelihood = InferForceLikelihood(getPulledAgentForceDistribution)
-
+    forceSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
+    getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(forceSpace, lowerBoundAngle, upperBoundAngle, computeAngleBetweenVectors) # change or not
+    getPulledAgentForceProb = GetPulledAgentForceProb(getAgentPosition, getPulledAgentForceLikelihood)
     gridSize = (10, 10)
     lowerBoundary = 1
     stayWithinBoundary = StayWithinBoundary(gridSize, lowerBoundary)
+    getTransitionLikelihood = GetTransitionLikelihood(getPulledAgentForceProb, getNoPullAgentForceProb, stayWithinBoundary)
 
-    inferOneStepDiscreteChasing = InferOneStepDiscreteChasing(inferPolicyLikelihood,
-                                                              inferForceLikelihood,
-                                                              inferTransitionLikelihood,
-                                                              stayWithinBoundary)
+    inferOneStepDiscreteChasing = InferOneStepDiscreteChasing(getPolicyLikelihood, getTransitionLikelihood)
 
-    thresholdPosterior = 1
-    comparisonIndex = ['chasingAgents', 'pullingAgents']
-    isTerminal = IsTerminal(thresholdPosterior, comparisonIndex)
-
-
+# visualization
     screenWidth = 800
     screenHeight = 800
     caption= "Game"
@@ -65,34 +50,30 @@ def main():
     gridPixelSize = min(screenHeight// gridNumberX, screenWidth// gridNumberY)
     modifyOverlappingPoints = ModifyOverlappingPoints(gridPixelSize, modificationRatio, checkDuplicates)
 
-
-    BLACK = (  0,   0,   0)
-    WHITE = (255, 255, 255)
-
     pointExtendTime = 100
     FPS = 60
     pointWidth = 10
+    BLACK = (  0,   0,   0)
     lineColor = BLACK
     drawCirclesAndLines = DrawCirclesAndLines(pointExtendTime, FPS, pointWidth, lineColor, modifyOverlappingPoints)
 
+    WHITE = (255, 255, 255)
     backgroundColor= WHITE
     gridColor = BLACK
     gridLineWidth = 3
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
-
-
-    BLUE = ( 0, 0, 255)
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
 
     wolfColor = RED
     sheepColor = GREEN
     masterColor = BLUE
 
-    wolfIndex = 0
-    sheepIndex = 1
-    masterIndex = 2
+    wolfIndex = 'wolf'
+    sheepIndex = 'sheep'
+    masterIndex = 'master'
 
     getWolfColor = GetChasingRoleColor(wolfColor, wolfIndex)
     getSheepColor = GetChasingRoleColor(sheepColor, sheepIndex)
@@ -105,10 +86,16 @@ def main():
     maxWidth = 5
     adjustPullingLineWidth = AdjustPullingLineWidth(minWidth, maxWidth)
 
-    drawInferenceResult = DrawInferenceResult(initializeGame, drawGrid, drawCirclesAndLines, gridPixelSize, colorChasingPoints, adjustPullingLineWidth)
+    drawInferenceResult = DrawInferenceResult(gridPixelSize, initializeGame, drawGrid, drawCirclesAndLines,
+                                              colorChasingPoints, adjustPullingLineWidth)
 
+    thresholdPosterior = 1
+    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior)
+
+    chasingAgents = ['wolf', 'sheep', 'master']
+    pullingAgents = ['pulled', 'noPull', 'pulled']
     inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(chasingAgents, pullingAgents, actionSpace, forceSpace,
-                                                createIndex, isTerminal, inferOneStepDiscreteChasing, drawInferenceResult)
+                                                createIndex, isInferenceTerminal, inferOneStepDiscreteChasing, drawInferenceResult)
 
     # trajectory = [[(5, 3), (8, 8), (6, 4)], [(5, 5), (8, 9), (5, 3)],
     #               [(6, 4), (8, 10), (4, 4)], [(6, 4), (7, 10), (6, 4)],
@@ -137,10 +124,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-

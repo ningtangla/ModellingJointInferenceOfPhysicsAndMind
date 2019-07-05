@@ -157,22 +157,20 @@ class AdjustPullingLineWidth:
             agentPosterior = resultGroupedByPullingIndices['normalizedPosterior'].values[index]
 
             pullingWidth = int(np.round(self.minWidth + agentPosterior * (self.maxWidth - self.minWidth)))
-            pulledAgentID, pullingAgentID = np.where(np.array(pullingIndex) == 0)[0]
+            pulledAgentID, pullingAgentID = np.where(np.array(pullingIndex) == 'pulled')[0]
 
             lineWidthDict[(pulledAgentID, pullingAgentID)] = pullingWidth
 
         return lineWidthDict
 
 
-# pickle
-
 class DrawInferenceResult:
-    def __init__(self, initializeGame, drawGrid, drawCirclesAndLines, gridPixelSize,
+    def __init__(self, gridPixelSize, initializeGame, drawGrid, drawCirclesAndLines,
                  colorChasingPoints, adjustPullingLineWidth):
+        self.gridPixelSize = gridPixelSize
         self.initializaGame = initializeGame
         self.drawGrid = drawGrid
         self.drawCirclesAndLines = drawCirclesAndLines
-        self.gridPixelSize = gridPixelSize
 
         self.colorChasingPoints = colorChasingPoints
         self.adjustPullingLineWidth = adjustPullingLineWidth

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class RandomActionLikelihood:
+class GetRandomActionLikelihood:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
 
@@ -11,12 +11,12 @@ class RandomActionLikelihood:
 
 
 class ActHeatSeeking:
-    def __init__(self, actionSpace, calculateAngle, lowerBoundAngle, upperBoundAngle):
+    def __init__(self, actionSpace, lowerBoundAngle, upperBoundAngle, calculateAngle):
         self.actionSpace = actionSpace
-        self.calculateAngle = calculateAngle
         self.lowerBoundAngle = lowerBoundAngle
         self.upperBoundAngle = upperBoundAngle
-        
+        self.calculateAngle = calculateAngle
+
     def __call__(self, heatSeekingDirection):
         heatActionAngle = {mvmtVector: self.calculateAngle(heatSeekingDirection, mvmtVector) 
                                               for mvmtVector in self.actionSpace}

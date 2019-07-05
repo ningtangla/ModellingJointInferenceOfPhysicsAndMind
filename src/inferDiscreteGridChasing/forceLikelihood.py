@@ -19,11 +19,12 @@ class StayWithinBoundary:
 
 
 class PulledForceDirectionLikelihood:
-    def __init__(self, calculateAngle, forceSpace, lowerBoundAngle, upperBoundAngle):
-        self.calculateAngle = calculateAngle
+    def __init__(self, forceSpace, lowerBoundAngle, upperBoundAngle, calculateAngle):
         self.forceSpace = forceSpace
         self.lowerBoundAngle = lowerBoundAngle
         self.upperBoundAngle = upperBoundAngle
+        self.calculateAngle = calculateAngle
+
         
     def __call__(self, pullersRelativeLocation):
         
