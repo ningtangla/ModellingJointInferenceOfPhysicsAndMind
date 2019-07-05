@@ -40,18 +40,15 @@ class SampleTrajectory:
             state = self.reset()
 
         trajectory = []
-        try:
-            for runningStep in range(self.maxRunningSteps):
-                if self.isTerminal(state):
-                    trajectory.append((state, None, None))
-                    break
-                actionDist = policy(state)
-                action = self.distToAction(actionDist)
-                trajectory.append((state, action, actionDist))
-                nextState = self.transit(state, action)
-                state = nextState
-        except:
-            import ipdb; ipdb.set_trace()
+        for runningStep in range(self.maxRunningSteps):
+            if self.isTerminal(state):
+                trajectory.append((state, None, None))
+                break
+            actionDist = policy(state)
+            action = self.distToAction(actionDist)
+            trajectory.append((state, action, actionDist))
+            nextState = self.transit(state, action)
+            state = nextState
 
         return trajectory
 

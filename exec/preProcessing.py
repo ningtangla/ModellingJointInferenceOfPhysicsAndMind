@@ -7,7 +7,10 @@ class AccumulateRewards:
         self.rewardFunction = rewardFunction
 
     def __call__(self, trajectory):
-        rewards = [self.rewardFunction(state, action) for state, action, actionDist in trajectory]
+        try:
+            rewards = [self.rewardFunction(state, action) for state, action, actionDist in trajectory]
+        except:
+            import ipdb; ipdb.set_trace()
         accumulateReward = lambda accumulatedReward, reward: self.decay * accumulatedReward + reward
         accumulatedRewards = np.array([reduce(accumulateReward, reversed(rewards[TimeT: ])) for TimeT in range(len(rewards))])
 
