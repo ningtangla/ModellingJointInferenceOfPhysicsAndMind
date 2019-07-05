@@ -160,7 +160,7 @@ class GenerateModel:
 
 
 class Train:
-    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter, validationData):
+    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter):
         self.maxStepNum = maxStepNum
         self.batchSize = batchSize
         self.sampleData = sampleData
@@ -168,8 +168,6 @@ class Train:
         self.terminalController = terimnalController
         self.coefficientController = coefficientController
         self.reporter = trainReporter
-        self.validationData = validationData
-        self.count = 1
 
     def __call__(self, model, trainingData):
         graph = model.graph
