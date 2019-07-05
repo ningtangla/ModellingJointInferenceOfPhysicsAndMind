@@ -31,10 +31,12 @@ class LoadTrajectories:
     def __call__(self, oneConditionDf):
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-        parameters['sampleIndex'] = '*'
-        genericSavePath = self.getSavePath(parameters)
-        filesNames = glob.glob(genericSavePath)
-        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
+        trajectoriesSavePath = self.getSavePath(parameters)
+        trajectories = self.loadFromPickle(trajectoriesSavePath)
+        # parameters['sampleIndex'] = '*'
+        # genericSavePath = self.getSavePath(parameters)
+        # filesNames = glob.glob(genericSavePath)
+        # trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
 
         return trajectories
 

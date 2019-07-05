@@ -12,7 +12,7 @@ def generateTrajectory(codeName, numSample):
     return cmdList
 
 def main():
-    codeName = 'NNPolicyVaryHyperParametersSheepChaseWolfMujoco.py'
+    codeName = 'NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py'
     numSample = 40
     stratTime = time.time()
     cmdList = generateTrajectory(codeName, numSample)
