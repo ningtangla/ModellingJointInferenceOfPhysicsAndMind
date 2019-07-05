@@ -17,7 +17,7 @@ from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.evaluationFunctions import GetSavePath, readParametersFromDf, LoadTrajectories
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter, LearningRateModifier
+from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
 
@@ -116,7 +116,7 @@ class IterativePlayAndTrain:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrajectoriesPerIteration'] = [256]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [2]#[256]
     manipulatedVariables['miniBatchSize'] = [512]
     manipulatedVariables['learningRate'] = [0.01]
 
@@ -198,7 +198,7 @@ def main():
                                                     processTrajectoryForNN)
 
     # replay buffer
-    windowSize = 5000
+    windowSize = 50#5000
     saveToBuffer = SaveToBuffer(windowSize)
     getUniformSamplingProbabilities = lambda buffer: [(1/len(buffer)) for _ in buffer]
     getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
@@ -214,7 +214,7 @@ def main():
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
-    coefficientController = CoefficientController(initCoeff, afterCoeff)
+    coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 25
     numTrainStepsPerIteration = 1
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
@@ -226,8 +226,8 @@ def main():
                                                       terminalController, coefficientController,
                                                       trainReporter)
     # functions to iteratively play and train the NN
-    numIterations = 150
-    iterativePlayAndTrain = IterativePlayAndTrain(numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
+    numIterations = 50#150
+    iterativePlayAndTrain = IterativePlayAndTrain(windowSize, numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
                        preProcessTrajectories, saveToBuffer, getSampleBatchFromBuffer, getTrainNN)
     performanceDf = toSplitFrame.groupby(levelNames).apply(iterativePlayAndTrain) 
     plt.plot(performanceDf.values[0])

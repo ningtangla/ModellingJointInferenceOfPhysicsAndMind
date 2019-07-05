@@ -11,6 +11,8 @@ class GenerateModel:
         self.seed = seed
 
     def __call__(self, sharedWidths, actionLayerWidths, valueLayerWidths, summaryPath="./tbdata"):
+        print("Generating NN with shared layers: {}, action layers: {}, value layers: {}"
+              .format(sharedWidths, actionLayerWidths, valueLayerWidths))
         graph = tf.Graph()
         with graph.as_default():
             if self.seed is not None:
@@ -160,7 +162,7 @@ class GenerateModel:
 
 
 class Train:
-    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter, validationData):
+    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter):
         self.maxStepNum = maxStepNum
         self.batchSize = batchSize
         self.sampleData = sampleData
@@ -168,8 +170,6 @@ class Train:
         self.terminalController = terimnalController
         self.coefficientController = coefficientController
         self.reporter = trainReporter
-        self.validationData = validationData
-        self.count = 1
 
     def __call__(self, model, trainingData):
         graph = model.graph
@@ -200,10 +200,10 @@ class Train:
             feedDict = {state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch,
                         learningRate_: learningRate, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
             evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
-            # validationDict = evaluate(model, self.validationData)
+
             self.reporter(evalDict, stepNum, trainWriter, summary)
 
-            if self.terminalController(evalDict, None, stepNum):
+            if self.terminalController(evalDict, stepNum):
                 break
 
         return model
@@ -220,8 +220,9 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
     valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
     evalSummaryOp = graph.get_collection_ref('summaryOps')[1]
     testWriter = graph.get_collection_ref('writers')[1]
-    fetches = [{"loss":loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
+    fetches = [{"actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
                evalSummaryOp]
+
     stateBatch, actionBatch, valueBatch = testData
     evalDict, summary = model.run(fetches, feed_dict={state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch})
     if summaryOn:
@@ -238,12 +239,14 @@ def saveVariables(model, path):
     graph = model.graph
     saver = graph.get_collection_ref("saver")[0]
     saver.save(model, path)
+    print("Model saved in {}".format(path))
 
 
 def restoreVariables(model, path):
     graph = model.graph
     saver = graph.get_collection_ref("saver")[0]
     saver.restore(model, path)
+    print("Model restored from {}".format(path))
     return model
 
 
