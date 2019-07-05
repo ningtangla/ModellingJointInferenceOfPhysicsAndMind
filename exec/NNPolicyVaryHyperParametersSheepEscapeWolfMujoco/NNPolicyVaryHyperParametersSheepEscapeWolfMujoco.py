@@ -8,19 +8,20 @@ from src.neuralNetwork.policyValueNetTemp import GenerateModelSeparateLastLayer,
     restoreVariables
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, Reset
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
+from src.neuralNetwork.trainToolsTemp import CoefficientController, TrainTerminalController, TrainReporter
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, \
+    HeatSeekingContinuesDeterministicPolicy, stationaryAgentPolicy
 from src.play import SampleTrajectory, worldDistToAction, agentDistToGreedyAction
 from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromTrajectory, GetStateFromTrajectory, \
     GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from src.constrainedChasingEscapingEnv.measure import ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition
 from exec.evaluationFunctions import LoadTrajectories, ComputeStatistics
+from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory
 
 import random
 import numpy as np
 import pickle
-import functools as ft
 from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -59,34 +60,22 @@ class ActionToOneHot:
         return oneHotAction
 
 
-class AccumulateRewards:
-    def __init__(self, decay, rewardFunction):
-        self.decay = decay
-        self.rewardFunction = rewardFunction
-
-    def __call__(self, trajectory):
-        rewards = [self.rewardFunction(state, action) for state, action in trajectory]
-        accumulateReward = lambda accumulatedReward, reward: self.decay * accumulatedReward + reward
-        accumulatedRewards = np.array(
-            [ft.reduce(accumulateReward, reversed(rewards[TimeT:])) for TimeT in range(len(rewards))])
-
-        return accumulatedRewards
-
-
 class PreProcessTrajectories:
-    def __init__(self, agentId, actionIndex, actionToOneHot):
+    def __init__(self, agentId, actionIndex, actionToOneHot, addValuesToTrajectory):
         self.agentId = agentId
         self.actionIndex = actionIndex
         self.actionToOneHot = actionToOneHot
+        self.addValuesToTrajectory = addValuesToTrajectory
 
     def __call__(self, trajectories):
-        stateActionValueTriples = [triple for trajectory in trajectories for triple in trajectory]
-        triplesFiltered = list(filter(lambda triple: triple[self.actionIndex] is not None, stateActionValueTriples))    # should I remove this None condition? because it will remove the terminal points--so we don't get Value prediction for those points.
-        print("{} data points remain after filtering".format(len(triplesFiltered)))
-        triplesProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
-                                     for state, actions, value in triplesFiltered]
+        trajectoriesWithValues = [self.addValuesToTrajectory(trajectory) for trajectory in trajectories]
+        allTimeStepTuples = [tup for trajectory in trajectoriesWithValues for tup in trajectory]
+        tuplesFiltered = list(filter(lambda tup: tup[self.actionIndex] is not None, allTimeStepTuples))
+        print("{} data points remain after filtering".format(len(tuplesFiltered)))
+        tuplesProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+                                     for state, actions, actionDist, value in tuplesFiltered]
 
-        return triplesProcessed
+        return tuplesProcessed
 
 
 class GenerateModel:
@@ -163,7 +152,7 @@ class GenerateTrajectories:
 
 def main():
     # important parameters
-    evalNumTrials = 200
+    evalNumTrials = 100#200
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
@@ -184,13 +173,13 @@ def main():
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 10
     dataSetNumSimulations = 75
-    dataSetNumTrials = 1500
+    dataSetNumTrials = 1000
     dataSetQPosInit = (0, 0, 0, 0)
-    dataSetQPosInitNoise = 0.7
+    dataSetQPosInitNoise = 9.7
     dataSetSheepPolicyName = 'MCTS'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps, 'qPosInit': dataSetQPosInit,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
-                                 'sheepPolicyName': dataSetSheepPolicyName, 'dataSetQPosInitNoise': dataSetQPosInitNoise}
+                                 'sheepPolicyName': dataSetSheepPolicyName, 'qPosInitNoise': dataSetQPosInitNoise}
     dataSetPath = getDataSetPath(dataSetConditionVariables)
 
     dataSetTrajectories = loadData(dataSetPath)
@@ -210,25 +199,20 @@ def main():
 
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
-
-    allValues = [accumulateRewards(trajectory) for trajectory in dataSetTrajectories]
-
-    # combine trajectories with the accumulated reward for each
-    trajectoriesWithValues = [[pair + (value,) for pair, value in zip(trajectory, trajectoryValues)]                    # is there a better way to do this? Maybe we should remove the lists altogether.
-                                for trajectory, trajectoryValues in zip(dataSetTrajectories, allValues)]
+    addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     actionIndex = 1
     actionToOneHot = ActionToOneHot(actionSpace)
-    preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot)
-    stateActionValueTriplesProcessed = preProcessTrajectories(trajectoriesWithValues)
+    preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot, addValuesToTrajectory)
+    stateActionValueTriplesProcessed = preProcessTrajectories(dataSetTrajectories)
 
     # shuffle and separate states and actions
     random.shuffle(stateActionValueTriplesProcessed)
     trainData = [[state for state, action, value in stateActionValueTriplesProcessed],
                  [action for state, action, value in stateActionValueTriplesProcessed],
-                 np.asarray([[value for state, action, value in stateActionValueTriplesProcessed]]).T]
+                 np.asarray([value for state, action, value in stateActionValueTriplesProcessed])]
 
     # initialise model for training
     numStateSpace = 12
@@ -246,7 +230,7 @@ def main():
     initValueCoeff = 1
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientController(initActionCoeff, initValueCoeff)
-    reportInterval = 500                                                                                                # may change this.
+    reportInterval = 500
     getTrain = lambda trainSteps, batchSize: Train(trainSteps, batchSize, terminalController, coefficientController,
                                         TrainReporter(trainSteps, reportInterval))
 
@@ -254,7 +238,7 @@ def main():
     modelFixedParameters = {'dataSetMaxRunningSteps': dataSetMaxRunningSteps, 'dataSetQPosInit': dataSetQPosInit,
                             'dataSetNumSimulations': dataSetNumSimulations, 'dataSetNumTrials': dataSetNumTrials,
                             'dataSetSheepPolicyName': dataSetSheepPolicyName}
-    modelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'NNPolicyVaryHyperParametersSheepChaseWolfMujoco',
+    modelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'NNPolicyVaryHyperParametersSheepEscapeWolfMujoco',
                                       'trainedModels')
 
     if not os.path.exists(modelSaveDirectory):
@@ -271,11 +255,13 @@ def main():
 
     # all agent policies
     getApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-    getStationaryAgentPolicy = lambda NNModel: stationaryAgentPolicy
-    getPolicy = GetPolicy(getApproximatePolicy, getStationaryAgentPolicy)
+    actionMagnitude = 5
+    heatSeekingDeterministicPolicy = HeatSeekingContinuesDeterministicPolicy(getWolfPos, getSheepPos, actionMagnitude)
+    getWolfPolicy = lambda NNModel: heatSeekingDeterministicPolicy
+    getPolicy = GetPolicy(getApproximatePolicy, getWolfPolicy)
 
     # sample trajectory for evaluation
-    evalMaxRunningSteps = 2
+    evalMaxRunningSteps = 15
     dirName = os.path.dirname(__file__)
     evalEnvModelPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
     evalModel = load_model_from_path(evalEnvModelPath)
@@ -301,7 +287,7 @@ def main():
     sheepPolicyName = 'NN'
     trajectoryFixedParameters = {'maxRunningSteps': evalMaxRunningSteps, 'numTrials': evalNumTrials,
                                  'sheepPolicyName': sheepPolicyName}
-    trajectorySaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'NNPolicyVaryHyperParametersSheepChaseWolfMujoco',
+    trajectorySaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'NNPolicyVaryHyperParametersSheepEscapeWolfMujoco',
                                       'trajectories', 'evaluate')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
@@ -326,9 +312,11 @@ def main():
     initTimeStep = 0
     stateIndex = 0
     getInitStateFromTrajectory = GetStateFromTrajectory(initTimeStep, stateIndex)
-    getOptimalAction = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getSheepPos, getWolfPos,
+    optimalPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getSheepPos, getWolfPos,
                                                               computeAngleBetweenVectors)
-    sheepTransit = lambda state, action: transit(state, [action, stationaryAgentPolicy(state)])
+    getOptimalAction = lambda state: agentDistToGreedyAction(optimalPolicy(state))
+    stationaryAgentAction = lambda state: agentDistToGreedyAction(stationaryAgentPolicy(state))
+    sheepTransit = lambda state, action: transit(state, [action, stationaryAgentAction(state)])
     computeOptimalNextPos = ComputeOptimalNextPos(getInitStateFromTrajectory, getOptimalAction, sheepTransit,
                                                   getSheepPos)
     measurementTimeStep = 1
@@ -338,8 +326,8 @@ def main():
                                                                       getPosAtNextStepFromTrajectory)
 
     # compute statistics on the trajectories
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath)
-    computeStatistics = ComputeStatistics(loadTrajectories, measurementFunction)
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadData)
+    computeStatistics = ComputeStatistics(loadTrajectories, len)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
     print("statisticsDf")
@@ -354,8 +342,8 @@ def main():
     for miniBatchSize, grp in statisticsDf.groupby('miniBatchSize'):
         grp.index = grp.index.droplevel('miniBatchSize')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-        axForDraw.set_ylim(0, 0.4)
-        plt.ylabel('Distance between optimal and actual next position of sheep')
+        axForDraw.set_ylim(13, 15)
+        # plt.ylabel('Distance between optimal and actual next position of sheep')
         drawPerformanceLine(grp, axForDraw, miniBatchSize)
         plotCounter += 1
 
