@@ -9,14 +9,12 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from collections import OrderedDict
 from subprocess import Popen, PIPE
-
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
 
 class SampleTrajectoriesParallel:
     def __init__(self, codeFileName, numSample):
         self.codeFileName = codeFileName
         self.numSample = numSample
-
     def __call__(self, oneConditionDf):
         sampleIdStrings = list(map(str, range(self.numSample)))
         indexLevelNames = oneConditionDf.index.names
@@ -32,7 +30,6 @@ class SampleTrajectoriesParallel:
         print('processTime', processTime)
         return cmdList
 
-
 def loadData(path):
     pklFile = open(path, "rb")
     dataSet = pickle.load(pklFile)
@@ -40,10 +37,8 @@ def loadData(path):
 
     return dataSet
 
-
 def drawPerformanceLine(dataDf, axForDraw):
     dataDf.plot(ax=axForDraw, y='mean', yerr='std')
-
 
 def main():
     codeFileName = 'generateTrajactoriesMCTSvsRandomSheepChaseWolfMujoco.py'
@@ -62,7 +57,8 @@ def main():
     
     # load trajectories and compute statistics on the trajectories
     dirName = os.path.dirname(__file__)
-    saveDirectory = os.path.join(dirName, '..', '..', 'data', 'tryParallelComputingFrame', 'trajectory')
+    saveDirectory = os.path.join(dirName, '..', '..', 'data', 'tryParallelComputingFrame',
+                                      'trajectory')
     extension = '.pickle'
     getSavePath = GetSavePath(saveDirectory, extension)
     loadTrajectories = LoadTrajectories(getSavePath, loadData)

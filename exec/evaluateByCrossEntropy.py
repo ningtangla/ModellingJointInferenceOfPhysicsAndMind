@@ -5,45 +5,64 @@ sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import policyValueNet as net
 import envNoPhysics as env
-import wrapperFunctions
+import wrappers
 import numpy as np
 import pandas as pd
-from measurementFunctions import calculateCrossEntropy
-from analyticGeometryFunctions import transitePolarToCartesian
+from measure import calculateCrossEntropy
+from analyticGeometryFunctions import transitePolarToCartesian, computeAngleBetweenVectors
 from pylab import plt
 import policies
 import mcts
 import os
 import math
+from collections import OrderedDict
+from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
+import pickle
+import matplotlib.style
+import matplotlib as mpl
+mpl.style.use('bmh')
 
 
-class Evaluate:
-    def __init__(self, mctsPolicy, nnPolicy, sampleFunction, colName, numOfAgnet, numPosEachState):
+class GenerateDistribution:
+    def __init__(self, mctsPolicy, nnPolicy, constructTestState, getSavePath, numTrials):
         self.mctsPolicy = mctsPolicy
         self.nnPolicy = nnPolicy
-        self.sampleFunction = sampleFunction
-        self.colName =colName
-        self.numPosEachState = numPosEachState
-        self.numOfAgent = numOfAgnet
+        self.constructTestState = constructTestState
+        self.numTrials = numTrials
+        self.getSavePath = getSavePath
 
     def __call__(self, df):
-        index = df.index[0]
-        state = [index[n:n+self.numPosEachState] for n in range(0, len(index), int(len(index)/self.numOfAgent))]
-        testState = self.sampleFunction(state)
+        wolfX = df.index.get_level_values('wolfXPosition')[0]
+        wolfY = df.index.get_level_values('wolfYPosition')[0]
+        sheepX = df.index.get_level_values('sheepXPosition')[0]
+        sheepY = df.index.get_level_values('sheepYPosition')[0]
+        indexLevelNames = df.index.names
+        parameters = {levelName: df.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
+        saveFileName = self.getSavePath(parameters)
+        if os.path.exists(saveFileName):
+            print("Data exists {}".format(saveFileName))
+            return None
+        testState = self.constructTestState([wolfX, wolfY], [sheepX, sheepY])
         if len(testState) == 0:
-            return pd.Series({self.colName: 0})
-        mctsActionDistribution = [self.mctsPolicy(state) for state in testState]
-        nnActionDistribution = [self.nnPolicy([item for sublist in state for item in sublist]) for state in testState]
-        crossEntropyList = [calculateCrossEntropy(np.array(list(prediction.values())), np.array(list(target.values()))) for prediction, target in zip(nnActionDistribution, mctsActionDistribution)]
-        meanCrossEntropy = np.mean(crossEntropyList)
-        return pd.Series({self.colName: meanCrossEntropy})
+            zombieDistribution = [0, 1, 0]
+            data = [{"NNActionDistribution": zombieDistribution, 'mctsActionDistribution': zombieDistribution} for cnt in range(self.numTrials)]
+        else:
+            evaluateStates = [testState for cnt in range(self.numTrials)]
+            mctsActionDistribution = [list(self.mctsPolicy(state).values()) for state in evaluateStates]
+            nnActionDistribution = [list(self.nnPolicy(state).values()) for state in evaluateStates]
+            data = [{"NNActionDistribution": nnAD, 'mctsActionDistribution': mctsAD} for mctsAD, nnAD in zip(mctsActionDistribution, nnActionDistribution)]
+        file = open(saveFileName, 'wb')
+        pickle.dump(data, file)
+        file.close()
+        return data
 
 
 class DrawHeatMap:
-    def __init__(self, groupByVariableNames, subplotIndex, subplotIndexName):
+    def __init__(self, groupByVariableNames, subplotIndex, subplotIndexName, extent):
         self.groupByVariableNames = groupByVariableNames
         self.subplotIndex = subplotIndex
         self.subplotIndexName = subplotIndexName
+        self.extent = extent
 
     def __call__(self, dataDF, colName):
         figure = plt.figure(figsize=(12, 10))
@@ -52,29 +71,43 @@ class DrawHeatMap:
         OrderedSubDFs = [df for subDF in subDFs for key, df in subDF.groupby(self.groupByVariableNames[1])]
         for subDF in OrderedSubDFs:
             subplot = figure.add_subplot(self.subplotIndex[0], self.subplotIndex[1], numOfplot)
-            plotDF = subDF.reset_index()
-            plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
+            resetDF = subDF.reset_index()[[self.subplotIndexName[0], self.subplotIndexName[1], colName]]
+            plotDF = resetDF.pivot(index=self.subplotIndexName[1], columns=self.subplotIndexName[0], values=colName)
+            cValues = plotDF.values
+            xticks = plotDF.columns.values
+            yticks = plotDF.index.values
+            newDf = pd.DataFrame(cValues, index=yticks, columns=xticks)
+            image = subplot.imshow(newDf, vmin=0, vmax=10,
+                              origin="lower", extent=self.extent)
+            plt.colorbar(image, fraction=0.046, pad=0.04)
+            plt.xlabel(self.subplotIndexName[0])
+            plt.ylabel(self.subplotIndexName[1])
+            # plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
             numOfplot = numOfplot + 1
+        plt.suptitle("CrossEntropy Between MCTS and NN")
         plt.subplots_adjust(wspace=0.8, hspace=0.4)
-        # plt.show()
 
 
-class SampleFunction:
-    def __init__(self, sampleNum, isTerminal):
-        self.sampleNum = sampleNum
+class ConstructTestState:
+    def __init__(self, sheepID, wolfID, isTerminal):
+        self.sheepID = sheepID
+        self.wolfID = wolfID
         self.isTerminal = isTerminal
 
-    def __call__(self, state):
-        return [state for count in range(self.sampleNum) if not self.isTerminal(state)]
+    def __call__(self, wolfPos, sheepPos):
+        unSequentialState = {self.wolfID:wolfPos, self.sheepID: sheepPos}
+        state = [unSequentialState[key] for key in sorted(unSequentialState.keys())]
+        if self.isTerminal(state):
+            return []
+        return state
 
 
 def main():
-    savePath = "../data/evaluateByCrossEntropy"
-
+    dataDir = "../data/evaluateByCrossEntropy"
     # env
-    wolfID = 0
-    sheepID = 1
-    posIndex = 0
+    wolfID = 1
+    sheepID = 0
+    posIndex = [0, 1]
     numOfAgent = 2
     numPosEachAgent = 2
     numStateSpace = numOfAgent * numPosEachAgent
@@ -91,19 +124,20 @@ def main():
     killZoneRadius = 25
 
     # mcts policy
-    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    getSheepPos = wrappers.GetAgentPosFromState(sheepID, posIndex)
+    getWolfPos = wrappers.GetAgentPosFromState(wolfID, posIndex)
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos)
-    transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(state, [wolfDriectChasingPolicy(state), np.array(action)])
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos,
+                                                                              computeAngleBetweenVectors)
+    transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
+    sheepTransition = lambda state, action: transition(np.array(state),
+                                                       [np.array(action), wolfDriectChasingPolicy(state)])
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
 
-    rewardFunction = lambda state, action: 1
-
+    # mcts policy
     cInit = 1
-    cBase = 1
-    calculateScore = mcts.CalculateScore(cInit, cBase)
+    cBase = 100
+    calculateScore = mcts.ScoreChild(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
     mctsUniformActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
@@ -113,29 +147,31 @@ def main():
 
     maxRollOutSteps = 10
     rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
+    rewardFunction = lambda state, action: 1
     heuristic = lambda state: 0
-    nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
+    estimateValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
     numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
+    mctsPolicyDistOutput = mcts.MCTS(numSimulations, selectChild, expand, estimateValue, mcts.backup,
+                                     mcts.establishSoftmaxActionDist)
 
     # neuralNetworkModel
-    modelDir = "../data/evaluateNeuralNetwork/savedModels"
+    modelDir = "savedModels"
     modelName = "60000data_64x4_minibatch_100kIter_contState_actionDist"
-    modelPath = os.path.join(modelDir, modelName)
-    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0, regularizationFactor=0, valueRelativeErrBound=0.0)
-    emptyModel = generateModel([64]*4)
+    modelPath = os.path.join(dataDir, modelDir, modelName)
+    if not os.path.exists(modelPath):
+        print("Model {} does not exist".format(modelPath))
+    generateModel = net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.0)
+    emptyModel = generateModel([64, 64, 64], [64], [64])
     trainedModel = net.restoreVariables(emptyModel, modelPath)
     nnPolicy = net.ApproximateActionPrior(trainedModel, sheepActionSpace)
 
     # pandas
     wolfDiscreteFactor = 3
     sheepDiscreteFactor = 10
-    columnName = "cross_entropy"
     wolfDiscreteRange = xBoundary[1] / (wolfDiscreteFactor+1)
     sheepDiscreteRange = xBoundary[1] / (sheepDiscreteFactor+1)
-    samplePoints = 25
-    figureName = os.path.join(savePath, "Factor{}x{}_{}sample_rollout{}HeatMap.png".format(wolfDiscreteFactor, sheepDiscreteFactor, samplePoints, maxRollOutSteps))
+    numTrials = 25
     wolfXPosition = [wolfDiscreteRange * (i+1) for i in range(wolfDiscreteFactor)]
     wolfYPosition = wolfXPosition
     sheepXPosition = [sheepDiscreteRange * (i+1) for i in range(sheepDiscreteFactor)]
@@ -145,12 +181,33 @@ def main():
     diffIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=diffIndex)
 
-    sampleFunction = SampleFunction(samplePoints, isTerminal)
-    evaluate = Evaluate(mctsPolicy, nnPolicy, sampleFunction, columnName, numOfAgent, numPosEachAgent)
-    resultDF = toSplitFrame.groupby(levelNames).apply(evaluate)
-    drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'])
-    drawHeatMap(resultDF, columnName)
-    plt.savefig(figureName)
+    constructTestState = ConstructTestState(sheepID=sheepID, wolfID=wolfID, isTerminal=isTerminal)
+    adDir = "actionDistributions"
+    adPath = os.path.join(dataDir, adDir)
+    extension = ".pickle"
+    fixedParameters = OrderedDict()
+    fixedParameters['numSimulations'] = numSimulations
+    if not os.path.exists(adPath):
+        os.makedirs(adPath)
+    getSavePath = GetSavePath(adPath, extension, fixedParameters)
+    generateDistribution = GenerateDistribution(mctsPolicyDistOutput, nnPolicy, constructTestState, getSavePath, numTrials)
+    resultDF = toSplitFrame.groupby(levelNames).apply(generateDistribution)
+
+    loadData = LoadTrajectories(getSavePath)
+    computeStatistic = ComputeStatistics(loadData, calculateCrossEntropy)
+    statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
+    drawingExtent = tuple(xBoundary) + tuple(yBoundary)
+    drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'], drawingExtent)
+    drawHeatMap(statisticDf, "mean")
+    figureDir = "Graphs"
+    figurePath = os.path.join(dataDir, figureDir)
+    if not os.path.exists(figurePath):
+        os.makedirs(figurePath)
+    figureName = "Factor{}x{}_{}sample_rollout{}HeatMap.png".format(wolfDiscreteFactor,
+                                                                    sheepDiscreteFactor,
+                                                                    numTrials,
+                                                                    maxRollOutSteps)
+    plt.savefig(os.path.join(figurePath, figureName))
 
 
 if __name__ == "__main__":

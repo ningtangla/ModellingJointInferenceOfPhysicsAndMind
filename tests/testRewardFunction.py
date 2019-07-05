@@ -10,6 +10,7 @@ from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 
+
 @ddt
 class TestMeasurementFunctions(unittest.TestCase):
     def setUp(self):

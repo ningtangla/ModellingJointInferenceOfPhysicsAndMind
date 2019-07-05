@@ -1,7 +1,11 @@
 *.pyc
-*.DS_Store
-data
+*.__pycache__
 __pycache__
-.idea
-.DS_Store
+*.DS_Store
 tbdata
+.lan
+*.local
+.DS.Store
+.idea
+data
+.DS_Store

@@ -12,7 +12,8 @@ def generateTrajectory(codeName, numSample):
     return cmdList
 
 def main():
-    codeName = 'NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py'
+    codeName = 'prepareNeuralNetData.py'
+
     numSample = 40
     stratTime = time.time()
     cmdList = generateTrajectory(codeName, numSample)

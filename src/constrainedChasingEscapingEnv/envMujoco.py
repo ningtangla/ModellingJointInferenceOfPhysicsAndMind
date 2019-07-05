@@ -13,8 +13,8 @@ class Reset():
     def __call__(self):
         numQPos = len(self.simulation.data.qpos)
         numQVel = len(self.simulation.data.qvel)
-        numQPosEachAgent = int(numQPos/self.numAgent)
-        numQVelEachAgent = int(numQVel/self.numAgent)
+        numQPosEachAgent = int(numQPos / self.numAgent)
+        numQVelEachAgent = int(numQVel / self.numAgent)
 
         qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
         qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
@@ -62,7 +62,7 @@ class TransitionFunction:
             self.simulation.forward()
 
             newQPos, newQVel = self.simulation.data.qpos, self.simulation.data.qvel
-            newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent: , :numQPosEachAgent])
+            newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent:, :numQPosEachAgent])
 
             agentNewQPos = lambda agentIndex: newQPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)]
             agentNewXPos = lambda agentIndex: newXPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)]
@@ -87,7 +87,7 @@ class IsTerminal():
         state = np.asarray(state)
         pos0 = self.getAgent0Pos(state)
         pos1 = self.getAgent1Pos(state)
-        L2Normdistance = np.linalg.norm((pos0 - pos1), ord = 2)
+        L2Normdistance = np.linalg.norm((pos0 - pos1), ord=2)
         terminal = (L2Normdistance <= self.minXDis)
 
         return terminal
