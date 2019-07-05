@@ -1,2 +1,0 @@
-model_checkpoint_path: "batchSize=0_trainingDataSize=10000_trainingDataType=actionDist"
-all_model_checkpoint_paths: "batchSize=0_trainingDataSize=10000_trainingDataType=actionDist"

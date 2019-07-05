@@ -1,13 +1,15 @@
 import sys
-sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/constrainedChasingEscapingEnv")
-sys.path.append("../src/algorithms")
-sys.path.append("../src")
 import os
+src = os.path.join('..', 'src')
+sys.path.append(src)
+sys.path.append(os.path.join(src, 'neuralNetwork'))
+sys.path.append(os.path.join(src, 'constrainedChasingEscapingEnv'))
+sys.path.append(os.path.join(src, 'algorithms'))
 import pandas as pd
 import pickle
 from pylab import plt
-import numpy as np
+from collections import OrderedDict
+from evaluationFunctions import GetSavePath
 
 
 class GetAgentStateFromDataSetState():
@@ -59,7 +61,7 @@ class DrawDataDistribution():
         xticks = [coor[0] for coor in plotDF.columns.values]
         yticks = [coor[0] for coor in plotDF.index.values]
         newDf = pd.DataFrame(cValues, index=yticks, columns=xticks)
-        image = ax.imshow(newDf, vmin=0, vmax=1500,
+        image = ax.imshow(newDf, vmin=0, vmax=11000,
                        origin="lower", extent=self.extent)
         plt.colorbar(image, fraction=0.046, pad=0.04)
         plt.title(title)
@@ -68,9 +70,20 @@ class DrawDataDistribution():
 
 def main():
     # data
-    dataDir = "../data/evaluateDataSetDistribution"
-    dataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
-    dataSetPath = os.path.join(dataDir, "dataSets", dataSetName)
+    dataDir = os.path.join('..', 'data', 'evaluateDataSetDistribution')
+    trainingDataDir = os.path.join(dataDir, "augmentedDataSets")
+    dataSetParameter = OrderedDict()
+    dataSetParameter['cBase'] = 100
+    dataSetParameter['initPos'] = 'Random'
+    dataSetParameter['maxRunningSteps'] = 30
+    dataSetParameter['numDataPoints'] = 68181
+    dataSetParameter['numSimulations'] = 200
+    dataSetParameter['numTrajs'] = 2500
+    dataSetParameter['rolloutSteps'] = 10
+    dataSetParameter['standardizedReward'] = 'True'
+    dataSetExtension = '.pickle'
+    getSavePathForDataSet = GetSavePath(trainingDataDir, dataSetExtension)
+    dataSetPath = getSavePathForDataSet(dataSetParameter)
     if not os.path.exists(dataSetPath):
         print("No such DataSet {}".format(dataSetPath))
         return
@@ -114,7 +127,10 @@ def main():
     graphDir = os.path.join(dataDir, "Graphs")
     if not os.path.exists(graphDir):
         os.mkdir(graphDir)
-    graphPath = os.path.join(graphDir, dataSetName.replace(".pickle", ".png"))
+    getSavePathForGraph = GetSavePath(graphDir, ".png")
+    graphPath = getSavePathForGraph(dataSetParameter)
+    print(graphPath)
+    exit()
     plt.savefig(graphPath)
 
 
