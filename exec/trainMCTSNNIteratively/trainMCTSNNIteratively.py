@@ -9,21 +9,15 @@ import json
 import numpy as np
 import pickle
 from collections import OrderedDict
-from mujoco_py import load_model_from_path, MjSim
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
-from src.play import SampleTrajectory, chooseGreedyAction
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from exec.evaluationFunctions import GetSavePath, readParametersFromDf, LoadTrajectories
-from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateActionPrior, ApproximateValueFunction, \
-    Train, saveVariables, sampleData
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter, LearningRateModifier
-from exec.trainMCTSNNIteratively.wrappers import GetApproximateValueFromNode, getStateFromNode
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
 
@@ -78,8 +72,9 @@ class PreProcessTrajectories:
 
 
 class IterativePlayAndTrain:
-    def __init__(self, numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
+    def __init__(self, windowSize, numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
                        preProcessTrajectories, saveToBuffer, getSampleBatchFromBuffer, getTrainNN):
+        self.windowSize = windowSize
         self.numIterations = numIterations
         self.initializedNNModel = initializedNNModel
         self.saveNNModel = saveNNModel
@@ -94,7 +89,6 @@ class IterativePlayAndTrain:
         numTrajectoriesPerIteration = oneConditionDf.index.get_level_values('numTrajectoriesPerIteration')[0]
         miniBatchSize = oneConditionDf.index.get_level_values('miniBatchSize')[0]
         learningRate = oneConditionDf.index.get_level_values('learningRate')[0]
-
 
         generateTrajectoriesParallel = self.getGenerateTrajectoriesParallel(numTrajectoriesPerIteration)
         sampleBatchFromBuffer = self.getSampleBatchFromBuffer(miniBatchSize)
@@ -112,7 +106,7 @@ class IterativePlayAndTrain:
             length.append(meanTrajectoryLength)
             processedTrajectories = self.preProcessTrajectories(trajectories)
             updatedBuffer = self.saveToBuffer(buffer, processedTrajectories)
-            if len(updatedBuffer) >= #miniBatchSize:
+            if len(updatedBuffer) >= self.windowSize:
                 sampledBatch = sampleBatchFromBuffer(updatedBuffer)
                 trainData = [list(varBatch) for varBatch in zip(*sampledBatch)]
                 updatedNNModel = trainNN(NNModel, trainData)
@@ -204,7 +198,7 @@ def main():
                                                     processTrajectoryForNN)
 
     # replay buffer
-    windowSize = 10000
+    windowSize = 5000
     saveToBuffer = SaveToBuffer(windowSize)
     getUniformSamplingProbabilities = lambda buffer: [(1/len(buffer)) for _ in buffer]
     getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
@@ -238,5 +232,7 @@ def main():
     performanceDf = toSplitFrame.groupby(levelNames).apply(iterativePlayAndTrain) 
     plt.plot(performanceDf.values[0])
     plt.show()
+
+
 if __name__ == '__main__':
     main()
