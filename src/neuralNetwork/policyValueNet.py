@@ -11,8 +11,6 @@ class GenerateModel:
         self.seed = seed
 
     def __call__(self, sharedWidths, actionLayerWidths, valueLayerWidths, summaryPath="./tbdata"):
-        print("Generating NN with shared layers: {}, action layers: {}, value layers: {}"
-              .format(sharedWidths, actionLayerWidths, valueLayerWidths))
         graph = tf.Graph()
         with graph.as_default():
             if self.seed is not None:
@@ -239,14 +237,12 @@ def saveVariables(model, path):
     graph = model.graph
     saver = graph.get_collection_ref("saver")[0]
     saver.save(model, path)
-    print("Model saved in {}".format(path))
 
 
 def restoreVariables(model, path):
     graph = model.graph
     saver = graph.get_collection_ref("saver")[0]
     saver.restore(model, path)
-    print("Model restored from {}".format(path))
     return model
 
 

@@ -17,6 +17,8 @@ from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, Heur
 from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from exec.evaluationFunctions import GetSavePath
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
+from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateActionPrior, ApproximateValueFunction, \
+    Train, saveVariables, restoreVariables, sampleData
 
 def saveData(data, path):
     pklFile = open(path, "wb")
@@ -25,67 +27,74 @@ def saveData(data, path):
 
 
 def main():
-    maxRunningSteps = 20
-    qPosInit = (0, 0, 0, 0)
-    numSimulations = 75
-
     dirName = os.path.dirname(__file__)
-    evalEnvModelPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
-    evalModel = mujoco.load_model_from_path(evalEnvModelPath)
-    evalSimulation = mujoco.MjSim(evalModel)
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    physicsSimulation = mujoco.MjSim(physicsModel)
+    qPosInit = (0, 0, 0, 0)
     qVelInit = [0, 0, 0, 0]
     numAgents = 2
     qPosInitNoise = 9.7
     qVelInitNoise = 0
-    reset = Reset(evalSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
     xPosIndex = [2, 3]
-
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
     killzoneRadius = 0.5
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    renderOn = False
     numSimulationFrames = 20
-    transit = TransitionFunction(evalSimulation, isTerminal, numSimulationFrames)
-    wolfPolicyInSheepSimulation = lambda state: stationaryAgentPolicy(state)
-    policyInSheepSimulation = lambda state, sheepSelfAction: [sheepSelfAction, wolfPolicyInSheepSimulation(state)])
-    transitInSheepSimulation = lambda state, sheepSelfAction: transit(policyInSheepSimulation(state, sheepSelfAction))
-
-    aliveBonus = -0.05
-    deathPenalty = 1
-    rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+    transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+    wolfActionInSheepMCTSSimulation = lambda state: (0, 0)
+    transitInSheepMCTSSimulation = lambda state, sheepSelfAction: transit(state, [sheepSelfAction, wolfActionInSheepMCTSSimulation(state)])
 
     cInit = 1
     cBase = 100
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
     
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    numActionSpace = len(actionSpace)
+    numStateSpace = 12
+    regularizationFactor = 1e-4
+    sharedWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
+    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+    initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    
+    maxRunningSteps = 10
+    numSimulations = 50
+    NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInitNoise': qPosInitNoise, 'qPosInit': qPosInit,
+                            'numSimulations': numSimulations}
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
                                         'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
-    getModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, trainFixedParameters)
+    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
     
     parametersForNNPath = json.loads(sys.argv[1])
-    NNModel = 
-    approximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, actionSpace)
-    initializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, transitInSheepSimulation, approximateActionPrior(NNModel))
-    expandNNPrior = lambda NNModel: Expand(isTerminal, initializeChildrenNNPrior(NNModel))
+    NNSavePath = getNNModelSavePath(parametersForNNPath)  
+    trainedNNModel = restoreVariables(initializedNNModel, NNSavePath)
 
-    numActionSpace = len(actionSpace)
+    approximateActionPrior = ApproximateActionPrior(trainedNNModel, actionSpace)
+    initializeChildrenNNPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation, approximateActionPrior)
+    expandNNPrior = Expand(isTerminal, initializeChildrenNNPrior)
+
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    maxRolloutSteps = 5
+    aliveBonus = -1/maxRolloutSteps
+    deathPenalty = 1
+    rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
     rolloutHeuristicWeight = 0
-    maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-    rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepSimulation, rewardFunction, isTerminal, rolloutHeuristic)
+    rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal, rolloutHeuristic)
 
-    # All agents' policies
     mctsNNPriorRolloutValue = MCTS(numSimulations, selectChild, expandNNPrior, rollout, backup, establishPlainActionDist)
     sheepPolicy = lambda state: mctsNNPriorRolloutValue(state)
     wolfPolicy = lambda state: stationaryAgentPolicy(state)
@@ -94,21 +103,20 @@ def main():
     # sampleTrajectory
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
  
-    # savePath
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit,
+                                 'qPosInitNoise': qPosInitNoise, 'numSimulations': numSimulations}
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
-                                      'trajectory')
-
+                                           'trajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
-
-    extension = '.pickle'
-    getSavePath = GetSavePath(trajectorySaveDirectory, extension)
+    trajectoryExtension = '.pickle'
+    getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
      
-    beginTime = time.time()
-    
-    sampleIndex = int(sys.argv[2]) 
-    parametersForPath['sampleIndex'] = sampleIndex
-    trajectorySavePath = getSavePath(parametersForPath) 
+    beginTime = time.time() 
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    sampleIndex = int(sys.argv[2])
+    parametersForTrajectoryPath['sampleIndex'] = sampleIndex
+    trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath) 
      
     if not os.path.isfile(trajectorySavePath):
         trajectory = sampleTrajectory(policy)

@@ -5,8 +5,11 @@ class SaveToBuffer:
     def __init__(self, windowSize):
         self.windowSize = windowSize
 
-    def __call__(self, buffer, trajectory):
-        updatedBuffer = buffer[1:] + [trajectory] if len(buffer) >= self.windowSize else buffer[:] + [trajectory]
+    def __call__(self, buffer, trajectories):
+        numTra = len(trajectories)
+        if len(buffer) >= self.windowSize:
+            del buffer[0:numTra] 
+        updatedBuffer = buffer[:] + trajectories
         return updatedBuffer
 
 

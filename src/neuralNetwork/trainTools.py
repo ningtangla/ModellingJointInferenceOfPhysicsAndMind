@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class CoefficientCotroller():
+class CoefficientController():
     def __init__(self, initCoeffs, afterCoeffs, threshold=0):
         self.actionCoeff, self.valueCoeff = initCoeffs
         self.afterActionCoeff, self.afterValueCoeff = afterCoeffs

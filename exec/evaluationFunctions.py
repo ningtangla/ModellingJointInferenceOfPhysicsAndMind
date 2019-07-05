@@ -10,7 +10,7 @@ class GetSavePath:
         self.extension = extension
         self.fixedParameters = fixedParameters
 
-    def __call__(self, parameters, ):
+    def __call__(self, parameters):
         allParameters = dict(list(parameters.items()) + list(self.fixedParameters.items()))
         sortedParameters = sorted(allParameters.items())
         nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
@@ -22,15 +22,19 @@ class GetSavePath:
 
         return path
 
+def readParametersFromDf(oneConditionDf): 
+    indexLevelNames = oneConditionDf.index.names
+    parameters = {levelName: str(oneConditionDf.index.get_level_values(levelName)[0]) for levelName in indexLevelNames}
+    return parameters
 
 class LoadTrajectories:
-    def __init__(self, getSavePath, loadFromPickle):
+    def __init__(self, getSavePath, loadFromPickle, readParametersFromDf):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
+        self.readParametersFromDf = readParametersFromDf
 
     def __call__(self, oneConditionDf):
-        indexLevelNames = oneConditionDf.index.names
-        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
+        parameters = self.readParametersFromDf(oneConditionDf)
         parameters['sampleIndex'] = '*'
         genericSavePath = self.getSavePath(parameters)
         filesNames = glob.glob(genericSavePath)
