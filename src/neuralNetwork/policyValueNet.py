@@ -152,7 +152,7 @@ class GenerateModel:
                 tf.add_to_collection("writers", trainWriter)
                 tf.add_to_collection("writers", testWriter)
 
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(max_to_keep=None)
             tf.add_to_collection("saver", saver)
 
             model = tf.Session(graph=graph)

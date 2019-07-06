@@ -124,7 +124,7 @@ def main():
     preparePolicy = PreparePolicy(getMCTSNN, getWolfPolicy)
 
     # sample trajectory
-    maxRunningSteps = 1
+    maxRunningSteps = 10
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # run evaluation for each condition
@@ -138,8 +138,8 @@ def main():
     numRows = 1
     plotCounter = 1
     axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-    resultDf.plot(ax=axForDraw, y='time', title='Time taken to run 1 step of MCTS (averaged over {} trials)'.
-                  format(numTrials), marker='o')
+    resultDf.plot(ax=axForDraw, y='time', title='Time taken to run {} steps of MCTS (averaged over {} trials)'.
+                  format(maxRunningSteps, numTrials), marker='o')
     plt.ylabel("time in seconds")
     plt.show()
 
