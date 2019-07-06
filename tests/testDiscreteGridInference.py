@@ -1,16 +1,20 @@
 import sys
+import os
 import unittest
 from ddt import ddt, data, unpack
 
-sys.path.append('..')
-sys.path.append('../src/inferDiscreteGridChasing')
-sys.path.append('../src/constrainedChasingEscapingEnv')
+sys.path.append(os.path.join('..', 'src', 'inferDiscreteGridChasing'))
+sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
+sys.path.append(os.path.join('..', 'visualize'))
 
-from forceLikelihood import *
-from heatSeekingLikelihood import *
 from analyticGeometryFunctions import computeAngleBetweenVectors
-from inference import *
-from wrapperFunctions import *
+from policyLikelihood import UniformPolicy, ActHeatSeeking, \
+    HeatSeekingActionLikelihood, WolfPolicy, SheepPolicy, MasterPolicy
+from transitionLikelihood import StayWithinBoundary, PulledForceLikelihood, \
+    PulledTransition, NoPullTransition
+from state import GetAgentPosFromState
+
+import numpy as np
 
 @ddt
 class testInference(unittest.TestCase):
@@ -25,26 +29,27 @@ class testInference(unittest.TestCase):
         self.getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
         rationalityParam = 0.9
         self.getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam, self.actHeatSeeking, getWolfPos, getSheepPos)
-        self.getWolfActionProb = GetWolfActionProb(self.getAgentPosition, self.getHeatSeekingActionLikelihood)
-        self.getSheepActionProb = GetSheepActionProb(self.getAgentPosition, self.getHeatSeekingActionLikelihood)
+        self.wolfPolicy = WolfPolicy(self.getAgentPosition, self.getHeatSeekingActionLikelihood)
+        self.sheepPolicy = SheepPolicy(self.getAgentPosition, self.getHeatSeekingActionLikelihood)
 
-        self.getRandomActionLikelihood = GetRandomActionLikelihood(self.actionSpace)
-        self.getMasterActionProb = GetMasterActionProb(self.getRandomActionLikelihood)
+        self.uniformPolicy = UniformPolicy(self.actionSpace)
+        self.masterPolicy = MasterPolicy(self.uniformPolicy)
 
-        self.getAgentsActionProb = [self.getWolfActionProb, self.getSheepActionProb, self.getMasterActionProb]
-
-        self.getPolicyLikelihood = lambda chasingIndices, state, allAgentsAction: np.product(
-            [getActionProb(chasingIndices, state, allAgentsAction) for getActionProb in self.getAgentsActionProb])
+        self.policyList = [self.wolfPolicy, self.sheepPolicy, self.masterPolicy]
+        self.policy = lambda mind, state, allAgentsAction: np.product(
+            [agentPolicy(mind, state, allAgentsAction) for agentPolicy in self.policyList])
 
 
         self.forceSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
-        self.getPulledAgentForceLikelihood = PulledForceDirectionLikelihood(self.forceSpace,self.lowerBoundAngle, self.upperBoundAngle, computeAngleBetweenVectors)
-        self.getPulledAgentForceProb = GetPulledAgentForceProb(self.getAgentPosition, self.getPulledAgentForceLikelihood)
-
+        self.pulledForceLikelihood = PulledForceLikelihood(self.forceSpace, self.lowerBoundAngle, self.upperBoundAngle, computeAngleBetweenVectors)
         gridSize = (10, 10)
         lowerBoundary = 1
         self.stayWithinBoundary = StayWithinBoundary(gridSize, lowerBoundary)
-        self.getTransitionLikelihood = GetTransitionLikelihood(self.getPulledAgentForceProb, getNoPullAgentForceProb, self.stayWithinBoundary)
+        self.pulledTransition = PulledTransition(self.getAgentPosition, self.pulledForceLikelihood, self.stayWithinBoundary)
+        self.noPullTransition = NoPullTransition(self.getAgentPosition, self.stayWithinBoundary)
+        transitionList = [self.pulledTransition, self.noPullTransition]
+        self.transition = lambda physics, state, allAgentsAction, nextState: \
+            np.product([agentTransition(physics, state, allAgentsAction, nextState) for agentTransition in transitionList])
 
 
     @data(([(2, 2), (3, 3), (4, 5)],
@@ -64,58 +69,47 @@ class testInference(unittest.TestCase):
            )
         )
     @unpack
-    def testPolicyLikelihood(self, state, allAgentsActions, chasingIndices, truePolicyLikelihood):
-        policyLikelihood = self.getPolicyLikelihood(chasingIndices, state, allAgentsActions)
+    def testPolicy(self, state, allAgentsActions, mind, truePolicyLikelihood):
+        policyLikelihood = self.policy(mind, state, allAgentsActions)
         self.assertAlmostEqual(policyLikelihood, truePolicyLikelihood)
 
 
     @data(([(2, 2), (3, 3), (4, 5)],
-           ((0, 1), (-1, 0),(-1, 0)),
            ((0, 0), (0, 0), (0, 0)),
            ((2, 3), (2, 3), (3, 5)),
-           ("noPull", "pulled", "pulled"), #noPull, pulled, puller
+           ("noPull", "pulled", "pulled"),
            0
            ),
           ([(2, 2), (3, 3), (4, 5)],
-           ((1, 0), (0, 0), (-1, 0)),
            ((0, 0), (0, 0), (0, 0)),
            ((3, 2), (3, 3), (3, 5)),
-           ("pulled", "noPull", "pulled"),  #pulling, noPull, pulled
+           ("pulled", "noPull", "pulled"),
            0.5
            ),
           ([(2, 2), (3, 3), (4, 5)],
-           ((0, 0), (1, 0), (-1, 0)),
            ((0, 0), (0, 0), (0, 0)),
            ((2, 3), (4, 3), (3, 5)),
-           ("noPull", "pulled", "pulled"),  # noPull, pulling, pulled
+           ("noPull", "pulled", "pulled"),
            0
            ),
           ([(2, 2), (3, 3), (4, 5)],
-           ((0, 0), (-1, 0), (1, 0)),
            ((0, 0), (0, 0), (0, 0)),
            ((3, 2), (3, 3), (3, 5)),
-           ("noPull", "pulled", "pulled"),  # noPull, pulling, pulled
+           ("noPull", "pulled", "pulled"),
            0
            ),
           ([(2, 2), (3, 3), (2, 2)],
            ((0, 0), (0, 0), (0, 0)),
-           ((0, 0), (0, 0), (0, 0)),
            ((2, 2), (3, 3), (2, 2)),
-           ("pulled", "noPull", "pulled"),  # pulling, noPull, pulled
+           ("pulled", "noPull", "pulled"),
            1
            )
           )
     @unpack
-    def testTransitionLikelihood(self, state, allAgentsForce, allAgentsAction, nextState, pullingIndices, trueTransitionLikelihood):
-        transitionLikelihood = self.getTransitionLikelihood(pullingIndices, allAgentsForce, allAgentsAction, state, nextState)
+    def testTransition(self, state, allAgentsAction, nextState, pullingIndices, trueTransitionLikelihood):
+        transitionLikelihood = self.transition(pullingIndices, state, allAgentsAction, nextState)
         self.assertAlmostEqual(transitionLikelihood, trueTransitionLikelihood)
 
-
-    def testIndex(self):
-        chasingAgents = ['wolf', 'sheep', 'master']
-        pullingAgents = ['pulled', 'noPull', 'pulled']
-        self.index = createIndex(chasingAgents, pullingAgents, self.actionSpace, self.forceSpace)
-        self.assertEqual(len(self.index), 13* 64* 6* 3)
 
 if __name__ == '__main__':
     unittest.main()

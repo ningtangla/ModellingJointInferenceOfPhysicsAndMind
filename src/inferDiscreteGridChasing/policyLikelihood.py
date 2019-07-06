@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class GetRandomActionLikelihood:
+class UniformPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
 
@@ -53,3 +53,58 @@ class HeatSeekingActionLikelihood:
         heatSeekingActionLikelihood = {**chosenActionsLikelihood, **unchosenActionsLikelihood}
 
         return heatSeekingActionLikelihood
+
+
+
+class WolfPolicy:
+    def __init__(self, getAgentPosition, heatSeekingActionLikelihood):
+        self.getAgentPosition = getAgentPosition
+        self.heatSeekingActionLikelihood = heatSeekingActionLikelihood
+
+    def __call__(self, mind, state, allAgentsAction):
+        wolfID = mind.index('wolf')
+        sheepID = mind.index('sheep')
+        getWolfPos = self.getAgentPosition(wolfID)
+        getSheepPos = self.getAgentPosition(sheepID)
+
+        getWolfActionLikelihood = self.heatSeekingActionLikelihood(getWolfPos, getSheepPos)
+        wolfActionLikelihood = getWolfActionLikelihood(state)
+
+        wolfAction = allAgentsAction[wolfID]
+        wolfActionProb = wolfActionLikelihood[wolfAction]
+
+        return wolfActionProb
+
+
+class SheepPolicy:
+    def __init__(self, getAgentPosition, heatSeekingActionLikelihood):
+        self.getAgentPosition = getAgentPosition
+        self.heatSeekingActionLikelihood = heatSeekingActionLikelihood
+
+    def __call__(self, mind, state, allAgentsAction):
+        wolfID = mind.index('wolf')
+        sheepID = mind.index('sheep')
+
+        getWolfPos = self.getAgentPosition(wolfID)
+        getSheepPos = self.getAgentPosition(sheepID)
+
+        getSheepActionLikelihood = self.heatSeekingActionLikelihood(getWolfPos, getSheepPos)
+        sheepActionLikelihood = getSheepActionLikelihood(state)
+
+        sheepAction = allAgentsAction[sheepID]
+        sheepActionProb = sheepActionLikelihood[sheepAction]
+
+        return sheepActionProb
+
+
+class MasterPolicy:
+    def __init__(self, getRandomActionLikelihood):
+        self.getRandomActionLikelihood = getRandomActionLikelihood
+
+    def __call__(self, mind, state, allAgentsAction):
+        masterID = mind.index('master')
+        masterActionLikelihood = self.getRandomActionLikelihood(state)
+        masterAction = allAgentsAction[masterID]
+        masterActionProb = masterActionLikelihood[masterAction]
+
+        return masterActionProb

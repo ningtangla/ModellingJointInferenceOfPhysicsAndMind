@@ -24,6 +24,7 @@ class MultiAgentSampleTrajectory:
                 break
         return trajectory
 
+
 class SampleTrajectory:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
         self.maxRunningSteps = maxRunningSteps

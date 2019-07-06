@@ -1,8 +1,7 @@
 import numpy as np 
 from itertools import combinations
-import pygame 
-
-
+import pygame
+import sys
 
 def checkDuplicates(checkingList):
     itemCount = len(checkingList)
