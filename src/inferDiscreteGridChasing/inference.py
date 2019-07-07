@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import pygame
 
 class IsInferenceTerminal:
     def __init__(self, thresholdPosterior):
@@ -50,21 +51,29 @@ class InferOneStepDiscreteChasing:
         return inferenceDf
 
 
+def saveImage(screenShotIndex, game):
+    pygame.image.save(game, "screenshot" + format(screenShotIndex, '04') + ".png")
+
+
+
 class InferDiscreteChasingAndDrawDemo:
     def __init__(self, hypothesisSpace, isInferenceTerminal, inferOneStepDiscreteChasing,
-                 drawInferenceResult):
+                 drawInferenceResult, saveImage = None):
         self.hypothesisSpace = hypothesisSpace
 
         self.isInferenceTerminal = isInferenceTerminal
         self.inferOneStepDiscreteChasing = inferOneStepDiscreteChasing
         self.drawInferenceResult = drawInferenceResult
+        self.saveImage = saveImage
 
     def __call__(self, trajectory):
         prior = [1] * len(self.hypothesisSpace)
         inferenceDf = pd.DataFrame(prior, index= self.hypothesisSpace, columns=['prior'])
         inferenceDf['normalizedPosterior'] = [1/ len(self.hypothesisSpace)] * len(self.hypothesisSpace)
         initialState = trajectory[0]
-        self.drawInferenceResult(0, initialState, inferenceDf, saveImage=True)
+        game = self.drawInferenceResult(initialState, inferenceDf)
+        if self.saveImage is not None:
+            self.saveImage(0, game)
 
         iterationTime = len(trajectory) - 1
         for index in range(iterationTime):
@@ -72,7 +81,11 @@ class InferDiscreteChasingAndDrawDemo:
             state = trajectory[index]
             nextState = trajectory[index + 1]
             inferenceDf = self.inferOneStepDiscreteChasing(state, nextState, inferenceDf)
-            self.drawInferenceResult(index+1, nextState, inferenceDf, saveImage=True)
+            game = self.drawInferenceResult(nextState, inferenceDf)
+
+            if self.saveImage is not None:
+                self.saveImage(index+1, game)
+
             if self.isInferenceTerminal(inferenceDf):
                 break
             inferenceDf['prior'] = inferenceDf['normalizedPosterior']

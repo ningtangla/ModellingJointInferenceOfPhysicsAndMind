@@ -13,7 +13,7 @@ from policyLikelihood import UniformPolicy, ActHeatSeeking, \
     HeatSeekingActionLikelihood, WolfPolicy, SheepPolicy, MasterPolicy
 from transitionLikelihood import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
-from inference import IsInferenceTerminal, InferOneStepDiscreteChasing, InferDiscreteChasingAndDrawDemo
+from inference import IsInferenceTerminal, saveImage, InferOneStepDiscreteChasing, InferDiscreteChasingAndDrawDemo
 from state import GetAgentPosFromState
 from discreteGridInferenceVisualization import checkDuplicates, ModifyOverlappingPoints, DrawCirclesAndLines, \
     InitializeGame, DrawGrid, GetChasingRoleColor, GetChasingResultColor, ColorChasingPoints, \
@@ -117,7 +117,7 @@ def main():
     iterables = [chasingSpace, pullingSpace, actionHypo]
     index = pd.MultiIndex.from_product(iterables, names=['chasingAgents', 'pullingAgents', 'action'])
 
-    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(index, isInferenceTerminal, inferOneStepDiscreteChasing, drawInferenceResult)
+    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(index, isInferenceTerminal, inferOneStepDiscreteChasing, drawInferenceResult, saveImage)
 
     trajectory = [[(6, 2), (9, 2), (5, 4)], [(7, 3), (10, 2), (6, 3)], [(6, 2), (10, 2), (7, 2)], [(8, 2), (10, 2), (6, 1)], [(8, 2), (10, 2), (7, 1)], [(8, 2), (10, 3), (7, 1)], [(9, 1), (10, 3), (8, 2)], [(8, 2), (10, 3), (8, 2)], [(8, 3), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (8, 1)], [(10, 1), (10, 4), (7, 2)], [(9, 2), (10, 5), (9, 2)], [(9, 3), (9, 5), (9, 3)], [(9, 4), (9, 6), (10, 3)], [(10, 5), (9, 7), (10, 3)], [(9, 4), (10, 7), (10, 4)], [(10, 5), (10, 7), (10, 4)], [(10, 5), (10, 8), (9, 5)], [(9, 6), (10, 9), (10, 4)], [(10, 7), (10, 9), (8, 4)], [(9, 8), (10, 10), (9, 3)], [(10, 7), (10, 10), (10, 4)], [(10, 7), (10, 10), (9, 5)], [(10, 7), (10, 10), (8, 6)], [(9, 8), (10, 10), (10, 6)], [(9, 8), (10, 10), (10, 6)], [(10, 9), (10, 9), (9, 7)]]
 

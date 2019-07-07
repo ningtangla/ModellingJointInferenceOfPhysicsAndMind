@@ -175,7 +175,7 @@ class DrawInferenceResult:
         self.colorChasingPoints = colorChasingPoints
         self.adjustPullingLineWidth = adjustPullingLineWidth
 
-    def __call__(self, screenShotIndex, state, inferenceDf, saveImage=False):
+    def __call__(self, state, inferenceDf):
         game = self.initializaGame()
         game = self.drawGrid(game)
         pointsCoord = state
@@ -190,6 +190,4 @@ class DrawInferenceResult:
 
         game = self.drawCirclesAndLines(game, pointsLocation, pointsColor, linesWidth)
 
-        if saveImage:
-            pygame.image.save(game, "screenshot" + format(screenShotIndex, '04') + ".png")
-
+        return game
