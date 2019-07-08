@@ -158,9 +158,6 @@ def main():
                                                   symmetries, sheepActionSpace,
                                                   getSheepState, getWolfState)
     augmentedData = generateSymmetricData(originalData)
-    augmentedDataSetDir = os.path.join(dataDir, "augmentedDataSets")
-    if not os.path.exists(augmentedDataSetDir):
-        os.mkdir(augmentedDataSetDir)
     augmentedDataSetParameter = dataSetParameter
     augmentedDataSetParameter['augmented'] = 'yes'
     augmentedDataSetPath = getSavePathForDataSet(augmentedDataSetParameter)
