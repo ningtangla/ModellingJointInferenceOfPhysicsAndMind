@@ -25,7 +25,7 @@ from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetwe
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory, \
     GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from exec.trainMCTSNNIteratively.wrappers import getStateFromNode, GetApproximateValueFromNode
+from exec.trainMCTSNNIteratively.valueFromNode import getStateFromNode, GetApproximateValueFromNode
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 
 
