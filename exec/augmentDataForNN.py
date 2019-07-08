@@ -1,22 +1,44 @@
 import sys
-sys.path.append("../src/neuralNetwork")
-sys.path.append("../src/constrainedChasingEscapingEnv")
-sys.path.append("../src/algorithms")
-sys.path.append("../src")
+import os
+src = os.path.join(os.pardir, 'src')
+sys.path.append(src)
+sys.path.append(os.path.join(src, 'neuralNetwork'))
+sys.path.append(os.path.join(src, 'constrainedChasingEscapingEnv'))
+sys.path.append(os.path.join(src, 'algorithms'))
 import numpy as np
 import math
 import pickle
-import os
 from analyticGeometryFunctions import transitePolarToCartesian
 from dataTools import createSymmetricVector
+from collections import OrderedDict
+from evaluationFunctions import GetSavePath
+
+
+class GetAgentStateFromDataSetState:
+
+    def __init__(self, agentStateDim, agentID):
+        self.agentStateDim = agentStateDim
+        self.agentID = agentID
+
+    def __call__(self, dataSetState):
+        indexes = [
+            self.agentID * self.agentStateDim + num
+            for num in range(self.agentStateDim)
+        ]
+        agentState = [dataSetState[index] for index in indexes]
+        return agentState
 
 
 class GenerateSymmetricData():
-    def __init__(self, bias, getSymmeticVector, symmetries, actionSpace):
+
+    def __init__(self, bias, getSymmeticVector, symmetries, actionSpace,
+                 getSheepState, getWolfState):
         self.bias = bias
         self.getSymmetricVector = getSymmeticVector
         self.symmetries = symmetries
         self.actionSpace = actionSpace
+        self.getSheepState = getSheepState
+        self.getWolfState = getWolfState
 
     def __call__(self, dataSet):
         newDataSet = []
@@ -24,78 +46,129 @@ class GenerateSymmetricData():
             turningPoint = None
             state, actionDistribution = data
             for symmetry in self.symmetries:
-                newState = np.concatenate(
-                    [self.getSymmetricVector(symmetry, np.array(state[0:2])),
-                     self.getSymmetricVector(symmetry, np.array(state[2:4]))])
-                newActionDistributionDict = {tuple(np.round(
-                    self.getSymmetricVector(symmetry, np.array(self.actionSpace[index])))):
-                                                 actionDistribution[index] for index
-                                             in range(len(actionDistribution))}
-                newActionDistribution = [newActionDistributionDict[action] for
-                                         action in self.actionSpace]
+                newState = np.concatenate([
+                    self.getSymmetricVector(symmetry,
+                                            np.array(
+                                                self.getSheepState(state))),
+                    self.getSymmetricVector(symmetry,
+                                            np.array(self.getWolfState(state)))
+                ])
+                newActionDistributionDict = {
+                    tuple(
+                        np.round(
+                            self.getSymmetricVector(
+                                symmetry, np.array(self.actionSpace[index])))):
+                    actionDistribution[index]
+                    for index in range(len(actionDistribution))
+                }
+                newActionDistribution = [
+                    newActionDistributionDict[action]
+                    for action in self.actionSpace
+                ]
                 if np.all(symmetry == np.array([1, 1])):
-                    turningPoint = np.array(
-                        [newState, newActionDistribution])
+                    turningPoint = np.array([newState, newActionDistribution])
                 newDataSet.append(
-                    np.array([newState, np.array(newActionDistribution)]))
+                    np.array([newState,
+                              np.array(newActionDistribution)]))
             if turningPoint is None:
                 continue
             state, actionDistribution = turningPoint
             for symmetry in self.symmetries:
-                newState = np.concatenate(
-                    [self.getSymmetricVector(symmetry, np.array(state[0:2])),
-                     self.getSymmetricVector(symmetry, np.array(state[2:4]))])
-                newActionDistributionDict = {tuple(np.round(
-                    self.getSymmetricVector(symmetry, np.array(self.actionSpace[index])))):
-                                                 actionDistribution[index] for index
-                                             in range(len(actionDistribution))}
-                newActionDistribution = [newActionDistributionDict[action] for
-                                         action in self.actionSpace]
+                newState = np.concatenate([
+                    self.getSymmetricVector(symmetry, np.array(state[0:2])),
+                    self.getSymmetricVector(symmetry, np.array(state[2:4]))
+                ])
+                newActionDistributionDict = {
+                    tuple(
+                        np.round(
+                            self.getSymmetricVector(
+                                symmetry, np.array(self.actionSpace[index])))):
+                    actionDistribution[index]
+                    for index in range(len(actionDistribution))
+                }
+                newActionDistribution = [
+                    newActionDistributionDict[action]
+                    for action in self.actionSpace
+                ]
                 newDataSet.append(
-                    np.array([newState, np.array(newActionDistribution)]))
-        augmentedDataSet = [np.array(
-            [np.array([coor + self.bias if coor < 0 else coor for coor in state]),
-             distribution]) for (state, distribution) in newDataSet]
+                    np.array([newState,
+                              np.array(newActionDistribution)]))
+        augmentedDataSet = [
+            np.array([
+                np.array(
+                    [coor + self.bias if coor < 0 else coor
+                     for coor in state]), distribution
+            ])
+            for (state, distribution) in newDataSet
+        ]
         return augmentedDataSet
 
 
 def main():
-    stateKey = 'state'
-    actionLabelKey = 'actionDist'
-    dataDir = '../data/augmentDataForNN'
-    originalDataSetName = "cBase=100_initPos=Random_maxRunningSteps=30_numDataPoints=68181_numSimulations=200_numTrajs=2500_rolloutSteps=10_standardizedReward=True.pickle"
-    dataSetPath = os.path.join(dataDir, "dataSets", originalDataSetName)
+    dataDir = os.path.join(os.pardir, 'data', 'augmentDataForNN')
+    dataSetParameter = OrderedDict()
+    dataSetParameter['cBase'] = 100
+    dataSetParameter['initPos'] = 'Random'
+    dataSetParameter['maxRunningSteps'] = 30
+    dataSetParameter['numDataPoints'] = 68181
+    dataSetParameter['numSimulations'] = 200
+    dataSetParameter['numTrajs'] = 2500
+    dataSetParameter['rolloutSteps'] = 10
+    dataSetParameter['standardizedReward'] = 'True'
+    dataSetExtension = '.pickle'
+    getSavePathForDataSet = GetSavePath(dataDir, dataSetExtension)
+    dataSetPath = getSavePathForDataSet(dataSetParameter)
     if not os.path.exists(dataSetPath):
-        print("No dataSet in:\n{}".format(dataSetPath))
+        print("No dataSet in: {}".format(dataSetPath))
         exit(1)
     with open(dataSetPath, "rb") as f:
-        originalDataSet = pickle.load(f)
-    modifiedDataSet = [[state, label]for state, label in zip(originalDataSet[stateKey], originalDataSet[actionLabelKey])]
+        dataSet = pickle.load(f)
+    stateKey = 'state'
+    actionLabelKey = 'actionDist'
+    originalData = [[
+        state, label
+    ] for state, label in zip(dataSet[stateKey], dataSet[actionLabelKey])]
 
     # env
     xBoundary = [0, 180]
     yBoundary = [0, 180]
     bias = xBoundary[1]
+    degrees = [
+        math.pi / 2, 0, math.pi, -math.pi / 2, math.pi / 4, -math.pi * 3 / 4,
+        -math.pi / 4, math.pi * 3 / 4
+    ]
+    establishAction = lambda speed, degree: tuple(
+        np.round(speed * transitePolarToCartesian(degree)))
     sheepSpeed = 20
-    degrees = [math.pi / 2, 0, math.pi, -math.pi / 2,
-               math.pi / 4, -math.pi * 3 / 4, -math.pi / 4, math.pi * 3 / 4]
     sheepActionSpace = [
-        tuple(np.round(sheepSpeed * transitePolarToCartesian(degree))) for
-        degree in degrees]
-    symmetries = [np.array([1, 1]), np.array([0, 1]), np.array([1, 0]),
-                  np.array([-1, 1])]
+        establishAction(sheepSpeed, degree) for degree in degrees
+    ]
+    symmetries = [
+        np.array([1, 1]),
+        np.array([0, 1]),
+        np.array([1, 0]),
+        np.array([-1, 1])
+    ]
+    agentStateDim = 2
+    sheepID = 0
+    getSheepState = GetAgentStateFromDataSetState(agentStateDim, sheepID)
+    wolfID = 1
+    getWolfState = GetAgentStateFromDataSetState(agentStateDim, wolfID)
     generateSymmetricData = GenerateSymmetricData(bias, createSymmetricVector,
-                                                  symmetries, sheepActionSpace)
-    augmentedDataSet = generateSymmetricData(modifiedDataSet)
+                                                  symmetries, sheepActionSpace,
+                                                  getSheepState, getWolfState)
+    augmentedData = generateSymmetricData(originalData)
     augmentedDataSetDir = os.path.join(dataDir, "augmentedDataSets")
     if not os.path.exists(augmentedDataSetDir):
         os.mkdir(augmentedDataSetDir)
-    augmentedDataSetPath = os.path.join(augmentedDataSetDir, originalDataSetName)
-    originalDataSet[stateKey] = [state for state, label in augmentedDataSet]
-    originalDataSet[actionLabelKey] = [label for state, label in augmentedDataSet]
+    augmentedDataSetParameter = dataSetParameter
+    augmentedDataSetParameter['augmented'] = 'yes'
+    augmentedDataSetPath = getSavePathForDataSet(augmentedDataSetParameter)
+    augmentedDataSet = dataSet
+    augmentedDataSet[stateKey] = [state for state, label in augmentedData]
+    augmentedDataSet[actionLabelKey] = [label for state, label in augmentedData]
     with open(augmentedDataSetPath, 'wb') as f:
-        pickle.dump(originalDataSet, f)
-
+        pickle.dump(augmentedDataSet, f)
 
 
 if __name__ == "__main__":
