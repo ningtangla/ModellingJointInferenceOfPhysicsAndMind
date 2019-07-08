@@ -1,7 +1,6 @@
-import numpy as np 
+import numpy as np
 from itertools import combinations
-import pygame 
-
+import pygame
 
 
 def checkDuplicates(checkingList):
@@ -31,7 +30,6 @@ class ModifyOverlappingPoints:
         return pointsLocation
 
 
-
 class DrawCircles:
     def __init__(self, pointExtendTime, FPS, colorList, pointWidth, modifyOverlappingPoints):
         self.FPS = FPS
@@ -56,12 +54,12 @@ class DrawCircles:
         return game
 
 
-
 class InitializeGame:
     def __init__(self, screenWidth, screenHeight, caption):
         self.screenWidth = screenWidth
         self.screenHeight = screenHeight
         self.caption = caption
+
     def __call__(self):
         pygame.init()
         game = pygame.display.set_mode((self.screenWidth, self.screenHeight))
@@ -74,12 +72,12 @@ class DrawGrid:
 
         self.gridNumberX, self.gridNumberY = gridSize
         self.gridPixelSize = gridPixelSize
-        self.backgroundColor=backgroundColor
+        self.backgroundColor = backgroundColor
         self.gridColor = gridColor
         self.gridLineWidth = gridLineWidth
 
     def __call__(self, game):
-        upperBoundX = self.gridPixelSize * self.gridNumberX
+        upperBoundX = self.gridPixelSrreresdsedeize * self.gridNumberX
         upperBoundY = self.gridPixelSize * self.gridNumberY
         game.fill(self.backgroundColor)
 
@@ -100,13 +98,13 @@ class DrawPointsFromLocationDfAndSaveImage:
         self.drawCircles = drawCircles
         self.gridPixelSize = gridPixelSize
 
-    def __call__(self, locationDf, iterationNumber, saveImage = False):
+    def __call__(self, locationDf, iterationNumber, saveImage=False):
         game = self.initializaGame()
         for currentState in locationDf.columns:
             game = self.drawGrid(game)
             pointsCoord = (locationDf[currentState])
-            pointsLocation = [list (np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize//2 )
-                                  for pointCoord in pointsCoord]
+            pointsLocation = [list(np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize // 2)
+                              for pointCoord in pointsCoord]
             game = self.drawCircles(game, pointsLocation)
             if saveImage:
-                pygame.image.save(game, "screenshot"+ format(currentState, '04') + ".png")
+                pygame.image.save(game, "screenshot" + format(currentState, '04') + ".png")

@@ -4,11 +4,10 @@ import random
 
 
 class GenerateModelSeparateLastLayer:
-	def __init__(self, numStateSpace, numActionSpace, learningRate, regularizationFactor,
+	def __init__(self, numStateSpace, numActionSpace, regularizationFactor,
 				 valueRelativeErrBound=0.01, seed=128):
 		self.numStateSpace = numStateSpace
 		self.numActionSpace = numActionSpace
-		self.learningRate = learningRate
 		self.regularizationFactor = regularizationFactor
 		self.valueRelativeErrBound = valueRelativeErrBound
 		self.seed = seed
@@ -24,6 +23,7 @@ class GenerateModelSeparateLastLayer:
 				state_ = tf.placeholder(tf.float32, [None, self.numStateSpace], name="state_")
 				actionLabel_ = tf.placeholder(tf.int32, [None, self.numActionSpace], name="actionLabel_")
 				valueLabel_ = tf.placeholder(tf.float32, [None, 1], name="valueLabel_")
+				updatedLearningRate_ = tf.placeholder(tf.float32, [None, 1], name="updatedLearningRate_")
 				actionLossCoef_ = tf.constant(50, dtype=tf.float32)
 				valueLossCoef_ = tf.constant(1, dtype=tf.float32)
 				tf.add_to_collection("inputs", state_)
@@ -31,6 +31,7 @@ class GenerateModelSeparateLastLayer:
 				tf.add_to_collection("inputs", valueLabel_)
 				tf.add_to_collection("lossCoefs", actionLossCoef_)
 				tf.add_to_collection("lossCoefs", valueLossCoef_)
+				tf.add_to_collection("learningRate", updatedLearningRate_)
 
 			with tf.name_scope("hidden"):
 				initWeight = tf.random_uniform_initializer(-0.03, 0.03)
@@ -105,7 +106,7 @@ class GenerateModelSeparateLastLayer:
 				tf.summary.scalar("l2RegLoss", l2RegularizationLoss_)
 				lossSummary = tf.summary.scalar("loss", loss_)
 
-				optimizer = tf.train.AdamOptimizer(self.learningRate, name='adamOpt_')
+				optimizer = tf.train.AdamOptimizer(updatedLearningRate_, name='adamOpt_')
 				gradVarPairs_ = optimizer.compute_gradients(loss_)
 				trainOp = optimizer.apply_gradients(gradVarPairs_)
 				tf.add_to_collection(tf.GraphKeys.TRAIN_OP, trainOp)
@@ -138,17 +139,19 @@ class GenerateModelSeparateLastLayer:
 
 
 class Train:
-	def __init__(self, maxStepNum, batchSize, terimnalController, CoefficientController, trainReporter):
+	def __init__(self, maxStepNum, batchSize, lrModifier, terimnalController, coefficientController, trainReporter):
 		self.maxStepNum = maxStepNum
 		self.batchSize = batchSize
+		self.lrModifier = lrModifier
 		self.reporter = trainReporter
 		self.terminalController = terimnalController
-		self.CoefficientController = CoefficientController
+		self.coefficientController = coefficientController
 
 	def __call__(self, model, trainingData):
 		graph = model.graph
 		state_, actionLabel_, valueLabel_ = graph.get_collection_ref("inputs")
 		actionLossCoef_, valueLossCoef_ = graph.get_collection_ref("lossCoefs")
+		updatedLearningRate_ = graph.get_collection_ref("learningRate")
 		loss_ = graph.get_collection_ref("loss")[0]
 		actionLoss_ = graph.get_collection_ref("actionLoss")[0]
 		valueLoss_ = graph.get_collection_ref("valueLoss")[0]
@@ -157,20 +160,22 @@ class Train:
 		trainOp = graph.get_collection_ref(tf.GraphKeys.TRAIN_OP)[0]
 		fullSummaryOp = graph.get_collection_ref('summaryOps')[0]
 		trainWriter = graph.get_collection_ref('writers')[0]
-		fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
-				   trainOp, fullSummaryOp]
+		fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_}, trainOp, fullSummaryOp]
 
 		evalDict = None
 		trainingDataList = list(zip(*trainingData))
 
 		for stepNum in range(self.maxStepNum):
-			if self.batchSize is None:
+			if self.batchSize == 0:
 				stateBatch, actionLabelBatch, valueLabelBatch = trainingData
 			else:
 				stateBatch, actionLabelBatch, valueLabelBatch = sampleData(trainingDataList, self.batchSize)
-			actionLossCoef, valueLossCoef = self.CoefficientController(evalDict)
-			evalDict, _, summary = model.run(fetches, feed_dict={state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch,
-																 actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef})
+			actionLossCoef, valueLossCoef = self.coefficientController(evalDict)
+			updatedLearningRate = self.lrModifier(stepNum)
+			feedDict = {state_: stateBatch, actionLabel_: actionLabelBatch, valueLabel_: valueLabelBatch, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef,
+			            updatedLearningRate_: updatedLearningRate}
+			evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
+			evalDict.update({"learningRate": updatedLearningRate_})
 
 			self.reporter(evalDict, stepNum, trainWriter, summary)
 
@@ -199,6 +204,7 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
 		testWriter.add_summary(summary, stepNum)
 	return evalDict
 
+
 def sampleData(data, batchSize):
 	batch = [list(varBatch) for varBatch in zip(*random.sample(data, batchSize))]
 	return batch
@@ -219,7 +225,7 @@ def restoreVariables(model, path):
 	return model
 
 
-class ApproximatePolicy():
+class ApproximatePolicy:
 	def __init__(self, model, actionSpace):
 		self.actionSpace = actionSpace
 		self.model = model

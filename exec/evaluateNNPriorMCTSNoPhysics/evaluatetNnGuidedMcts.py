@@ -7,15 +7,11 @@ import numpy as np
 import pickle
 import random
 import pygame as pg
-import numpy as np
 import tensorflow as tf
-import random
 from collections import OrderedDict
-import pickle
 import pandas as pd
 from matplotlib import pyplot as plt
 import time
-
 
 import src.constrainedChasingEscapingEnv.reward as reward
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
@@ -104,13 +100,11 @@ class NeuralNetworkPolicy:
 
 
 class SampleTrajectory:
-    def __init__(self, maxRunningSteps, transit, isTerminal, reset, render, renderOn):
+    def __init__(self, maxRunningSteps, transit, isTerminal, reset):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
         self.isTerminal = isTerminal
         self.reset = reset
-        self.render = render
-        self.renderOn = renderOn
 
     def __call__(self, policy, trialIndex):
         state = self.reset(trialIndex)
@@ -121,9 +115,6 @@ class SampleTrajectory:
             if self.isTerminal(state):
                 trajectory.append((state, None))
                 break
-
-            if self.renderOn:
-                self.render(state)
             action = policy(state)
             trajectory.append((state, action))
             nextState = self.transit(state, action)
@@ -172,11 +163,11 @@ class GenerateTrajectories:
 if __name__ == "__main__":
     # manipulated variables (and some other parameters that are commonly varied)
     numTrials = 30
-    maxRunningSteps = 30
+    maxRunningSteps = 80
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['trainSteps'] = [0, 500, 1000, 10000]  # according to loss
-    manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNN']
-    manipulatedVariables['numSimulations'] = [50, 200]
+    manipulatedVariables['trainSteps'] = [0, 100, 500, 20000]  # [0, 100, 500, 100000]
+    manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNN'] # ['random', 'MCTS', 'NN', 'MCTSNN']
+    manipulatedVariables['numSimulations'] = [10, 20, 30]  # [10, 20, 30]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -193,27 +184,18 @@ if __name__ == "__main__":
     xBoundary = [0, 320]
     yBoundary = [0, 240]
 
-    renderOn = False
-    from pygame.color import THECOLORS
-    screenColor = THECOLORS['black']
-    circleColorList = [THECOLORS['green'], THECOLORS['red']]
-    circleSize = 8
-    screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-    render = Render(numOfAgent, positionIndex,
-                    screen, screenColor, circleColorList, circleSize)
-
     getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
     getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
 
     stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance)
+    isTerminal = env.IsTerminal(getPredatorPos, getPreyPos, minDistance)
     transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
-    actionMagnitude = 6
+    actionMagnitude = 8
     wolfPolicy = HeatSeekingContinuesDeterministicPolicy(getPredatorPos, getPreyPos, actionMagnitude)
 
     # select child
@@ -221,9 +203,6 @@ if __name__ == "__main__":
     cBase = 100
     calculateScore = CalculateScore(cInit, cBase)
     selectChild = SelectChild(calculateScore)
-
-    # prior
-    getActionPriorUniformFunction = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
 
     def sheepTransit(state, action): return transitionFunction(
         state, [action, wolfPolicy(state)])
@@ -259,7 +238,7 @@ if __name__ == "__main__":
 
     dataSetMaxRunningSteps = 30
     dataSetNumSimulations = 200
-    dataSetNumTrials = 8000
+    dataSetNumTrials = 5000
     modelTrainFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'learnRate': learningRate}
@@ -287,12 +266,16 @@ if __name__ == "__main__":
     getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN}
 
     # sample trajectory
-    initPositionList = [[env.samplePosition(xBoundary, yBoundary) for j in range(numOfAgent)]
-                        for i in range(numTrials)]
+    # randomReset = env.RandomReset(numOfAgent, xBoundary, yBoundary, isTerminal)
+    # initPositionList = [randomReset() for i in range(numTrials)]
+
+    savedPositionFileName = "../../exec/evaluateNNPriorMCTSNoPhysics/initPositionListForEvaluation_30trials.pickle"
+    # pickle.dump(initPositionList, open(savedPositionFileName, 'wb'))
+    initPositionList = pickle.load(open(savedPositionFileName, 'rb'))
 
     reset = env.FixedReset(initPositionList)
     sampleTrajectory = SampleTrajectory(
-        maxRunningSteps, transitionFunction, isTerminal, reset, render, renderOn)
+        maxRunningSteps, transitionFunction, isTerminal, reset)
 
     # function to generate trajectories
     trajectoryDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trajectories"
@@ -324,6 +307,7 @@ if __name__ == "__main__":
         grp.index = grp.index.droplevel('trainSteps')
         axForDraw = fig.add_subplot(1, numColumns, plotCounter)
         drawPerformanceLine(grp, axForDraw, key)
+        plt.ylim((0, maxRunningSteps))
         plotCounter += 1
 
     plt.legend(loc='best')

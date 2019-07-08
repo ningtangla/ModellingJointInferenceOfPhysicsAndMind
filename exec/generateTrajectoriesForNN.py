@@ -17,8 +17,8 @@ from evaluationFunctions import GetSavePath
 
 def main():
     # env
-    wolfID = 0
-    sheepID = 1
+    sheepID = 0
+    wolfID = 1
     posIndex = 0
     numOfAgent = 2
     numPosEachAgent = 2
@@ -33,7 +33,7 @@ def main():
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
     wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfPos, getSheepPos)
     transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(np.array(state), [wolfDriectChasingPolicy(state), np.array(action)])
+    sheepTransition = lambda state, action: transition(np.array(state), [np.array(action), wolfDriectChasingPolicy(state)])
 
     initPosition = np.array([[30, 30], [20, 20]])
     initNoise = [0, 0]
@@ -63,21 +63,13 @@ def main():
 
     # sample trajectories
     maxRunningSteps = 30
-
-    sampleTraj = play.SampleTrajectory(maxRunningSteps, transition, isTerminal, reset)
-    policy = lambda state: [wolfDriectChasingPolicy(state), mctsPolicy(state)]
-
     agentDist2Action = play.agentDistToGreedyAction
     worldDist2Action = lambda worldDist: play.worldDistToAction(agentDist2Action, worldDist)
     sampleTrajWithActionDist = play.SampleTrajectoryWithActionDist(maxRunningSteps, transition, isTerminal, reset, worldDist2Action)
-    policyDistOutput = lambda state: [wolfDriectChasingPolicy(state), mctsPolicyDistOutput(state)]
+    policyDistOutput = lambda state: [mctsPolicyDistOutput(state), wolfDriectChasingPolicy(state)]
 
-    useActionDist = True
-    numTrajs = 100
-    if not useActionDist:
-        trajs = [sampleTraj(policy) for _ in range(numTrajs)]
-    else:
-        trajs = [sampleTrajWithActionDist(policyDistOutput) for _ in range(numTrajs)]
+    numTrajs = 200
+    trajs = [sampleTrajWithActionDist(policyDistOutput) for _ in range(numTrajs)]
     print("Avg traj length = {}".format(np.mean([len(traj) for traj in trajs])))
 
     dataDirectory = '../data/trainingDataForNN/trajectories'
@@ -91,7 +83,6 @@ def main():
     varDict["numSimulations"] = numSimulations
     varDict["maxRunningSteps"] = maxRunningSteps
     varDict["numTrajs"] = numTrajs
-    varDict["withActionDist"] = useActionDist
     savePath = getSavePath(varDict)
 
     saveOn = True

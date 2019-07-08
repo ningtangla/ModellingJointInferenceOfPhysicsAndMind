@@ -78,7 +78,7 @@ def main():
     # initPositionNoise = [0, 0]
     # reset = env.Reset(numOfAgent, initPosition, initPositionNoise)
 
-    renderOn = False
+    renderOn = True
     from pygame.color import THECOLORS
     screenColor = THECOLORS['black']
     circleColorList = [THECOLORS['green'], THECOLORS['red']]
@@ -91,7 +91,7 @@ def main():
     getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
 
     stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance)
+    isTerminal = env.IsTerminal(getPredatorPos, getPreyPos, minDistance)
     transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
     reset = env.RandomReset(numOfAgent, xBoundary, yBoundary, isTerminal)
 
@@ -146,7 +146,7 @@ def main():
 
     # generate trajectories
     maxRunningSteps = 30
-    numTrials = 8000
+    numTrials = 5000
     sampleTrajectory = SampleTrajectory(
         maxRunningSteps, transitionFunction, isTerminal, reset, render, renderOn)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]

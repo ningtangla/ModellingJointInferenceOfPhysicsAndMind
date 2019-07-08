@@ -1,20 +1,16 @@
 import numpy as np
 import random
 
-
 def stationaryAgentPolicy(state):
     return (0, 0)
-
 
 class RandomPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
-
     def __call__(self, state):
         actionIndex = np.random.randint(len(self.actionSpace))
         action = self.actionSpace[actionIndex]
         return action
-
 
 class HeatSeekingDiscreteDeterministicPolicy:
     def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
@@ -59,7 +55,6 @@ class ActHeatSeeking:
                                               for mvmtVector in self.actionSpace}
 
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
-        
         movementAnglePair = zip(self.actionSpace, heatActionAngle.values())
 
         angleFilter = {movement: angleWithinRange(angle) for movement, angle in movementAnglePair}
@@ -71,17 +66,17 @@ class ActHeatSeeking:
         return [chosenActions, unchosenActions]  
 
 class HeatSeekingDiscreteStochasticPolicy:
-    def __init__(self, rationalityParam, actHeatSeeking, locateChasingAgent, locateEscapingAgent):
+    def __init__(self, rationalityParam, actHeatSeeking, getPredatorPos, getPreyPos):
         self.rationalityParam = rationalityParam
         self.actHeatSeeking = actHeatSeeking
-        self.locateChasingAgent = locateChasingAgent
-        self.locateEscapingAgent = locateEscapingAgent
+        self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
 
     def __call__(self, state):
-        chasingAgentPosition = self.locateChasingAgent(state)
-        escapingAgentPosition = self.locateEscapingAgent(state)
+        predatorPosition = self.getPredatorPos(state)
+        preyPosition = self.getPreyPos(state)
 
-        heatSeekingDirection = np.array(escapingAgentPosition) - np.array(chasingAgentPosition)
+        heatSeekingDirection = np.array(preyPosition) - np.array(predatorPosition)
         chosenActions, unchosenActions = self.actHeatSeeking(heatSeekingDirection)
 
         chosenActionsLikelihood = {action: self.rationalityParam / len(chosenActions) for action in chosenActions}

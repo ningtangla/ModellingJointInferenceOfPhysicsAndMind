@@ -51,7 +51,7 @@ if __name__ == '__main__':
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 30
     dataSetNumSimulations = 200
-    dataSetNumTrials = 2
+    dataSetNumTrials = 5000
     dataSetSheepPolicyName = 'mcts'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
@@ -81,28 +81,31 @@ if __name__ == '__main__':
     generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
     modelToTrain = generatePolicyNet(hiddenWidths)
 
-    # train model
-    trainSteps = 10000
-    lossChangeThreshold = 1e-8
+    # train models
+    allTrainSteps = [0, 100, 500]
+    reportInterval = 100
+    lossChangeThreshold = 1e-6
     lossHistorySize = 10
-    reportInterval = 500
+    getTrain = lambda trainSteps: Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
+                                        summaryOn=False, testData=None)
 
-    train = Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval,
-                  summaryOn=False, testData=None)
+    allTrainFunctions = {trainSteps: getTrain(trainSteps) for trainSteps in allTrainSteps}
+    allTrainedModels = {trainSteps: train(generatePolicyNet(hiddenWidths), trainData) for trainSteps, train in
+                        allTrainFunctions.items()}
 
-    trainedModel = train(modelToTrain, trainData)
-
-    # get path to save trained model
-    modelTrainConditions = {'maxRunningSteps': dataSetMaxRunningSteps,
-                            'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
-                            'learnRate': learningRate, 'trainSteps': trainSteps}
+    # get path to save trained models
+    fixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps,
+                       'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
+                       'learnRate': learningRate}
     modelSaveDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trainedModels"
     if not os.path.exists(modelSaveDirectory):
         os.makedirs(modelSaveDirectory)
     modelSaveExtension = ''
 
-    getModelSavePath = GetSavePath(modelSaveDirectory, modelSaveExtension)
-    modelSavePath = getModelSavePath(modelTrainConditions)
+    getModelSavePath = GetSavePath(modelSaveDirectory, modelSaveExtension, fixedParameters)
+    allModelSavePaths = {trainedModel: getModelSavePath({'trainSteps': trainSteps}) for trainSteps, trainedModel in
+                         allTrainedModels.items()}
 
     # save trained model variables
-    saveVariables(trainedModel, modelSavePath)
+    savedVariables = [saveVariables(trainedModel, modelSavePath) for trainedModel, modelSavePath in
+                      allModelSavePaths.items()]

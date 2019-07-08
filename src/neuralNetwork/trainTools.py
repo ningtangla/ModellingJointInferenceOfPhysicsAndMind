@@ -1,18 +1,19 @@
 import numpy as np
+import tensorflow as tf
 
 
 class coefficientCotroller():
-	def __init__(self, initActionCoeff, initValueCoeff, threshold=0):
-		self.actionCoeff = initActionCoeff
-		self.valueCoeff = initValueCoeff
+	def __init__(self, initCoeffs, afterCoeffs, threshold=0):
+		self.actionCoeff, self.valueCoeff = initCoeffs
+		self.afterActionCoeff, self.afterValueCoeff = afterCoeffs
 		self.threshold = threshold
 		self.update = False
 
 	def __call__(self, evalDict):
 		if evalDict is not None:
 			if evalDict["actionLoss"] < self.threshold and not self.update:
-				self.actionCoeff = 5
-				self.valueCoeff = 1
+				self.actionCoeff = self.afterActionCoeff
+				self.valueCoeff = self.afterValueCoeff
 				self.update = True
 				print("Coefficients of losses Updated to {:.2f} {:.2f}".format(self.actionCoeff, self.valueCoeff))
 		return self.actionCoeff, self.valueCoeff
@@ -48,3 +49,13 @@ class TrainReporter():
 			print("#{} {}".format(stepNum, evalDict))
 			if self.tensorBoardSummaryOn:
 				writer.add_summary(summary, stepNum)
+
+
+class learningRateModifier():
+	def __init__(self, initLearningRate, decayRate, decayStep):
+		self.initLearningRate = initLearningRate
+		self.decayRate = decayRate
+		self.decayStep = decayStep
+
+	def __call__(self, globalStep):
+		return self.initLearningRate * np.power(self.decayRate, globalStep / self.decayStep)

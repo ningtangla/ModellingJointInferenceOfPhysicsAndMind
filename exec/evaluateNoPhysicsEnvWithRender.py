@@ -12,7 +12,7 @@ from src.algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, Select
 
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
-from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 
