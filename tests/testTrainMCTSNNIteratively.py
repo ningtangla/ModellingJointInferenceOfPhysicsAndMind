@@ -7,7 +7,7 @@ from ddt import ddt, data, unpack
 import unittest
 import numpy as np
 
-from exec.trainMCTSNNIteratively.trainMCTSNNIteratively import ProcessTrajectoryForNN, PreProcessTrajectories, \
+from exec.trainMCTSNNIteratively.trainMCTSNNIterativelyParallel import ProcessTrajectoryForNN, PreProcessTrajectories, \
     ConstantLearningRateModifier
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
 
