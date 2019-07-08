@@ -1,7 +1,3 @@
-def getStateFromNode(node):
-    return list(node.id.values())[0]
-
-
 class GetApproximateValueFromNode:
     def __init__(self, getStateFromNode, getApproximateValue):
         self.getStateFromNode = getStateFromNode
