@@ -1,100 +1,88 @@
 import pandas as pd
-import numpy as np
 import pygame
 
 class IsInferenceTerminal:
-    def __init__(self, thresholdPosterior):
+    def __init__(self, thresholdPosterior, mindPhysicsName, inferenceIndex):
         self.thresholdPosterior = thresholdPosterior
+        self.mindName, self.physicsName = mindPhysicsName
+        self.inferenceIndex = inferenceIndex
 
-    def __call__(self, inferenceDf):
-        rank = inferenceDf.groupby(['chasingAgents', 'pullingAgents']).sum().reset_index()
-        largestPosterior = max(rank['normalizedPosterior'])
+    def __call__(self, posterior):
+        inferenceDf = pd.DataFrame(index= self.inferenceIndex)
+        inferenceDf['posterior'] = posterior
+        rank = inferenceDf.groupby([self.mindName, self.physicsName]).sum().reset_index()
+        largestPosterior = max(rank['posterior'])
         if largestPosterior >= self.thresholdPosterior:
             return True
         else:
             return False
 
 
-class InferOneStepDiscreteChasing:
-    def __init__(self, getPolicyLikelihood, getTransitionLikelihood):
-        self.getPolicyLikelihood = getPolicyLikelihood
-        self.getTransitionLikelihood = getTransitionLikelihood
+class InferOneStep:
+    def __init__(self, inferenceIndex, mindPhysicsActionName, getLikelihood):
+        self.inferenceIndex = inferenceIndex
+        self.mindName, self.physicsName, self.actionName = mindPhysicsActionName
+        self.getLikelihood = getLikelihood
 
-    def __call__(self, state, nextState, inferenceDf):
-        hypothesisSpace = inferenceDf.index
+    def __call__(self, state, nextState, mindsPhysicsPrior):
+        mindsPhysicsActionsDf = pd.DataFrame(index= self.inferenceIndex)
+        getRowLikelihood = lambda row: self.getLikelihood(row[self.mindName], state, row[self.actionName],
+                                                          row[self.physicsName], nextState)
+        mindsPhysicsActionsDf['jointLikelihood'] = list(mindsPhysicsActionsDf.reset_index().apply(getRowLikelihood, axis=1))
+        actionsIntegratedOut = list(mindsPhysicsActionsDf.groupby([self.mindName, self.physicsName])[
+            'jointLikelihood'].transform('sum'))
 
-        inferenceDf['state'] = [state] * len(hypothesisSpace)
-        inferenceDf['nextState'] = [nextState] * len(hypothesisSpace)
+        priorLikelihoodPair = zip(mindsPhysicsPrior, actionsIntegratedOut)
+        posteriorUnnormalized = [prior* likelihood for prior, likelihood in priorLikelihoodPair]
+        unnormalizedSum = sum(posteriorUnnormalized)
+        mindsPhysicsPosterior = [posterior / unnormalizedSum for posterior in posteriorUnnormalized]
 
-        mindList = hypothesisSpace.get_level_values('chasingAgents')
-        physicsList = hypothesisSpace.get_level_values('pullingAgents')
-        actionList = hypothesisSpace.get_level_values('action')
-
-        policyLikelihood = [self.getPolicyLikelihood(mind, state, allAgentsActions)
-                            for mind, allAgentsActions in zip(mindList, actionList)]
-        inferenceDf['policyLikelihood'] = policyLikelihood
-
-        transitionLikelihood = [self.getTransitionLikelihood(physics, state, allAgentsAction, nextState)
-                                for physics, allAgentsAction in zip(physicsList, actionList)]
-        inferenceDf['transitionLikelihood'] = transitionLikelihood
-
-        posterior = [prior * policy * transition for prior, policy, transition
-                     in zip(inferenceDf['prior'], policyLikelihood, transitionLikelihood)]
-        inferenceDf['posterior'] = posterior
-
-        inferenceDf['marginalizedPosterior'] = inferenceDf.groupby(['chasingAgents', 'pullingAgents'])['posterior'].transform('sum')
-
-        normalizedPosterior = [singlePosterior / sum(inferenceDf['marginalizedPosterior'])
-                               for singlePosterior in inferenceDf['marginalizedPosterior']]
-        inferenceDf['normalizedPosterior'] = normalizedPosterior
-
-        return inferenceDf
+        return mindsPhysicsPosterior
 
 
 def saveImage(screenShotIndex, game):
     pygame.image.save(game, "screenshot" + format(screenShotIndex, '04') + ".png")
 
 
+class Observe:
+    def __init__(self, trajectory):
+        self.trajectory = trajectory
+
+    def __call__(self, timeStep):
+        currentState = self.trajectory[timeStep]
+        if timeStep >= len(self.trajectory):
+            currentState = None
+        return currentState
+
+
 
 class InferDiscreteChasingAndDrawDemo:
-    def __init__(self, hypothesisSpace, isInferenceTerminal, inferOneStepDiscreteChasing,
-                 drawInferenceResult, saveImage = None):
-        self.hypothesisSpace = hypothesisSpace
-
+    def __init__(self, isInferenceTerminal, observe, inferOneStep,
+                 visualize = None, saveImage = None):
         self.isInferenceTerminal = isInferenceTerminal
-        self.inferOneStepDiscreteChasing = inferOneStepDiscreteChasing
-        self.drawInferenceResult = drawInferenceResult
+        self.observe = observe
+        self.inferOneStep = inferOneStep
+        self.visualize = visualize
         self.saveImage = saveImage
 
-    def __call__(self, trajectory):
-        prior = [1] * len(self.hypothesisSpace)
-        inferenceDf = pd.DataFrame(prior, index= self.hypothesisSpace, columns=['prior'])
-        inferenceDf['normalizedPosterior'] = [1/ len(self.hypothesisSpace)] * len(self.hypothesisSpace)
-        initialState = trajectory[0]
-        game = self.drawInferenceResult(initialState, inferenceDf)
-        if self.saveImage is not None:
-            self.saveImage(0, game)
+    def __call__(self, mindsPhysicsPrior):
+        currentState = self.observe(0)
+        nextTimeStep = 1
+        while True:
+            print('round', nextTimeStep)
+            if self.visualize:
+                game = self.visualize(currentState, mindsPhysicsPrior)
+                if self.saveImage is not None:
+                    self.saveImage(nextTimeStep, game)
+            nextState = self.observe(nextTimeStep)
+            if nextState is None:
+                return mindsPhysicsPrior
+            mindsPhysicsPosterior = self.inferOneStep(currentState, nextState,
+                                                 mindsPhysicsPrior)
+            if self.isInferenceTerminal(mindsPhysicsPosterior):
+                return mindsPhysicsPosterior
+            currentState = nextState
+            mindsPhysicsPrior = mindsPhysicsPosterior
+            nextTimeStep += 1
 
-        iterationTime = len(trajectory) - 1
-        for index in range(iterationTime):
-            print("round", index)
-            state = trajectory[index]
-            nextState = trajectory[index + 1]
-            inferenceDf = self.inferOneStepDiscreteChasing(state, nextState, inferenceDf)
-            game = self.drawInferenceResult(nextState, inferenceDf)
 
-            if self.saveImage is not None:
-                self.saveImage(index+1, game)
-
-            if self.isInferenceTerminal(inferenceDf):
-                break
-            inferenceDf['prior'] = inferenceDf['normalizedPosterior']
-
-        inferenceDf = inferenceDf[["prior", "state", "nextState", "policyLikelihood", "transitionLikelihood",
-                                   "posterior", "marginalizedPosterior", "normalizedPosterior"]]
-
-        rank = inferenceDf.groupby(['chasingAgents', 'pullingAgents']).sum().reset_index()
-        largestPosterior = rank.sort_values(['normalizedPosterior'], ascending=False).head(1)[np.array(['chasingAgents', 'pullingAgents', 'normalizedPosterior'])]
-        print(largestPosterior)
-
-        return inferenceDf

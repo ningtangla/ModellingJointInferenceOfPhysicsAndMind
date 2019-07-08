@@ -2,6 +2,7 @@ import numpy as np
 from itertools import combinations
 import pygame
 import sys
+import pandas as pd
 
 
 def checkDuplicates(checkingList):
@@ -109,11 +110,11 @@ class GetChasingRoleColor:
         self.roleIndex = roleIndex
 
     def __call__(self, agentIndex, resultGroupedByChasingIndices):
-        indexList = resultGroupedByChasingIndices['chasingAgents']
+        indexList = resultGroupedByChasingIndices['mind']
         chasingFilter = [chasingCondition[agentIndex] == self.roleIndex for chasingCondition in indexList]
         chasingIndexList = [i for i, index in zip(range(len(indexList)), chasingFilter) if index]
         agentPosterior = sum(
-            [resultGroupedByChasingIndices.iloc[chasingIndex]['normalizedPosterior'] for chasingIndex in
+            [resultGroupedByChasingIndices.iloc[chasingIndex]['posterior'] for chasingIndex in
              chasingIndexList])
         newColor = tuple(agentPosterior * np.array(self.roleColor))
         return newColor
@@ -138,7 +139,7 @@ class ColorChasingPoints:
         self.getChasingResultColorColor = getChasingResultColor
 
     def __call__(self, resultGroupedByChasingIndices):
-        agentCount = len(resultGroupedByChasingIndices['chasingAgents'][0])
+        agentCount = len(resultGroupedByChasingIndices['mind'][0])
         colorList = [self.getChasingResultColorColor(agentIndex, resultGroupedByChasingIndices) for agentIndex in
                      range(agentCount)]
         return colorList
@@ -150,11 +151,11 @@ class AdjustPullingLineWidth:
         self.maxWidth = maxWidth
 
     def __call__(self, resultGroupedByPullingIndices):
-        pullingIndexList = resultGroupedByPullingIndices['pullingAgents']
+        pullingIndexList = resultGroupedByPullingIndices['physics']
         lineWidthDict = dict()
         for index in range(len(pullingIndexList)):
             pullingIndex = pullingIndexList[index]
-            agentPosterior = resultGroupedByPullingIndices['normalizedPosterior'].values[index]
+            agentPosterior = resultGroupedByPullingIndices['posterior'].values[index]
 
             pullingWidth = int(np.round(self.minWidth + agentPosterior * (self.maxWidth - self.minWidth)))
             pulledAgentID, pullingAgentID = np.where(np.array(pullingIndex) == 'pulled')[0]
@@ -165,8 +166,10 @@ class AdjustPullingLineWidth:
 
 
 class DrawInferenceResult:
-    def __init__(self, gridPixelSize, initializeGame, drawGrid, drawCirclesAndLines,
+    def __init__(self, inferenceIndex, gridPixelSize, initializeGame, drawGrid, drawCirclesAndLines,
                  colorChasingPoints, adjustPullingLineWidth):
+        self.inferenceIndex = inferenceIndex
+        
         self.gridPixelSize = gridPixelSize
         self.initializaGame = initializeGame
         self.drawGrid = drawGrid
@@ -175,17 +178,20 @@ class DrawInferenceResult:
         self.colorChasingPoints = colorChasingPoints
         self.adjustPullingLineWidth = adjustPullingLineWidth
 
-    def __call__(self, state, inferenceDf):
+    def __call__(self, state, posterior):
         game = self.initializaGame()
         game = self.drawGrid(game)
         pointsCoord = state
         pointsLocation = [list(np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize // 2)
                           for pointCoord in pointsCoord]
-
-        resultGroupedByChasingIndices = inferenceDf.groupby('chasingAgents').sum().reset_index()
+        
+        inferenceDf = pd.DataFrame(index= self.inferenceIndex)
+        inferenceDf['posterior'] = posterior
+        
+        resultGroupedByChasingIndices = inferenceDf.groupby('mind').sum().reset_index()
         pointsColor = self.colorChasingPoints(resultGroupedByChasingIndices)
 
-        resultGroupedByPullingIndices = inferenceDf.groupby('pullingAgents').sum().reset_index()
+        resultGroupedByPullingIndices = inferenceDf.groupby('physics').sum().reset_index()
         linesWidth = self.adjustPullingLineWidth(resultGroupedByPullingIndices)
 
         game = self.drawCirclesAndLines(game, pointsLocation, pointsColor, linesWidth)
