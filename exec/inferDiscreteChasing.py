@@ -10,7 +10,7 @@ import numpy as np
 
 from analyticGeometryFunctions import computeAngleBetweenVectors
 from policyLikelihood import UniformPolicy, ActHeatSeeking, \
-    HeatSeekingActionLikelihood, WolfPolicy, SheepPolicy, MasterPolicy
+    HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
 from transitionLikelihood import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
 from inference import IsInferenceTerminal, saveImage, Observe, InferOneStep, InferDiscreteChasingAndDrawDemo
@@ -21,24 +21,26 @@ from discreteGridInferenceVisualization import checkDuplicates, ModifyOverlappin
 
 
 def main():
-    positionIndex = [0, 1]
-    getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
-    rationalityParam = 0.9
     actionSpace = [(-1, 0), (1, 0), (0, 1), (0, -1)]
     lowerBoundAngle = 0
     upperBoundAngle = np.pi / 2
     actHeatSeeking = ActHeatSeeking(actionSpace, lowerBoundAngle, upperBoundAngle, computeAngleBetweenVectors)
-    
-    getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: \
-        HeatSeekingActionLikelihood(rationalityParam, actHeatSeeking, getWolfPos, getSheepPos)
-    wolfPolicy = WolfPolicy(getAgentPosition, getHeatSeekingActionLikelihood)
-    sheepPolicy = SheepPolicy(getAgentPosition, getHeatSeekingActionLikelihood)
-    
+
+    rationalityParam = 0.9
+    heatSeekingPolicy = HeatSeekingPolicy(rationalityParam, actHeatSeeking)
+
+    positionIndex = [0, 1]
+    getAgentPosition = lambda agentID, state: GetAgentPosFromState(agentID, positionIndex)(state)
+
+    wolfPolicy = WolfPolicy(getAgentPosition, heatSeekingPolicy)
+    sheepPolicy = SheepPolicy(getAgentPosition, heatSeekingPolicy)
+
     uniformPolicy = UniformPolicy(actionSpace)
     masterPolicy = MasterPolicy(uniformPolicy)
     
     policyList = [wolfPolicy, sheepPolicy, masterPolicy]
-    policy = lambda mind, state, allAgentsAction: np.product([agentPolicy(mind, state, allAgentsAction) for agentPolicy in policyList])
+    policy = lambda mind, state, allAgentsAction: np.product(
+        [agentPolicy(mind, state, allAgentsAction) for agentPolicy in policyList])
 
 
     forceSpace = [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
@@ -53,7 +55,7 @@ def main():
     transition = lambda physics, state, allAgentsAction, nextState: \
         np.product([agentTransition(physics, state, allAgentsAction, nextState) for agentTransition in transitionList])
 
-    getLikelihood = lambda mind, state, allAgentsAction, physics, nextState: \
+    getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsAction, physics, nextState: \
         policy(mind, state, allAgentsAction) * transition(physics, state, allAgentsAction, nextState)
 
 
@@ -122,7 +124,7 @@ def main():
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
 
     mindPhysicsActionName = ['mind', 'physics', 'action']
-    inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getLikelihood)
+    inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
 
     trajectory = [[(6, 2), (9, 2), (5, 4)], [(7, 3), (10, 2), (6, 3)], [(6, 2), (10, 2), (7, 2)], [(8, 2), (10, 2), (6, 1)], [(8, 2), (10, 2), (7, 1)], [(8, 2), (10, 3), (7, 1)], [(9, 1), (10, 3), (8, 2)], [(8, 2), (10, 3), (8, 2)], [(8, 3), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (8, 1)], [(10, 1), (10, 4), (7, 2)], [(9, 2), (10, 5), (9, 2)], [(9, 3), (9, 5), (9, 3)], [(9, 4), (9, 6), (10, 3)], [(10, 5), (9, 7), (10, 3)], [(9, 4), (10, 7), (10, 4)], [(10, 5), (10, 7), (10, 4)], [(10, 5), (10, 8), (9, 5)], [(9, 6), (10, 9), (10, 4)], [(10, 7), (10, 9), (8, 4)], [(9, 8), (10, 10), (9, 3)], [(10, 7), (10, 10), (10, 4)], [(10, 7), (10, 10), (9, 5)], [(10, 7), (10, 10), (8, 6)], [(9, 8), (10, 10), (10, 6)], [(9, 8), (10, 10), (10, 6)], [(10, 9), (10, 9), (9, 7)]]
     observe = Observe(trajectory)

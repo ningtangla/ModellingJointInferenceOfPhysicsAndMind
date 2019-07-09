@@ -9,7 +9,7 @@ sys.path.append(os.path.join('..', 'visualize'))
 
 from analyticGeometryFunctions import computeAngleBetweenVectors
 from policyLikelihood import UniformPolicy, ActHeatSeeking, \
-    HeatSeekingActionLikelihood, WolfPolicy, SheepPolicy, MasterPolicy
+    HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
 from transitionLikelihood import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
 from state import GetAgentPosFromState
@@ -26,14 +26,15 @@ class testInference(unittest.TestCase):
         self.actHeatSeeking = ActHeatSeeking(self.actionSpace, self.lowerBoundAngle, self.upperBoundAngle, computeAngleBetweenVectors)
 
         positionIndex = [0, 1]
-        self.getAgentPosition = lambda agentID: GetAgentPosFromState(agentID, positionIndex)
-        rationalityParam = 0.9
-        self.getHeatSeekingActionLikelihood = lambda getWolfPos, getSheepPos: HeatSeekingActionLikelihood(rationalityParam, self.actHeatSeeking, getWolfPos, getSheepPos)
-        self.wolfPolicy = WolfPolicy(self.getAgentPosition, self.getHeatSeekingActionLikelihood)
-        self.sheepPolicy = SheepPolicy(self.getAgentPosition, self.getHeatSeekingActionLikelihood)
+        getAgentPosition = lambda agentID, state: GetAgentPosFromState(agentID, positionIndex)(state)
 
-        self.uniformPolicy = UniformPolicy(self.actionSpace)
-        self.masterPolicy = MasterPolicy(self.uniformPolicy)
+        rationalityParam = 0.9
+        heatSeekingPolicy = HeatSeekingPolicy(rationalityParam, self.actHeatSeeking)
+        self.wolfPolicy = WolfPolicy(getAgentPosition, heatSeekingPolicy)
+        self.sheepPolicy = SheepPolicy(getAgentPosition, heatSeekingPolicy)
+
+        uniformPolicy = UniformPolicy(self.actionSpace)
+        self.masterPolicy = MasterPolicy(uniformPolicy)
 
         self.policyList = [self.wolfPolicy, self.sheepPolicy, self.masterPolicy]
         self.policy = lambda mind, state, allAgentsAction: np.product(
@@ -45,8 +46,8 @@ class testInference(unittest.TestCase):
         gridSize = (10, 10)
         lowerBoundary = 1
         self.stayWithinBoundary = StayWithinBoundary(gridSize, lowerBoundary)
-        self.pulledTransition = PulledTransition(self.getAgentPosition, self.pulledForceLikelihood, self.stayWithinBoundary)
-        self.noPullTransition = NoPullTransition(self.getAgentPosition, self.stayWithinBoundary)
+        self.pulledTransition = PulledTransition(getAgentPosition, self.pulledForceLikelihood, self.stayWithinBoundary)
+        self.noPullTransition = NoPullTransition(getAgentPosition, self.stayWithinBoundary)
         transitionList = [self.pulledTransition, self.noPullTransition]
         self.transition = lambda physics, state, allAgentsAction, nextState: \
             np.product([agentTransition(physics, state, allAgentsAction, nextState) for agentTransition in transitionList])

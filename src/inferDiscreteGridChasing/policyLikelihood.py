@@ -33,78 +33,70 @@ class ActHeatSeeking:
         return [chosenActions, unchosenActions]  
 
 
-class HeatSeekingActionLikelihood:
-    def __init__(self, rationalityParam, actHeatSeeking, getPredatorPos, getPreyPos):
+class HeatSeekingPolicy:
+    def __init__(self, rationalityParam, actHeatSeeking):
         self.rationalityParam = rationalityParam
         self.actHeatSeeking = actHeatSeeking
-        self.getPredatorPos = getPredatorPos
-        self.getPreyPos = getPreyPos
 
-    def __call__(self, state):
-        predatorPosition = self.getPredatorPos(state)
-        preyPosition = self.getPreyPos(state)
-
-        heatSeekingDirection = np.array(preyPosition) - np.array(predatorPosition)
+    def __call__(self, heatSeekingDirection):
         chosenActions, unchosenActions = self.actHeatSeeking(heatSeekingDirection)
+        chosenActionsLik = {action: self.rationalityParam / len(chosenActions) for action in chosenActions}
+        unchosenActionsLik = {action: (1 - self.rationalityParam) / len(unchosenActions) for action in unchosenActions}
+        heatSeekingActionLik = {**chosenActionsLik, **unchosenActionsLik}
 
-        chosenActionsLikelihood = {action: self.rationalityParam / len(chosenActions) for action in chosenActions}
-        unchosenActionsLikelihood = {action: (1 - self.rationalityParam) / len(unchosenActions) for action in
-                                     unchosenActions}
-        heatSeekingActionLikelihood = {**chosenActionsLikelihood, **unchosenActionsLikelihood}
-
-        return heatSeekingActionLikelihood
-
+        return heatSeekingActionLik
 
 
 class WolfPolicy:
-    def __init__(self, getAgentPosition, heatSeekingActionLikelihood):
+    def __init__(self, getAgentPosition, heatSeekingPolicy):
         self.getAgentPosition = getAgentPosition
-        self.heatSeekingActionLikelihood = heatSeekingActionLikelihood
+        self.heatSeekingPolicy = heatSeekingPolicy
 
     def __call__(self, mind, state, allAgentsAction):
         wolfID = mind.index('wolf')
         sheepID = mind.index('sheep')
-        getWolfPos = self.getAgentPosition(wolfID)
-        getSheepPos = self.getAgentPosition(sheepID)
 
-        getWolfActionLikelihood = self.heatSeekingActionLikelihood(getWolfPos, getSheepPos)
-        wolfActionLikelihood = getWolfActionLikelihood(state)
+        wolfPos = self.getAgentPosition(wolfID, state)
+        sheepPos = self.getAgentPosition(sheepID, state)
+
+        heatSeekingDirection = np.array(sheepPos) - np.array(wolfPos)
+        wolfActionLik = self.heatSeekingPolicy(heatSeekingDirection)
 
         wolfAction = allAgentsAction[wolfID]
-        wolfActionProb = wolfActionLikelihood[wolfAction]
+        wolfActionProb = wolfActionLik[wolfAction]
 
         return wolfActionProb
 
 
 class SheepPolicy:
-    def __init__(self, getAgentPosition, heatSeekingActionLikelihood):
+    def __init__(self, getAgentPosition, heatSeekingPolicy):
         self.getAgentPosition = getAgentPosition
-        self.heatSeekingActionLikelihood = heatSeekingActionLikelihood
+        self.heatSeekingPolicy = heatSeekingPolicy
 
     def __call__(self, mind, state, allAgentsAction):
         wolfID = mind.index('wolf')
         sheepID = mind.index('sheep')
 
-        getWolfPos = self.getAgentPosition(wolfID)
-        getSheepPos = self.getAgentPosition(sheepID)
+        wolfPos = self.getAgentPosition(wolfID, state)
+        sheepPos = self.getAgentPosition(sheepID, state)
 
-        getSheepActionLikelihood = self.heatSeekingActionLikelihood(getWolfPos, getSheepPos)
-        sheepActionLikelihood = getSheepActionLikelihood(state)
+        heatSeekingDirection = np.array(sheepPos) - np.array(wolfPos)
+        sheepActionLik = self.heatSeekingPolicy(heatSeekingDirection)
 
         sheepAction = allAgentsAction[sheepID]
-        sheepActionProb = sheepActionLikelihood[sheepAction]
+        sheepActionProb = sheepActionLik[sheepAction]
 
         return sheepActionProb
 
 
 class MasterPolicy:
-    def __init__(self, getRandomActionLikelihood):
-        self.getRandomActionLikelihood = getRandomActionLikelihood
+    def __init__(self, uniformPolicy):
+        self.uniformPolicy = uniformPolicy
 
     def __call__(self, mind, state, allAgentsAction):
         masterID = mind.index('master')
-        masterActionLikelihood = self.getRandomActionLikelihood(state)
+        masterActionLik = self.uniformPolicy(state)
         masterAction = allAgentsAction[masterID]
-        masterActionProb = masterActionLikelihood[masterAction]
+        masterActionProb = masterActionLik[masterAction]
 
         return masterActionProb

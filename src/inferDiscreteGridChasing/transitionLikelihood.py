@@ -29,10 +29,10 @@ class PulledForceLikelihood:
         
         if np.all(np.array(pullersRelativeLocation) == np.array((0, 0))):
             isZeroArray = lambda force: np.all(np.array(force) == 0)
-            nonZeroForceLikelihood = {force: 0 for force in self.forceSpace if not isZeroArray(force)}
-            zeroForceLikelihood = {force: 1 for force in self.forceSpace if isZeroArray(force)}
-            forceDirectionLikelihood = {**nonZeroForceLikelihood, **zeroForceLikelihood}
-            return forceDirectionLikelihood
+            nonZeroForceLik = {force: 0 for force in self.forceSpace if not isZeroArray(force)}
+            zeroForceLik = {force: 1 for force in self.forceSpace if isZeroArray(force)}
+            forceDirectionLik = {**nonZeroForceLik, **zeroForceLik}
+            return forceDirectionLik
 
         forceAndRelativeLocAngle = [self.calculateAngle(pullersRelativeLocation, forceDirection) for forceDirection in self.forceSpace]
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
@@ -41,49 +41,46 @@ class PulledForceLikelihood:
         unchosenFilter = [force in chosenForceDirections for force in self.forceSpace]
         unchosenForceDirections = [force for force, index in zip(self.forceSpace, unchosenFilter) if not index]
 
-        chosenForcesLikelihood = {force: 1 / len(chosenForceDirections) for force in chosenForceDirections}
-        unchosenForcesLikelihood = {force: 0 for force in unchosenForceDirections}
-        forceDirectionLikelihood = {**chosenForcesLikelihood, **unchosenForcesLikelihood}
+        chosenForcesLik = {force: 1 / len(chosenForceDirections) for force in chosenForceDirections}
+        unchosenForcesLik = {force: 0 for force in unchosenForceDirections}
+        forceDirectionLik = {**chosenForcesLik, **unchosenForcesLik}
 
-        return forceDirectionLikelihood
+        return forceDirectionLik
 
 
 class PulledTransition:
-    def __init__(self, getAgentPosition, getPulledAgentForceLikelihood, stayWithinBoundary):
+    def __init__(self, getAgentPosition, getPulledAgentForceLik, stayWithinBoundary):
         self.getAgentPosition = getAgentPosition
-        self.getPulledAgentForceLikelihood = getPulledAgentForceLikelihood
+        self.getPulledAgentForceLik = getPulledAgentForceLik
         self.stayWithinBoundary = stayWithinBoundary
 
     def __call__(self, physics, state, allAgentsAction, nextState):
         pulledAgentID, pullingAgentID = np.where(np.array(physics) == 'pulled')[0]
 
-        getPulledAgentPos = self.getAgentPosition(pulledAgentID)
-        getPullingAgentPos = self.getAgentPosition(pullingAgentID)
+        pulledAgentPos = self.getAgentPosition(pulledAgentID, state)
+        pullingAgentPos = self.getAgentPosition(pullingAgentID, state)
 
-        pulledAgentState = getPulledAgentPos(state)
-        pullingAgentState = getPullingAgentPos(state)
-
-        pullersRelativeLocation = np.array(pullingAgentState) - np.array(pulledAgentState)
+        pullersRelativeLocation = np.array(pullingAgentPos) - np.array(pulledAgentPos)
         getIntendedState = lambda agentState, agentAction, agentForce: self.stayWithinBoundary(sum(np.array([agentState, agentAction, agentForce])))
-        pulledAgentForceLikelihood = self.getPulledAgentForceLikelihood(pullersRelativeLocation)
+        pulledAgentForceLik = self.getPulledAgentForceLik(pullersRelativeLocation)
 
         pulledAgentAction = allAgentsAction[pulledAgentID]
-        forceLikelihoodPair = zip(pulledAgentForceLikelihood.keys(), pulledAgentForceLikelihood.values())
-        nextStateLikelihood = {tuple(getIntendedState(pulledAgentState, pulledAgentAction, force)): likelihood for force, likelihood in forceLikelihoodPair}
-        pulledAgentNextState = tuple(getPulledAgentPos(nextState))
-        pulledTransitionLikelihood = nextStateLikelihood.get(pulledAgentNextState, 0)
+        forceLikPair = zip(pulledAgentForceLik.keys(), pulledAgentForceLik.values())
+        nextStateLik = {tuple(getIntendedState(pulledAgentPos, pulledAgentAction, force)): likelihood for force, likelihood in forceLikPair}
+        pulledAgentNextState = tuple(self.getAgentPosition(pulledAgentID, nextState))
+        pulledTransitionLik = nextStateLik.get(pulledAgentNextState, 0)
 
-        pulledForce = np.array(pulledAgentNextState) - np.array(pulledAgentState) - np.array(pulledAgentAction)
+        pulledForce = np.array(pulledAgentNextState) - np.array(pulledAgentPos) - np.array(pulledAgentAction)
         pullingForce = -pulledForce
         pullingAgentAction = allAgentsAction[pullingAgentID]
-        nextPullingIntendedState = self.stayWithinBoundary(sum(np.array([pullingAgentState, pullingAgentAction, pullingForce])))
-        nextPullingStateLikelihood = {tuple(nextPullingIntendedState): 1}
-        pullingNextState = tuple(getPullingAgentPos(nextState))
-        pullingTransitionLikelihood = nextPullingStateLikelihood.get(pullingNextState, 0)
+        nextPullingIntendedState = self.stayWithinBoundary(sum(np.array([pullingAgentPos, pullingAgentAction, pullingForce])))
+        nextPullingStateLik = {tuple(nextPullingIntendedState): 1}
+        pullingNextState = tuple(self.getAgentPosition(pullingAgentID, nextState))
+        pullingTransitionLik = nextPullingStateLik.get(pullingNextState, 0)
 
-        transitionLikelihood = pulledTransitionLikelihood* pullingTransitionLikelihood
+        transitionLik = pulledTransitionLik * pullingTransitionLik
 
-        return transitionLikelihood
+        return transitionLik
 
 
 class NoPullTransition:
@@ -94,13 +91,12 @@ class NoPullTransition:
     def __call__(self, physics, state, allAgentsAction, nextState):
         noPullAgentID = physics.index('noPull')
 
-        getNoPullAgentPos = self.getAgentPosition(noPullAgentID)
-        noPullAgentState = getNoPullAgentPos(state)
+        noPullAgentPos = self.getAgentPosition(noPullAgentID, state)
         noPullAgentAction = allAgentsAction[noPullAgentID]
-        nextIntendedState = self.stayWithinBoundary(np.array(noPullAgentState) + np.array(noPullAgentAction))
-        nextStateLikelihood = {tuple(nextIntendedState): 1}
+        nextIntendedState = self.stayWithinBoundary(np.array(noPullAgentPos) + np.array(noPullAgentAction))
+        nextStateLik = {tuple(nextIntendedState): 1}
 
-        noPullAgentNextState = tuple(getNoPullAgentPos(nextState))
-        transitionLikelihood = nextStateLikelihood.get(noPullAgentNextState, 0)
+        noPullAgentNextState = tuple(self.getAgentPosition(noPullAgentID, nextState))
+        transitionLik = nextStateLik.get(noPullAgentNextState, 0)
 
-        return transitionLikelihood
+        return transitionLik
