@@ -75,8 +75,11 @@ class GenerateSymmetricData():
             state, actionDistribution = turningPoint
             for symmetry in self.symmetries:
                 newState = np.concatenate([
-                    self.getSymmetricVector(symmetry, np.array(state[0:2])),
-                    self.getSymmetricVector(symmetry, np.array(state[2:4]))
+                    self.getSymmetricVector(symmetry,
+                                            np.array(
+                                                self.getSheepState(state))),
+                    self.getSymmetricVector(symmetry,
+                                            np.array(self.getWolfState(state)))
                 ])
                 newActionDistributionDict = {
                     tuple(

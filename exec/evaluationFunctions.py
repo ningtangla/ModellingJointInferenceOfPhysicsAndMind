@@ -51,3 +51,17 @@ class ComputeStatistics:
         measurementStd = np.std(allMeasurements)
 
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
+
+class LoadMultipleTrajectoriesFile:
+    def __init__(self, getSavePath, loadFromPickle):
+        self.getSavePath = getSavePath
+        self.loadFromPickle = loadFromPickle
+
+    def __call__(self, oneConditionDf):
+        indexLevelNames = oneConditionDf.index.names
+        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
+        filePath = self.getSavePath(parameters)
+        with open(filePath, 'rb') as file:
+            trajectories = self.loadFromPickle(file)
+
+        return trajectories

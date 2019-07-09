@@ -5,11 +5,12 @@ sys.path.append(src)
 sys.path.append(os.path.join(src, 'neuralNetwork'))
 sys.path.append(os.path.join(src, 'constrainedChasingEscapingEnv'))
 sys.path.append(os.path.join(src, 'algorithms'))
+sys.path.append(os.path.join(os.pardir, 'exec'))
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 import math
-from augmentDataForNN import GenerateSymmetricData
+from augmentDataForNN import GenerateSymmetricData, GetAgentStateFromDataSetState
 from analyticGeometryFunctions import transitePolarToCartesian
 from dataTools import createSymmetricVector
 xBoundary = [0, 180]
@@ -38,6 +39,11 @@ class TestGenerateData(unittest.TestCase):
             np.array([1, 0]),
             np.array([-1, 1])
         ]
+        agentStateDim = 2
+        sheepID = 0
+        self.getSheepState = GetAgentStateFromDataSetState(agentStateDim, sheepID)
+        wolfID = 1
+        self.getWolfState = GetAgentStateFromDataSetState(agentStateDim, wolfID)
 
     # (0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)
     @data((
@@ -65,12 +71,14 @@ class TestGenerateData(unittest.TestCase):
         generateSymmetricData = GenerateSymmetricData(self.bias,
                                                       createSymmetricVector,
                                                       self.symmetries,
-                                                      self.sheepActionSpace)
-        sysmetricDataSet = generateSymmetricData(originalDataSet)
-        for data in sysmetricDataSet:
-            for truthData in groundTruth:
-                if np.allclose(data[0], np.array(truthData[0])):
-                    self.assertSequenceEqual(list(data[1]), list(truthData[1]))
+                                                      self.sheepActionSpace,
+                                                      self.getSheepState,
+                                                      self.getWolfState)
+        symmetricDataSet = generateSymmetricData(originalDataSet)
+        symmetricDict = {tuple(np.round(data[0])): list(data[1]) for data in symmetricDataSet}
+        groundTruthDict = {tuple(data[0]): list(data[1]) for data in groundTruth}
+        for key in symmetricDict.keys():
+            self.assertTrue(np.all(np.array(symmetricDict[key]) == np.array(groundTruthDict[key])))
 
 
 if __name__ == "__main__":
