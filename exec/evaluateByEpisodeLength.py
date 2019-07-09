@@ -86,7 +86,7 @@ class GenerateTrainedModel:
 
 
 def main():
-    dataDir = os.path.join(os.pardir, 'data', 'evaluateByEpisodeLength') #.. parentdir
+    dataDir = os.path.join(os.pardir, 'data', 'evaluateByEpisodeLength')
 
     # sample trajectory
     sheepID = 0
@@ -108,7 +108,12 @@ def main():
                                         reset, chooseGreedyAction)
 
     # data set
-    trainingDataDir = os.path.join(dataDir, "dataSets")
+    augmented = 'yes'
+    if augmented == 'yes':
+        dataSetDir = 'augmentedDataSets'
+    else:
+        dataSetDir = 'dataSets'
+    trainingDataDir = os.path.join(dataDir, dataSetDir)
     dataSetParameter = OrderedDict()
     dataSetParameter['cBase'] = 100
     dataSetParameter['initPos'] = 'Random'
@@ -176,7 +181,7 @@ def main():
     wolfActionSpace = [establishAction(wolfSpeed, degree) for degree in degrees]
     wolfPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(
         wolfActionSpace, getWolfPos, getSheepPos, computeAngleBetweenVectors)
-    generateSheepPolicy = lambda trainedModel: net.ApproximatePolicy(
+    generateSheepPolicy = lambda trainedModel: net.ApproximateActionPrior(
         trainedModel, sheepActionSpace)
     generatePolicy = lambda trainedModel: (generateSheepPolicy(trainedModel),
                                            wolfPolicy)
@@ -184,10 +189,10 @@ def main():
     # split & apply
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [10000, 30000, 60000]
-    independentVariables['batchSize'] = [0, 1024, 4096]
-    independentVariables['augmented'] = ['no']
-    independentVariables['trainingStep'] = [1000, 5000, 10000, 50000]
+    independentVariables['trainingDataSize'] = [size for size in range(5000, 61000, 1000)]
+    independentVariables['batchSize'] = [2048]
+    independentVariables['augmented'] = ['yes', 'no']
+    independentVariables['trainingStep'] = [20000]
     independentVariables['neuronsPerLayer'] = [64]
     independentVariables['sharedLayers'] = [3]
     independentVariables['actionLayers'] = [1]
@@ -227,14 +232,16 @@ def main():
     print(statDF)
 
     # draw
-    xStatistic = "trainingStep"
+    xStatistic = "trainingDataSize"
     yStatistic = "mean"
-    lineStatistic = "batchSize"
-    subplotStatistic = "trainingDataSize"
+    lineStatistic = "augmented"
+    subplotStatistic = "trainingStep"
     figsize = (12, 10)
     figure = plt.figure(figsize=figsize)
     subplotNum = len(statDF.groupby(subplotStatistic))
     numOfPlot = 1
+    ylimTop = max(statDF[yStatistic])
+    ylimBot = min(statDF[yStatistic])-1
     for subplotKey, subPlotDF in statDF.groupby(subplotStatistic):
         for linekey, lineDF in subPlotDF.groupby(lineStatistic):
             ax = figure.add_subplot(1, subplotNum, numOfPlot)
@@ -243,11 +250,13 @@ def main():
                         y=yStatistic,
                         ax=ax,
                         label=linekey,
-                        title="{}:{}".format(subplotStatistic, subplotKey))
+                        title="step:{}".format(subplotKey))
+            plt.ylim(bottom=ylimBot, top=ylimTop)
         numOfPlot += 1
     plt.legend(loc='best')
+    plt.subplots_adjust(wspace=0.4)
     plt.suptitle("{} vs {} episode length".format(xStatistic, yStatistic))
-    figureName = "effect_{}_on_NNPerformance.png".format(xStatistic)
+    figureName = "effect_augmentation_on_NNPerformance.png"
     figurePath = os.path.join(dataDir, figureName)
     plt.savefig(figurePath)
 
