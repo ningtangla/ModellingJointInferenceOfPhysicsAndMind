@@ -36,7 +36,7 @@ class GenerateTrainedModel:
         self.sampleTrajectory = sampleTrajectory
         self.numTrials = numTrials
 
-    def __call__(self, df, dataSet):
+    def __call__(self, df, dataSetDict):
         trainDataSize = df.index.get_level_values('trainingDataSize')[0]
         trainDataType = df.index.get_level_values('trainingDataType')[0]
         batchSize = df.index.get_level_values('batchSize')[0]
@@ -45,8 +45,14 @@ class GenerateTrainedModel:
         sharedLayers = df.index.get_level_values('sharedLayers')[0]
         actionLayers = df.index.get_level_values('actionLayers')[0]
         valueLayers = df.index.get_level_values('valueLayers')[0]
+        augmented = df.index.get_level_values('augmented')[0]
+        if augmented == 'yes':
+            dataFactor = 8
+        else:
+            dataFactor = 1
+        dataSet = dataSetDict[augmented]
         trainData = [
-            dataSet[varName][:trainDataSize]
+            dataSet[varName][:trainDataSize*dataFactor]
             for varName in ['state', trainDataType, 'value']
         ]
         indexLevelNames = df.index.names
@@ -108,12 +114,9 @@ def main():
                                         reset, chooseGreedyAction)
 
     # data set
-    augmented = 'yes'
-    if augmented == 'yes':
-        dataSetDir = 'augmentedDataSets'
-    else:
-        dataSetDir = 'dataSets'
-    trainingDataDir = os.path.join(dataDir, dataSetDir)
+    dataSetDict = dict()
+    augmentedDataSetDir = os.path.join(dataDir,"augmentedDataSets")
+    dataSetDir = os.path.join(dataDir,"dataSets")
     dataSetParameter = OrderedDict()
     dataSetParameter['cBase'] = 100
     dataSetParameter['initPos'] = 'Random'
@@ -124,13 +127,20 @@ def main():
     dataSetParameter['rolloutSteps'] = 10
     dataSetParameter['standardizedReward'] = 'True'
     dataSetExtension = '.pickle'
-    getSavePathForDataSet = GetSavePath(trainingDataDir, dataSetExtension)
+    getSavePathForDataSet = GetSavePath(dataSetDir, dataSetExtension)
     dataSetPath = getSavePathForDataSet(dataSetParameter)
     if not os.path.exists(dataSetPath):
         print("No dataSet in: {}".format(dataSetPath))
         exit(1)
     with open(dataSetPath, "rb") as f:
-        dataSet = pickle.load(f)
+        dataSetDict['no'] = pickle.load(f)
+    getSavePathForAugmentedDataSet = GetSavePath(augmentedDataSetDir, dataSetExtension)
+    augmentedDataSetPath = getSavePathForAugmentedDataSet(dataSetParameter)
+    if not os.path.exists(augmentedDataSetPath):
+        print("No dataSet in: {}".format(augmentedDataSetPath))
+        exit(1)
+    with open(augmentedDataSetPath, "rb") as f:
+        dataSetDict['yes'] = pickle.load(f)
 
     # NeuralNetwork Parameter
     lossChangeThreshold = 1e-6
@@ -152,7 +162,7 @@ def main():
     testDataSize = 10000
     testDataType = 'actionDist'
     testData = [
-        dataSet[varName][-testDataSize:]
+        dataSetDict['no'][varName][-testDataSize:]
         for varName in ['state', testDataType, 'value']
     ]
     generateTrain = lambda trainingStep, batchSize: net.Train(
@@ -223,7 +233,7 @@ def main():
                                                   generatePolicy,
                                                   sampleTrajectory, numTrials)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput,
-                                                      dataSet)
+                                                      dataSetDict)
 
     loadTrajectories = LoadMultipleTrajectoriesFile(getSavePathForTrajectory,
                                                     pickle.load)
