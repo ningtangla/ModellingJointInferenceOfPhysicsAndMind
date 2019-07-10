@@ -199,8 +199,8 @@ def main():
     # split & apply
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [size for size in range(5000, 61000, 1000)]
-    independentVariables['batchSize'] = [2048]
+    independentVariables['trainingDataSize'] = [size for size in range(5000, 61000, 5000)]
+    independentVariables['batchSize'] = [2048, 4096]
     independentVariables['augmented'] = ['yes', 'no']
     independentVariables['trainingStep'] = [20000]
     independentVariables['neuronsPerLayer'] = [64]
@@ -245,7 +245,7 @@ def main():
     xStatistic = "trainingDataSize"
     yStatistic = "mean"
     lineStatistic = "augmented"
-    subplotStatistic = "trainingStep"
+    subplotStatistic = "batchSize"
     figsize = (12, 10)
     figure = plt.figure(figsize=figsize)
     subplotNum = len(statDF.groupby(subplotStatistic))
