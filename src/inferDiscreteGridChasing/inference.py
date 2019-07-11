@@ -52,15 +52,17 @@ class Observe:
         self.trajectory = trajectory
 
     def __call__(self, timeStep):
-        currentState = self.trajectory[timeStep]
         if timeStep >= len(self.trajectory):
-            currentState = None
+            return None
+        currentState = self.trajectory[timeStep]
         return currentState
 
 
 class InferDiscreteChasingAndDrawDemo:
-    def __init__(self, isInferenceTerminal, observe, inferOneStep,
+    def __init__(self, inferenceIndex, isInferenceTerminal, observe, inferOneStep,
                  visualize = None, saveImage = None):
+        self.inferenceIndex = inferenceIndex
+
         self.isInferenceTerminal = isInferenceTerminal
         self.observe = observe
         self.inferOneStep = inferOneStep
@@ -70,7 +72,9 @@ class InferDiscreteChasingAndDrawDemo:
     def __call__(self, mindsPhysicsPrior):
         currentState = self.observe(0)
         nextTimeStep = 1
+        mindsPhysicsActionsDf = pd.DataFrame(index = self.inferenceIndex)
         while True:
+            mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
             print('round', nextTimeStep)
             if self.visualize:
                 game = self.visualize(currentState, mindsPhysicsPrior)
@@ -78,13 +82,15 @@ class InferDiscreteChasingAndDrawDemo:
                     self.saveImage(nextTimeStep, game)
             nextState = self.observe(nextTimeStep)
             if nextState is None:
-                return mindsPhysicsPrior
-            mindsPhysicsPosterior = self.inferOneStep(currentState, nextState,
-                                                 mindsPhysicsPrior)
-            if self.isInferenceTerminal(mindsPhysicsPosterior):
-                return mindsPhysicsPosterior
-            currentState = nextState
-            mindsPhysicsPrior = mindsPhysicsPosterior
+                return mindsPhysicsActionsDf
+            mindsPhysicsPosterior = self.inferOneStep(currentState, nextState, mindsPhysicsPrior)
+
             nextTimeStep += 1
+            mindsPhysicsPrior = mindsPhysicsPosterior
+            currentState = nextState
+            if self.isInferenceTerminal(mindsPhysicsPosterior):
+                mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
+                return mindsPhysicsActionsDf
+
 
 

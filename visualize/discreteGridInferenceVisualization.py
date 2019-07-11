@@ -3,6 +3,8 @@ from itertools import combinations
 import pygame
 import sys
 import pandas as pd
+import os
+from pylab import plt
 
 
 def checkDuplicates(checkingList):
@@ -15,7 +17,7 @@ def checkDuplicates(checkingList):
 
 
 class ModifyOverlappingPoints:
-    def __init__(self, gridPixelSize, modificationRatio, checkDuplicates):
+    def __init__(self, gridPixelSize, checkDuplicates, modificationRatio = 3):
         self.gridPixelSize = gridPixelSize
         self.modificationRatio = modificationRatio
         self.checkDuplicates = checkDuplicates
@@ -37,7 +39,7 @@ class ModifyOverlappingPoints:
 
 
 class DrawCirclesAndLines:
-    def __init__(self, pointExtendTime, FPS, pointWidth, lineColor, modifyOverlappingPoints):
+    def __init__(self, modifyOverlappingPoints, pointExtendTime = 100, FPS = 60, pointWidth = 10, lineColor = (0,0,0) ):
         self.FPS = FPS
         self.pointExtendFrame = int(pointExtendTime * self.FPS / 1000)
         self.pointWidth = pointWidth
@@ -68,7 +70,7 @@ class DrawCirclesAndLines:
 
 
 class InitializeGame:
-    def __init__(self, screenWidth, screenHeight, caption):
+    def __init__(self, screenWidth = 800, screenHeight = 800, caption = "Game"):
         self.screenWidth = screenWidth
         self.screenHeight = screenHeight
         self.caption = caption
@@ -81,7 +83,7 @@ class InitializeGame:
 
 
 class DrawGrid:
-    def __init__(self, gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth):
+    def __init__(self, gridSize, gridPixelSize, backgroundColor = (255, 255, 255), gridColor = (0,0,0), gridLineWidth = 3):
 
         self.gridNumberX, self.gridNumberY = gridSize
         self.gridPixelSize = gridPixelSize
@@ -146,7 +148,7 @@ class ColorChasingPoints:
 
 
 class AdjustPullingLineWidth:
-    def __init__(self, minWidth, maxWidth):
+    def __init__(self, minWidth = 1, maxWidth = 5):
         self.minWidth = minWidth
         self.maxWidth = maxWidth
 
@@ -197,3 +199,19 @@ class DrawInferenceResult:
         game = self.drawCirclesAndLines(game, pointsLocation, pointsColor, linesWidth)
 
         return game
+
+
+class PlotInferenceProb:
+    def __init__(self, xVariableName, yVaraibleName, groupIndex):
+        self.xVariableName = xVariableName
+        self.yVaraibleName = yVaraibleName
+        self.groupIndex = groupIndex
+
+    def __call__(self, inferenceDf):
+        resultDf = inferenceDf.groupby(self.groupIndex).sum()
+        graph = resultDf.T.plot()
+        graph.set_xlabel(self.xVariableName)
+        graph.set_ylabel(self.yVaraibleName)
+        plt.savefig(os.path.join(self.groupIndex + 'InferencePlot'))
+        plt.show()
+
