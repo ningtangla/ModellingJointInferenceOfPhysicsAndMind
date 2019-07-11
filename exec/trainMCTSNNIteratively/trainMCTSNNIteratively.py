@@ -1,198 +1,190 @@
+import time
 import sys
 import os
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
+from subprocess import Popen, PIPE
+import json
 import numpy as np
-import tensorflow as tf
-import random
-from functools import reduce
 import pickle
+from collections import OrderedDict
+from mujoco_py import load_model_from_path, MjSim
+import pandas as pd
+from matplotlib import pyplot as plt
 
 from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
-from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, Expand, MCTS, backup
-from src.play import SampleTrajectory
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
+from src.play import SampleTrajectory, chooseGreedyAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
-from exec.evaluationFunctions import GetSavePath
-from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, ApproximateActionPrior, \
-    ApproximateValueFunction, Train, saveVariables
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState
-from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter
+from exec.evaluationFunctions import GetSavePath, readParametersFromDf, LoadTrajectories
+from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateActionPrior, ApproximateValueFunction, \
+    Train, saveVariables, sampleData
+from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter, LearningRateModifier
 from exec.trainMCTSNNIteratively.wrappers import GetApproximateValueFromNode, getStateFromNode
+from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
+from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
 
+def loadData(path):
+    pklFile = open(path, "rb")
+    dataSet = pickle.load(pklFile)
+    pklFile.close()
 
-def saveData(data, path):
-    pickleOut = open(path, 'wb')
-    pickle.dump(data, pickleOut)
-    pickleOut.close()
+    return dataSet
 
+class GenerateTrajectoriesParallel:
+    def __init__(self, codeFileName, numSample, readParametersFromDf):
+        self.codeFileName = codeFileName
+        self.numSample = numSample
+        self.readParametersFromDf = readParametersFromDf
 
-class ActionToOneHot:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
+    def __call__(self, oneConditionDf):
+        sampleIdStrings = list(map(str, range(self.numSample)))
+        parameters = self.readParametersFromDf(oneConditionDf)
+        parametersString = json.dumps(parameters)
+        cmdList = [['python3', self.codeFileName, parametersString, sampleIndex] for sampleIndex in sampleIdStrings]
+        processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
+        for proc in processList:
+            proc.wait()
+        return cmdList
 
-    def __call__(self, action):
-        oneHotAction = np.asarray([1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index
-                                   in range(len(self.actionSpace))])
-        return oneHotAction
-
-
-class AccumulateRewards:
-    def __init__(self, decay, rewardFunction):
-        self.decay = decay
-        self.rewardFunction = rewardFunction
-
-    def __call__(self, trajectory):
-        rewards = [self.rewardFunction(state, action) for state, action in trajectory]
-        accumulateReward = lambda accumulatedReward, reward: self.decay * accumulatedReward + reward
-        accumulatedRewards = np.array([reduce(accumulateReward, reversed(rewards[TimeT:])) for TimeT in range(len(rewards))])
-
-        return accumulatedRewards
-
-
-class AddValuesToTrajectory:
-    def __init__(self, trajectoryValueFunction):
-        self.trajectoryValueFunction = trajectoryValueFunction
+class ProcessTrajectoryForNN:
+    def __init__(self, actionToOneHot, agentId):
+        self.actionToOneHot = actionToOneHot
+        self.agentId = agentId
 
     def __call__(self, trajectory):
-        values = self.trajectoryValueFunction(trajectory)
-        trajWithValues = [(s, a, np.array([v])) for (s, a), v in zip(trajectory, values)]
+        processTuple = lambda state, actions, actionDist, value: \
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+        processedTrajectory = [processTuple(*triple) for triple in trajectory]
 
-        return trajWithValues
+        return processedTrajectory
 
 
 class PreProcessTrajectories:
-    def __init__(self, agentId, actionIndex, actionToOneHot, addValuesToTrajectory):
-        self.agentId = agentId
-        self.actionIndex = actionIndex
-        self.actionToOneHot = actionToOneHot
+    def __init__(self, addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN):
         self.addValuesToTrajectory = addValuesToTrajectory
+        self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
+        self.processTrajectoryForNN = processTrajectoryForNN
 
     def __call__(self, trajectories):
         trajectoriesWithValues = [self.addValuesToTrajectory(trajectory) for trajectory in trajectories]
-        stateActionValueTriples = [triple for trajectory in trajectoriesWithValues for triple in trajectory]
-        triplesFiltered = list(filter(lambda triple: triple[self.actionIndex] is not None, stateActionValueTriples))
-        processTriple = lambda state, actions, value: (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
-        triplesProcessed = [processTriple(state, actions, value) for state, actions, value in triplesFiltered]
+        filteredTrajectories = [self.removeTerminalTupleFromTrajectory(trajectory) for trajectory in trajectoriesWithValues]
+        processedTrajectories = [self.processTrajectoryForNN(trajectory) for trajectory in filteredTrajectories]
 
-        random.shuffle(triplesProcessed)
-        trainData = [[state for state, action, value in triplesProcessed],
-                     [action for state, action, value in triplesProcessed],
-                     np.asarray([value for state, action, value in triplesProcessed])]
-
-        return trainData
+        return processedTrajectories
 
 
-class GetPolicy:
-    def __init__(self, getSheepPolicy, getWolfPolicy):
-        self.getSheepPolicy = getSheepPolicy
-        self.getWolfPolicy = getWolfPolicy
+class IterativePlayAndTrain:
+    def __init__(self, numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
+                       preProcessTrajectories, saveToBuffer, getSampleBatchFromBuffer, getTrainNN):
+        self.numIterations = numIterations
+        self.initializedNNModel = initializedNNModel
+        self.saveNNModel = saveNNModel
+        self.getGenerateTrajectoriesParallel = getGenerateTrajectoriesParallel
+        self.loadTrajectories = loadTrajectories
+        self.preProcessTrajectories = preProcessTrajectories
+        self.saveToBuffer = saveToBuffer
+        self.getSampleBatchFromBuffer = getSampleBatchFromBuffer
+        self.getTrainNN = getTrainNN
 
-    def __call__(self, NNModel):
-        sheepPolicy = self.getSheepPolicy(NNModel)
-        wolfPolicy = self.getWolfPolicy(NNModel)
-        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
-
-        return policy
-
-
-class PlayToTrain:
-    def __init__(self, sampleTrajectory, numTrialsEachIteration, getTrajectorySavePath, getPolicy, saveData):
-        self.sampleTrajectory = sampleTrajectory
-        self.numTrialsEachIteration = numTrialsEachIteration
-        self.getTrajectorySavePath = getTrajectorySavePath
-        self.getPolicy = getPolicy
-        self.saveData = saveData
-
-    def __call__(self, NNModel, pathParameters):
-        policy = self.getPolicy(NNModel)
-        trajectories = [self.sampleTrajectory(policy) for trial in range(self.numTrialsEachIteration)]
-        trajectorySavePath = self.getTrajectorySavePath(pathParameters)
-        self.saveData(trajectories, trajectorySavePath)
-
-        return trajectories
+    def __call__(self, oneConditionDf):
+        numTrajectoriesPerIteration = oneConditionDf.index.get_level_values('numTrajectoriesPerIteration')[0]
+        miniBatchSize = oneConditionDf.index.get_level_values('miniBatchSize')[0]
+        learningRate = oneConditionDf.index.get_level_values('learningRate')[0]
 
 
-class TrainToPlay:
-    def __init__(self, train, getModelSavePath):
-        self.train = train
-        self.getModelSavePath = getModelSavePath
+        generateTrajectoriesParallel = self.getGenerateTrajectoriesParallel(numTrajectoriesPerIteration)
+        sampleBatchFromBuffer = self.getSampleBatchFromBuffer(miniBatchSize)
+        trainNN = self.getTrainNN(learningRate)
 
-    def __call__(self, NNModel, trainData, pathParameters):
-        updatedNNModel = self.train(NNModel, trainData)
-        modelSavePath = self.getModelSavePath(pathParameters)
-        saveVariables(updatedNNModel, modelSavePath)
-
-        return updatedNNModel
-
+        NNModel = self.initializedNNModel
+        buffer = []
+        length = []
+        for iterationIndex in range(self.numIterations):
+            conditionDfOneIteration = pd.concat([oneConditionDf], keys = [iterationIndex], names = ['iterationIndex'])
+            self.saveNNModel(NNModel, conditionDfOneIteration)
+            cmdListGenerateTra = generateTrajectoriesParallel(conditionDfOneIteration)
+            trajectories = self.loadTrajectories(conditionDfOneIteration)
+            meanTrajectoryLength = np.mean([len(trajectory) for trajectory in trajectories])
+            length.append(meanTrajectoryLength)
+            processedTrajectories = self.preProcessTrajectories(trajectories)
+            updatedBuffer = self.saveToBuffer(buffer, processedTrajectories)
+            if len(updatedBuffer) >= #miniBatchSize:
+                sampledBatch = sampleBatchFromBuffer(updatedBuffer)
+                trainData = [list(varBatch) for varBatch in zip(*sampledBatch)]
+                updatedNNModel = trainNN(NNModel, trainData)
+                NNModel = updatedNNModel
+            buffer = updatedBuffer
+        return length 
 
 def main():
-    random.seed(128)
-    np.random.seed(128)
-    tf.set_random_seed(128)
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['numTrajectoriesPerIteration'] = [256]
+    manipulatedVariables['miniBatchSize'] = [512]
+    manipulatedVariables['learningRate'] = [0.01]
 
-    # commonly varied parameters
-    numIterations = 1000
-    numTrialsEachIteration = 1
+    levelNames = list(manipulatedVariables.keys())
+    levelValues = list(manipulatedVariables.values())
+    modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    toSplitFrame = pd.DataFrame(index=modelIndex)
 
-    # functions for MCTS
-    envModelName = 'twoAgents'
+
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    numActionSpace = len(actionSpace)
+
+    # neural network init and save path
+    numStateSpace = 12
+    regularizationFactor = 1e-4
+    sharedWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
+    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+    initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+
+    maxRunningSteps = 10
+    numSimulations = 50
     qPosInit = (0, 0, 0, 0)
-    qVelInit = [0, 0, 0, 0]
-    numAgents = 2
     qPosInitNoise = 9.7
-    qVelInitNoise = 0
+    NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInitNoise': qPosInitNoise, 'qPosInit': qPosInit,
+                            'numSimulations': numSimulations}
+    dirName = os.path.dirname(__file__)
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
+                                        'trainedNNModels')
+    if not os.path.exists(NNModelSaveDirectory):
+        os.makedirs(NNModelSaveDirectory)
+    NNModelSaveExtension = ''
+    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+    NNPathFromDf = lambda oneConditionDf: getNNModelSavePath(readParametersFromDf(oneConditionDf)) 
+    saveNNModel = lambda NNmodel, oneConditionDf: saveVariables(NNmodel, NNPathFromDf(oneConditionDf)) 
+  
+    #generate trajectory 
+    generateTrajectoriesCodeName = 'generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py'
+    getGenerateTrajectoriesParallel = lambda numTrajectoriesPerIteration: GenerateTrajectoriesParallel(generateTrajectoriesCodeName, numTrajectoriesPerIteration,
+            readParametersFromDf)
+    
+    #trajectory path to load
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit,
+                                 'qPosInitNoise': qPosInitNoise, 'numSimulations': numSimulations}
+    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
+                                           'trajectories')
+    if not os.path.exists(trajectorySaveDirectory):
+        os.makedirs(trajectorySaveDirectory)
+    trajectoryExtension = '.pickle'
+    getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
 
+    #load trajectories
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadData, readParametersFromDf)
+
+    # pre-process the trajectory for training the neural network
     sheepId = 0
     wolfId = 1
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-
-    killzoneRadius = 0.5
-    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-
-    renderOn = False
-    numSimulationFrames = 20
-    transit = TransitionFunction(envModelName, isTerminal, renderOn, numSimulationFrames)
-    sheepTransit = lambda state, action: transit(state, [action, stationaryAgentPolicy(state)])
-
-    cInit = 1
-    cBase = 100
-    calculateScore = CalculateScore(cInit, cBase)
-    selectChild = SelectChild(calculateScore)
-
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    numActionSpace = len(actionSpace)
-
-    # neural network model
-    numStateSpace = 12
-    learningRates = [1e-8, 1e-6, 1e-10]
-    regularizationFactor = 1e-4
-    hiddenWidths = [128, 128]
-
-    maxRunningSteps = 10
-    numSimulations = 75                                                                                                 # should we change this number?
-
-    # wrapper function for expand
-    approximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, actionSpace)
-    getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, sheepTransit, approximateActionPrior(NNModel))
-    getExpandNNPrior = lambda NNModel: Expand(isTerminal, getInitializeChildrenNNPrior(NNModel))
-
-    # wrapper function for policy
-    getApproximateValue = lambda NNModel: GetApproximateValueFromNode(getStateFromNode, ApproximateValueFunction(NNModel))
-    getMCTSNN = lambda NNModel: MCTS(numSimulations, selectChild, getExpandNNPrior(NNModel),
-                                     getApproximateValue(NNModel), backup, selectGreedyAction)
-    getStationaryAgentPolicy = lambda NNModel: stationaryAgentPolicy                                                    # should I do this just to keep the interface symmetric?
-    getPolicy = GetPolicy(getMCTSNN, getStationaryAgentPolicy)
-
-    # sample trajectory
-    reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
-
-    # pre-process the trajectory for training the neural network
-    playAliveBonus = -0.05
+    playAliveBonus = -1/maxRunningSteps
     playDeathPenalty = 1
     playKillzoneRadius = 0.5
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepXPos, getWolfXPos)
@@ -202,62 +194,49 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
+    actionToOneHot = lambda action: np.asarray([1 if (np.array(action) == np.array(actionSpace[index])).all() else 0
+                                                for index in range(len(actionSpace))])
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(actionSpace)
-    preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot, addValuesToTrajectory)
+    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+    removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
+    processTrajectoryForNN = ProcessTrajectoryForNN(actionToOneHot, sheepId)
+    preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory,
+                                                    processTrajectoryForNN)
+
+    # replay buffer
+    windowSize = 10000
+    saveToBuffer = SaveToBuffer(windowSize)
+    getUniformSamplingProbabilities = lambda buffer: [(1/len(buffer)) for _ in buffer]
+    getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # function to train NN model
-    trainSteps = 50
-    batchSize = None
+    batchSizeForTrainFunction = 0
     terminalThreshold = 1e-6
     lossHistorySize = 10
     initActionCoeff = 1
     initValueCoeff = 1
+    initCoeff = (initActionCoeff, initValueCoeff)
+    afterActionCoeff = 1
+    afterValueCoeff = 1
+    afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
-    coefficientController = CoefficientController(initActionCoeff, initValueCoeff)
+    coefficientController = CoefficientController(initCoeff, afterCoeff)
     reportInterval = 25
-    trainReporter = TrainReporter(trainSteps, reportInterval)
-
-    train = Train(trainSteps, batchSize, terminalController, coefficientController, trainReporter)
-
-    # NN model save path
-    trainFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInitNoise': qPosInitNoise, 'qPosInit': qPosInit,
-                            'numSimulations': numSimulations, 'trainSteps': trainSteps,
-                            'numTrialsEachIteration': numTrialsEachIteration}
-    NNModelSaveDirectory = "../../data/trainMCTSNNIteratively/trainedNNModels"
-    if not os.path.exists(NNModelSaveDirectory):
-        os.makedirs(NNModelSaveDirectory)
-    NNModelSaveExtension = ''
-    getModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, trainFixedParameters)
-
-    # trajectory save path
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit,
-                                 'qPosInitNoise': qPosInitNoise, 'numSimulations': numSimulations,
-                                 'trainSteps': trainSteps,
-                                 'numTrialsEachIteration': numTrialsEachIteration}
-    trajectorySaveDirectory = "../../data/trainMCTSNNIteratively/trajectories/training"
-    if not os.path.exists(trajectorySaveDirectory):
-        os.makedirs(trajectorySaveDirectory)
-    trajectoryExtension = '.pickle'
-    getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
-
-    # play and train NN iteratively
-    playToTrain = PlayToTrain(sampleTrajectory, numTrialsEachIteration, getTrajectorySavePath, getPolicy, saveData)
-    trainToPlay = TrainToPlay(train, getModelSavePath)
-    replayBuffer = []
-
-
-    for learningRate in learningRates:
-        generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate,
-                                                           regularizationFactor)
-        NNModel = generatePolicyNet(hiddenWidths)
-        for iteration in range(numIterations):
-            trajectories = playToTrain(NNModel, {'iteration': iteration, 'learnRate': learningRate})
-            trainData = preProcessTrajectories(trajectories)
-
-            updatedNNModel = trainToPlay(NNModel, trainData, {'iteration': iteration, 'learnRate': learningRate})
-            NNModel = updatedNNModel
-
-
+    numTrainStepsPerIteration = 1
+    trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
+    learningRateDecay = 1
+    learningRateDecayStep = 1
+    learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
+    getTrainNN = lambda learningRate: Train(numTrainStepsPerIteration, batchSizeForTrainFunction, sampleData,
+                                                      learningRateModifier(learningRate),
+                                                      terminalController, coefficientController,
+                                                      trainReporter)
+    # functions to iteratively play and train the NN
+    numIterations = 150
+    iterativePlayAndTrain = IterativePlayAndTrain(numIterations, initializedNNModel, saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
+                       preProcessTrajectories, saveToBuffer, getSampleBatchFromBuffer, getTrainNN)
+    performanceDf = toSplitFrame.groupby(levelNames).apply(iterativePlayAndTrain) 
+    plt.plot(performanceDf.values[0])
+    plt.show()
 if __name__ == '__main__':
     main()

@@ -1,16 +1,50 @@
 import numpy as np
 
+class GetStateFromTrajectory:
+    def __init__(self, timeStep, stateIndex):
+        self.timeStep = timeStep
+        self.stateIndex = stateIndex
+
+    def __call__(self, trajectory):
+        state = trajectory[self.timeStep][self.stateIndex]
+
+        return state
+
+
+class GetAgentPosFromTrajectory:
+    def __init__(self, getAgentPosFromState, getStateFromTrajectory):
+        self.getAgentPosFromState = getAgentPosFromState
+        self.getStateFromTrajectory = getStateFromTrajectory
+
+    def __call__(self, trajectory):
+        state = self.getStateFromTrajectory(trajectory)
+        agentPos = self.getAgentPosFromState(state)
+
+        return agentPos
+
+
+class GetAgentActionFromTrajectory:
+    def __init__(self, timeStep, actionIndex, agentId):
+        self.timeStep = timeStep
+        self.actionIndex = actionIndex
+        self.agentId = agentId
+
+    def __call__(self, trajectory):
+        allAgentActions = trajectory[self.timeStep][self.actionIndex]
+        agentAction = allAgentActions[self.agentId]
+
+        return agentAction
 
 class ComputeOptimalNextPos:
-    def __init__(self, getInitStateFromTrajectory, optimalPolicy, transit, getAgentPosFromState):
+    def __init__(self, getInitStateFromTrajectory, getOptimalAction, transit, getAgentPosFromState):
         self.getInitStateFromTrajectory = getInitStateFromTrajectory
-        self.optimalPolicy = optimalPolicy
+        self.getOptimalAction = getOptimalAction
         self.transit = transit
         self.getAgentPosFromState = getAgentPosFromState
 
     def __call__(self, trajectory):
         initState = self.getInitStateFromTrajectory(trajectory)
-        optimalAction = self.optimalPolicy(initState)
+        optimalAction = self.getOptimalAction(initState)
         nextState = self.transit(initState, optimalAction)
         nextPos = self.getAgentPosFromState(nextState)
 

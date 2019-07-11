@@ -104,7 +104,7 @@ def main():
     pointExtendTime = 100
     FPS = 60
     colorList = [BLACK,BLACK,BLACK]
-    colorList = [BLUE, PINK, GREEN]
+    # colorList = [BLUE, PINK, GREEN]
 
     pointWidth = 10
     modificationRatio = 3
@@ -122,7 +122,7 @@ def main():
     drawGrid = DrawGrid(gridSize, gridPixelSize, backgroundColor, gridColor, gridLineWidth)
 
     drawPointsFromLocationDfandSaveImage = DrawPointsFromLocationDfAndSaveImage(initializeGame, drawGrid, drawCircles, gridPixelSize)
-    drawPointsFromLocationDfandSaveImage(trajectory, iterationNumber, saveImage = False)
+    drawPointsFromLocationDfandSaveImage(trajectory, iterationNumber, saveImage = True)
 
 
 if __name__ == '__main__':
