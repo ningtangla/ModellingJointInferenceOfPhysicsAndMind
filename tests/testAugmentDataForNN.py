@@ -11,8 +11,7 @@ from ddt import ddt, data, unpack
 import numpy as np
 import math
 from evaluateAugmentation.augmentDataForNN import GenerateSymmetricData, \
-    GetAgentStateFromDataSetState, GenerateSymmetricState, \
-    GenerateSymmetricDistribution, CalibrateState
+    GenerateSymmetricState, GenerateSymmetricDistribution, CalibrateState
 from analyticGeometryFunctions import transitePolarToCartesian
 from dataTools import createSymmetricVector
 xBoundary = [0, 180]
@@ -40,12 +39,6 @@ class TestGenerateData(unittest.TestCase):
             np.array([1, 0]),
             np.array([-1, 1])
         ]
-        agentStateDim = 2
-        sheepID = 0
-        self.getSheepState = GetAgentStateFromDataSetState(
-            agentStateDim, sheepID)
-        wolfID = 1
-        self.getWolfState = GetAgentStateFromDataSetState(agentStateDim, wolfID)
 
     @data((2, 2, [1, 0, 0, 1], [1, 1], [0, 1, 1, 0]))
     @unpack

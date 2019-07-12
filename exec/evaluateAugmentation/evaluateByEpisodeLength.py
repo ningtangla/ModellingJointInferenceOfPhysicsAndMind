@@ -24,6 +24,7 @@ from augmentDataForNN import GenerateSymmetricData, GenerateSymmetricDistributio
 from dataTools import createSymmetricVector
 import trainTools
 from pylab import plt
+import random
 
 
 class GenerateTrainedModel:
@@ -89,6 +90,22 @@ class GenerateTrainedModel:
             with open(saveTrajName, 'wb') as f:
                 pickle.dump(trajectories, f)
         return pd.Series({"Trajectory": trajectories})
+
+
+class SampleDataWithAugmentation:
+    def __init__(self, generateSymmetricData,  augmented):
+        self.generateSymmetricData = generateSymmetricData
+        self.augmented = augmented
+
+    def __call__(self, data, batchSize):
+        if self.augmented:
+            normalBatch = [list(varBatch) for varBatch in random.sample(data, batchSize)]
+            augmentedBatch = [self.generateSymmetricData(data) for data in normalBatch]
+            reducedBatch = [random.sample(batch, 1)[0] for batch in augmentedBatch]
+            finalBatch = [list(batch) for batch in zip(*reducedBatch)]
+            return finalBatch
+        else:
+            return net.sampleData(data, batchSize)
 
 
 def main():
