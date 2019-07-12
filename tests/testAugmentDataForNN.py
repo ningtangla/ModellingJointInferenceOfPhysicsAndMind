@@ -10,7 +10,7 @@ import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 import math
-from augmentDataForNN import GenerateSymmetricData, \
+from evaluateAugmentation.augmentDataForNN import GenerateSymmetricData, \
     GetAgentStateFromDataSetState, GenerateSymmetricState, \
     GenerateSymmetricDistribution, CalibrateState
 from analyticGeometryFunctions import transitePolarToCartesian

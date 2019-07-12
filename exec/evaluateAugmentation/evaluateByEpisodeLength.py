@@ -1,7 +1,8 @@
 import sys
 import os
-src = os.path.join(os.pardir, 'src')
+src = os.path.join(os.pardir, os.pardir, 'src')
 sys.path.append(src)
+sys.path.append(os.path.join(os.pardir))
 sys.path.append(os.path.join(src, 'neuralNetwork'))
 sys.path.append(os.path.join(src, 'constrainedChasingEscapingEnv'))
 sys.path.append(os.path.join(src, 'algorithms'))
@@ -91,7 +92,7 @@ class GenerateTrainedModel:
 
 
 def main():
-    dataDir = os.path.join(os.pardir, 'data', 'evaluateByEpisodeLength')
+    dataDir = os.path.join(os.pardir, os.pardir, 'data', 'evaluateByEpisodeLength')
 
     # sample trajectory
     sheepID = 0
