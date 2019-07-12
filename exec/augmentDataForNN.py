@@ -100,7 +100,7 @@ class GenerateSymmetricData:
         self.generateSymmetricDistribution = generateSymmetricDistribution
 
     def __call__(self, data):
-        state, distribution = data
+        state, distribution, value = data
         twinSymmetry = self.symmetries[0]
         twinState = self.generateSymmetricState(state, twinSymmetry)
         twinDistribution = self.generateSymmetricDistribution(
@@ -116,7 +116,7 @@ class GenerateSymmetricData:
             for symmetry in self.symmetries
         }
         symmetricData.update(twinSymmetricData)
-        augmentedData = [[state, distribution]
+        augmentedData = [[state, distribution, value]
                          for state, distribution in symmetricData.items()]
         return augmentedData
 
