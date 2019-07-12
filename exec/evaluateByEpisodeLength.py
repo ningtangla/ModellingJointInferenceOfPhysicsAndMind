@@ -19,24 +19,27 @@ from analyticGeometryFunctions import transitePolarToCartesian, \
     computeAngleBetweenVectors
 from evaluationFunctions import GetSavePath, ComputeStatistics, \
     LoadMultipleTrajectoriesFile
+from augmentDataForNN import GenerateSymmetricData, GenerateSymmetricDistribution, GenerateSymmetricState, CalibrateState
+from dataTools import createSymmetricVector
 import trainTools
 from pylab import plt
 
 
 class GenerateTrainedModel:
 
-    def __init__(self, getSavePathForModel, getSavePathForTrajectory,
-                 generateModel, generateTrain, generatePolicy, sampleTrajectory,
-                 numTrials):
+    def __init__(self, numTrials, getSavePathForModel, getSavePathForTrajectory,
+                 generateModel, generateTrain, generatePolicy,
+                 generateSampleBatch, sampleTrajectory):
+        self.numTrials = numTrials
         self.getSavePathForModel = getSavePathForModel
         self.getSavePathForTrajectory = getSavePathForTrajectory
         self.generateTrain = generateTrain
         self.generateModel = generateModel
         self.generatePolicy = generatePolicy
+        self.generateSampleBatch = generateSampleBatch
         self.sampleTrajectory = sampleTrajectory
-        self.numTrials = numTrials
 
-    def __call__(self, df, dataSetDict):
+    def __call__(self, df, dataSet):
         trainDataSize = df.index.get_level_values('trainingDataSize')[0]
         trainDataType = df.index.get_level_values('trainingDataType')[0]
         batchSize = df.index.get_level_values('batchSize')[0]
@@ -46,13 +49,8 @@ class GenerateTrainedModel:
         actionLayers = df.index.get_level_values('actionLayers')[0]
         valueLayers = df.index.get_level_values('valueLayers')[0]
         augmented = df.index.get_level_values('augmented')[0]
-        if augmented == 'yes':
-            dataFactor = 8
-        else:
-            dataFactor = 1
-        dataSet = dataSetDict[augmented]
         trainData = [
-            dataSet[varName][:trainDataSize*dataFactor]
+            dataSet[varName][:trainDataSize]
             for varName in ['state', trainDataType, 'value']
         ]
         indexLevelNames = df.index.names
@@ -74,7 +72,8 @@ class GenerateTrainedModel:
         if os.path.exists(saveModelDir):
             trainedModel = net.restoreVariables(model, modelPath)
         else:
-            train = self.generateTrain(trainingStep, batchSize)
+            sample = self.generateSampleBatch(augmented)
+            train = self.generateTrain(trainingStep, batchSize, sample)
             trainedModel = train(model, trainData)
             net.saveVariables(trainedModel, modelPath)
         saveTrajName = self.getSavePathForTrajectory(parameters)
@@ -115,7 +114,6 @@ def main():
 
     # data set
     dataSetDict = dict()
-    augmentedDataSetDir = os.path.join(dataDir,"augmentedDataSets")
     dataSetDir = os.path.join(dataDir,"dataSets")
     dataSetParameter = OrderedDict()
     dataSetParameter['cBase'] = 100
@@ -133,21 +131,13 @@ def main():
         print("No dataSet in: {}".format(dataSetPath))
         exit(1)
     with open(dataSetPath, "rb") as f:
-        dataSetDict['no'] = pickle.load(f)
-    getSavePathForAugmentedDataSet = GetSavePath(augmentedDataSetDir, dataSetExtension)
-    augmentedDataSetPath = getSavePathForAugmentedDataSet(dataSetParameter)
-    if not os.path.exists(augmentedDataSetPath):
-        print("No dataSet in: {}".format(augmentedDataSetPath))
-        exit(1)
-    with open(augmentedDataSetPath, "rb") as f:
-        dataSetDict['yes'] = pickle.load(f)
+        dataSet = pickle.load(f)
 
     # NeuralNetwork Parameter
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
-    validationSize = 100
     trainTerminalController = trainTools.TrainTerminalController(
-        lossHistorySize, lossChangeThreshold, validationSize)
+        lossHistorySize, lossChangeThreshold)
     initActionCoefficient = (1, 1)
     initValueCoefficient = (1, 1)
     coefficientController = trainTools.CoefficientCotroller(
@@ -159,24 +149,18 @@ def main():
     initLearningRate = 1e-4
     learningRateModifier = trainTools.LearningRateModifier(
         initLearningRate, decayRate, decayStep)
-    testDataSize = 10000
-    testDataType = 'actionDist'
-    testData = [
-        dataSetDict['no'][varName][-testDataSize:]
-        for varName in ['state', testDataType, 'value']
+    symmetries = [
+        np.array([1, 1]),
+        np.array([0, 1]),
+        np.array([1, 0]),
+        np.array([-1, 1])
     ]
-    generateTrain = lambda trainingStep, batchSize: net.Train(
-        trainingStep, batchSize, net.sampleData, learningRateModifier,
-        trainTerminalController, coefficientController, reporter, testData)
-    numStateSpace = 4
-    numActionSpace = 8
-    regularizationFactor = 0
-    valueRelativeErrBound = 0.1
-    generateModel = net.GenerateModel(numStateSpace,
-                                      numActionSpace,
-                                      regularizationFactor,
-                                      valueRelativeErrBound)
-
+    round = lambda state: np.round(state, 10)
+    calibrateState = CalibrateState(xBoundary, yBoundary, round)
+    stateDim = 2
+    generateSymmetricState = GenerateSymmetricState(numOfAgent, stateDim,
+                                                    createSymmetricVector,
+                                                    calibrateState)
     degrees = [
         math.pi / 2, 0, math.pi, -math.pi / 2, math.pi / 4, -math.pi * 3 / 4,
         -math.pi / 4, math.pi * 3 / 4
@@ -187,6 +171,30 @@ def main():
     sheepActionSpace = [
         establishAction(sheepSpeed, degree) for degree in degrees
     ]
+    generateSymmetricDistribution = GenerateSymmetricDistribution(
+        sheepActionSpace, createSymmetricVector)
+    generateSymmetricData = GenerateSymmetricData(
+        symmetries, createSymmetricVector, generateSymmetricState,
+        generateSymmetricDistribution)
+    generateSampleBatch = lambda augmented: net.SampleDataWithAugmentation(generateSymmetricData, augmented)
+    # trainData = [
+    #     dataSet[varName][:2]
+    #     for varName in ['state', 'actionDist', 'value']
+    # ]
+    # print(sampleData(list(zip(*trainData)), 2))
+    # exit()
+    generateTrain = lambda trainingStep, batchSize, sampleData: net.Train(
+        trainingStep, batchSize, sampleData, learningRateModifier,
+        trainTerminalController, coefficientController, reporter)
+    numStateSpace = 4
+    numActionSpace = 8
+    regularizationFactor = 0
+    valueRelativeErrBound = 0.1
+    generateModel = net.GenerateModel(numStateSpace,
+                                      numActionSpace,
+                                      regularizationFactor,
+                                      valueRelativeErrBound)
+
     wolfSpeed = sheepSpeed * 0.95
     wolfActionSpace = [establishAction(wolfSpeed, degree) for degree in degrees]
     wolfPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(
@@ -201,7 +209,7 @@ def main():
     independentVariables['trainingDataType'] = ['actionDist']
     independentVariables['trainingDataSize'] = [size for size in range(5000, 61000, 5000)]
     independentVariables['batchSize'] = [2048, 4096]
-    independentVariables['augmented'] = ['yes', 'no']
+    independentVariables['augmented'] = [True, False]
     independentVariables['trainingStep'] = [20000]
     independentVariables['neuronsPerLayer'] = [64]
     independentVariables['sharedLayers'] = [3]
@@ -227,13 +235,15 @@ def main():
                                            extension, fixedParameter)
 
     numTrials = 1000
-    generateTrainingOutput = GenerateTrainedModel(getSavePathForModel,
+    generateTrainingOutput = GenerateTrainedModel(numTrials,
+                                                getSavePathForModel,
                                                   getSavePathForTrajectory,
                                                   generateModel, generateTrain,
                                                   generatePolicy,
-                                                  sampleTrajectory, numTrials)
+                                                  generateSampleBatch,
+                                                  sampleTrajectory)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput,
-                                                      dataSetDict)
+                                                      dataSet)
 
     loadTrajectories = LoadMultipleTrajectoriesFile(getSavePathForTrajectory,
                                                     pickle.load)
