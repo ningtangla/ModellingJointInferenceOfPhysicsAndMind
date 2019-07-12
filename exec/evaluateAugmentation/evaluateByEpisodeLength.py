@@ -131,7 +131,6 @@ def main():
                                         reset, chooseGreedyAction)
 
     # data set
-    dataSetDict = dict()
     dataSetDir = os.path.join(dataDir,"dataSets")
     dataSetParameter = OrderedDict()
     dataSetParameter['cBase'] = 100
@@ -194,13 +193,7 @@ def main():
     generateSymmetricData = GenerateSymmetricData(
         symmetries, createSymmetricVector, generateSymmetricState,
         generateSymmetricDistribution)
-    generateSampleBatch = lambda augmented: net.SampleDataWithAugmentation(generateSymmetricData, augmented)
-    # trainData = [
-    #     dataSet[varName][:2]
-    #     for varName in ['state', 'actionDist', 'value']
-    # ]
-    # print(sampleData(list(zip(*trainData)), 2))
-    # exit()
+    generateSampleBatch = lambda augmented: SampleDataWithAugmentation(generateSymmetricData, augmented)
     generateTrain = lambda trainingStep, batchSize, sampleData: net.Train(
         trainingStep, batchSize, sampleData, learningRateModifier,
         trainTerminalController, coefficientController, reporter)
