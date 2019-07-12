@@ -29,82 +29,96 @@ class GetAgentStateFromDataSetState:
         return agentState
 
 
-class GenerateSymmetricData():
+class CalibrateState:
 
-    def __init__(self, bias, getSymmeticVector, symmetries, actionSpace,
-                 getSheepState, getWolfState):
-        self.bias = bias
-        self.getSymmetricVector = getSymmeticVector
+    def __init__(self, xBoundary, yBoundary, round):
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.round = round
+
+    def __call__(self, state):
+        xPos, yPos = self.round(state)
+        if xPos < self.xBoundary[0]:
+            calibrateXPos = xPos + self.xBoundary[1]
+        else:
+            calibrateXPos = xPos
+        if yPos < self.yBoundary[0]:
+            calibrateyPos = yPos + self.yBoundary[1]
+        else:
+            calibrateyPos = yPos
+        return [calibrateXPos, calibrateyPos]
+
+
+class GenerateSymmetricState:
+
+    def __init__(self, numOfAgent, stateDim, createSymmetricVector,
+                 calibrateState):
+        self.numOfAgent = numOfAgent
+        self.stateDim = stateDim
+        self.createSymmetricVector = createSymmetricVector
+        self.calibrateState = calibrateState
+
+    def __call__(self, state, symmetry):
+        groupedState = [
+            state[num * self.stateDim:(num + 1) * self.stateDim]
+            for num in range(self.numOfAgent)
+        ]
+        symmetricState = [
+            self.calibrateState(createSymmetricVector(symmetry, state))
+            for state in groupedState
+        ]
+        flattenedState = np.concatenate(symmetricState)
+        return flattenedState
+
+
+class GenerateSymmetricDistribution:
+
+    def __init__(self, actionSpace, createSymmetricVector):
+        self.createSymmetricVector = createSymmetricVector
+        self.actionSpace = actionSpace
+
+    def __call__(self, distribution, symmetry):
+        distributionDict = {
+            action: prob for action, prob in zip(self.actionSpace, distribution)
+        }
+        getSymmetricAction = lambda action: tuple(
+            np.around(self.createSymmetricVector(symmetry, action)))
+        symmetricDistribution = [
+            distributionDict[getSymmetricAction(np.array(action))]
+            for action in self.actionSpace
+        ]
+        return symmetricDistribution
+
+
+class GenerateSymmetricData:
+
+    def __init__(self, symmetries, actionSpace, generateSymmetricState,
+                 generateSymmetricDistribution):
         self.symmetries = symmetries
         self.actionSpace = actionSpace
-        self.getSheepState = getSheepState
-        self.getWolfState = getWolfState
+        self.generateSymmetricState = generateSymmetricState
+        self.generateSymmetricDistribution = generateSymmetricDistribution
 
-    def __call__(self, dataSet):
-        newDataSet = []
-        for data in dataSet:
-            turningPoint = None
-            state, actionDistribution = data
-            for symmetry in self.symmetries:
-                newState = np.concatenate([
-                    self.getSymmetricVector(symmetry,
-                                            np.array(
-                                                self.getSheepState(state))),
-                    self.getSymmetricVector(symmetry,
-                                            np.array(self.getWolfState(state)))
-                ])
-                newActionDistributionDict = {
-                    tuple(
-                        np.round(
-                            self.getSymmetricVector(
-                                symmetry, np.array(self.actionSpace[index])))):
-                    actionDistribution[index]
-                    for index in range(len(actionDistribution))
-                }
-                newActionDistribution = [
-                    newActionDistributionDict[action]
-                    for action in self.actionSpace
-                ]
-                if np.all(symmetry == np.array([1, 1])):
-                    turningPoint = np.array([newState, newActionDistribution])
-                newDataSet.append(
-                    np.array([newState,
-                              np.array(newActionDistribution)]))
-            if turningPoint is None:
-                continue
-            state, actionDistribution = turningPoint
-            for symmetry in self.symmetries:
-                newState = np.concatenate([
-                    self.getSymmetricVector(symmetry,
-                                            np.array(
-                                                self.getSheepState(state))),
-                    self.getSymmetricVector(symmetry,
-                                            np.array(self.getWolfState(state)))
-                ])
-                newActionDistributionDict = {
-                    tuple(
-                        np.round(
-                            self.getSymmetricVector(
-                                symmetry, np.array(self.actionSpace[index])))):
-                    actionDistribution[index]
-                    for index in range(len(actionDistribution))
-                }
-                newActionDistribution = [
-                    newActionDistributionDict[action]
-                    for action in self.actionSpace
-                ]
-                newDataSet.append(
-                    np.array([newState,
-                              np.array(newActionDistribution)]))
-        augmentedDataSet = [
-            np.array([
-                np.array(
-                    [coor + self.bias if coor < 0 else coor
-                     for coor in state]), distribution
-            ])
-            for (state, distribution) in newDataSet
-        ]
-        return augmentedDataSet
+    def __call__(self, data):
+        state, distribution = data
+        twinSymmetry = self.symmetries[0]
+        twinState = self.generateSymmetricState(state, twinSymmetry)
+        twinDistribution = self.generateSymmetricDistribution(
+            distribution, twinSymmetry)
+        symmetricData = {
+            tuple(self.generateSymmetricState(state, symmetry)):
+            self.generateSymmetricDistribution(distribution, symmetry)
+            for symmetry in self.symmetries
+        }
+        twinSymmetricData = {
+            tuple(self.generateSymmetricState(twinState, symmetry)):
+            self.generateSymmetricDistribution(twinDistribution, symmetry)
+            for symmetry in self.symmetries
+        }
+        symmetricData.update(twinSymmetricData)
+        augmentedData = [[state, distribution]
+                         for state, distribution in symmetricData.items()]
+        return augmentedData
 
 
 def main():
@@ -125,17 +139,15 @@ def main():
         print("No dataSet in: {}".format(dataSetPath))
         exit(1)
     with open(dataSetPath, "rb") as f:
-        dataSet = pickle.load(f)
+        dataSetDict = pickle.load(f)
     stateKey = 'state'
     actionLabelKey = 'actionDist'
-    originalData = [[
-        state, label
-    ] for state, label in zip(dataSet[stateKey], dataSet[actionLabelKey])]
+    originalDataSet = [[state, label] for state, label in zip(
+        dataSetDict[stateKey], dataSetDict[actionLabelKey])]
 
     # env
     xBoundary = [0, 180]
     yBoundary = [0, 180]
-    bias = xBoundary[1]
     degrees = [
         math.pi / 2, 0, math.pi, -math.pi / 2, math.pi / 4, -math.pi * 3 / 4,
         -math.pi / 4, math.pi * 3 / 4
@@ -152,21 +164,31 @@ def main():
         np.array([1, 0]),
         np.array([-1, 1])
     ]
-    agentStateDim = 2
-    sheepID = 0
-    getSheepState = GetAgentStateFromDataSetState(agentStateDim, sheepID)
-    wolfID = 1
-    getWolfState = GetAgentStateFromDataSetState(agentStateDim, wolfID)
-    generateSymmetricData = GenerateSymmetricData(bias, createSymmetricVector,
-                                                  symmetries, sheepActionSpace,
-                                                  getSheepState, getWolfState)
-    augmentedData = generateSymmetricData(originalData)
+    stateDim = 2
+    numOfAgent = 2
+    round = lambda state: np.round(state, 10)
+    calibrateState = CalibrateState(xBoundary, yBoundary, round)
+    generateSymmetricState = GenerateSymmetricState(numOfAgent, stateDim,
+                                                    createSymmetricVector,
+                                                    calibrateState)
+    generateSymmetricDistribution = GenerateSymmetricDistribution(
+        sheepActionSpace, createSymmetricVector)
+    generateSymmetricData = GenerateSymmetricData(
+        symmetries, createSymmetricVector, generateSymmetricState,
+        generateSymmetricDistribution)
+    augmentedDataSet = np.concatenate([
+        generateSymmetricData(originalData) for originalData in originalDataSet
+    ])
     augmentedDataSetParameter = dataSetParameter
     augmentedDataSetParameter['augmented'] = 'yes'
     augmentedDataSetPath = getSavePathForDataSet(augmentedDataSetParameter)
-    augmentedDataSet = dataSet
-    augmentedDataSet[stateKey] = [state for state, label in augmentedData]
-    augmentedDataSet[actionLabelKey] = [label for state, label in augmentedData]
+    augmentedDataSetDict = dataSetDict
+    augmentedDataSetDict[stateKey] = [
+        state for state, label in augmentedDataSet
+    ]
+    augmentedDataSetDict[actionLabelKey] = [
+        label for state, label in augmentedDataSet
+    ]
     with open(augmentedDataSetPath, 'wb') as f:
         pickle.dump(augmentedDataSet, f)
 
