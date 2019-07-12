@@ -55,33 +55,88 @@ class FetchTensorValuesAcrossCollections:
 
 
 class PlotHistograms:
-    def __init__(self, figSize, summarizeStats, plotConfig=None, spaceBtwSubplots=(0.4, 0.6)):
+    def __init__(self, figSize, summarizeStats, useLogScale=False, plotConfig=None, spaceBtwSubplots=(0.4, 0.6)):
         self.figSize = figSize
         self.summarizeStats = summarizeStats
+        self.useLogScale = useLogScale
         self.plotConfig = plotConfig
         self.wspace, self.hspace = spaceBtwSubplots
 
     def __call__(self, valueName, valueDict, savePath):
-        numOfSubplots = len(valueDict)
-        if self.plotConfig is not None:
-            plotCols, plotRows = self.plotConfig
+        valueDict = {name: value.flatten() for name, value in valueDict.items()}
+
+        layerCount = {"shared": 0, "action": 0, "value": 0}
+        for name, value in valueDict.items():
+            for layerName in layerCount:
+                if layerName in name:
+                    layerCount[layerName] += 1
+        plotRows = len(layerCount)
+        plotCols = max(list(layerCount.values()))
+        fig = plt.figure(figsize=self.figSize)
+        gs = fig.add_gridspec(plotRows, plotCols)
+
+        allValue = np.concatenate(list(valueDict.values()))
+        if self.useLogScale:
+            logAllValue = np.log10(allValue + 1e-10)
+            _, logBins = np.histogram(logAllValue, bins="auto")
+            bins = 10 ** logBins
         else:
-            plotCols = int(np.ceil(np.sqrt(numOfSubplots)))
-            plotRows = int(np.ceil(numOfSubplots / plotCols))
-        fig, axs = plt.subplots(plotRows, plotCols, figsize=self.figSize)
+            _, bins = np.histogram(allValue, bins="auto")
 
-        axs = axs.flat
-        for ax in axs[len(valueDict):]:
-            ax.remove()
-        axs = axs[:len(valueDict)]
-
-        for ax, (name, value) in zip(axs, valueDict.items()):
+        layerNameToPos = {"shared": [0, 0], "action": [1, 0], "value": [2, 0]}
+        axs = []
+        for name, value in valueDict.items():
+            for layerName in layerNameToPos:
+                if layerName in name:
+                    r, c = layerNameToPos[layerName]
+                    layerNameToPos[layerName] = [r, c + 1]
+            ax = fig.add_subplot(gs[r, c])
+            axs.append(ax)
             summary = self.summarizeStats(value)
-            ax.set_title("{}\n$\mu=${:.4f} $\sigma=${:.4f}\nrange=[{:.4f}, {:.4f}]"
-                         .format(name, summary["mean"], summary["std"], summary["min"], summary["max"]))
-            ax.hist(value.flatten(), density=1)
+            ax.set_title("{}\n$\mu=${:.2E} $\sigma=${:.2E}".format(name, summary["mean"], summary["std"]))
+            if self.useLogScale:
+                ax.set_xscale("log")
+                logValue = np.log10(value + 1e-10)
+                counts, _ = np.histogram(logValue, bins=logBins)
+            else:
+                counts, _ = np.histogram(value, bins=bins)
+            ax.hist(bins[:-1], bins=bins, weights=counts / np.sum(counts))
+
+        xMin, xMax = np.inf, -np.inf
+        yMin, yMax = np.inf, -np.inf
+        for ax in axs:
+            x0, x1 = ax.get_xlim()
+            y0, y1 = ax.get_ylim()
+            xMin = min(x0, xMin)
+            xMax = max(x1, xMax)
+            yMin = min(y0, yMin)
+            yMax = max(y1, yMax)
+        for ax in axs:
+            ax.set_xlim(xMin, xMax)
+            ax.set_ylim(yMin, yMax)
+
         plt.suptitle("Histograms of {}".format(valueName))
         plt.subplots_adjust(wspace=self.wspace, hspace=self.hspace)
+
+        if savePath is not None:
+            plt.savefig(savePath)
+        plt.show()
+
+
+class PlotBoxes:
+    def __init__(self, figSize, useLogScale=False):
+        self.figSize = figSize
+        self.useLogScale = useLogScale
+
+    def __call__(self, valueName, valueDict, savePath):
+        fig, ax = plt.subplots(figsize=self.figSize)
+        data = list(valueDict.values())
+        labels = list(valueDict.keys())
+        if self.useLogScale:
+            ax.set_yscale('log')
+        ax.boxplot(data, labels=labels)
+        ax.set_title("Box plots of {}".format(valueName))
+        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
         if savePath is not None:
             plt.savefig(savePath)
         plt.show()
@@ -91,9 +146,9 @@ def main():
     numStateSpace = 4
     numActionSpace = 8
     generateModel = net.GenerateModel(numStateSpace, numActionSpace)
-    sharedWidths = [8]
-    actionWidths = [8, 8, 4]
-    valueWidths = [4]
+    sharedWidths = [100]
+    actionWidths = [300, 300, 200]
+    valueWidths = [200]
     policyValueNet = generateModel(sharedWidths, actionWidths, valueWidths)
     fetchTensorValuesInOneCollection = FetchTensorValuesInOneCollection(policyValueNet, clipTensorName)
     fetchTensorValuesAcrossCollections = FetchTensorValuesAcrossCollections(policyValueNet, clipTensorName)
@@ -129,15 +184,30 @@ def main():
     gtActions_, gtValues_ = g.get_collection("groundTruths")
     feedDict = {states_: trainData[0], gtActions_: trainData[1], gtValues_: trainData[2]}
 
-
-    keyword = "gradient"
+    keyword = "grad"
     valueDict = fetchTensorValuesAcrossCollections(keyword, feedDict)
 
-    figSize = (15, 10)
-    plotHists = PlotHistograms(figSize, summarizeStats)
+    weightGradientValueDict = dict()
+    for name in valueDict:
+        if "kernel" in name:
+            weightGradientValueDict[name] = valueDict[name]
 
-    savePath = None
-    plotHists(keyword + 's', valueDict, savePath)
+    biasGradientValueDict = dict()
+    for name in valueDict:
+        if "bias" in name:
+            biasGradientValueDict[name] = valueDict[name]
+
+    flattenedValueDict = {name: value.flatten() for name, value in weightGradientValueDict.items()}
+    absValueDict = {name: np.abs(value) for name, value in flattenedValueDict.items()}
+
+    figSize = (15, 10)
+    useLogScale = True
+    plotBoxes = PlotBoxes(figSize, useLogScale)
+    plotHists = PlotHistograms(figSize, summarizeStats, useLogScale)
+
+    boxPlotSavePath = None
+    histPlotSavePath = None
+    plotHists("weight gradients", absValueDict, histPlotSavePath)
 
 
 if __name__ == "__main__":

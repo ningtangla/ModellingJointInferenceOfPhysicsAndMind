@@ -223,14 +223,12 @@ def saveVariables(model, path):
     graph = model.graph
     saver = graph.get_collection_ref("saver")[0]
     saver.save(model, path)
-    print("Model saved in {}".format(path))
 
 
 def restoreVariables(model, path):
     graph = model.graph
     saver = graph.get_collection_ref("saver")[0]
     saver.restore(model, path)
-    print("Model restored from {}".format(path))
     return model
 
 

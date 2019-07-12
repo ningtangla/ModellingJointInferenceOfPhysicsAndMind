@@ -43,7 +43,7 @@ class GenerateModel:
                 activation_ = states_
                 for i in range(len(sharedWidths)):
                     fcLayer = tf.layers.Dense(units=sharedWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fcLayer{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
                     tf.add_to_collection("weights", fcLayer.kernel)
                     tf.add_to_collection("biases", fcLayer.bias)
@@ -54,13 +54,13 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(actionLayerWidths)):
                     fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fcLayer{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
                     tf.add_to_collection("weights", fcLayer.kernel)
                     tf.add_to_collection("biases", fcLayer.bias)
                     tf.add_to_collection("activations", activation_)
                 outputFCLayer = tf.layers.Dense(units=self.numActionSpace, activation=None, kernel_initializer=initWeight,
-                                                bias_initializer=initBias, name="fcLayer{}".format(len(actionLayerWidths) + 1))
+                                                bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
                 outputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collection("weights", outputFCLayer.kernel)
                 tf.add_to_collection("biases", outputFCLayer.bias)
@@ -76,14 +76,14 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(valueLayerWidths)):
                     fcLayer = tf.layers.Dense(units=valueLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fcLayer{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
                     tf.add_to_collection("weights", fcLayer.kernel)
                     tf.add_to_collection("biases", fcLayer.bias)
                     tf.add_to_collection("activations", activation_)
 
                 outputFCLayer = tf.layers.Dense(units=1, activation=None, kernel_initializer=initWeight,
-                                                bias_initializer=initBias, name="fcLayer{}".format(len(valueLayerWidths) + 1))
+                                                bias_initializer=initBias, name="fc{}".format(len(valueLayerWidths) + 1))
                 outputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collection("weights", outputFCLayer.kernel)
                 tf.add_to_collection("biases", outputFCLayer.bias)
@@ -133,7 +133,7 @@ class GenerateModel:
 
                 with tf.name_scope("inspectGrad"):
                     for grad_, var_ in gradVarPairs_:
-                        tf.add_to_collection(var_.name + "_gradient", grad_)
+                        tf.add_to_collection(var_.name + "/gradient", grad_)
                     gradients_ = [tf.reshape(grad_, [1, -1]) for (grad_, _) in gradVarPairs_]
                     allGradTensor_ = tf.concat(gradients_, 1)
                     allGradNorm_ = tf.norm(allGradTensor_)
@@ -162,7 +162,7 @@ class GenerateModel:
 
 
 class Train:
-    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter, validationData):
+    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController, coefficientController, trainReporter):
         self.maxStepNum = maxStepNum
         self.batchSize = batchSize
         self.sampleData = sampleData
@@ -170,8 +170,6 @@ class Train:
         self.terminalController = terimnalController
         self.coefficientController = coefficientController
         self.reporter = trainReporter
-        self.validationData = validationData
-        self.count = 1
 
     def __call__(self, model, trainingData):
         graph = model.graph
@@ -202,10 +200,10 @@ class Train:
             feedDict = {state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch,
                         learningRate_: learningRate, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
             evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
-            # validationDict = evaluate(model, self.validationData)
+
             self.reporter(evalDict, stepNum, trainWriter, summary)
 
-            if self.terminalController(evalDict, None, stepNum):
+            if self.terminalController(evalDict, stepNum):
                 break
 
         return model
@@ -222,8 +220,9 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
     valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
     evalSummaryOp = graph.get_collection_ref('summaryOps')[1]
     testWriter = graph.get_collection_ref('writers')[1]
-    fetches = [{"loss":loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
+    fetches = [{"actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
                evalSummaryOp]
+
     stateBatch, actionBatch, valueBatch = testData
     evalDict, summary = model.run(fetches, feed_dict={state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch})
     if summaryOn:
