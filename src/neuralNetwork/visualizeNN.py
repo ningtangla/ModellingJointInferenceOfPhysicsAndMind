@@ -4,6 +4,7 @@ dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
 
 import numpy as np
+from collections import OrderedDict
 import pandas as pd
 import pickle
 from pylab import plt
@@ -11,21 +12,19 @@ import src.neuralNetwork.policyValueNet as net
 from exec.evaluationFunctions import GetSavePath
 
 
-def frameNNData(levelNames, sectionNameToDepth):
-    indexSection = lambda name, numOfLayers: [(name, i + 1) for i in range(numOfLayers)]
+def indexLayers(sectionNameToDepth):
+    indexSection = lambda sectionName, depth: [(sectionName, i + 1) for i in range(depth)]
     sectionIndexLists = [indexSection(sectionName, depth) for sectionName, depth in sectionNameToDepth.items()]
     layerIndices = sum(sectionIndexLists, [])
-    multiIndex = pd.MultiIndex.from_tuples(layerIndices, names=levelNames)
-    toSplitFrame = pd.DataFrame(index=multiIndex)
-    return toSplitFrame
+    return layerIndices
 
 
 class FindKey:
     def __init__(self, allKeys):
         self.allKeys = allKeys
 
-    def __call__(self, varName, sectionName, layerIndex):
-        keyPrefix = f"{varName}/{sectionName}/fc{layerIndex}/"
+    def __call__(self, varName, sectionName, layerNum):
+        keyPrefix = f"{varName}/{sectionName}/fc{layerNum}/"
         matches = np.array([keyPrefix in key for key in self.allKeys])
         matchIndices = np.argwhere(matches).flatten()
         assert(len(matchIndices) == 1)
@@ -41,9 +40,8 @@ class FetchVarsFromModel:
         self.findKey = findKey
 
     def __call__(self, oneConditionDf):
-        sectionName = oneConditionDf.index.get_level_values("section")[0]
-        layerIndex = oneConditionDf.index.get_level_values("layer")[0]
-        findKeyByVarName = lambda varName: self.findKey(varName, sectionName, layerIndex)
+        sectionName, layerNum = oneConditionDf.index.get_level_values('layerIndex')[0]
+        findKeyByVarName = lambda varName: self.findKey(varName, sectionName, layerNum)
         collectionKeys = [findKeyByVarName(varName) for varName in self.varNames]
         getTensorByKey = lambda key: self.model.graph.get_collection(key)[0]
         varNameToTensor = {varName: getTensorByKey(key) for varName, key in zip(self.varNames, collectionKeys)}
@@ -68,41 +66,38 @@ def syncLimits(axs):
 
 
 class PlotHist:
-    def __init__(self, useAbs, useLog, binCount, histBase, syncLimits):
+    def __init__(self, useAbs, useLog, histBase, bins):
         self.useAbs = useAbs
         self.useLog = useLog
-        self.binCount = binCount
         self.histBase = histBase
-        self.syncLimits = syncLimits
+        self.bins = bins
 
-    def __call__(self, nnVariableDf, varName, sectionNameToDepth):
-        plotRows = len(sectionNameToDepth)
-        plotCols = max(list(sectionNameToDepth.values()))
-        fig = plt.figure()
-        fig.suptitle(f"Histograms of {varName}")
-        gs = fig.add_gridspec(plotRows, plotCols)
+    def __call__(self, layerIndex, ax, rawData):
+        if self.useLog:
+            ax.set_xscale("log")
+        data = (np.abs(rawData) if self.useAbs else rawData) + (self.histBase if self.useLog else 0)
+        counts, _ = np.histogram(data, bins=self.bins)
+        ax.hist(self.bins[:-1], bins=self.bins, weights=counts / np.sum(counts))
+        sectionName, layerNum = layerIndex
+        ax.set_title(f"{sectionName}/{layerNum} $\mu=${np.mean(data):.2E} $\sigma=${np.std(data):.2E}")
 
-        rawAllData = np.concatenate(nnVariableDf[varName].tolist())
-        allData = np.abs(rawAllData) if self.useAbs else rawAllData
-        counts, bins = logHist(allData, self.binCount, self.histBase) if self.useLog \
-            else np.histogram(allData, bins=self.binCount)
 
-        sectionNameToRow = {'shared': 0, 'action': 1, 'value': 2}
-        axs = []
-        for sectionName, sectionGrp in nnVariableDf.groupby('section'):
-            sectionGrp.index = sectionGrp.index.droplevel('section')
-            for layerIndex, layerDf in sectionGrp.groupby('layer'):
-                axForDraw = fig.add_subplot(gs[sectionNameToRow[sectionName], layerIndex - 1])
-                if self.useLog:
-                    axForDraw.set_xscale("log")
-                axs.append(axForDraw)
-                rawData = np.array(layerDf[varName][layerIndex])
-                data = (np.abs(rawData) if self.useAbs else rawData) + (self.histBase if self.useLog else 0)
-                counts, _ = np.histogram(data, bins=bins)
-                axForDraw.hist(bins[:-1], bins=bins, weights=counts / np.sum(counts))
-                axForDraw.set_title(f"{sectionName}/{layerIndex} $\mu=${np.mean(data):.2E} $\sigma=${np.std(data):.2E}")
-        self.syncLimits(axs)
-        plt.show()
+class PlotBars:
+    def __init__(self, useAbs, useLog):
+        self.useAbs = useAbs
+        self.useLog = useLog
+
+    def __call__(self, ax, means, stds, mins, maxes, labels):
+        if self.useLog:
+            ax.set_yscale('log')
+        numLayers = len(labels)
+        ax.plot(range(numLayers), means, 'or', label="$\mu$")
+        ax.errorbar(range(numLayers), means, stds, label="$\sigma$", fmt='.', markersize=0, ecolor="black", lw=4)
+        ax.errorbar(range(numLayers), means, [means - mins, maxes - means], label="range", fmt=".", markersize=0, ecolor="grey", lw=1.5)
+        ax.legend()
+        ax.set_xticks(range(numLayers))
+        ax.set_xticklabels(labels)
+        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
 
 
 class PlotErrorBars:
@@ -116,26 +111,6 @@ class PlotErrorBars:
         layerIndices = sum(sectionIndexLists, [])
         numLayers = len(layerIndices)
 
-        rawDataList = [nnVariableDf[varName][section][layer] for section, layer in layerIndices]
-        dataList = [np.abs(data) for data in rawDataList] if self.useAbs else rawDataList
-        indexToStr = lambda sectionName, layerIndex: f"{sectionName}/{layerIndex}"
-        labelList = [indexToStr(section, layer) for section, layer in layerIndices]
-
-        fig, ax = plt.subplots()
-        if self.useLog:
-            ax.set_yscale('log')
-        statsOnPlot = [(np.mean(data), np.std(data), np.min(data), np.max(data)) for data in dataList]
-        means, stds, mins, maxs = [np.array(stats) for stats in zip(*statsOnPlot)]
-        ax.plot(range(numLayers), means, 'or', label="$\mu$")
-        ax.errorbar(range(numLayers), means, stds, label="$\sigma$", fmt='.', markersize=0, ecolor="black", lw=4)
-        ax.errorbar(range(numLayers), means, [means - mins, maxs - means], label="range", fmt=".", markersize=0, ecolor="grey", lw=1.5)
-        ax.legend()
-        ax.set_xticks(range(numLayers))
-        ax.set_xticklabels(labelList)
-        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
-        ax.set_title("Bar plots of {}".format(varName))
-        plt.show()
-
 
 def main():
     # model
@@ -146,11 +121,17 @@ def main():
     actionWidths = [300, 300, 200]
     valueWidths = [200]
     policyValueNet = generateModel(sharedWidths, actionWidths, valueWidths)
-
-    # empty data frame to split
-    levelNames = ["section", "layer"]
     sectionNameToDepth = {"shared": len(sharedWidths), "action": len(actionWidths) + 1, "value": len(valueWidths) + 1}
-    toSplitFrame = frameNNData(levelNames, sectionNameToDepth)
+    layerIndices = indexLayers(sectionNameToDepth)
+
+    # empty data frame
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['iterationNum'] = [0]
+    manipulatedVariables['layerIndex'] = layerIndices
+    levelNames = list(manipulatedVariables.keys())
+    levelValues = list(manipulatedVariables.values())
+    modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    toSplitFrame = pd.DataFrame(index=modelIndex)
 
     # data
     dataSetsDir = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/dataSets'
@@ -191,14 +172,49 @@ def main():
 
     # plot
     useAbs = True
-    useLogScale = True
-    binCount = 50
+    useLog = True
     histBase = 1e-10
-    plotHist = PlotHist(useAbs, useLogScale, binCount, histBase, syncLimits)
-    plotBars = PlotErrorBars(useAbs, useLogScale)
-
+    binCount = 50
     varNameToPlot = 'weightGradient'
-    plotHist(nnVariableDf, varNameToPlot, sectionNameToDepth)
+    rawAllData = np.concatenate(nnVariableDf[varNameToPlot].tolist())
+    allData = np.abs(rawAllData) if useAbs else rawAllData
+    _, bins = logHist(allData, binCount, histBase) if useLog else np.histogram(allData, bins=binCount)
+
+    plotBars = PlotBars(useAbs, useLog)
+    plotHist = PlotHist(useAbs, useLog, histBase, bins)
+
+    # histogram
+    sectionNameToRow = {'shared': 0, 'action': 1, 'value': 2}
+    plotRows = len(sectionNameToDepth)
+    plotCols = max(list(sectionNameToDepth.values()))
+    histFig = plt.figure()
+    histFig.suptitle(f"Histograms of {varNameToPlot}")
+    histGS = histFig.add_gridspec(plotRows, plotCols)
+
+    axs = []
+    for iterNum, iterGrp in nnVariableDf.groupby('iterationNum'):
+        iterGrp.index = iterGrp.index.droplevel('iterationNum')
+        for layerIndex, layerDf in iterGrp.groupby('layerIndex'):
+            sectionName, layerNum = layerIndex
+            ax = histFig.add_subplot(histGS[sectionNameToRow[sectionName], layerNum - 1])
+            axs.append(ax)
+            data = np.array(layerDf[varNameToPlot][layerIndex])
+            plotHist(layerIndex, ax, data)
+    syncLimits(axs)
+    plt.show()
+
+    # bar
+    rawDataList = [nnVariableDf[varNameToPlot][0][layerIndex] for layerIndex in layerIndices]
+    dataList = [np.abs(data) for data in rawDataList] if useAbs else rawDataList
+    indexToStr = lambda sectionName, layerIndex: f"{sectionName}/{layerIndex}"
+    labelList = [indexToStr(section, layer) for section, layer in layerIndices]
+
+    _, barAx = plt.subplots()
+    statsOnPlot = [(np.mean(data), np.std(data), np.min(data), np.max(data)) for data in dataList]
+    means, stds, mins, maxs = [np.array(stats) for stats in zip(*statsOnPlot)]
+    plotBars(barAx, means, stds, mins, maxs, labelList)
+    barAx.set_title("Bar plots of {}".format(varNameToPlot))
+    plt.show()
 
 
 if __name__ == "__main__":
