@@ -2,17 +2,18 @@ import numpy as np
 
 
 class Reset():
-    def __init__(self, numOfAgent, initPosition, initPositionNoise):
-        self.numOfAgent = numOfAgent
-        self.initPosition = initPosition
-        self.initPositionNoiseLow, self.initPositionNoiseHigh = initPositionNoise
+    def __init__(self, xBoundary, yBoundary, numOfAgent):
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.numOfAgnet = numOfAgent
 
     def __call__(self):
-        initPositionNoise = np.random.uniform(
-            low=-self.initPositionNoiseLow, high=self.initPositionNoiseHigh, size=self.numOfAgent)
-        initState = [positions +
-                     initPositionNoise for positions in self.initPosition]
-        return initState
+        xMin, xMax = self.xBoundary
+        yMin, yMax = self.yBoundary
+        initState = [[np.random.uniform(xMin, xMax),
+                      np.random.uniform(yMin, yMax)]
+                     for _ in range(self.numOfAgnet)]
+        return np.array(initState)
 
 
 def samplePosition(xBoundary, yBoundary):

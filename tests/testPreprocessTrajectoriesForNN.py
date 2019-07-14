@@ -3,7 +3,7 @@ sys.path.append("..")
 import unittest
 from ddt import ddt, data, unpack
 import numpy as np
-import exec.preprocessTrajectoriesForNN as preprocess
+import exec.compareValueDataStandardizationAndLossCoefs.preprocessTrajectoriesForNN as preprocess
 
 
 @ddt

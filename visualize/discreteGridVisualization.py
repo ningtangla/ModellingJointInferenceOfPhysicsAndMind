@@ -98,13 +98,14 @@ class DrawPointsFromLocationDfAndSaveImage:
         self.drawCircles = drawCircles
         self.gridPixelSize = gridPixelSize
 
-    def __call__(self, locationDf, iterationNumber, saveImage=False):
+    def __call__(self, trajectory, iterationNumber, saveImage=False):
         game = self.initializaGame()
-        for currentState in locationDf.columns:
+        for frameIndex in range(len(trajectory)):
             game = self.drawGrid(game)
-            pointsCoord = (locationDf[currentState])
+
+            pointsCoord = trajectory[frameIndex]
             pointsLocation = [list(np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize // 2)
                               for pointCoord in pointsCoord]
             game = self.drawCircles(game, pointsLocation)
             if saveImage:
-                pygame.image.save(game, "screenshot" + format(currentState, '04') + ".png")
+                pygame.image.save(game, "screenshot" + format(frameIndex, '04') + ".png")

@@ -5,11 +5,11 @@ sys.path.append("../src/algorithms")
 sys.path.append("../src")
 import policyValueNet as net
 import envNoPhysics as env
-import wrapperFunctions
+import wrappers
 import numpy as np
 import pandas as pd
-from measurementFunctions import calculateCrossEntropy
-from analyticGeometryFunctions import transitePolarToCartesian
+from measure import calculateCrossEntropy
+from analyticGeometryFunctions import transitePolarToCartesian, computeAngleBetweenVectors
 from pylab import plt
 import policies
 import mcts
@@ -18,6 +18,9 @@ import math
 from collections import OrderedDict
 from evaluationFunctions import GetSavePath, ComputeStatistics, LoadTrajectories
 import pickle
+import matplotlib.style
+import matplotlib as mpl
+mpl.style.use('bmh')
 
 
 class GenerateDistribution:
@@ -41,7 +44,7 @@ class GenerateDistribution:
             return None
         testState = self.constructTestState([wolfX, wolfY], [sheepX, sheepY])
         if len(testState) == 0:
-            zombieDistribution = [1 / 8 for cnt in range(8)]
+            zombieDistribution = [0, 1, 0]
             data = [{"NNActionDistribution": zombieDistribution, 'mctsActionDistribution': zombieDistribution} for cnt in range(self.numTrials)]
         else:
             evaluateStates = [testState for cnt in range(self.numTrials)]
@@ -55,10 +58,11 @@ class GenerateDistribution:
 
 
 class DrawHeatMap:
-    def __init__(self, groupByVariableNames, subplotIndex, subplotIndexName):
+    def __init__(self, groupByVariableNames, subplotIndex, subplotIndexName, extent):
         self.groupByVariableNames = groupByVariableNames
         self.subplotIndex = subplotIndex
         self.subplotIndexName = subplotIndexName
+        self.extent = extent
 
     def __call__(self, dataDF, colName):
         figure = plt.figure(figsize=(12, 10))
@@ -67,9 +71,20 @@ class DrawHeatMap:
         OrderedSubDFs = [df for subDF in subDFs for key, df in subDF.groupby(self.groupByVariableNames[1])]
         for subDF in OrderedSubDFs:
             subplot = figure.add_subplot(self.subplotIndex[0], self.subplotIndex[1], numOfplot)
-            plotDF = subDF.reset_index()
-            plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
+            resetDF = subDF.reset_index()[[self.subplotIndexName[0], self.subplotIndexName[1], colName]]
+            plotDF = resetDF.pivot(index=self.subplotIndexName[1], columns=self.subplotIndexName[0], values=colName)
+            cValues = plotDF.values
+            xticks = plotDF.columns.values
+            yticks = plotDF.index.values
+            newDf = pd.DataFrame(cValues, index=yticks, columns=xticks)
+            image = subplot.imshow(newDf, vmin=0, vmax=10,
+                              origin="lower", extent=self.extent)
+            plt.colorbar(image, fraction=0.046, pad=0.04)
+            plt.xlabel(self.subplotIndexName[0])
+            plt.ylabel(self.subplotIndexName[1])
+            # plotDF.plot.scatter(x=self.subplotIndexName[0], y=self.subplotIndexName[1], c=colName, colormap="jet", ax=subplot, vmin=0, vmax=9)
             numOfplot = numOfplot + 1
+        plt.suptitle("CrossEntropy Between MCTS and NN")
         plt.subplots_adjust(wspace=0.8, hspace=0.4)
 
 
@@ -92,7 +107,7 @@ def main():
     # env
     wolfID = 1
     sheepID = 0
-    posIndex = 0
+    posIndex = [0, 1]
     numOfAgent = 2
     numPosEachAgent = 2
     numStateSpace = numOfAgent * numPosEachAgent
@@ -109,19 +124,20 @@ def main():
     killZoneRadius = 25
 
     # mcts policy
-    getSheepPos = wrapperFunctions.GetAgentPosFromState(sheepID, posIndex, numPosEachAgent)
-    getWolfPos = wrapperFunctions.GetAgentPosFromState(wolfID, posIndex, numPosEachAgent)
+    getSheepPos = wrappers.GetAgentPosFromState(sheepID, posIndex)
+    getWolfPos = wrappers.GetAgentPosFromState(wolfID, posIndex)
     checkBoundaryAndAdjust = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos)
-    transition = env.TransitionForMultiAgent(checkBoundaryAndAdjust)
-    sheepTransition = lambda state, action: transition(state, [np.array(action), wolfDriectChasingPolicy(state)])
+    wolfDriectChasingPolicy = policies.HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos,
+                                                                              computeAngleBetweenVectors)
+    transition = env.TransiteForNoPhysics(checkBoundaryAndAdjust)
+    sheepTransition = lambda state, action: transition(np.array(state),
+                                                       [np.array(action), wolfDriectChasingPolicy(state)])
     isTerminal = env.IsTerminal(getWolfPos, getSheepPos, killZoneRadius)
 
-    rewardFunction = lambda state, action: 1
-
+    # mcts policy
     cInit = 1
-    cBase = 1
-    calculateScore = mcts.CalculateScore(cInit, cBase)
+    cBase = 100
+    calculateScore = mcts.ScoreChild(cInit, cBase)
     selectChild = mcts.SelectChild(calculateScore)
 
     mctsUniformActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
@@ -131,11 +147,13 @@ def main():
 
     maxRollOutSteps = 10
     rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
+    rewardFunction = lambda state, action: 1
     heuristic = lambda state: 0
-    nodeValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
+    estimateValue = mcts.RollOut(rolloutPolicy, maxRollOutSteps, sheepTransition, rewardFunction, isTerminal, heuristic)
 
     numSimulations = 600
-    mctsPolicy = mcts.MCTS(numSimulations, selectChild, expand, nodeValue, mcts.backup, mcts.establishSoftmaxActionDist)
+    mctsPolicyDistOutput = mcts.MCTS(numSimulations, selectChild, expand, estimateValue, mcts.backup,
+                                     mcts.establishSoftmaxActionDist)
 
     # neuralNetworkModel
     modelDir = "savedModels"
@@ -143,9 +161,8 @@ def main():
     modelPath = os.path.join(dataDir, modelDir, modelName)
     if not os.path.exists(modelPath):
         print("Model {} does not exist".format(modelPath))
-        exit(1)
-    generateModel = net.GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate=0, regularizationFactor=0, valueRelativeErrBound=0.0)
-    emptyModel = generateModel([64]*4)
+    generateModel = net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.0)
+    emptyModel = generateModel([64, 64, 64], [64], [64])
     trainedModel = net.restoreVariables(emptyModel, modelPath)
     nnPolicy = net.ApproximateActionPrior(trainedModel, sheepActionSpace)
 
@@ -173,13 +190,14 @@ def main():
     if not os.path.exists(adPath):
         os.makedirs(adPath)
     getSavePath = GetSavePath(adPath, extension, fixedParameters)
-    generateDistribution = GenerateDistribution(mctsPolicy, nnPolicy, constructTestState, getSavePath, numTrials)
+    generateDistribution = GenerateDistribution(mctsPolicyDistOutput, nnPolicy, constructTestState, getSavePath, numTrials)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateDistribution)
 
     loadData = LoadTrajectories(getSavePath)
-    computeStatistic = ComputeStatistics(loadData, numTrials, calculateCrossEntropy)
+    computeStatistic = ComputeStatistics(loadData, calculateCrossEntropy)
     statisticDf = toSplitFrame.groupby(levelNames).apply(computeStatistic)
-    drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'])
+    drawingExtent = tuple(xBoundary) + tuple(yBoundary)
+    drawHeatMap = DrawHeatMap(['wolfYPosition', 'wolfXPosition'], [len(wolfXPosition), len(wolfYPosition)], ['sheepXPosition', 'sheepYPosition'], drawingExtent)
     drawHeatMap(statisticDf, "mean")
     figureDir = "Graphs"
     figurePath = os.path.join(dataDir, figureDir)

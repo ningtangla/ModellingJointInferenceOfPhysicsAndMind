@@ -2,7 +2,7 @@ import numpy as np
 from anytree import AnyNode as Node
 
 
-class CalculateScore:
+class ScoreChild:
     def __init__(self, cInit, cBase):
         self.cInit = cInit
         self.cBase = cBase
@@ -78,44 +78,34 @@ class RollOut:
         self.rolloutHeuristic = rolloutHeuristic
 
     def __call__(self, leafNode):
-        reachedTerminal = False
         currentState = list(leafNode.id.values())[0]
         totalRewardForRollout = 0
+
         for rolloutStep in range(self.maxRolloutStep):
             action = self.rolloutPolicy(currentState)
             totalRewardForRollout += self.rewardFunction(currentState, action)
-
             if self.isTerminal(currentState):
-                reachedTerminal = True
                 break
-
             nextState = self.transitionFunction(currentState, action)
             currentState = nextState
 
-        if not reachedTerminal:
-            heuristicReward = self.rolloutHeuristic(currentState)
-            totalRewardForRollout += heuristicReward
+        heuristicReward = self.rolloutHeuristic(currentState)
+        totalRewardForRollout += heuristicReward
 
         return totalRewardForRollout
 
 
-def backup(value, nodeList):
+def backup(value, nodeList):#anytree lib
     for node in nodeList:
         node.sumValue += value
         node.numVisited += 1
 
 
-def selectGreedyAction(root):
-    visits = np.array([child.numVisited for child in root.children])
-    maxIndices = np.argwhere(visits == np.max(visits)).flatten()
-    selectedIndex = np.random.choice(maxIndices)
-    action = list(root.children[selectedIndex].id.keys())[0]
-    return action
-
 def establishPlainActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     actionProbs = visits / np.sum(visits)
-    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    actions = [list(child.id.keys())[0] for child in root.children]
+    actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
 
@@ -123,17 +113,19 @@ def establishSoftmaxActionDist(root):
     visits = np.array([child.numVisited for child in root.children])
     expVisits = np.exp(visits)
     actionProbs = expVisits / np.sum(expVisits)
-    actionDist = {list(child.id.keys())[0]: prob for child, prob in zip(root.children, actionProbs)}
+    actions = [list(child.id.keys())[0] for child in root.children]
+    actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
+
 class MCTS:
-    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputActionOrDistribution):
+    def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
         self.numSimulation = numSimulation
         self.selectChild = selectChild
         self.expand = expand
         self.estimateValue = estimateValue
         self.backup = backup
-        self.outputActionOrDistribution = outputActionOrDistribution
+        self.outputDistribution = outputDistribution
 
     def __call__(self, currentState):
         root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
@@ -152,8 +144,8 @@ class MCTS:
             value = self.estimateValue(leafNode)
             self.backup(value, nodePath)
 
-        mctsOutput = self.outputActionOrDistribution(root)
-        return mctsOutput
+        actionDistribution = self.outputDistribution(root)
+        return actionDistribution
 
 
 def main():
