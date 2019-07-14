@@ -38,7 +38,7 @@ def drawPerformanceLine(dataDf, axForDraw, trainSteps):
         grp.index = grp.index.droplevel('sheepPolicyName')
         grp.plot(ax=axForDraw, label=key, y='mean', yerr='std', title='TrainSteps: {}'.format(trainSteps))
 
-
+#
 class GetMCTS:
     def __init__(self, selectChild, rollout, backup, selectNextAction, getActionPriorFunction):
         self.selectChild = selectChild

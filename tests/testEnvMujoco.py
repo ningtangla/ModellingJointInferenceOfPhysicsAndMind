@@ -10,7 +10,7 @@ from mujoco_py import load_model_from_path, MjSim
 
 # Local import
 from src.constrainedChasingEscapingEnv.envMujoco import Reset, TransitionFunction, IsTerminal
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 
 @ddt

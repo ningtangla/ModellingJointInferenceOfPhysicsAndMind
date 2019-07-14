@@ -1,25 +1,29 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'src', 'inferDiscreteGridChasing'))
+sys.path.append(os.path.join('..', 'src', 'inferChasing'))
 sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
 sys.path.append(os.path.join('..', 'visualize'))
 
 import itertools
 import pandas as pd
 import numpy as np
+from pygame.color import THECOLORS
 
 from analyticGeometryFunctions import computeAngleBetweenVectors
-from policyLikelihood import UniformPolicy, ActHeatSeeking, \
+from discreteGridPolicy import UniformPolicy, ActHeatSeeking, \
     HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
-from transitionLikelihood import StayWithinBoundary, PulledForceLikelihood, \
+from discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
-from inference import IsInferenceTerminal, saveImage, Observe, InferOneStep, \
+from inference import IsInferenceTerminal, Observe, InferOneStep, \
     InferDiscreteChasingAndDrawDemo
 from state import GetAgentPosFromState
-from discreteGridInferenceVisualization import checkDuplicates, ModifyOverlappingPoints, \
-    DrawCirclesAndLines, InitializeGame, DrawGrid, GetChasingRoleColor, \
+from inferenceVisualization import SaveImage, GetChasingRoleColor, \
     GetChasingResultColor, ColorChasingPoints, AdjustPullingLineWidth, \
-    DrawInferenceResult, PlotInferenceProb
+    DrawInferenceResultWithPull, PlotInferenceProb
+from initialization import initializeScreen
+
+from discreteGridVisualization import checkDuplicates, ModifyOverlappingPoints, DrawGrid,\
+    DrawCirclesAndLines
 
 
 def main():
@@ -66,19 +70,21 @@ def main():
 
 
 # visualization
-    initializeGame = InitializeGame()
-
-    gridNumberX, gridNumberY = gridSize
+    fullScreen = False
     screenWidth = 800
     screenHeight = 800
-    gridPixelSize = min(screenHeight// gridNumberX, screenWidth// gridNumberY)
-    modifyOverlappingPoints = ModifyOverlappingPoints(gridPixelSize, checkDuplicates)
-    drawCirclesAndLines = DrawCirclesAndLines(modifyOverlappingPoints)
-    drawGrid = DrawGrid(gridSize, gridPixelSize)
+    screen = initializeScreen(fullScreen, screenWidth, screenHeight)
 
-    wolfColor = (255, 0, 0) # red
-    sheepColor = (0, 255, 0) # green
-    masterColor = (0, 0, 255) #blue
+    gridNumberX, gridNumberY = gridSize
+    gridPixelSize = min(screenHeight// gridNumberX, screenWidth// gridNumberY)
+    modificationRatio = 3
+    modifyOverlappingPoints = ModifyOverlappingPoints(gridPixelSize, checkDuplicates, modificationRatio)
+    drawCirclesAndLines = DrawCirclesAndLines(modifyOverlappingPoints)
+    drawGrid = DrawGrid(screen, gridSize, gridPixelSize)
+
+    wolfColor = THECOLORS['red']
+    sheepColor = THECOLORS['green']
+    masterColor = THECOLORS['blue']
 
     wolfIndex = 'wolf'
     sheepIndex = 'sheep'
@@ -87,7 +93,8 @@ def main():
     getWolfColor = GetChasingRoleColor(wolfColor, wolfIndex)
     getSheepColor = GetChasingRoleColor(sheepColor, sheepIndex)
     getMasterColor = GetChasingRoleColor(masterColor, masterIndex)
-    getChasingResultColor = GetChasingResultColor(getWolfColor, getSheepColor, getMasterColor)
+    getRolesColor = [getWolfColor, getSheepColor, getMasterColor]
+    getChasingResultColor = GetChasingResultColor(getRolesColor)
 
     colorChasingPoints = ColorChasingPoints(getChasingResultColor)
     adjustPullingLineWidth = AdjustPullingLineWidth()
@@ -101,9 +108,9 @@ def main():
     iterables = [chasingSpace, pullingSpace, actionHypo]
     inferenceIndex = pd.MultiIndex.from_product(iterables, names=['mind', 'physics', 'action'])
 
-    drawInferenceResult = DrawInferenceResult(inferenceIndex, gridPixelSize,
-                                              initializeGame, drawGrid, drawCirclesAndLines,
-                                              colorChasingPoints, adjustPullingLineWidth)
+    drawInferenceResult = DrawInferenceResultWithPull(inferenceIndex, gridPixelSize,
+                                                      drawGrid, drawCirclesAndLines,
+                                                      colorChasingPoints, adjustPullingLineWidth)
 
     thresholdPosterior = 1
     mindPhysicsName = ['mind', 'physics']
@@ -113,11 +120,17 @@ def main():
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
 
     trajectory = [[(6, 2), (9, 2), (5, 4)], [(7, 3), (10, 2), (6, 3)], [(6, 2), (10, 2), (7, 2)], [(8, 2), (10, 2), (6, 1)], [(8, 2), (10, 2), (7, 1)], [(8, 2), (10, 3), (7, 1)], [(9, 1), (10, 3), (8, 2)], [(8, 2), (10, 3), (8, 2)], [(8, 3), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (8, 1)], [(10, 1), (10, 4), (7, 2)], [(9, 2), (10, 5), (9, 2)], [(9, 3), (9, 5), (9, 3)], [(9, 4), (9, 6), (10, 3)], [(10, 5), (9, 7), (10, 3)], [(9, 4), (10, 7), (10, 4)], [(10, 5), (10, 7), (10, 4)], [(10, 5), (10, 8), (9, 5)], [(9, 6), (10, 9), (10, 4)], [(10, 7), (10, 9), (8, 4)], [(9, 8), (10, 10), (9, 3)], [(10, 7), (10, 10), (10, 4)], [(10, 7), (10, 10), (9, 5)], [(10, 7), (10, 10), (8, 6)], [(9, 8), (10, 10), (10, 6)], [(9, 8), (10, 10), (10, 6)], [(10, 9), (10, 9), (9, 7)]]
-    observe = Observe(trajectory)
+    observe = Observe(positionIndex, trajectory)
 
-    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(inferenceIndex, isInferenceTerminal, observe, inferOneStep,drawInferenceResult, saveImage)
+    imageFolderName = 'demo'
+    saveImage = SaveImage(imageFolderName)
+    FPS = 60
+    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(FPS, inferenceIndex,
+                isInferenceTerminal, observe, inferOneStep,
+                 drawInferenceResult, saveImage)
 
     mindsPhysicsPrior = [1/ len(inferenceIndex)] * len(inferenceIndex)
+
     posteriorDf = inferDiscreteChasingAndDrawDemo(mindsPhysicsPrior)
 
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')

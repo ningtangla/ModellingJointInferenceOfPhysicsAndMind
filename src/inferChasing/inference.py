@@ -1,5 +1,20 @@
+# random policy: inference should not be able to infer anything
+# noise to the transition -> make it deterministic first!
 import pandas as pd
-import pygame
+import pygame as pg
+
+class Observe:
+    def __init__(self, positionIndex, trajectory):
+        self.xIndex, self.yIndex = positionIndex
+        self.trajectory = trajectory
+
+    def __call__(self, timeStep):
+        if timeStep >= len(self.trajectory):
+            return None
+        currentState = self.trajectory[timeStep]
+        currentPosition = [[agentState[self.xIndex], agentState[self.yIndex]] for agentState in currentState]
+        return currentPosition
+
 
 class IsInferenceTerminal:
     def __init__(self, thresholdPosterior, mindPhysicsName, inferenceIndex):
@@ -27,7 +42,6 @@ class InferOneStep:
     def __call__(self, state, nextState, mindsPhysicsPrior):
         mindsPhysicsActionsDf = pd.DataFrame(index = self.inferenceIndex)
         getLikelihood = lambda mind, physics, action: self.getMindsPhysicsActionsJointLikelihood(mind, state, action, physics, nextState)
-        # mindsPhysicsActionsDf['jointLikelihood'] = [getLikelihood(mind, physics, action) for index, value in mindsPhysicsActionsDf.iterrows() for mind, physics, action in index]
 
         mindsPhysicsActionsDf['jointLikelihood'] = [getLikelihood(index[0], index[1], index[2])
                                                     for index, value in mindsPhysicsActionsDf.iterrows()]
@@ -43,24 +57,10 @@ class InferOneStep:
         return mindsPhysicsPosterior
 
 
-def saveImage(screenShotIndex, game):
-    pygame.image.save(game, "screenshot" + format(screenShotIndex, '04') + ".png")
-
-
-class Observe:
-    def __init__(self, trajectory):
-        self.trajectory = trajectory
-
-    def __call__(self, timeStep):
-        if timeStep >= len(self.trajectory):
-            return None
-        currentState = self.trajectory[timeStep]
-        return currentState
-
-
 class InferDiscreteChasingAndDrawDemo:
-    def __init__(self, inferenceIndex, isInferenceTerminal, observe, inferOneStep,
+    def __init__(self, fps, inferenceIndex, isInferenceTerminal, observe, inferOneStep,
                  visualize = None, saveImage = None):
+        self.fps = fps
         self.inferenceIndex = inferenceIndex
 
         self.isInferenceTerminal = isInferenceTerminal
@@ -73,13 +73,16 @@ class InferDiscreteChasingAndDrawDemo:
         currentState = self.observe(0)
         nextTimeStep = 1
         mindsPhysicsActionsDf = pd.DataFrame(index = self.inferenceIndex)
+        fpsClock = pg.time.Clock()
         while True:
             mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
             print('round', nextTimeStep)
             if self.visualize:
+                fpsClock.tick(self.fps)
                 game = self.visualize(currentState, mindsPhysicsPrior)
                 if self.saveImage is not None:
                     self.saveImage(nextTimeStep, game)
+
             nextState = self.observe(nextTimeStep)
             if nextState is None:
                 return mindsPhysicsActionsDf
