@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import random
 import pygame as pg
+from pygame.color import THECOLORS
 from collections import OrderedDict
 
 from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild, Expand, RollOut, backup, InitializeChildren
@@ -13,10 +14,9 @@ import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from exec.evaluationFunctions import GetSavePath
-from src.neuralNetwork.policyNet import GenerateModel, Train, restoreVariables, approximatePolicy
+from exec.trajectoriesSaveLoad import GetSavePath, loadFromPickle
+from src.neuralNetwork.policyNet import GenerateModel, Train, restoreVariables, approximatePolicy, saveVariables
 from src.episode import chooseGreedyAction
-
 from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectory
 
 
@@ -35,6 +35,32 @@ class NeuralNetworkPolicy:
         return actionPrior
 
 
+class ActionToOneHot:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def __call__(self, action):
+        oneHotAction = [1 if (np.array(action) == np.array(self.actionSpace[index])).all() else 0 for index in
+                        range(len(self.actionSpace))]
+
+        return oneHotAction
+
+
+class PreProcessTrajectories:
+    def __init__(self, agentId, actionIndex, actionToOneHot):
+        self.agentId = agentId
+        self.actionIndex = actionIndex
+        self.actionToOneHot = actionToOneHot
+
+    def __call__(self, trajectories):
+        stateActionPairs = [pair for trajectory in trajectories for pair in trajectory]
+        stateActionPairsFiltered = list(filter(lambda pair: pair[self.actionIndex] is not None, stateActionPairs))
+        stateActionPairsProcessed = [(np.asarray(state).flatten().tolist(), self.actionToOneHot(action[self.agentId]))
+                                     for state, action, actionDist in stateActionPairsFiltered]
+
+        return stateActionPairsProcessed
+
+
 def main():
     numOfAgent = 2
     sheepId = 0
@@ -45,8 +71,7 @@ def main():
     yBoundary = [0, 240]
     minDistance = 25
 
-    renderOn = True
-    from pygame.color import THECOLORS
+    renderOn = False
     screenColor = THECOLORS['black']
     circleColorList = [THECOLORS['green'], THECOLORS['red']]
     circleSize = 8
@@ -66,19 +91,36 @@ def main():
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
-    wolfActionSpace = [(6, 0), (5, 5), (0, 6), (-5, 5),
-                       (-10, 0), (-5, -5), (0, -10), (5, -5)]
+    wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6),
+                       (-8, 0), (-6, -6), (0, -8), (6, -6)]
     heatSeekingPolicy = HeatSeekingDiscreteDeterministicPolicy(
         wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
+
+# mcts
     # select child
     cInit = 1
     cBase = 100
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
+    def sheepTransit(state, action): return transitionFunction(
+        state, [action, chooseGreedyAction(wolfPolicy(state))])
+
+    # reward function
+    aliveBonus = 0.05
+    deathPenalty = -1
+    rewardFunction = reward.RewardFunctionCompete(
+        aliveBonus, deathPenalty, isTerminal)
+
     # prior
-    getActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
+    getActionPrior = lambda state: {
+        action: 1 / len(actionSpace) for action in actionSpace}
+
+    # initialize children; expand
+    initializeChildren = InitializeChildren(
+        actionSpace, sheepTransit, getActionPrior)
+    expand = Expand(isTerminal, initializeChildren)
 
     # random rollout policy
     def rolloutPolicy(
@@ -86,21 +128,25 @@ def main():
 
     # rollout
     rolloutHeuristicWeight = 0
+    maxRolloutSteps = 10
     rolloutHeuristic = reward.HeuristicDistanceToTarget(
         rolloutHeuristicWeight, getPredatorPos, getPreyPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit,
                       rewardFunction, isTerminal, rolloutHeuristic)
 
-    numSimulations = 200
+    numSimulations = 10
     mcts = MCTS(numSimulations, selectChild, expand,
                 rollout, backup, establishSoftmaxActionDist)
 
     # All agents' policies
-    def policy(state): return [mcts(state), heatSeekingPolicy(state)]
+    sheepPolicy = mcts
+    wolfPolicy = heatSeekingPolicy
+
+    def policy(state): return [sheepPolicy(state), wolfPolicy(state)]
 
     # generate trajectories
-    maxRunningSteps = 30
-    numTrials = 5000
+    maxRunningSteps = 1000
+    numTrials = 50
     sampleTrajectory = SampleTrajectory(
         maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction, render, renderOn)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]
@@ -120,23 +166,22 @@ def main():
     pickleIn.close()
 
     # Get dataset for training
-    dataSetDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trajectories"
-    dataSetExtension = '.pickle'
+    dataSetDirectory = saveDirectory
+    dataSetExtension = extension
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
-    dataSetMaxRunningSteps = 30
-    dataSetNumSimulations = 200
-    dataSetNumTrials = 2
+    dataSetMaxRunningSteps = maxRunningSteps
+    dataSetNumSimulations = numSimulations
+    dataSetNumTrials = numTrials
     dataSetSheepPolicyName = 'mcts'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'sheepPolicyName': dataSetSheepPolicyName}
     dataSetPath = getDataSetPath(dataSetConditionVariables)
-    dataSetTrajectories = loadData(dataSetPath)
+    dataSetTrajectories = loadFromPickle(dataSetPath)
 
     # pre-process the trajectories
     sheepId = 0
     actionIndex = 1
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     actionToOneHot = ActionToOneHot(actionSpace)
     preProcessTrajectories = PreProcessTrajectories(sheepId, actionIndex, actionToOneHot)
     stateActionPairsProcessed = preProcessTrajectories(dataSetTrajectories)
@@ -156,7 +201,7 @@ def main():
     modelToTrain = generatePolicyNet(hiddenWidths)
 
     # train models
-    allTrainSteps = [0, 100, 500]
+    allTrainSteps = [0, 10000]
     reportInterval = 100
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
@@ -171,7 +216,7 @@ def main():
     fixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps,
                        'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                        'learnRate': learningRate}
-    modelSaveDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trainedModels"
+    modelSaveDirectory = saveDirectory
     if not os.path.exists(modelSaveDirectory):
         os.makedirs(modelSaveDirectory)
     modelSaveExtension = ''
@@ -185,41 +230,13 @@ def main():
                       allModelSavePaths.items()]
 
 
-# load chase nn policy
-    numStateSpace = 4
-    numActionSpace = len(actionSpace)
-    learningRate = 0.0001
-    regularizationFactor = 1e-4
-    hiddenWidths = [128, 128]
-    generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
-
-    model = generatePolicyNet(hiddenWidths)
+# load escape nn policy
     manipulatedVariables = OrderedDict()
-    dataSetMaxRunningSteps = 30
-    dataSetNumSimulations = 200
-    dataSetNumTrials = 3
-    modelTrainFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps,
-                                 'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
-                                 'learnRate': learningRate}
-    numStateSpace = 4
-    numActionSpace = len(actionSpace)
-    learningRate = 0.0001
-    regularizationFactor = 1e-4
-    hiddenWidths = [128, 128]
-    generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
-
-    modelSaveDirectory = "../../data/evaluateNNPriorMCTSNoPhysicsSheepChaseWolf/trainedModels"
-    modelSaveExtension = ''
-    getModelSavePath = GetSavePath(modelSaveDirectory, modelSaveExtension, modelTrainFixedParameters)
-
-    trainSteps = 200
+    trainSteps = 10000
     modelSavePath = getModelSavePath({'trainSteps': trainSteps})
     trainedModel = restoreVariables(generatePolicyNet(hiddenWidths), modelSavePath)
 
-    wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6),
-                       (-8, 0), (-6, -6), (0, -8), (6, -6)]
-
-    chasePolicy = NeuralNetworkPolicy(trainedModel, wolfActionSpace)
+    escapePolicy = NeuralNetworkPolicy(trainedModel, actionSpace)
 
 
 if __name__ == "__main__":
