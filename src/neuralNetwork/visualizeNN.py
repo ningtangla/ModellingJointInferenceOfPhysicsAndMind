@@ -1,148 +1,144 @@
 import sys
-sys.path.append('../..')
+import os
+dirName = os.path.dirname(__file__)
+sys.path.append(os.path.join(dirName, '..', '..'))
+
 import numpy as np
+import pandas as pd
 import pickle
 from pylab import plt
 import src.neuralNetwork.policyValueNet as net
 from exec.evaluationFunctions import GetSavePath
 
 
-def summarizeStats(data):
-    data = np.array(data).flatten()
-    summary = dict()
-    summary["mean"] = np.mean(data)
-    summary["std"] = np.std(data)
-    summary["min"] = np.min(data)
-    summary["med"] = np.median(data)
-    summary["max"] = np.max(data)
-    return summary
+def frameNNData(levelNames, sectionNameToDepth):
+    indexSection = lambda name, numOfLayers: [(name, i + 1) for i in range(numOfLayers)]
+    sectionIndexLists = [indexSection(sectionName, depth) for sectionName, depth in sectionNameToDepth.items()]
+    layerIndices = sum(sectionIndexLists, [])
+    multiIndex = pd.MultiIndex.from_tuples(layerIndices, names=levelNames)
+    toSplitFrame = pd.DataFrame(index=multiIndex)
+    return toSplitFrame
 
 
-def clipTensorName(name):
-    nameComponents = name.split('/')[:-1]
-    clippedName = '/'.join(nameComponents)
-    return clippedName
+class FindKey:
+    def __init__(self, allKeys):
+        self.allKeys = allKeys
+
+    def __call__(self, varName, sectionName, layerIndex):
+        keyPrefix = f"{varName}/{sectionName}/fc{layerIndex}/"
+        matches = np.array([keyPrefix in key for key in self.allKeys])
+        matchIndices = np.argwhere(matches).flatten()
+        assert(len(matchIndices) == 1)
+        matchKey = self.allKeys[matchIndices[0]]
+        return matchKey
 
 
-class FetchTensorValuesInOneCollection:
-    def __init__(self, model, rename):
+class FetchVarsFromModel:
+    def __init__(self, model, feedDict, varNames, findKey):
         self.model = model
-        self.rename = rename
+        self.feedDict = feedDict
+        self.varNames = varNames
+        self.findKey = findKey
 
-    def __call__(self, collectionName, feedDict=None):
-        g = self.model.graph
-        tensors_ = g.get_collection(collectionName)
-        nameToTensor_ = {self.rename(t_.name): t_ for t_ in tensors_}
-        nameToValue = self.model.run(nameToTensor_, feed_dict=feedDict)
-        return nameToValue
-
-
-class FetchTensorValuesAcrossCollections:
-    def __init__(self, model, rename):
-        self.model = model
-        self.rename = rename
-
-    def __call__(self, keyword, feedDict=None):
-        nameToTensor_ = dict()
-        g = self.model.graph
-        collectionNames = g.get_all_collection_keys()
-        for collectionName in collectionNames:
-            if keyword in collectionName:
-                t_ = g.get_collection(collectionName)[0]
-                nameToTensor_[self.rename(collectionName)] = t_
-        nameToValue = self.model.run(nameToTensor_, feed_dict=feedDict)
-        return nameToValue
+    def __call__(self, oneConditionDf):
+        sectionName = oneConditionDf.index.get_level_values("section")[0]
+        layerIndex = oneConditionDf.index.get_level_values("layer")[0]
+        findKeyByVarName = lambda varName: self.findKey(varName, sectionName, layerIndex)
+        collectionKeys = [findKeyByVarName(varName) for varName in self.varNames]
+        getTensorByKey = lambda key: self.model.graph.get_collection(key)[0]
+        varNameToTensor = {varName: getTensorByKey(key) for varName, key in zip(self.varNames, collectionKeys)}
+        varNameToValue = self.model.run(varNameToTensor, feed_dict=self.feedDict)
+        varNameToValue = {name: value.flatten() for name, value in varNameToValue.items()}
+        return pd.Series(varNameToValue)
 
 
-class PlotHistograms:
-    def __init__(self, figSize, summarizeStats, useLogScale=False, plotConfig=None, spaceBtwSubplots=(0.4, 0.6)):
-        self.figSize = figSize
-        self.summarizeStats = summarizeStats
-        self.useLogScale = useLogScale
-        self.plotConfig = plotConfig
-        self.wspace, self.hspace = spaceBtwSubplots
+def logHist(data, bins, base):
+    logData = np.log10(np.array(data) + base)
+    counts, logBins = np.histogram(logData, bins=bins)
+    return counts, 10 ** logBins
 
-    def __call__(self, valueName, valueDict, savePath):
-        valueDict = {name: value.flatten() for name, value in valueDict.items()}
 
-        layerCount = {"shared": 0, "action": 0, "value": 0}
-        for name, value in valueDict.items():
-            for layerName in layerCount:
-                if layerName in name:
-                    layerCount[layerName] += 1
-        plotRows = len(layerCount)
-        plotCols = max(list(layerCount.values()))
-        fig = plt.figure(figsize=self.figSize)
+def syncLimits(axs):
+    xlims = sum([list(ax.get_xlim()) for ax in axs], [])
+    xlim = (min(xlims), max(xlims))
+    ylims = sum([list(ax.get_ylim()) for ax in axs], [])
+    ylim = (min(ylims), max(ylims))
+    newLimits = [(ax.set_xlim(xlim), ax.set_ylim(ylim)) for ax in axs]
+    return newLimits
+
+
+class PlotHist:
+    def __init__(self, useAbs, useLog, binCount, histBase, syncLimits):
+        self.useAbs = useAbs
+        self.useLog = useLog
+        self.binCount = binCount
+        self.histBase = histBase
+        self.syncLimits = syncLimits
+
+    def __call__(self, nnVariableDf, varName, sectionNameToDepth):
+        plotRows = len(sectionNameToDepth)
+        plotCols = max(list(sectionNameToDepth.values()))
+        fig = plt.figure()
+        fig.suptitle(f"Histograms of {varName}")
         gs = fig.add_gridspec(plotRows, plotCols)
 
-        allValue = np.concatenate(list(valueDict.values()))
-        if self.useLogScale:
-            logAllValue = np.log10(allValue + 1e-10)
-            _, logBins = np.histogram(logAllValue, bins="auto")
-            bins = 10 ** logBins
-        else:
-            _, bins = np.histogram(allValue, bins="auto")
+        rawAllData = np.concatenate(nnVariableDf[varName].tolist())
+        allData = np.abs(rawAllData) if self.useAbs else rawAllData
+        counts, bins = logHist(allData, self.binCount, self.histBase) if self.useLog \
+            else np.histogram(allData, bins=self.binCount)
 
-        layerNameToPos = {"shared": [0, 0], "action": [1, 0], "value": [2, 0]}
+        sectionNameToRow = {'shared': 0, 'action': 1, 'value': 2}
         axs = []
-        for name, value in valueDict.items():
-            for layerName in layerNameToPos:
-                if layerName in name:
-                    r, c = layerNameToPos[layerName]
-                    layerNameToPos[layerName] = [r, c + 1]
-            ax = fig.add_subplot(gs[r, c])
-            axs.append(ax)
-            summary = self.summarizeStats(value)
-            ax.set_title("{}\n$\mu=${:.2E} $\sigma=${:.2E}".format(name, summary["mean"], summary["std"]))
-            if self.useLogScale:
-                ax.set_xscale("log")
-                logValue = np.log10(value + 1e-10)
-                counts, _ = np.histogram(logValue, bins=logBins)
-            else:
-                counts, _ = np.histogram(value, bins=bins)
-            ax.hist(bins[:-1], bins=bins, weights=counts / np.sum(counts))
-
-        xMin, xMax = np.inf, -np.inf
-        yMin, yMax = np.inf, -np.inf
-        for ax in axs:
-            x0, x1 = ax.get_xlim()
-            y0, y1 = ax.get_ylim()
-            xMin = min(x0, xMin)
-            xMax = max(x1, xMax)
-            yMin = min(y0, yMin)
-            yMax = max(y1, yMax)
-        for ax in axs:
-            ax.set_xlim(xMin, xMax)
-            ax.set_ylim(yMin, yMax)
-
-        plt.suptitle("Histograms of {}".format(valueName))
-        plt.subplots_adjust(wspace=self.wspace, hspace=self.hspace)
-
-        if savePath is not None:
-            plt.savefig(savePath)
+        for sectionName, sectionGrp in nnVariableDf.groupby('section'):
+            sectionGrp.index = sectionGrp.index.droplevel('section')
+            for layerIndex, layerDf in sectionGrp.groupby('layer'):
+                axForDraw = fig.add_subplot(gs[sectionNameToRow[sectionName], layerIndex - 1])
+                if self.useLog:
+                    axForDraw.set_xscale("log")
+                axs.append(axForDraw)
+                rawData = np.array(layerDf[varName][layerIndex])
+                data = (np.abs(rawData) if self.useAbs else rawData) + (self.histBase if self.useLog else 0)
+                counts, _ = np.histogram(data, bins=bins)
+                axForDraw.hist(bins[:-1], bins=bins, weights=counts / np.sum(counts))
+                axForDraw.set_title(f"{sectionName}/{layerIndex} $\mu=${np.mean(data):.2E} $\sigma=${np.std(data):.2E}")
+        self.syncLimits(axs)
         plt.show()
 
 
-class PlotBoxes:
-    def __init__(self, figSize, useLogScale=False):
-        self.figSize = figSize
-        self.useLogScale = useLogScale
+class PlotErrorBars:
+    def __init__(self, useAbs, useLog):
+        self.useAbs = useAbs
+        self.useLog = useLog
 
-    def __call__(self, valueName, valueDict, savePath):
-        fig, ax = plt.subplots(figsize=self.figSize)
-        data = list(valueDict.values())
-        labels = list(valueDict.keys())
-        if self.useLogScale:
+    def __call__(self, nnVariableDf, varName, sectionNameToDepth):
+        indexSection = lambda name, numOfLayers: [(name, i + 1) for i in range(numOfLayers)]
+        sectionIndexLists = [indexSection(sectionName, depth) for sectionName, depth in sectionNameToDepth.items()]
+        layerIndices = sum(sectionIndexLists, [])
+        numLayers = len(layerIndices)
+
+        rawDataList = [nnVariableDf[varName][section][layer] for section, layer in layerIndices]
+        dataList = [np.abs(data) for data in rawDataList] if self.useAbs else rawDataList
+        indexToStr = lambda sectionName, layerIndex: f"{sectionName}/{layerIndex}"
+        labelList = [indexToStr(section, layer) for section, layer in layerIndices]
+
+        fig, ax = plt.subplots()
+        if self.useLog:
             ax.set_yscale('log')
-        ax.boxplot(data, labels=labels)
-        ax.set_title("Box plots of {}".format(valueName))
+        statsOnPlot = [(np.mean(data), np.std(data), np.min(data), np.max(data)) for data in dataList]
+        means, stds, mins, maxs = [np.array(stats) for stats in zip(*statsOnPlot)]
+        ax.plot(range(numLayers), means, 'or', label="$\mu$")
+        ax.errorbar(range(numLayers), means, stds, label="$\sigma$", fmt='.', markersize=0, ecolor="black", lw=4)
+        ax.errorbar(range(numLayers), means, [means - mins, maxs - means], label="range", fmt=".", markersize=0, ecolor="grey", lw=1.5)
+        ax.legend()
+        ax.set_xticks(range(numLayers))
+        ax.set_xticklabels(labelList)
         plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
-        if savePath is not None:
-            plt.savefig(savePath)
+        ax.set_title("Bar plots of {}".format(varName))
         plt.show()
 
 
 def main():
+    # model
     numStateSpace = 4
     numActionSpace = 8
     generateModel = net.GenerateModel(numStateSpace, numActionSpace)
@@ -150,13 +146,16 @@ def main():
     actionWidths = [300, 300, 200]
     valueWidths = [200]
     policyValueNet = generateModel(sharedWidths, actionWidths, valueWidths)
-    fetchTensorValuesInOneCollection = FetchTensorValuesInOneCollection(policyValueNet, clipTensorName)
-    fetchTensorValuesAcrossCollections = FetchTensorValuesAcrossCollections(policyValueNet, clipTensorName)
 
+    # empty data frame to split
+    levelNames = ["section", "layer"]
+    sectionNameToDepth = {"shared": len(sharedWidths), "action": len(actionWidths) + 1, "value": len(valueWidths) + 1}
+    toSplitFrame = frameNNData(levelNames, sectionNameToDepth)
+
+    # data
     dataSetsDir = '../../data/compareValueDataStandardizationAndLossCoefs/trainingData/dataSets'
-    extension = ".pickle"
+    extension = '.pickle'
     getDataSetPath = GetSavePath(dataSetsDir, extension)
-
     initPosition = np.array([[30, 30], [20, 20]])
     maxRollOutSteps = 10
     numSimulations = 200
@@ -171,43 +170,35 @@ def main():
     pathVarDict["numTrajs"] = numTrajs
     pathVarDict["numDataPoints"] = numDataPoints
     pathVarDict["standardizedReward"] = True
-
     savePath = getDataSetPath(pathVarDict)
     with open(savePath, "rb") as f:
         dataSet = pickle.load(f)
-
     trainDataSize = 3000
     trainData = [dataSet[varName][:trainDataSize] for varName in ['state', 'actionDist', 'value']]
 
-    g = policyValueNet.graph
-    states_ = g.get_collection("inputs")[0]
-    gtActions_, gtValues_ = g.get_collection("groundTruths")
-    feedDict = {states_: trainData[0], gtActions_: trainData[1], gtValues_: trainData[2]}
+    # function to apply
+    graph = policyValueNet.graph
+    states = graph.get_collection("inputs")[0]
+    groundTruthActions, groundTruthValues = graph.get_collection("groundTruths")
+    feedDict = {states: trainData[0], groundTruthActions: trainData[1], groundTruthValues: trainData[2]}
+    varNames = ['weight', 'bias', 'activation', 'weightGradient', 'biasGradient']
+    allKeys = graph.get_all_collection_keys()
+    findKey = FindKey(allKeys)
+    fetchTensorValue = FetchVarsFromModel(policyValueNet, feedDict, varNames, findKey)
 
-    keyword = "grad"
-    valueDict = fetchTensorValuesAcrossCollections(keyword, feedDict)
+    nnVariableDf = toSplitFrame.groupby(levelNames).apply(fetchTensorValue)
+    print(nnVariableDf)
 
-    weightGradientValueDict = dict()
-    for name in valueDict:
-        if "kernel" in name:
-            weightGradientValueDict[name] = valueDict[name]
-
-    biasGradientValueDict = dict()
-    for name in valueDict:
-        if "bias" in name:
-            biasGradientValueDict[name] = valueDict[name]
-
-    flattenedValueDict = {name: value.flatten() for name, value in weightGradientValueDict.items()}
-    absValueDict = {name: np.abs(value) for name, value in flattenedValueDict.items()}
-
-    figSize = (15, 10)
+    # plot
+    useAbs = True
     useLogScale = True
-    plotBoxes = PlotBoxes(figSize, useLogScale)
-    plotHists = PlotHistograms(figSize, summarizeStats, useLogScale)
+    binCount = 50
+    histBase = 1e-10
+    plotHist = PlotHist(useAbs, useLogScale, binCount, histBase, syncLimits)
+    plotBars = PlotErrorBars(useAbs, useLogScale)
 
-    boxPlotSavePath = None
-    histPlotSavePath = None
-    plotHists("weight gradients", absValueDict, histPlotSavePath)
+    varNameToPlot = 'weightGradient'
+    plotHist(nnVariableDf, varNameToPlot, sectionNameToDepth)
 
 
 if __name__ == "__main__":

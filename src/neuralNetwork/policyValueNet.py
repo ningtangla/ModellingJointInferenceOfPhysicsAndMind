@@ -45,9 +45,9 @@ class GenerateModel:
                     fcLayer = tf.layers.Dense(units=sharedWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
-                    tf.add_to_collection("weights", fcLayer.kernel)
-                    tf.add_to_collection("biases", fcLayer.bias)
-                    tf.add_to_collection("activations", activation_)
+                    tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
+                    tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
+                    tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
                 sharedOutput_ = tf.identity(activation_, name="output")
 
             with tf.variable_scope("action"):
@@ -56,15 +56,15 @@ class GenerateModel:
                     fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
-                    tf.add_to_collection("weights", fcLayer.kernel)
-                    tf.add_to_collection("biases", fcLayer.bias)
-                    tf.add_to_collection("activations", activation_)
+                    tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
+                    tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
+                    tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
                 outputFCLayer = tf.layers.Dense(units=self.numActionSpace, activation=None, kernel_initializer=initWeight,
                                                 bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
                 outputLayerActivation_ = outputFCLayer(activation_)
-                tf.add_to_collection("weights", outputFCLayer.kernel)
-                tf.add_to_collection("biases", outputFCLayer.bias)
-                tf.add_to_collection("activations", outputLayerActivation_)
+                tf.add_to_collections(["weights", f"weight/{outputFCLayer.kernel.name}"], outputFCLayer.kernel)
+                tf.add_to_collections(["biases", f"bias/{outputFCLayer.bias.name}"], outputFCLayer.bias)
+                tf.add_to_collections(["activations", f"activation/{outputLayerActivation_.name}"], outputLayerActivation_)
 
             with tf.name_scope("actionOutputs"):
                 actionDistributions_ = tf.nn.softmax(outputLayerActivation_, name="distributions")
@@ -78,16 +78,16 @@ class GenerateModel:
                     fcLayer = tf.layers.Dense(units=valueLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i+1))
                     activation_ = fcLayer(activation_)
-                    tf.add_to_collection("weights", fcLayer.kernel)
-                    tf.add_to_collection("biases", fcLayer.bias)
-                    tf.add_to_collection("activations", activation_)
+                    tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
+                    tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
+                    tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
 
                 outputFCLayer = tf.layers.Dense(units=1, activation=None, kernel_initializer=initWeight,
                                                 bias_initializer=initBias, name="fc{}".format(len(valueLayerWidths) + 1))
                 outputLayerActivation_ = outputFCLayer(activation_)
-                tf.add_to_collection("weights", outputFCLayer.kernel)
-                tf.add_to_collection("biases", outputFCLayer.bias)
-                tf.add_to_collection("activations", outputLayerActivation_)
+                tf.add_to_collections(["weights", f"weight/{outputFCLayer.kernel.name}"], outputFCLayer.kernel)
+                tf.add_to_collections(["biases", f"bias/{outputFCLayer.bias.name}"], outputFCLayer.bias)
+                tf.add_to_collections(["activations", f"activation/{outputLayerActivation_.name}"], outputLayerActivation_)
 
             with tf.name_scope("valueOutputs"):
                 values_ = tf.identity(outputLayerActivation_, name="values")
@@ -133,7 +133,8 @@ class GenerateModel:
 
                 with tf.name_scope("inspectGrad"):
                     for grad_, var_ in gradVarPairs_:
-                        tf.add_to_collection(var_.name + "/gradient", grad_)
+                        keyPrefix = "weightGradient" if "kernel" in var_.name else "biasGradient"
+                        tf.add_to_collection(f"{keyPrefix}/{var_.name}", grad_)
                     gradients_ = [tf.reshape(grad_, [1, -1]) for (grad_, _) in gradVarPairs_]
                     allGradTensor_ = tf.concat(gradients_, 1)
                     allGradNorm_ = tf.norm(allGradTensor_)
