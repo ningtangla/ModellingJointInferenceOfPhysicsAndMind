@@ -7,30 +7,25 @@ import numpy as np
 import pickle
 import random
 import pygame as pg
-import numpy as np
 import tensorflow as tf
-import random
 from collections import OrderedDict
-import pickle
 import pandas as pd
 from matplotlib import pyplot as plt
 import time
-
 
 import src.constrainedChasingEscapingEnv.reward as reward
 from exec.evaluationFunctions import GetSavePath, LoadTrajectories, ComputeStatistics
 from src.neuralNetwork.policyNet import GenerateModel, Train, restoreVariables
 
-from src.constrainedChasingEscapingEnv.measurementFunctions import DistanceBetweenActualAndOptimalNextPosition
-from src.constrainedChasingEscapingEnv.wrapperFunctions import GetAgentPosFromState, GetAgentPosFromTrajectory
-
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 import src.constrainedChasingEscapingEnv.envNoPhysics as env
-from src.algorithms.mcts import MCTS, CalculateScore, selectGreedyAction, SelectChild, Expand, RollOut, backup, \
-    InitializeChildren
-from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy
+from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild, Expand, RollOut, backup, InitializeChildren
+
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 from exec.evaluateNoPhysicsEnvWithRender import Render
+from src.episode import chooseGreedyAction
 
 
 def drawPerformanceLine(dataDf, axForDraw, trainSteps):
@@ -50,7 +45,7 @@ class GetMCTS:
     def __call__(self, numSimulations, trainedModel):
         actionPriorFunction = self.getActionPriorFunction(trainedModel)
         expand = Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit, actionPriorFunction))
-        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, selectGreedyAction)
+        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         return mcts
 
@@ -95,22 +90,19 @@ class NeuralNetworkPolicy:
         graph = self.model.graph
         actionDistribution_ = graph.get_collection_ref("actionDistribution")[0]
         state_ = graph.get_collection_ref("inputs")[0]
-        actionDistribution = self.model.run(actionDistribution_, feed_dict={state_: [stateFlat]})[0]
-        maxIndex = np.argwhere(actionDistribution == np.max(actionDistribution)).flatten()
-        actionIndex = np.random.choice(maxIndex)
-        action = self.actionSpace[actionIndex]
+        actionDist = self.model.run(actionDistribution_, feed_dict={state_: [stateFlat]})[0]
+        actionPrior = {action: prob for action, prob in zip(self.actionSpace, actionDist)}
 
-        return action
+        return actionPrior
 
 
 class SampleTrajectory:
-    def __init__(self, maxRunningSteps, transit, isTerminal, reset, render, renderOn):
+    def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
         self.isTerminal = isTerminal
         self.reset = reset
-        self.render = render
-        self.renderOn = renderOn
+        self.chooseAction = chooseAction
 
     def __call__(self, policy, trialIndex):
         state = self.reset(trialIndex)
@@ -119,13 +111,11 @@ class SampleTrajectory:
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
             if self.isTerminal(state):
-                trajectory.append((state, None))
+                trajectory.append((state, None, None))
                 break
-
-            if self.renderOn:
-                self.render(state)
-            action = policy(state)
-            trajectory.append((state, action))
+            actionDists = policy(state)
+            action = [self.chooseAction(actionDist) for actionDist in actionDists]
+            trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
             state = nextState
 
@@ -169,14 +159,28 @@ class GenerateTrajectories:
         return None
 
 
+def loadData(path):
+    pklFile = open(path, "rb")
+    dataSet = pickle.load(pklFile)
+    pklFile.close()
+
+    return dataSet
+
+
+def readParametersFromDf(oneConditionDf):
+    indexLevelNames = oneConditionDf.index.names
+    parameters = {levelName: str(oneConditionDf.index.get_level_values(levelName)[0]) for levelName in indexLevelNames}
+    return parameters
+
+
 if __name__ == "__main__":
     # manipulated variables (and some other parameters that are commonly varied)
     numTrials = 30
-    maxRunningSteps = 30
+    maxRunningSteps = 80
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['trainSteps'] = [0, 500, 1000, 10000]  # according to loss
-    manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNN']
-    manipulatedVariables['numSimulations'] = [50, 200]
+    manipulatedVariables['trainSteps'] = [0, 100, 500, 10000]  # [0, 100, 500, 100000]
+    manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNN']  # ['random', 'MCTS', 'NN', 'MCTSNN']
+    manipulatedVariables['numSimulations'] = [10, 20, 30]  # [10, 20, 30]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -193,40 +197,33 @@ if __name__ == "__main__":
     xBoundary = [0, 320]
     yBoundary = [0, 240]
 
-    renderOn = False
-    from pygame.color import THECOLORS
-    screenColor = THECOLORS['black']
-    circleColorList = [THECOLORS['green'], THECOLORS['red']]
-    circleSize = 8
-    screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-    render = Render(numOfAgent, positionIndex,
-                    screen, screenColor, circleColorList, circleSize)
-
     getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
     getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
 
     stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    isTerminal = env.IsTerminal(getPreyPos, getPredatorPos, minDistance)
+    isTerminal = env.IsTerminal(getPredatorPos, getPreyPos, minDistance)
     transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                    (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
-    actionMagnitude = 6
-    wolfPolicy = HeatSeekingContinuesDeterministicPolicy(getPredatorPos, getPreyPos, actionMagnitude)
+    # actionMagnitude = 8
+    # wolfPolicy = HeatSeekingContinuesDeterministicPolicy(getPredatorPos, getPreyPos, actionMagnitude)
+
+    wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6),
+                       (-8, 0), (-6, -6), (0, -8), (6, -6)]
+    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(
+        wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
     # select child
     cInit = 1
     cBase = 100
-    calculateScore = CalculateScore(cInit, cBase)
+    calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    # prior
-    getActionPriorUniformFunction = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
-
     def sheepTransit(state, action): return transitionFunction(
-        state, [action, wolfPolicy(state)])
+        state, [action, chooseGreedyAction(wolfPolicy(state))])
 
     maxRolloutSteps = 5
 
@@ -259,7 +256,7 @@ if __name__ == "__main__":
 
     dataSetMaxRunningSteps = 30
     dataSetNumSimulations = 200
-    dataSetNumTrials = 8000
+    dataSetNumTrials = 2
     modelTrainFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,
                                  'learnRate': learningRate}
@@ -280,19 +277,23 @@ if __name__ == "__main__":
     getActionPriorNNFunction = lambda trainedModel: GetActionDistNeuralNet(actionSpace, trainedModel)
 
     # wrapper functions for sheep policies
-    getMCTS = GetMCTS(selectChild, rollout, backup, selectGreedyAction, getActionPriorUniformFunction)
-    getMCTSNN = GetMCTS(selectChild, rollout, backup, selectGreedyAction, getActionPriorNNFunction)
-    getRandom = lambda numSimulations, trainedModel: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    getMCTS = GetMCTS(selectChild, rollout, backup, chooseGreedyAction, getActionPriorUniformFunction)
+    getMCTSNN = GetMCTS(selectChild, rollout, backup, chooseGreedyAction, getActionPriorNNFunction)
+    getRandom = lambda numSimulations, trainedModel: lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
     getNN = lambda numSimulations, trainedModel: NeuralNetworkPolicy(trainedModel, actionSpace)
-    getSheepPolicies = {'MCTS': getMCTS, 'random': getRandom, 'NN': getNN, 'MCTSNN': getMCTSNN}
+    getSheepPolicies = {'random': getRandom, 'MCTS': getMCTS, 'NN': getNN, 'MCTSNN': getMCTSNN}
 
     # sample trajectory
-    initPositionList = [[env.samplePosition(xBoundary, yBoundary) for j in range(numOfAgent)]
-                        for i in range(numTrials)]
+    # randomReset = env.Reset(xBoundary, yBoundary, numOfAgent)
+    # initPositionList = [randomReset() for i in range(numTrials)]
+
+    savedPositionFileName = "../../exec/evaluateNNPriorMCTSNoPhysicsSheepEscapeWolf/initPositionListForEvaluation_30trials.pickle"
+    # pickle.dump(initPositionList, open(savedPositionFileName, 'wb'))
+    initPositionList = pickle.load(open(savedPositionFileName, 'rb'))
 
     reset = env.FixedReset(initPositionList)
     sampleTrajectory = SampleTrajectory(
-        maxRunningSteps, transitionFunction, isTerminal, reset, render, renderOn)
+        maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 
     # function to generate trajectories
     trajectoryDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trajectories"
@@ -310,8 +311,8 @@ if __name__ == "__main__":
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
 
     # compute statistics on the trajectories
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath)
-    computeStatistics = ComputeStatistics(loadTrajectories, numTrials, measurementFunction=len)
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadData, readParametersFromDf)
+    computeStatistics = ComputeStatistics(loadTrajectories, measurementFunction=len)
 
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     # plot the statistics
@@ -324,6 +325,7 @@ if __name__ == "__main__":
         grp.index = grp.index.droplevel('trainSteps')
         axForDraw = fig.add_subplot(1, numColumns, plotCounter)
         drawPerformanceLine(grp, axForDraw, key)
+        plt.ylim((0, maxRunningSteps))
         plotCounter += 1
 
     plt.legend(loc='best')

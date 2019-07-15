@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
 class ComputeStatistics:
     def __init__(self, getTrajectories, measurementFunction):
         self.getTrajectories = getTrajectories

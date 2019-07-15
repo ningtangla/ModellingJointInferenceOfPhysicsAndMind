@@ -1,7 +1,6 @@
-import numpy as np 
+import numpy as np
 from itertools import combinations
-import pygame 
-
+import pygame
 
 
 def checkDuplicates(checkingList):
@@ -29,7 +28,6 @@ class ModifyOverlappingPoints:
                 firstPointIndex, secondPointIndex = pairIndex
                 pointsLocation[firstPointIndex], pointsLocation[secondPointIndex] = self.modifyPoints(pointsLocation[firstPointIndex], pointsLocation[secondPointIndex])
         return pointsLocation
-
 
 
 class DrawCircles:
@@ -74,12 +72,12 @@ class DrawGrid:
 
         self.gridNumberX, self.gridNumberY = gridSize
         self.gridPixelSize = gridPixelSize
-        self.backgroundColor=backgroundColor
+        self.backgroundColor = backgroundColor
         self.gridColor = gridColor
         self.gridLineWidth = gridLineWidth
 
     def __call__(self, game):
-        upperBoundX = self.gridPixelSize * self.gridNumberX
+        upperBoundX = self.gridPixelSrreresdsedeize * self.gridNumberX
         upperBoundY = self.gridPixelSize * self.gridNumberY
         game.fill(self.backgroundColor)
 
@@ -100,13 +98,14 @@ class DrawPointsFromLocationDfAndSaveImage:
         self.drawCircles = drawCircles
         self.gridPixelSize = gridPixelSize
 
-    def __call__(self, trajectory, iterationNumber, saveImage = False):
+    def __call__(self, trajectory, iterationNumber, saveImage=False):
         game = self.initializaGame()
         for frameIndex in range(len(trajectory)):
             game = self.drawGrid(game)
+
             pointsCoord = trajectory[frameIndex]
-            pointsLocation = [list (np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize//2)
-                                  for pointCoord in pointsCoord]
+            pointsLocation = [list(np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize // 2)
+                              for pointCoord in pointsCoord]
             game = self.drawCircles(game, pointsLocation)
             if saveImage:
-                pygame.image.save(game, "screenshot"+ format(frameIndex, '04') + ".png")
+                pygame.image.save(game, "screenshot" + format(frameIndex, '04') + ".png")
