@@ -16,7 +16,6 @@ class ComputeStatistics:
 
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
 
-
 class GenerateInitQPosUniform:
     def __init__(self, minQPos, maxQPos, isTerminal, getResetFromInitQPos):
         self.minQPos = minQPos
@@ -35,10 +34,4 @@ class GenerateInitQPosUniform:
         return qPosInit
 
 
-def conditionDfFromParametersDict(parametersDict):
-    levelNames = list(parametersDict.keys())
-    levelValues = list(parametersDict.values())
-    modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
-    conditionDf = pd.DataFrame(index=modelIndex)
 
-    return conditionDf
