@@ -22,10 +22,12 @@ class GetSavePath:
 
         return path
 
-def readParametersFromDf(oneConditionDf): 
+
+def readParametersFromDf(oneConditionDf):
     indexLevelNames = oneConditionDf.index.names
     parameters = {levelName: str(oneConditionDf.index.get_level_values(levelName)[0]) for levelName in indexLevelNames}
     return parameters
+
 
 class LoadTrajectories:
     def __init__(self, getSavePath, loadFromPickle, readParametersFromDf):

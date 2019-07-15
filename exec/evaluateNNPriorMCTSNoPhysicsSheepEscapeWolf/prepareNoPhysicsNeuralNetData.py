@@ -223,7 +223,7 @@ def main():
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]
 
     # save the trajectories
-    saveDirectory = "../../data/evaluateNNPriorMCTSNoPhysicsSheepChaseWolf/trajectories"
+    saveDirectory = "../../data/evaluateNNPriorMCTSNoPhysics/trajectories"
     if not os.path.exists(saveDirectory):
         os.makedirs(saveDirectory)
     extension = '.pickle'

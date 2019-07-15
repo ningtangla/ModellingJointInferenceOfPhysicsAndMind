@@ -51,7 +51,7 @@ if __name__ == '__main__':
     getDataSetPath = GetSavePath(dataSetDirectory, dataSetExtension)
     dataSetMaxRunningSteps = 30
     dataSetNumSimulations = 200
-    dataSetNumTrials = 5000
+    dataSetNumTrials = 2
     dataSetSheepPolicyName = 'mcts'
     dataSetConditionVariables = {'maxRunningSteps': dataSetMaxRunningSteps,
                                  'numSimulations': dataSetNumSimulations, 'numTrials': dataSetNumTrials,

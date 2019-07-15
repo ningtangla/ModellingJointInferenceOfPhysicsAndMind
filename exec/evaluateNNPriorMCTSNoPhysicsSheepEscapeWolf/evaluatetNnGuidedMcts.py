@@ -45,7 +45,7 @@ class GetMCTS:
     def __call__(self, numSimulations, trainedModel):
         actionPriorFunction = self.getActionPriorFunction(trainedModel)
         expand = Expand(isTerminal, InitializeChildren(actionSpace, sheepTransit, actionPriorFunction))
-        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, chooseGreedyAction)
+        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         return mcts
 
@@ -159,13 +159,27 @@ class GenerateTrajectories:
         return None
 
 
+def loadData(path):
+    pklFile = open(path, "rb")
+    dataSet = pickle.load(pklFile)
+    pklFile.close()
+
+    return dataSet
+
+
+def readParametersFromDf(oneConditionDf):
+    indexLevelNames = oneConditionDf.index.names
+    parameters = {levelName: str(oneConditionDf.index.get_level_values(levelName)[0]) for levelName in indexLevelNames}
+    return parameters
+
+
 if __name__ == "__main__":
     # manipulated variables (and some other parameters that are commonly varied)
     numTrials = 30
     maxRunningSteps = 80
     manipulatedVariables = OrderedDict()
     manipulatedVariables['trainSteps'] = [0, 100, 500, 10000]  # [0, 100, 500, 100000]
-    manipulatedVariables['sheepPolicyName'] = ['MCTS', 'NN', 'MCTSNN']  # ['random', 'MCTS', 'NN', 'MCTSNN']
+    manipulatedVariables['sheepPolicyName'] = ['random', 'MCTS', 'NN', 'MCTSNN']  # ['random', 'MCTS', 'NN', 'MCTSNN']
     manipulatedVariables['numSimulations'] = [10, 20, 30]  # [10, 20, 30]
 
     levelNames = list(manipulatedVariables.keys())
@@ -197,9 +211,8 @@ if __name__ == "__main__":
     # actionMagnitude = 8
     # wolfPolicy = HeatSeekingContinuesDeterministicPolicy(getPredatorPos, getPreyPos, actionMagnitude)
 
-    wolfActionSpace = [(6, 0), (5, 5), (0, 6), (-5, 5),
-                       (-10, 0), (-5, -5), (0, -10), (5, -5)]
-
+    wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6),
+                       (-8, 0), (-6, -6), (0, -8), (6, -6)]
     wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(
         wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
@@ -266,12 +279,12 @@ if __name__ == "__main__":
     # wrapper functions for sheep policies
     getMCTS = GetMCTS(selectChild, rollout, backup, chooseGreedyAction, getActionPriorUniformFunction)
     getMCTSNN = GetMCTS(selectChild, rollout, backup, chooseGreedyAction, getActionPriorNNFunction)
-    # getRandom = lambda numSimulations, trainedModel: lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    getRandom = lambda numSimulations, trainedModel: lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
     getNN = lambda numSimulations, trainedModel: NeuralNetworkPolicy(trainedModel, actionSpace)
-    getSheepPolicies = {'MCTS': getMCTS, 'NN': getNN, 'MCTSNN': getMCTSNN}
+    getSheepPolicies = {'random': getRandom, 'MCTS': getMCTS, 'NN': getNN, 'MCTSNN': getMCTSNN}
 
     # sample trajectory
-    # randomReset = env.RandomReset(numOfAgent, xBoundary, yBoundary, isTerminal)
+    # randomReset = env.Reset(xBoundary, yBoundary, numOfAgent)
     # initPositionList = [randomReset() for i in range(numTrials)]
 
     savedPositionFileName = "../../exec/evaluateNNPriorMCTSNoPhysicsSheepEscapeWolf/initPositionListForEvaluation_30trials.pickle"
@@ -298,8 +311,8 @@ if __name__ == "__main__":
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
 
     # compute statistics on the trajectories
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath)
-    computeStatistics = ComputeStatistics(loadTrajectories, numTrials, measurementFunction=len)
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadData, readParametersFromDf)
+    computeStatistics = ComputeStatistics(loadTrajectories, measurementFunction=len)
 
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     # plot the statistics
