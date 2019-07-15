@@ -2,17 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1db435d6-41a0-44a9-81b2-924e417a2f62" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/evaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluationFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/generateVideos/chasingVisualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/generateVideos/chasingVisualization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/generateVideos/convertTrajectoryToDf.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/generateVideos/convertTrajectoryToDf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/generateVideos/script.command" beforeDir="false" afterPath="$PROJECT_DIR$/exec/generateVideos/script.command" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/generateVideos/visualiseDf.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/generateVideos/visualiseDf.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -38,8 +29,8 @@
       <file leaf-file-name="trainNNEscape.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2565">
-              <caret line="171" selection-start-line="171" selection-end-line="171" />
+            <state relative-caret-position="-715">
+              <caret line="82" column="122" selection-start-line="82" selection-start-column="122" selection-end-line="82" selection-end-column="122" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -50,8 +41,8 @@
       <file leaf-file-name="evaluateAccumulatedRewardsVsNumTrainingSteps.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="21" column="60" selection-start-line="21" selection-start-column="60" selection-end-line="21" selection-end-column="60" />
+            <state relative-caret-position="15">
+              <caret line="21" column="61" selection-start-line="21" selection-start-column="61" selection-end-line="21" selection-end-column="61" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -176,8 +167,8 @@
         <option value="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" />
         <option value="$PROJECT_DIR$/exec/SheepAndWolfNNOnlyPolicies/policy.py" />
         <option value="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py" />
-        <option value="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py" />
         <option value="$PROJECT_DIR$/exec/generateVideos/convertTrajectoryToDf.py" />
+        <option value="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py" />
         <option value="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py" />
       </list>
     </option>
@@ -755,32 +746,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="115">
-          <caret line="98" column="72" selection-start-line="98" selection-start-column="72" selection-end-line="98" selection-end-column="72" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/trajectoriesSaveLoad.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1115">
           <caret line="20" column="65" lean-forward="true" selection-start-line="20" selection-start-column="65" selection-end-line="20" selection-end-column="65" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2565">
-          <caret line="171" selection-start-line="171" selection-end-line="171" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -795,10 +766,30 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="115">
+          <caret line="98" column="72" selection-start-line="98" selection-start-column="72" selection-end-line="98" selection-end-column="72" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-715">
+          <caret line="82" column="122" selection-start-line="82" selection-start-column="122" selection-end-line="82" selection-end-column="122" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="21" column="60" selection-start-line="21" selection-start-column="60" selection-end-line="21" selection-end-column="60" />
+        <state relative-caret-position="15">
+          <caret line="21" column="61" selection-start-line="21" selection-start-column="61" selection-end-line="21" selection-end-column="61" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
