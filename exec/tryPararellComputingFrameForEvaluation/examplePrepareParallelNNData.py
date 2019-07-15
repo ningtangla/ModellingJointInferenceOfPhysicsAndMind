@@ -13,6 +13,7 @@ def generateTrajectory(codeName, numSample):
 
 def main():
     codeName = 'prepareNeuralNetData.py'
+
     numSample = 40
     stratTime = time.time()
     cmdList = generateTrajectory(codeName, numSample)

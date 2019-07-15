@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Reset():
+class ResetUniform:
     def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
@@ -42,6 +42,7 @@ class TransitionFunction:
         
     def __call__(self, state, actions):
         state = np.asarray(state)
+        # print("state", state)
         actions = np.asarray(actions)
         numAgent = len(state)
 
@@ -77,7 +78,7 @@ class TransitionFunction:
         return newState
 
 
-class IsTerminal():
+class IsTerminal:
     def __init__(self, minXDis, getAgent0Pos, getAgent1Pos):
         self.minXDis = minXDis
         self.getAgent0Pos = getAgent0Pos
@@ -91,3 +92,21 @@ class IsTerminal():
         terminal = (L2Normdistance <= self.minXDis)
 
         return terminal
+
+
+class WithinBounds:
+    def __init__(self, minQPos, maxQPos):
+        self.minQPos = np.asarray(minQPos)
+        self.maxQPos = np.asarray(maxQPos)
+
+    def __call__(self, qPos):
+        qPos = np.asarray(qPos)
+        numQPosEachAgent = len(self.minQPos)
+        numQPos = len(qPos)
+        numAgents = int(numQPos/numQPosEachAgent)
+        getAgentQPos = lambda agentIndex: qPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)]
+        agentWithinBounds = lambda agentIndex: np.all(np.less_equal(getAgentQPos(agentIndex), self.maxQPos)) and \
+                                               np.all(np.greater_equal(getAgentQPos(agentIndex), self.minQPos))
+        allAgentsWithinbounds = all(agentWithinBounds(agentIndex) for agentIndex in range(numAgents))
+
+        return allAgentsWithinbounds

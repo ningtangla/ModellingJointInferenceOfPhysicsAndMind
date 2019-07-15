@@ -1,46 +1,5 @@
-import os
 import numpy as np
 import pandas as pd
-import glob
-
-
-class GetSavePath:
-    def __init__(self, dataDirectory, extension, fixedParameters={}):
-        self.dataDirectory = dataDirectory
-        self.extension = extension
-        self.fixedParameters = fixedParameters
-
-    def __call__(self, parameters):
-        allParameters = dict(list(parameters.items()) + list(self.fixedParameters.items()))
-        sortedParameters = sorted(allParameters.items())
-        nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
-
-        fileName = '_'.join(nameValueStringPairs) + self.extension
-        fileName = fileName.replace(" ", "")
-
-        path = os.path.join(self.dataDirectory, fileName)
-
-        return path
-
-def readParametersFromDf(oneConditionDf): 
-    indexLevelNames = oneConditionDf.index.names
-    parameters = {levelName: str(oneConditionDf.index.get_level_values(levelName)[0]) for levelName in indexLevelNames}
-    return parameters
-
-class LoadTrajectories:
-    def __init__(self, getSavePath, loadFromPickle, readParametersFromDf):
-        self.getSavePath = getSavePath
-        self.loadFromPickle = loadFromPickle
-        self.readParametersFromDf = readParametersFromDf
-
-    def __call__(self, oneConditionDf):
-        parameters = self.readParametersFromDf(oneConditionDf)
-        parameters['sampleIndex'] = '*'
-        genericSavePath = self.getSavePath(parameters)
-        filesNames = glob.glob(genericSavePath)
-        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
-
-        return trajectories
 
 
 class ComputeStatistics:
@@ -50,8 +9,36 @@ class ComputeStatistics:
 
     def __call__(self, oneConditionDf):
         allTrajectories = self.getTrajectories(oneConditionDf)
+        [print(len(trajectory)) for trajectory in allTrajectories]
         allMeasurements = [self.measurementFunction(trajectory) for trajectory in allTrajectories]
         measurementMean = np.mean(allMeasurements)
         measurementStd = np.std(allMeasurements)
 
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
+
+
+class GenerateInitQPosUniform:
+    def __init__(self, minQPos, maxQPos, isTerminal, getResetFromInitQPos):
+        self.minQPos = minQPos
+        self.maxQPos = maxQPos
+        self.isTerminal = isTerminal
+        self.getResetFromInitQPos = getResetFromInitQPos
+
+    def __call__(self):
+        while True:
+            qPosInit = np.random.uniform(self.minQPos, self.maxQPos, 4)
+            reset = self.getResetFromInitQPos(qPosInit)
+            initState = reset()
+            if not self.isTerminal(initState):
+                break
+
+        return qPosInit
+
+
+def conditionDfFromParametersDict(parametersDict):
+    levelNames = list(parametersDict.keys())
+    levelValues = list(parametersDict.values())
+    modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    conditionDf = pd.DataFrame(index=modelIndex)
+
+    return conditionDf
