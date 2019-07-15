@@ -29,7 +29,7 @@ def main():
     colorSpace = [THECOLORS['green'], THECOLORS['red']]
 
     FPS = 60
-    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='videosNN/4')
+    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='videosMCTS/4')
 
     rawXRange = [-10, 10]
     rawYRange = [-10, 10]
@@ -45,8 +45,8 @@ def main():
     parentPath = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
     dataPath = os.path.abspath(os.path.join(parentPath, 'trainedData'))
     DIRNAME = os.path.dirname(__file__)
-    trajectoryDf = pd.read_pickle(os.path.join(DIRNAME, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'videosNN',
-                                               'sampleIndex.pickle'))
+    trajectoryDf = pd.read_pickle(os.path.join(DIRNAME, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'videosMCTS',
+                                               'sampleIndex4.pickle'))
     #pd.read_pickle(os.path.join(os.path.join(dataPath, 'df.pickle')))
     trajectory = getTrajectory(trajectoryDf)
     chaseTrial(trajectory)

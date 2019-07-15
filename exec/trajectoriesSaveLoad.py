@@ -65,8 +65,8 @@ class GenerateAllSampleIndexSavePaths:
         genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
         existingFilesNames = glob.glob(genericSavePath)
         numExistingFiles = len(existingFilesNames)
-        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex) for sampleIndex in
-                              range(numExistingFiles, numExistingFiles + numSamples)}
+        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
+                              range(numSamples)}
         allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
                         allIndexParameters.items()}
 
