@@ -81,7 +81,7 @@ class ChaseTrialWithTraj:
                 currentDir = os.getcwd()
                 parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
                 saveImageDir = os.path.join(os.path.join(parentDir, '..', 'data',
-                                                         'evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco',
+                                                         'trainNNEscapePolicyMujoco',
                                                          'demo'), self.imageFolderName)
                 if not os.path.exists(saveImageDir):
                     os.makedirs(saveImageDir)

@@ -6,7 +6,7 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 import mujoco_py as mujoco
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 from src.algorithms.mcts import RollOut, Expand, InitializeChildren, ScoreChild, SelectChild, MCTS, backup, \
@@ -20,6 +20,7 @@ def main():
     numSamples = 750
     maxRunningSteps = 25
     numSimulations = 100
+    wolfNNModelPath = '/Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainedNNModels/killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999'
 
     # Mujoco environment
     dirName = os.path.dirname(__file__)
@@ -32,7 +33,7 @@ def main():
     numAgents = 2
     qVelInitNoise = 8
     qPosInitNoise = 9.7
-    reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
@@ -56,8 +57,7 @@ def main():
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
-    NNModelSavePath = '/Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainedNNModels/killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999'
-    restoredNNModel = restoreVariables(initializedNNModel, NNModelSavePath)
+    restoredNNModel = restoreVariables(initializedNNModel, wolfNNModelPath)
     approximatePolicy = ApproximatePolicy(restoredNNModel, actionSpace)
     NNPolicy = lambda state: {approximatePolicy(state): 1}
 
@@ -80,7 +80,7 @@ def main():
     rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
     rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    rolloutHeuristicWeight = 0.1
+    rolloutHeuristicWeight = -0.1
     maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTS, rewardFunction, isTerminal,
@@ -96,8 +96,7 @@ def main():
     trajectories = [sampleTrajectory(policy) for _ in range(numSamples)]
 
     # saving trajectories
-    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                           'generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco')
+    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'trainingTrajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
 

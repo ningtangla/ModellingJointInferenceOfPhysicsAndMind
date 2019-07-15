@@ -11,10 +11,8 @@ from exec.evaluationFunctions import conditionDfFromParametersDict
 
 def main():
     DIRNAME = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data',
-                                       'evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco')
-    trajectoryParameters = {'killzoneRadius': 2, 'qVelInitRange': 10,
-                            'rolloutHeuristicWeight': 0.1, 'numSimulations': 50}
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'evaluationTrajectories')
+    trajectoryParameters = {'evaluationMaxRunningSteps': 25, 'policy': 'mcts', 'trainSteps': 99999}
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryParameters)
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
@@ -37,11 +35,11 @@ def main():
     trajectories = loadTrajectories({})
     numTrajectories = len(trajectories)
     allDf = [convertTrajectoryToStateDf(trajectory) for trajectory in trajectories]
-    selectedDf = allDf[5:10]
+    selectedDf = allDf[0:5]
 
     [saveToPickle(df, os.path.join(DIRNAME, '..', '..', 'data',
-                                   'evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco', 'videosNumSim50',
-                                   'sampleIndex{}.pickle'.format(sampleIndex))) for df, sampleIndex in
+                                   'trainNNEscapePolicyMujoco', 'videosMCTS', 'sampleIndex{}.pickle'.format(sampleIndex)))
+     for df, sampleIndex in
      zip(selectedDf, range(numTrajectories))]
 
 

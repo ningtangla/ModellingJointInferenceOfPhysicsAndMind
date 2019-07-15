@@ -9,7 +9,6 @@ class ComputeStatistics:
 
     def __call__(self, oneConditionDf):
         allTrajectories = self.getTrajectories(oneConditionDf)
-        [print(len(trajectory)) for trajectory in allTrajectories]
         allMeasurements = [self.measurementFunction(trajectory) for trajectory in allTrajectories]
         measurementMean = np.mean(allMeasurements)
         measurementStd = np.std(allMeasurements)

@@ -1,4 +1,4 @@
-cd /Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco/demo/videosNumSim50/9
+cd /Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/trainNNEscapePolicyMujoco/demo/videosNN/4
 mkdir demoPics
 mv 0* demoPics
 cd demoPics

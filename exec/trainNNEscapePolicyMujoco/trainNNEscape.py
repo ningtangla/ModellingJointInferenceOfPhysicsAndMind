@@ -11,11 +11,8 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, \
     LearningRateModifier
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
-from exec.evaluationFunctions import conditionDfFromParametersDict
-
 
 import numpy as np
-from collections import OrderedDict
 
 
 class ProcessTrajectoryForNN:
@@ -83,8 +80,7 @@ def main():
 
     # get trajectory save path
     dirName = os.path.dirname(__file__)
-    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                           'generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco')
+    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNEscapePolicyMujoco')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
 
@@ -92,7 +88,7 @@ def main():
     killzoneRadius = 2
     qPosInitNoise = 9.7
     qVelInitNoise = 8
-    rolloutHeuristicWeight = 0.1
+    rolloutHeuristicWeight = -0.1
     maxRunningSteps = 25
     trajectorySaveParameters = {'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,
                                 'qPosInitNoise': qPosInitNoise, 'qVelInitNoise': qVelInitNoise,
@@ -144,8 +140,7 @@ def main():
                          'qPosInitNoise': qPosInitNoise, 'qVelInitNoise': qVelInitNoise,
                          'rolloutHeuristicWeight': rolloutHeuristicWeight, 'maxRunningSteps': maxRunningSteps}
     dirName = os.path.dirname(__file__)
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'trainNNEscapePolicyMujoco', 'trainedNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
