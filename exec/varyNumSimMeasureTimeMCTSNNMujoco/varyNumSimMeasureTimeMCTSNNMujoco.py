@@ -3,7 +3,7 @@ import os
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
-from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import ScoreChild, SelectChild, MCTS, InitializeChildren, Expand, backup, establishPlainActionDist
 from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateActionPrior, ApproximateValueFunction

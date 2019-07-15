@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class GetStateFromTrajectory:
     def __init__(self, timeStep, stateIndex):
         self.timeStep = timeStep
@@ -34,6 +35,7 @@ class GetAgentActionFromTrajectory:
         agentAction = allAgentActions[self.agentId]
 
         return agentAction
+
 
 class ComputeOptimalNextPos:
     def __init__(self, getInitStateFromTrajectory, getOptimalAction, transit, getAgentPosFromState):

@@ -96,7 +96,7 @@ class RollOut:
         return totalRewardForRollout
 
 
-def backup(value, nodeList):#anytree lib
+def backup(value, nodeList): #anytree lib
     for node in nodeList:
         node.sumValue += value
         node.numVisited += 1

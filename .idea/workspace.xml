@@ -2,148 +2,28 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1db435d6-41a0-44a9-81b2-924e417a2f62" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/xmls/twoAgents.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/xmls/twoAgents.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluationFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/preProcessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/preProcessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively.zip" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561676802.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561676827.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561680940.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561681254.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561681312.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561681372.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561681457.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561681582.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561681836.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561682295.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561705687.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561744933.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561750388.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561750437.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561754510.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561754540.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561754679.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561757346.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561757774.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561759623.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561759802.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561759886.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561760915.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561760967.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561761155.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561761831.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561764932.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561771476.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561771901.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561773414.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561776997.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561777037.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561777112.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561777260.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561778370.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561778491.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561778535.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561779349.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561779463.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561780026.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561780074.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561780461.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561781289.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561781342.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561782384.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561782413.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561782431.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561783319.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561784695.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561784787.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561784877.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561785914.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561786197.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561789218.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561790174.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561790225.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561790289.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561790358.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561790394.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561793580.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561793944.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561794046.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561794050.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561794054.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561794180.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561802583.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561811078.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/test/events.out.tfevents.1561837657.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561676801.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561676827.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561680940.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561681254.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561681312.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561681372.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561681457.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561681582.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561681836.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561682295.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561705687.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561744933.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561750388.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561750436.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561754510.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561754540.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561754679.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561757346.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561757774.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561759623.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561759802.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561759886.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561760915.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561760967.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561761155.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561761831.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561764932.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561771476.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561771900.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561773414.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561776997.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561777037.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561777112.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561777259.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561778370.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561778491.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561778535.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561779349.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561779463.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561780026.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561780074.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561780460.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561781289.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561781342.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561782384.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561782413.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561782430.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561783319.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561784695.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561784787.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561784876.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561785914.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561786196.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561789218.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561790174.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561790225.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561790289.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561790358.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561790394.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561793580.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561793944.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561794046.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561794050.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561794054.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561794180.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561802583.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561811078.Nishads-MacBook-Air-1391.local" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/tbdata/train/events.out.tfevents.1561837657.Nishads-MacBook-Air-1391.local" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/wrappers.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/valueFromNode.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/replayBuffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/replayBuffer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/testReplayBuffer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testReplayBuffer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/valueFromNode.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/valueFromNode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/varyNumSimMeasureTimeMCTSNNMujoco/varyNumSimMeasureTimeMCTSNNMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/varyNumSimMeasureTimeMCTSNNMujoco/varyNumSimMeasureTimeMCTSNNMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/mcts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/mcts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/state.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/state.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/episode.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/episode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/simple1DEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/simple1DEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testEnvMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testEnvMujoco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testExecEvaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testExecEvaluationFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testPlay.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testPlay.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testTrainMCTSNNIteratively.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testTrainMCTSNNIteratively.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -154,25 +34,37 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="trainMCTSNNIterativelyParallel.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIterativelyParallel.py">
+      <file leaf-file-name="trainNNEscape.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="356">
-              <caret line="382" lean-forward="true" selection-start-line="382" selection-end-line="382" />
+            <state relative-caret-position="150">
+              <caret line="79" column="25" selection-start-line="79" selection-start-column="25" selection-end-line="79" selection-end-column="25" />
               <folding>
-                <element signature="e#0#11#0" expanded="true" />
+                <element signature="e#0#10#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py">
+      <file leaf-file-name="evaluateAccumulatedRewardsVsNumTrainingSteps.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5055">
-              <caret line="337" column="33" selection-start-line="337" selection-start-column="33" selection-end-line="337" selection-end-column="33" />
+            <state relative-caret-position="146">
+              <caret line="84" column="29" selection-start-line="84" selection-start-column="29" selection-end-line="84" selection-end-column="29" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1084">
+              <caret line="98" column="64" selection-start-line="98" selection-start-column="64" selection-end-line="98" selection-end-column="64" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -189,17 +81,45 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>approximateActionPrior</find>
-      <find>saveNNModel</find>
-      <find>readParametersFromDf</find>
-      <find>choose</find>
-      <find>numSimulations</find>
-      <find>maxRunn</find>
-      <find>getModel</find>
-      <find>getNNModel</find>
-      <find>numSim</find>
-      <find>'replayBuffer'</find>
+      <find>qVelInit</find>
+      <find>load</find>
+      <find>policyValue</find>
+      <find>mcts</find>
+      <find>rollout</find>
+      <find>readPara</find>
+      <find>Train(</find>
+      <find>sheep</find>
+      <find>conditionDfFr</find>
+      <find>levelNames</find>
+      <find>updatedNNModel</find>
+      <find>learningRateM</find>
+      <find>learningRateMo</find>
+      <find>wolf</find>
+      <find>trainSteps</find>
+      <find>'trainS</find>
+      <find>maxRunningSteps</find>
+      <find>maxRunnin</find>
+      <find>'MCTSRollout</find>
+      <find>levelName</find>
+      <find>bonus</find>
+      <find>terminalReward</find>
+      <find>'iteration</find>
+      <find>Terminal</find>
+      <find>killz</find>
+      <find>0.05</find>
+      <find>reward</find>
+      <find>numAge</find>
+      <find>sampleTraje</find>
+      <find>killzone</find>
     </findStrings>
+    <replaceStrings>
+      <replace>bufferSize</replace>
+      <replace>Sample</replace>
+      <replace>replayBuffer</replace>
+      <replace>esetUniform</replace>
+      <replace>sample</replace>
+      <replace>stdDev</replace>
+    </replaceStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -207,22 +127,64 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/wrappers.py" />
-        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py" />
-        <option value="$PROJECT_DIR$/src/algorithms/mcts.py" />
+        <option value="$PROJECT_DIR$/exec/bootStrappedMCTSNNvsHeatSeekingSheepChaseWolfMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetSheepChaseWolfMCTSMujoco/generateTrainingData.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/evaluate.py" />
+        <option value="$PROJECT_DIR$/exec/generateMujocoVideos/fixedActionStartFromRest.py" />
+        <option value="$PROJECT_DIR$/exec/generateMujocoVideos/heatSeekingWolfConstantVelocitySheep.py" />
+        <option value="$PROJECT_DIR$/exec/plotTrajectoryStatistics.py" />
         <option value="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" />
-        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/preTrainNN.py" />
-        <option value="$PROJECT_DIR$/src/replayBuffer.py" />
-        <option value="$PROJECT_DIR$/tests/testReplayBuffer.py" />
-        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/temp.py" />
-        <option value="$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/evaluatePolicyEstimation.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/trainNNModels.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/generateTrainingData.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/evaluateValueEstimation.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardMujoco/evaluateAccumulatedRewards.py" />
+        <option value="$PROJECT_DIR$/exec/preProcessing.py" />
         <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/state.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py" />
+        <option value="$PROJECT_DIR$/exec/varyNumSimMeasureTimeMCTSNNMujoco/varyNumSimMeasureTimeMCTSNNMujoco.py" />
+        <option value="$PROJECT_DIR$/tests/testTrajectoriesSaveLoad.py" />
+        <option value="$PROJECT_DIR$/exec/plotAvgNumberOfTerminalTrajectoriesVaryQVelInitNoise.py" />
+        <option value="$PROJECT_DIR$/exec/plotAvgNumberOfTerminalTrajectoriesVaryQVelInitNoiseHeatSeekingChase.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py" />
+        <option value="$PROJECT_DIR$/tests/testEnvMujoco.py" />
+        <option value="$PROJECT_DIR$/tests/testMCTS.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py" />
+        <option value="$PROJECT_DIR$/src/algorithms/mcts.py" />
+        <option value="$PROJECT_DIR$/exec/createTrajectoryDf.py" />
+        <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py" />
+        <option value="$PROJECT_DIR$/src/simple1DEnv.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py" />
+        <option value="$PROJECT_DIR$/tests/testPlay.py" />
+        <option value="$PROJECT_DIR$/exec/generateMujocoVideos/convertTrajectoryToDf.py" />
+        <option value="$PROJECT_DIR$/exec/generateMujocoVideos/trajectory.py" />
+        <option value="$PROJECT_DIR$/exec/generateMujocoVideos/visualiseDf.py" />
+        <option value="$PROJECT_DIR$/exec/generateVideos/mujocoRender/fixedActionStartFromRest.py" />
+        <option value="$PROJECT_DIR$/env/xmls/chase10.xml" />
+        <option value="$PROJECT_DIR$/src/episode.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateMeanEpisodeLengthVaryTerminationProbabilityMCTSWolfChaseSheepMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/generateVideos/script.command" />
+        <option value="$PROJECT_DIR$/exec/evaluationFunctions.py" />
+        <option value="$PROJECT_DIR$/exec/trainNNEscapePolicy/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/generateVideos/chasingVisualization.py" />
+        <option value="$PROJECT_DIR$/exec/generateVideos/convertTrajectoryToDf.py" />
+        <option value="$PROJECT_DIR$/exec/generateVideos/visualiseDf.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/trainNNEscapePolicy/trainNNEscape.py" />
+        <option value="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" />
+        <option value="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py" />
+        <option value="$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="y" value="23" />
     <option name="width" value="1440" />
-    <option name="height" value="900" />
+    <option name="height" value="877" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -240,19 +202,30 @@
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="env" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
               <item name="exec" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
               <item name="exec" type="462c0819:PsiDirectoryNode" />
-              <item name="NNPolicyVaryHyperParametersSheepEscapeWolfMujoco" type="462c0819:PsiDirectoryNode" />
+              <item name="evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
               <item name="exec" type="462c0819:PsiDirectoryNode" />
-              <item name="trainMCTSNNIteratively" type="462c0819:PsiDirectoryNode" />
+              <item name="generateVideos" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
+              <item name="exec" type="462c0819:PsiDirectoryNode" />
+              <item name="trainNNEscapePolicyMujoco" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -287,6 +260,19 @@
       </pane>
     </panes>
   </component>
+  <component name="PropertiesComponent">
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/env/xmls/twoAgents.xml" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/env/xmls" />
+      <recent name="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/exec" />
+    </key>
+  </component>
   <component name="RunDashboard">
     <option name="ruleStates">
       <list>
@@ -317,15 +303,17 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.33474278" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25229034" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3292232" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50072044" side_tool="true" weight="0.2811344" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32917705" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49927953" weight="0.36868066" />
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.20114122" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.20074813" />
       <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.2811344" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.31047383" />
+      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.38653368" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.20114122" />
@@ -348,7 +336,6 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" id="SciView" order="3" />
-      <window_info anchor="bottom" id="Find" order="1" />
       <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.31047383" />
       <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.2811344" />
     </layout>
@@ -357,235 +344,448 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_17.py" />
-    <entry file="file://$PROJECT_DIR$/exec/drawDiscreteGridChasing 10.24.06 AM.py" />
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_18.py" />
-    <entry file="file://$PROJECT_DIR$/tests/testDiscreteGridPolicy.py" />
-    <entry file="file://$PROJECT_DIR$/tests/testWrapperFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="86" lean-forward="true" selection-start-line="86" selection-end-line="86" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Desktop/Gao Lab/Python/pythonpracticepublish/SourceCode/DiscreteBayesian.py" />
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="20">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testPolicies_IssueShaozhe.py" />
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="439">
-          <caret line="101" column="28" selection-start-line="101" selection-start-column="28" selection-end-line="101" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/play.py" />
-    <entry file="file://$PROJECT_DIR$/tests/testDiscreteGridEnv.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4282">
-          <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testDrawingFunctions.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/testNoPhysicsEnv.py" />
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsRandomInSheepEscapeMujoco.py" />
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSQEffectMujoco.py" />
-    <entry file="file://$PROJECT_DIR$/exec/preprocessTrajectoriesForNN.py" />
-    <entry file="file://$PROJECT_DIR$/exec/testSheepFirstStepInEscapeMujoco.py" />
-    <entry file="file://$PROJECT_DIR$/exec/generateTrajectoriesForNN.py" />
-    <entry file="file://$PROJECT_DIR$/visualize/discreteGridVisualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="100">
-          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="920">
-          <caret line="46" column="46" selection-start-line="46" selection-start-column="46" selection-end-line="46" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/lib/python3.7/site-packages/pandas/core/indexing.py" />
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/wrapperFunctions.py" />
-    <entry file="file://$PROJECT_DIR$/visualize/discreteGridInferenceVisualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="40">
-          <caret line="2" column="13" lean-forward="true" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferDiscreteGridChasing/inference.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="512">
-          <caret line="198" selection-start-line="198" selection-end-line="198" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferDiscreteGridChasing/wrappers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="421">
-          <caret line="60" selection-start-line="60" selection-end-line="60" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferDiscreteGridChasing/heatSeekingLikelihood.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-239">
-          <caret line="22" selection-start-line="22" selection-end-line="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferDiscreteGridChasing/forceLikelihood.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1040">
-          <caret line="52" selection-start-line="52" selection-end-line="52" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testDiscreteGridWrapperFunctions.py" />
-    <entry file="file://$PROJECT_DIR$/exec/drawDiscreteGridChasing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="123" column="133" selection-start-line="123" selection-start-column="133" selection-end-line="123" selection-end-column="133" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testDiscreteGridInference.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="261">
-          <caret line="107" column="9" lean-forward="true" selection-start-line="107" selection-start-column="9" selection-end-line="107" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/inferDiscreteChasing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2920">
-          <caret line="146" selection-start-line="146" selection-end-line="146" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/preProcessing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-44">
-          <caret line="10" column="35" selection-start-line="10" selection-start-column="35" selection-end-line="10" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/trainTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="885">
-          <caret line="60" column="92" selection-start-line="60" selection-start-column="92" selection-end-line="60" selection-end-column="92" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/testMCTSvsMCTSNNPolicyValueSheepChaseWolfMujoco/runEvaluationParallel.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="381">
-          <caret line="28" column="89" lean-forward="true" selection-start-line="28" selection-start-column="8" selection-end-line="28" selection-end-column="89" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/tryPararellComputingFrameForEvaluation/examplePrepareParallelNNData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="11" selection-start-line="11" selection-end-line="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2783" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/resluts.png" />
-    <entry file="file://$PROJECT_DIR$/src/episode.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="45" column="21" lean-forward="true" selection-start-line="45" selection-start-column="21" selection-end-line="45" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/varyNumSimMeasureTimeMCTSNNMujoco/varyNumSimMeasureTimeMCTSNNMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="333">
-          <caret line="141" column="42" selection-start-line="141" selection-start-column="42" selection-end-line="141" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/valueFromNode.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="991">
-          <caret line="279" column="35" selection-start-line="279" selection-start-column="35" selection-end-line="279" selection-end-column="35" />
+        <state relative-caret-position="15">
+          <caret line="232" column="32" selection-start-line="232" selection-start-column="32" selection-end-line="232" selection-end-column="32" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+    <entry file="file://$PROJECT_DIR$/exec/bootStrappedMCTSNNvsHeatSeekingSheepChaseWolfMujoco.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="13" column="91" selection-start-line="13" selection-start-column="24" selection-end-line="13" selection-end-column="91" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="45" column="41" selection-start-line="45" selection-start-column="41" selection-end-line="45" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="292">
-          <caret line="118" column="31" selection-start-line="118" selection-start-column="4" selection-end-line="118" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/testReplayBuffer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="271">
-          <caret line="36" column="11" selection-start-line="36" selection-start-column="11" selection-end-line="36" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/temp.py" />
-    <entry file="file://$PROJECT_DIR$/src/replayBuffer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="38">
-          <caret line="8" column="25" selection-start-line="8" selection-start-column="25" selection-end-line="8" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5055">
-          <caret line="337" column="33" selection-start-line="337" selection-start-column="33" selection-end-line="337" selection-end-column="33" />
+        <state relative-caret-position="257">
+          <caret line="203" column="68" selection-start-line="203" selection-start-column="20" selection-end-line="203" selection-end-column="68" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/preTrainNN.py" />
-    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py" />
+    <entry file="file://$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/trainNNModels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="164" selection-start-line="152" selection-end-line="164" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/generateTrainingData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="291">
+          <caret line="128" column="50" selection-start-line="128" selection-start-column="4" selection-end-line="128" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateEffectOfMaxRunningStepsOnValueNetWolfChaseSheepUsingMCTSMujoco/evaluateValueEstimation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="347">
+          <caret line="151" selection-start-line="140" selection-end-line="151" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/preProcessing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="12" selection-start-line="12" selection-end-line="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-589">
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testTrainMCTSNNIteratively.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1575">
+          <caret line="105" column="19" lean-forward="true" selection-start-line="105" selection-start-column="4" selection-end-line="105" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testReplayBuffer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="193">
+          <caret line="26" column="119" selection-start-line="25" selection-start-column="14" selection-end-line="26" selection-end-column="119" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/state.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="23" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/measure.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="21" column="35" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testTrajectoriesSaveLoad.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="348">
+          <caret line="27" selection-start-line="21" selection-end-line="27" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/fixedActionStartFromRest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="18" column="18" selection-start-line="18" selection-start-column="18" selection-end-line="18" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/varyNumSimMeasureTimeMCTSNNMujoco/varyNumSimMeasureTimeMCTSNNMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="5" column="68" selection-start-line="5" selection-start-column="68" selection-end-line="5" selection-end-column="68" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/plotAvgNumberOfTerminalTrajectoriesMCTSNNIterativeTrainChaseMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-673">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/plotAvgNumberOfTerminalTrajectoriesVaryQVelInitNoiseHeatSeekingChase.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testEnvMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="72" lean-forward="true" selection-start-line="12" selection-start-column="72" selection-end-line="12" selection-end-column="72" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testMCTS.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="347">
+          <caret line="193" selection-start-line="193" selection-end-line="193" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="49" selection-start-line="4" selection-start-column="48" selection-end-line="4" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="168">
+          <caret line="100" column="25" selection-start-line="100" selection-start-column="25" selection-end-line="100" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="21" column="29" selection-start-line="21" selection-start-column="29" selection-end-line="21" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1365">
+          <caret line="92" selection-start-line="92" selection-end-line="92" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testPlay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="178">
+          <caret line="76" column="46" selection-start-line="76" selection-start-column="46" selection-end-line="76" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/simple1DEnv.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="37" selection-start-line="5" selection-start-column="37" selection-end-line="5" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testPolicies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/createTrajectoryDf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="168" selection-end-line="40" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco/NNPolicyVaryHyperParametersSheepEscapeWolfMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1607">
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/sampleIndex0.pickle">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2">
+          <caret line="41" column="50" lean-forward="true" selection-start-line="41" selection-start-column="50" selection-end-line="41" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIteratively.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1306">
+          <caret line="200" column="89" selection-start-line="200" selection-start-column="25" selection-end-line="200" selection-end-column="89" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="780">
+          <caret line="53" lean-forward="true" selection-start-line="53" selection-end-line="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/mujocoRender/fixedActionStartFromRest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="370">
+          <caret line="46" column="47" selection-start-line="46" selection-start-column="47" selection-end-line="46" selection-end-column="47" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/env/xmls/twoAgents.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-215">
+          <caret line="9" column="58" selection-start-line="9" selection-start-column="8" selection-end-line="9" selection-end-column="58" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="129">
+          <caret line="65" column="67" selection-start-line="65" selection-start-column="58" selection-end-line="65" selection-end-column="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/trajectory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="750">
+          <caret line="50" selection-start-line="50" selection-end-line="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/episode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="269">
+          <caret line="80" column="29" selection-start-line="80" selection-start-column="29" selection-end-line="80" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/env/xmls/chase10.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="415">
+          <caret line="129" column="44" selection-start-line="129" selection-start-column="41" selection-end-line="129" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/script.command">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="113" selection-start-column="113" selection-end-column="113" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateMeanEpisodeLengthVaryTerminationProbabilityMCTSWolfChaseSheepMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="267">
+          <caret line="48" selection-start-line="46" selection-end-line="48" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="132">
+          <caret line="11" column="65" selection-start-line="11" selection-start-column="65" selection-end-line="11" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="34" column="97" selection-start-line="34" selection-start-column="97" selection-end-line="34" selection-end-column="97" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1215">
+          <caret line="81" column="28" selection-end-line="187" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/visualiseDf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="130">
+          <caret line="31" column="113" selection-start-line="31" selection-start-column="113" selection-end-line="31" selection-end-column="113" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/convertTrajectoryToDf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="220">
+          <caret line="39" column="27" selection-start-line="39" selection-start-column="27" selection-end-line="39" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="389">
+          <caret line="118" column="80" selection-start-line="118" selection-start-column="80" selection-end-line="118" selection-end-column="80" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateVideos/chasingVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1260">
+          <caret line="84" column="57" selection-start-line="84" selection-start-column="57" selection-end-line="84" selection-end-column="57" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1084">
+          <caret line="98" column="64" selection-start-line="98" selection-start-column="64" selection-end-line="98" selection-end-column="64" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trajectoriesSaveLoad.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="192">
+          <caret line="52" column="52" selection-start-line="52" selection-start-column="52" selection-end-line="52" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/trainNNEscape.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="79" column="25" selection-start-line="79" selection-start-column="25" selection-end-line="79" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1125">
+          <caret line="75" column="82" selection-end-line="244" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="146">
+          <caret line="84" column="29" selection-start-line="84" selection-start-column="29" selection-end-line="84" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
   </component>
 </project>
