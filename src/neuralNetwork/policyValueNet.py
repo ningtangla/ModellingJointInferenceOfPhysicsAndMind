@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
+
 class GenerateModel:
     def __init__(self, numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.01, seed=128):
         self.numStateSpace = numStateSpace
@@ -153,7 +154,7 @@ class GenerateModel:
                 tf.add_to_collection("writers", trainWriter)
                 tf.add_to_collection("writers", testWriter)
 
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(max_to_keep=1000, name='saver')
             tf.add_to_collection("saver", saver)
 
             model = tf.Session(graph=graph)
