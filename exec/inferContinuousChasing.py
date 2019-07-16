@@ -1,47 +1,95 @@
 import sys
 import os
+
+DIRNAME = os.path.dirname(__file__)
+sys.path.append(os.path.join(DIRNAME, '..'))
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+from src.inferChasing.continuousPolicy import Policy, RandomPolicy
+from src.inferChasing.continuousTransition import Transition
+from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
+    InferContinuousChasingAndDrawDemo
+
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
+from exec.SheepAndWolfNNOnlyPolicies.policy import AgentPolicy
+from exec.trajectoriesSaveLoad import loadFromPickle
+
+from visualize.initialization import initializeScreen
+from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
+    GetChasingResultColor, ColorChasingPoints, DrawContinuousInferenceResultNoPull, \
+    PlotInferenceProb
+from visualize.continuousVisualization import ScaleState, AdjustStateFPS,\
+    DrawBackground, DrawState
+
 import itertools as it
 import pandas as pd
 from pygame.color import THECOLORS
-
-sys.path.append(os.path.join('..', 'src', 'inferContinuousChasing'))
-sys.path.append(os.path.join('..', 'visualize'))
-
-from continuousPolicy import Policy
-from continuousTransition import Transition
-from inference import IsInferenceTerminal, Observe, InferOneStep, \
-    InferDiscreteChasingAndDrawDemo
-
-from initialization import initializeScreen
-from inferenceVisualization import SaveImage, GetChasingRoleColor, \
-    GetChasingResultColor, ColorChasingPoints, DrawContinuousInferenceResultNoPull, \
-    PlotInferenceProb
-from continuousVisualization import DrawBackground, DrawState
+import mujoco_py as mujoco
 
 
 def main():
-    wolfPolicy = ___
-    sheepPolicy = __
-    randomPolicy = ____
+    # transition function
+    dirName = os.path.dirname(__file__)
+    physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    physicsSimulation = mujoco.MjSim(physicsModel)
+
+    sheepId = 0
+    wolfId = 1
+    xPosIndex = [2, 3]
+    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
+    killzoneRadius = 2
+    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+
+    numSimulationFrames = 20
+    transitAgents = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+    transition = Transition(transitAgents)
+
+    # Neural Network
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    numActionSpace = len(actionSpace)
+    numStateSpace = 12
+    regularizationFactor = 1e-4
+    sharedWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
+    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+
+    # wolf NN Policy
+    wolfModelPath = os.path.join(dirName, '..','NNModels','wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+    wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    restoreVariables(wolfNNModel, wolfModelPath)
+    approximateWolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)
+    wolfPolicy = AgentPolicy(approximateWolfPolicy)
+
+
+    # sheep NN Policy
+    sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
+    sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    restoreVariables(sheepNNModel, sheepModelPath)
+    approximateSheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace)
+    sheepPolicy = AgentPolicy(approximateSheepPolicy)
+
+    # random Policy
+    randomPolicy = RandomPolicy(actionSpace)
     policy = Policy(wolfPolicy, sheepPolicy, randomPolicy)
 
-    transitDeterministically = ___
-    transition = Transition(transitDeterministically)
+    getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
+        policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsAction, physics, nextState: \
-        policy(mind, state, allAgentsAction) * transition(physics, state, allAgentsAction, nextState)
-
-    positionIndex = [0, 1]
-    trajectory = ___
-    observe = Observe(positionIndex, trajectory)
+    dataIndex = 5
+    dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
+    trajectory = loadFromPickle(dataPath)
+    stateIndex = 0
+    observe = Observe(stateIndex, trajectory)
 
     chasingAgents = ['wolf', 'sheep']
     chasingSpace = list(it.permutations(chasingAgents))
     chasingSpace.append(('random', 'random'))
-
     pullingSpace = ['noPull']
-
-    actionSpace = ___
     numOfAgents = len(chasingAgents)
     actionHypo = list(it.product(actionSpace, repeat=numOfAgents))
     iterables = [chasingSpace, pullingSpace, actionHypo]
@@ -74,31 +122,40 @@ def main():
     getChasingResultColor = GetChasingResultColor(getRolesColor)
     colorChasingPoints = ColorChasingPoints(getChasingResultColor)
 
-    drawInferenceResult = DrawContinuousInferenceResultNoPull(inferenceIndex, drawState, colorChasingPoints)
+    rawXRange = [-10, 10]
+    rawYRange = [-10, 10]
+    scaledXRange = [210, 590]
+    scaledYRange = [210, 590]
+    scaleState = ScaleState(positionIndex, rawXRange,rawYRange, scaledXRange, scaledYRange)
 
-    thresholdPosterior = 1
+    oldFPS = 5
+    FPS = 60
+    adjustFPS = AdjustStateFPS(oldFPS, FPS)
+
+    imageFolderName = 'continuousDemo' + str(dataIndex)
+    saveImage = SaveImage(imageFolderName)
+    drawInferenceResult = DrawContinuousInferenceResultNoPull(inferenceIndex, drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
+
+    thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
 
     mindPhysicsActionName = ['mind', 'physics', 'action']
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
 
-    trajectory = [[(6, 2), (9, 2), (5, 4)], [(7, 3), (10, 2), (6, 3)], [(6, 2), (10, 2), (7, 2)], [(8, 2), (10, 2), (6, 1)], [(8, 2), (10, 2), (7, 1)], [(8, 2), (10, 3), (7, 1)], [(9, 1), (10, 3), (8, 2)], [(8, 2), (10, 3), (8, 2)], [(8, 3), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (8, 1)], [(10, 1), (10, 4), (7, 2)], [(9, 2), (10, 5), (9, 2)], [(9, 3), (9, 5), (9, 3)], [(9, 4), (9, 6), (10, 3)], [(10, 5), (9, 7), (10, 3)], [(9, 4), (10, 7), (10, 4)], [(10, 5), (10, 7), (10, 4)], [(10, 5), (10, 8), (9, 5)], [(9, 6), (10, 9), (10, 4)], [(10, 7), (10, 9), (8, 4)], [(9, 8), (10, 10), (9, 3)], [(10, 7), (10, 10), (10, 4)], [(10, 7), (10, 10), (9, 5)], [(10, 7), (10, 10), (8, 6)], [(9, 8), (10, 10), (10, 6)], [(9, 8), (10, 10), (10, 6)], [(10, 9), (10, 9), (9, 7)]]
-    observe = Observe(positionIndex, trajectory)
-
-    imageFolderName = 'continuousDemo'
-    saveImage = SaveImage(imageFolderName)
-
-    FPS = 60
-    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(FPS, inferenceIndex,
-                 isInferenceTerminal, observe, inferOneStep, drawInferenceResult, saveImage)
-
+    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,
+                 isInferenceTerminal, observe, inferOneStep, drawInferenceResult)
     mindsPhysicsPrior = [1/ len(inferenceIndex)] * len(inferenceIndex)
-    posteriorDf = inferDiscreteChasingAndDrawDemo(mindsPhysicsPrior)
+    posteriorDf = inferContinuousChasingAndDrawDemo(mindsPhysicsPrior)
 
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotMindInferenceProb(posteriorDf)
-    plotPhysicsInferenceProb(posteriorDf)
+    plotMindInferenceProb(posteriorDf, dataIndex)
+    plotPhysicsInferenceProb(posteriorDf, dataIndex)
+
+    # posteriorDf.to_csv("posterior.csv")
+
+if __name__ == '__main__':
+    main()
 

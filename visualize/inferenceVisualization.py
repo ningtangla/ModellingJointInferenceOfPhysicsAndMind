@@ -8,13 +8,14 @@ class SaveImage:
     def __init__(self, imageFolderName):
         self.imageFolderName = imageFolderName
 
-    def __call__(self, timeStep, screen):
+    def __call__(self, screen):
         currentDir = os.getcwd()
         parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
         saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), self.imageFolderName)
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
-        pg.image.save(screen, saveImageDir + '/' + format(timeStep, '04') + ".png")
+        fileCount = len([name for name in os.listdir(saveImageDir) if os.path.isfile(os.path.join(saveImageDir, name))])
+        pg.image.save(screen, saveImageDir + '/' + format(fileCount, '05') + ".png")
 
 
 class GetChasingRoleColor:
@@ -107,21 +108,33 @@ class DrawInferenceResultWithPull:
 
 
 class DrawContinuousInferenceResultNoPull:
-    def __init__(self, inferenceIndex, drawState,
-                 colorChasingPoints):
+    def __init__(self, inferenceIndex, drawState, scaleState,
+                 colorChasingPoints, adjustFPS, saveImage):
         self.inferenceIndex = inferenceIndex
         self.drawState = drawState
+        self.scaleState = scaleState
         self.colorChasingPoints = colorChasingPoints
+        self.adjustFPS = adjustFPS
+        self.saveImage = saveImage
 
-    def __call__(self, state, posterior):
+    def __call__(self, currentState, nextState, posterior):
+        currentPosition = self.scaleState(currentState)
+        nextPosition =  self.scaleState(nextState)
+        print("currentPosition: ", currentPosition)
+
         inferenceDf = pd.DataFrame(index=self.inferenceIndex)
         inferenceDf['posterior'] = posterior
 
         resultGroupedByChasingIndices = inferenceDf.groupby('mind').sum().reset_index()
         circleColorList = self.colorChasingPoints(resultGroupedByChasingIndices)
 
-        screen = self.drawState(state, circleColorList)
-        return screen
+        positionsList = self.adjustFPS(currentPosition, nextPosition)
+
+        for positionIndex in range(len(positionsList)):
+            screen = self.drawState(positionsList[positionIndex], circleColorList)
+            if self.saveImage is not None:
+                self.saveImage(screen)
+
 
 
 class PlotInferenceProb:
@@ -130,11 +143,13 @@ class PlotInferenceProb:
         self.yVaraibleName = yVaraibleName
         self.groupIndex = groupIndex
 
-    def __call__(self, inferenceDf):
+    def __call__(self, inferenceDf, graphIndex):
         resultDf = inferenceDf.groupby(self.groupIndex).sum()
         graph = resultDf.T.plot()
         graph.set_xlabel(self.xVariableName)
         graph.set_ylabel(self.yVaraibleName)
-        plt.savefig(os.path.join(self.groupIndex + 'InferencePlot'))
+        dirName = os.path.dirname(__file__)
+        plotPath = os.path.join(dirName, '..', 'demo')
+        plt.savefig(os.path.join(plotPath, self.groupIndex + 'InferencePlot'+ str(graphIndex)))
         plt.show()
 

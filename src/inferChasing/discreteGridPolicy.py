@@ -1,15 +1,6 @@
 import numpy as np
 
 
-class UniformPolicy:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
-
-    def __call__(self, state):
-        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
-        return likelihood
-
-
 class ActHeatSeeking:
     def __init__(self, actionSpace, lowerBoundAngle, upperBoundAngle, calculateAngle):
         self.actionSpace = actionSpace

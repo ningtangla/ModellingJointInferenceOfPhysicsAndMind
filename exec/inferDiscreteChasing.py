@@ -10,8 +10,9 @@ import numpy as np
 from pygame.color import THECOLORS
 
 from analyticGeometryFunctions import computeAngleBetweenVectors
-from discreteGridPolicy import UniformPolicy, ActHeatSeeking, \
+from discreteGridPolicy import ActHeatSeeking, \
     HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
+from policies import UniformPolicy
 from discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
 from inference import IsInferenceTerminal, Observe, InferOneStep, \

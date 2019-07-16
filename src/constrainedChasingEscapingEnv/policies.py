@@ -6,6 +6,15 @@ def stationaryAgentPolicy(state):
     return {(0, 0): 1}
 
 
+class UniformPolicy:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def __call__(self, state):
+        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+        return likelihood
+
+
 class RandomPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace

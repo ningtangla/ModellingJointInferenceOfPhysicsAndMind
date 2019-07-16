@@ -4,16 +4,15 @@ import pandas as pd
 import pygame as pg
 
 class Observe:
-    def __init__(self, positionIndex, trajectory):
-        self.xIndex, self.yIndex = positionIndex
+    def __init__(self, stateIndex, trajectory):
+        self.stateIndex = stateIndex
         self.trajectory = trajectory
 
     def __call__(self, timeStep):
         if timeStep >= len(self.trajectory):
             return None
-        currentState = self.trajectory[timeStep]
-        currentPosition = [[agentState[self.xIndex], agentState[self.yIndex]] for agentState in currentState]
-        return currentPosition
+        currentState = self.trajectory[timeStep][self.stateIndex]
+        return currentState
 
 
 class IsInferenceTerminal:
@@ -91,6 +90,46 @@ class InferDiscreteChasingAndDrawDemo:
             nextTimeStep += 1
             mindsPhysicsPrior = mindsPhysicsPosterior
             currentState = nextState
+
+            if self.isInferenceTerminal(mindsPhysicsPosterior):
+                mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
+                return mindsPhysicsActionsDf
+
+
+
+
+class InferContinuousChasingAndDrawDemo:
+    def __init__(self, fps, inferenceIndex, isInferenceTerminal, observe, inferOneStep, visualize = None):
+        self.fps = fps
+        self.inferenceIndex = inferenceIndex
+
+        self.isInferenceTerminal = isInferenceTerminal
+        self.observe = observe
+        self.inferOneStep = inferOneStep
+        self.visualize = visualize
+
+    def __call__(self, mindsPhysicsPrior):
+        currentState = self.observe(0)
+        nextTimeStep = 1
+        mindsPhysicsActionsDf = pd.DataFrame(index = self.inferenceIndex)
+        fpsClock = pg.time.Clock()
+        while True:
+            mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
+            print('round', nextTimeStep)
+            nextState = self.observe(nextTimeStep)
+            if nextState is None:
+                return mindsPhysicsActionsDf
+
+            if self.visualize:
+                fpsClock.tick(self.fps)
+                self.visualize(currentState, nextState, mindsPhysicsPrior)
+
+            mindsPhysicsPosterior = self.inferOneStep(currentState, nextState, mindsPhysicsPrior)
+
+            nextTimeStep += 1
+            mindsPhysicsPrior = mindsPhysicsPosterior
+            currentState = nextState
+
             if self.isInferenceTerminal(mindsPhysicsPosterior):
                 mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
                 return mindsPhysicsActionsDf

@@ -3,6 +3,29 @@ import os
 import numpy as np
 
 
+class ScaleState:
+    def __init__(self, positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange):
+        self.xIndex, self.yIndex = positionIndex
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+
+    def __call__(self, originalState):
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (rawY - self.rawYMin) * yScale + self.scaledYMin
+
+        adjustState = lambda state: [adjustX(state[self.xIndex]), adjustY(state[self.yIndex])]
+
+        newState = [adjustState(agentState) for agentState in originalState]
+
+        return newState
+
+
 class ScaleTrajectory:
     def __init__(self, positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange):
         self.xIndex, self.yIndex = positionIndex
@@ -52,6 +75,16 @@ class AdjustDfFPStoTraj:
         newTraj = [getSingleState(time) for time in range(newTimeStepsNumber)]
         return newTraj
 
+
+class AdjustStateFPS:
+    def __init__(self, oldFPS, newFPS):
+        self.oldFPS = oldFPS
+        self.newFPS = newFPS
+
+    def __call__(self, currentPosition, nextPosition):
+        adjustRatio = self.newFPS // (self.oldFPS - 1)
+        positionList = np.linspace(currentPosition, nextPosition, adjustRatio, endpoint=False)
+        return positionList
 
 
 class DrawBackground:
