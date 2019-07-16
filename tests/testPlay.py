@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 import unittest
 from ddt import ddt, data, unpack
-from src.play import SampleTrajectory, agentDistToGreedyAction, worldDistToAction
+from src.episode import SampleTrajectory, chooseGreedyAction, SampleTrajectoryTerminationProbability
 from src.simple1DEnv import TransitionFunction, Terminal
 
 
@@ -17,62 +17,76 @@ class TestPlay(unittest.TestCase):
         self.reset = lambda: 0
 
 
-    @data(({0: 1}, 0),
-          ({1: 0.2, 0: 0.3, -1: 0.5}, -1),
-          ({(0, 0): 0.125, (1, 0): 0.75, (0, 1): 0.125, (1, 1): 0}, (1, 0)),
-          ({(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1, (1, 1): 0.1, (-1, -1): 0.1, (-1, 0): 0.1, (0, -1): 0.3}, (0, -1)))
-    @unpack
-    def testAgentDistToGreedyAction(self, actionDist, greedyAction):
-        selectedAction = agentDistToGreedyAction(actionDist)
-        self.assertEqual(selectedAction, greedyAction)
+    # @data(({0: 1}, 0),
+    #       ({1: 0.2, 0: 0.3, -1: 0.5}, -1),
+    #       ({(0, 0): 0.125, (1, 0): 0.75, (0, 1): 0.125, (1, 1): 0}, (1, 0)),
+    #       ({(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1, (1, 1): 0.1, (-1, -1): 0.1, (-1, 0): 0.1, (0, -1): 0.3}, (0, -1)))
+    # @unpack
+    # def testAgentDistToGreedyAction(self, actionDist, greedyAction):
+    #     selectedAction = agentDistToGreedyAction(actionDist)
+    #     self.assertEqual(selectedAction, greedyAction)
+    #
+    # @data(({1: 0.33, 0: 0.33, -1: 0.33, 2: 0.01}, [1, 0, -1], 1000, 200),
+    #       ({(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1, (1, 1): 0.3, (-1, -1): 0, (-1, 0): 0, (0, -1): 0.3}, [(1, 1), (0, -1)], 1000, 400))
+    # @unpack
+    # def testRandomnessInAgentDistToGreedyAction(self, actionDist, greedyActions, rep, minSelected):
+    #     counter = {action: 0 for action in greedyActions}
+    #     for _ in range(rep):
+    #         selectedAction = agentDistToGreedyAction(actionDist)
+    #         counter[selectedAction] += 1
+    #     self.assertEqual(sum(counter.values()), rep)
+    #     for action in counter:
+    #         self.assertGreater(counter[action], minSelected)
+    #
+    # @data(([0, 1, 0], [0, 1, 0]),
+    #       ([{0: 0.6, 1: 0.4}], [0]),
+    #       ([{0: 0.6, 1: 0.4}, {0: 0.4, 1: 0.6}, {0: 0, 1: 1}, {0: 0.3, 1: 0.7}], [0, 1, 1, 1]),
+    #       ([{0: 0.6, 1: 0.4}, 1, {0: 0, 1: 1}, 1], [0, 1, 1, 1]),
+    #       ([{(1, 0): 0.1, (0, 1): 0.7, (-1, 0): 0.1, (0, -1): 0.1},
+    #         {(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.7, (0, -1): 0.1},
+    #         {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1},
+    #         {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1}],
+    #        [(0, 1), (-1, 0), (1, 0), (1, 0)]),
+    #       ([{(1, 0): 0.1, (0, 1): 0.7, (-1, 0): 0.1, (0, -1): 0.1},
+    #         (-1, 0),
+    #         (1, 0),
+    #         {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1}],
+    #        [(0, 1), (-1, 0), (1, 0), (1, 0)]))
+    # @unpack
+    # def testWorldDistToAction(self, dists, actions):
+    #     convertedDists = worldDistToAction(agentDistToGreedyAction, dists)
+    #     self.assertEqual(convertedDists, actions)
+    #
+    # @data(([{0: 1}], [(0, 0, {0: 1})]*5),
+    #       ([{1: 0.7, 2: 0.1, 3: 0.2}, {-1: 0.9, 0: 0.1}],
+    #        [(0, 1, {1: 0.7, 2: 0.1, 3: 0.2}), (1, -1, {-1: 0.9, 0: 0.1}), (0, 1, {1: 0.7, 2: 0.1, 3: 0.2}), (1, -1, {-1: 0.9, 0: 0.1}), (0, 1, {1: 0.7, 2: 0.1, 3: 0.2})]),
+    #       ([{1: 0.6, -1: 0.4}]*5,
+    #        [(0, 1, {1: 0.6, -1: 0.4}), (1, 1, {1: 0.6, -1: 0.4}), (2, 1, {1: 0.6, -1: 0.4}), (3, 1, {1: 0.6, -1: 0.4}), (4, 1, {1: 0.6, -1: 0.4})]),
+    #       ([{7: 0.7, 10: 0.3}], [(0, 7, {7: 0.7, 10: 0.3}), (7, None, None)]),
+    #       ([{2: 0.9, -2: 0.1}, {0: 1}, {3: 0.4, 2: 0.2, 1: 0.2}, {0: 1}, {0: 1}, {2: 0.99, 4: 0.01}],
+    #        [(0, 2, {2: 0.9, -2: 0.1}), (2, 3, {3: 0.4, 2: 0.2, 1: 0.2}), (5, 2, {2: 0.99, 4: 0.01}), (7, None, None)]))
+    # @unpack
+    # def testSampleTrajectory(self, policyArray, groundTruthTraj):
+    #     maxRunningSteps = 5
+    #     distToAction = agentDistToGreedyAction
+    #     sampleTraj = SampleTrajectory(maxRunningSteps, self.transition, self.isTerminal, self.reset, distToAction)
+    #     policy = lambda i: policyArray[i]
+    #     traj = sampleTraj(policy)
+    #     self.assertEqual(traj, groundTruthTraj)
 
-    @data(({1: 0.33, 0: 0.33, -1: 0.33, 2: 0.01}, [1, 0, -1], 1000, 200),
-          ({(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1, (1, 1): 0.3, (-1, -1): 0, (-1, 0): 0, (0, -1): 0.3}, [(1, 1), (0, -1)], 1000, 400))
+    @data((0.5, 1), (0.3, 3), (0.7, 2), (1, 1))
     @unpack
-    def testRandomnessInAgentDistToGreedyAction(self, actionDist, greedyActions, rep, minSelected):
-        counter = {action: 0 for action in greedyActions}
-        for _ in range(rep):
-            selectedAction = agentDistToGreedyAction(actionDist)
-            counter[selectedAction] += 1
-        self.assertEqual(sum(counter.values()), rep)
-        for action in counter:
-            self.assertGreater(counter[action], minSelected)
-
-    @data(([0, 1, 0], [0, 1, 0]),
-          ([{0: 0.6, 1: 0.4}], [0]),
-          ([{0: 0.6, 1: 0.4}, {0: 0.4, 1: 0.6}, {0: 0, 1: 1}, {0: 0.3, 1: 0.7}], [0, 1, 1, 1]),
-          ([{0: 0.6, 1: 0.4}, 1, {0: 0, 1: 1}, 1], [0, 1, 1, 1]),
-          ([{(1, 0): 0.1, (0, 1): 0.7, (-1, 0): 0.1, (0, -1): 0.1},
-            {(1, 0): 0.1, (0, 1): 0.1, (-1, 0): 0.7, (0, -1): 0.1},
-            {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1},
-            {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1}],
-           [(0, 1), (-1, 0), (1, 0), (1, 0)]),
-          ([{(1, 0): 0.1, (0, 1): 0.7, (-1, 0): 0.1, (0, -1): 0.1},
-            (-1, 0),
-            (1, 0),
-            {(1, 0): 0.7, (0, 1): 0.1, (-1, 0): 0.1, (0, -1): 0.1}],
-           [(0, 1), (-1, 0), (1, 0), (1, 0)]))
-    @unpack
-    def testWorldDistToAction(self, dists, actions):
-        convertedDists = worldDistToAction(agentDistToGreedyAction, dists)
-        self.assertEqual(convertedDists, actions)
-
-    @data(([{0: 1}], [(0, 0, {0: 1})]*5),
-          ([{1: 0.7, 2: 0.1, 3: 0.2}, {-1: 0.9, 0: 0.1}],
-           [(0, 1, {1: 0.7, 2: 0.1, 3: 0.2}), (1, -1, {-1: 0.9, 0: 0.1}), (0, 1, {1: 0.7, 2: 0.1, 3: 0.2}), (1, -1, {-1: 0.9, 0: 0.1}), (0, 1, {1: 0.7, 2: 0.1, 3: 0.2})]),
-          ([{1: 0.6, -1: 0.4}]*5,
-           [(0, 1, {1: 0.6, -1: 0.4}), (1, 1, {1: 0.6, -1: 0.4}), (2, 1, {1: 0.6, -1: 0.4}), (3, 1, {1: 0.6, -1: 0.4}), (4, 1, {1: 0.6, -1: 0.4})]),
-          ([{7: 0.7, 10: 0.3}], [(0, 7, {7: 0.7, 10: 0.3}), (7, None, None)]),
-          ([{2: 0.9, -2: 0.1}, {0: 1}, {3: 0.4, 2: 0.2, 1: 0.2}, {0: 1}, {0: 1}, {2: 0.99, 4: 0.01}],
-           [(0, 2, {2: 0.9, -2: 0.1}), (2, 3, {3: 0.4, 2: 0.2, 1: 0.2}), (5, 2, {2: 0.99, 4: 0.01}), (7, None, None)]))
-    @unpack
-    def testSampleTrajectory(self, policyArray, groundTruthTraj):
-        maxRunningSteps = 5
-        distToAction = agentDistToGreedyAction
-        sampleTraj = SampleTrajectory(maxRunningSteps, self.transition, self.isTerminal, self.reset, distToAction)
-        policy = lambda i: policyArray[i]
-        traj = sampleTraj(policy)
-        self.assertEqual(traj, groundTruthTraj)
+    def testSampleTrajectoryTerminationProbability(self, terminationProbability, episodeLength):
+        numSamples = 10000
+        sampleTrajectoryTerminationProbability = SampleTrajectoryTerminationProbability(terminationProbability,
+                                                                                        self.transition, self.isTerminal,
+                                                                                        self.reset, chooseGreedyAction)
+        policy = lambda state: [{1: 1}]
+        trajectories = [sampleTrajectoryTerminationProbability(policy) for _ in range(numSamples)]
+        allTrajLengths = [len(trajectory) for trajectory in trajectories]
+        fractionTrajectoriesWithGivenLength = len(list(filter(lambda x: x == episodeLength, allTrajLengths)))/numSamples
+        fractionGroundTruth = ((1-terminationProbability)**(episodeLength-1))*terminationProbability
+        self.assertAlmostEqual(fractionTrajectoriesWithGivenLength, fractionGroundTruth, 1)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import numpy as np
-import pandas as pd
+import random
 
 class MultiAgentSampleTrajectory:
     def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
@@ -25,6 +25,7 @@ class MultiAgentSampleTrajectory:
                 break
         return trajectory
 
+
 class SampleTrajectory:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
         self.maxRunningSteps = maxRunningSteps
@@ -49,6 +50,36 @@ class SampleTrajectory:
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
             state = nextState
+
+        return trajectory
+
+
+class SampleTrajectoryTerminationProbability:
+    def __init__(self, terminationProbability, transit, isTerminal, reset, chooseAction):
+        self.terminationProbability = terminationProbability
+        self.transit = transit
+        self.isTerminal = isTerminal
+        self.reset = reset
+        self.chooseAction = chooseAction
+
+    def __call__(self, policy):
+        state = self.reset()
+
+        while self.isTerminal(state):
+            state = self.reset()
+
+        trajectory = []
+        terminal = False
+        while(terminal == False):
+            if self.isTerminal(state):
+                trajectory.append((state, None, None))
+                break
+            actionDists = policy(state)
+            action = [self.chooseAction(actionDist) for actionDist in actionDists]
+            trajectory.append((state, action, actionDists))
+            nextState = self.transit(state, action)
+            state = nextState
+            terminal = random.random() < self.terminationProbability
 
         return trajectory
 
