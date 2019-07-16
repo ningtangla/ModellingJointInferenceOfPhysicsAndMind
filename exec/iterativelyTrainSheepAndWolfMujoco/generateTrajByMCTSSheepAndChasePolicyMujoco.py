@@ -72,8 +72,8 @@ def main():
 
     # wolf NN Policy
     dirName = os.path.dirname(__file__)
-    sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'trainNNChasePolicyMujoco', 'trainedNNModels')
+    wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                            'trainNNChasePolicyMujoco', 'trainedNNModels')
     numSimulations = 10
     killzoneRadius = 2
     qPosInitNoise = 9.7
@@ -85,7 +85,7 @@ def main():
                          'qPosInitNoise': qPosInitNoise, 'qVelInitNoise': qVelInitNoise,
                          'rolloutHeuristicWeight': rolloutHeuristicWeight, 'maxRunningSteps': maxRunningSteps}
     NNModelSaveExtension = ''
-    getSheepModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+    getSheepModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
     numStateSpace = 12
     numActionSpace = len(sheepActionSpace)
