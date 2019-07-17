@@ -43,12 +43,18 @@ def main():
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
     sheepBodyMassIndex = 6
     wolfBodyMassIndex = 7
-    smallMass = 5
-    largeMass = 10
+    # smallMass = 5
+    # largeMass = 10
+    # physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    # physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [smallMass, smallMass]
+    # physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    # physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [largeMass, largeMass]
+
     physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [smallMass, smallMass]
+    physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [4, 5]
     physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [largeMass, largeMass]
+    physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [8, 10]
+
     physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
     physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
 
@@ -95,7 +101,7 @@ def main():
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 9
+    dataIndex = 10
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0
