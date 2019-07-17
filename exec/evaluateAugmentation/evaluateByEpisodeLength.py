@@ -18,8 +18,8 @@ import math
 from episode import SampleTrajectory, chooseGreedyAction
 from analyticGeometryFunctions import transitePolarToCartesian, \
     computeAngleBetweenVectors
-from evaluationFunctions import GetSavePath, ComputeStatistics, \
-    LoadMultipleTrajectoriesFile
+from trajectoriesSaveLoad import GetSavePath, LoadMultipleTrajectoriesFile
+from evaluationFunctions import ComputeStatistics
 from augmentDataForNN import GenerateSymmetricData, GenerateSymmetricDistribution, GenerateSymmetricState, CalibrateState
 from dataTools import createSymmetricVector
 import trainTools
