@@ -12,7 +12,7 @@ from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneSte
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy, ApproximateActionPrior
 from exec.SheepAndWolfNNOnlyPolicies.policy import AgentPolicy
 from exec.trajectoriesSaveLoad import loadFromPickle
 
@@ -62,16 +62,19 @@ def main():
     wolfModelPath = os.path.join(dirName, '..','NNModels','wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
     wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(wolfNNModel, wolfModelPath)
-    approximateWolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)
-    wolfPolicy = AgentPolicy(approximateWolfPolicy)
+    # approximateWolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)
+    # wolfPolicy = AgentPolicy(approximateWolfPolicy)
+    wolfPolicy = ApproximateActionPrior(wolfNNModel, actionSpace) # input state, return action distribution
 
 
     # sheep NN Policy
     sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
     sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(sheepNNModel, sheepModelPath)
-    approximateSheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace)
-    sheepPolicy = AgentPolicy(approximateSheepPolicy)
+    # approximateSheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace)
+    # sheepPolicy = AgentPolicy(approximateSheepPolicy)
+    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace) # input state, return action distribution
+
 
     # random Policy
     randomPolicy = RandomPolicy(actionSpace)
@@ -80,7 +83,7 @@ def main():
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 5
+    dataIndex = 6
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0

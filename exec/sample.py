@@ -68,7 +68,7 @@ def main():
     policy = lambda state: [{approximatePolicy(state): 1} for approximatePolicy in approximatePolicyList]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 5
+    dataIndex = 6
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 
