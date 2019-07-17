@@ -51,10 +51,10 @@ def conditionDfFromParametersDict(parametersDict):
     return conditionDf
 
 class LoadTrajectories:
-    def __init__(self, fuzzySearchParameterNames, getSavePath, loadFromPickle):
-        self.fuzzySearchParameterNames = fuzzySearchParameterNames
+    def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames = []):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
+        self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters):
         parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])

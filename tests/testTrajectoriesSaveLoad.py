@@ -74,7 +74,7 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
     @unpack
     def testLoadMultipleTrajectoriesFromMultipleFiles(self, parameters, fixedParameters, fuzzySearchParameterNames):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
-        loadTrajectories = LoadTrajectories(fuzzySearchParameterNames, getSavePath, loadFromPickle)
+        loadTrajectories = LoadTrajectories(getSavePath, loadFromPickle, fuzzySearchParameterNames)
         loadedTrajectories = loadTrajectories(parameters)
         numTrials = len(loadedTrajectories)
 
@@ -85,7 +85,7 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
     @unpack
     def testLoadMultipleTrajectoriesFromOneFile(self, parameters, fixedParameters, fuzzySearchParameterNames):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
-        loadTrajectories = LoadTrajectories(fuzzySearchParameterNames, getSavePath, loadFromPickle)
+        loadTrajectories = LoadTrajectories(getSavePath, loadFromPickle, fuzzySearchParameterNames)
         loadedTrajectories = loadTrajectories(parameters)
         numTrials = len(loadedTrajectories)
 
@@ -97,7 +97,7 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
     @unpack
     def testLoadTrajectoriesQPosInit(self, parameters, fixedParameters, fuzzySearchParameterNames):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
-        loadTrajectories = LoadTrajectories(fuzzySearchParameterNames, getSavePath, loadFromPickle)
+        loadTrajectories = LoadTrajectories(getSavePath, loadFromPickle, fuzzySearchParameterNames)
         loadedTrajectories = loadTrajectories(parameters)
         initTimeStep = 0
         stateIndex = 0

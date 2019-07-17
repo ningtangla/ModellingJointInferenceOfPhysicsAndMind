@@ -93,3 +93,7 @@ def chooseGreedyAction(actionDist):
     return selectedAction
 
 
+def getPairedTrajectory(agentsTrajectory):
+    timeStepCount = len(agentsTrajectory[0])
+    pairedTraj =[[agentTrajectory[timeStep] for agentTrajectory in agentsTrajectory] for timeStep in range(timeStepCount)]
+    return pairedTraj
