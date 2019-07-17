@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class GetAgentPosFromState:
     def __init__(self, agentId, posIndex):
         self.agentId = agentId
@@ -10,4 +11,3 @@ class GetAgentPosFromState:
         agentPos = state[self.agentId][self.posIndex]
 
         return agentPos
-

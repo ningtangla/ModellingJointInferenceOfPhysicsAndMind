@@ -2,7 +2,7 @@ import pickle
 import os
 import glob
 import pandas as pd
-
+import numpy as np 
 
 def loadFromPickle(path):
     pickleIn = open(path, 'rb')
@@ -30,6 +30,8 @@ class GetSavePath:
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
+        fileName = fileName.replace("[", "(")
+        fileName = fileName.replace("]", ")")
 
         path = os.path.join(self.dataDirectory, fileName)
 
@@ -41,51 +43,25 @@ def readParametersFromDf(oneConditionDf):
     parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
     return parameters
 
+def conditionDfFromParametersDict(parametersDict):
+    levelNames = list(parametersDict.keys())
+    levelValues = list(parametersDict.values())
+    modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    conditionDf = pd.DataFrame(index=modelIndex)
+    return conditionDf
 
 class LoadTrajectories:
-    def __init__(self, getSavePath, loadFromPickle):
+    def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames = []):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
+        self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters):
-        parameters['sampleIndex'] = '*'
-        genericSavePath = self.getSavePath(parameters)
+        parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
+        genericSavePath = self.getSavePath(parametersWithFuzzy)
         filesNames = glob.glob(genericSavePath)
-        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
-
+        trajectories = list(np.array([self.loadFromPickle(fileName) for fileName in filesNames]).flatten())
         return trajectories
-
-
-class GenerateAllSampleIndexSavePaths:
-    def __init__(self, getSavePath):
-        self.getSavePath = getSavePath
-
-    def __call__(self, numSamples, pathParameters):
-        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
-        genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
-        existingFilesNames = glob.glob(genericSavePath)
-        numExistingFiles = len(existingFilesNames)
-        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
-                              range(numSamples)}
-        allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
-                        allIndexParameters.items()}
-
-        return allSavePaths
-
-
-class SaveAllTrajectories:
-    def __init__(self, saveData, generateAllSampleIndexSavePaths):
-        self.saveData = saveData
-        self.generateAllSampleIndexSavePaths = generateAllSampleIndexSavePaths
-
-    def __call__(self, trajectories, pathParameters):
-        numSamples = len(trajectories)
-        allSavePaths = self.generateAllSampleIndexSavePaths(numSamples, pathParameters)
-        saveTrajectory = lambda sampleIndex: self.saveData(trajectories[sampleIndex], allSavePaths[sampleIndex])
-        [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
-
-        return None
-
 
 class GetAgentCoordinateFromTrajectoryAndStateDf:
     def __init__(self, stateIndex, coordinates):

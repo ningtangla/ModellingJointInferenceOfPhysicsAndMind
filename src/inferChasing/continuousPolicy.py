@@ -4,10 +4,9 @@ class RandomPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
 
-    def __call__(self, agentAction):
+    def __call__(self, state):
         likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
-        actionLik = likelihood[agentAction]
-        return actionLik
+        return likelihood
 
 
 class Policy:
@@ -18,7 +17,8 @@ class Policy:
 
     def __call__(self, mind, state, allAgentsActions):
         if mind[0] == 'random':
-            actionLikelihood = [self.randomPolicy(action) for action in allAgentsActions]
+            allActionsLikelihood = self.randomPolicy(state)
+            actionLikelihood = [allActionsLikelihood.get(action, 0) for action in allAgentsActions]
             policyLikelihood = np.product(actionLikelihood)
 
         else:
@@ -26,10 +26,13 @@ class Policy:
             sheepID = mind.index('sheep')
 
             wolfAction = allAgentsActions[wolfID]
-            wolfActionLikelihood = self.wolfPolicy(state, wolfAction)
+            wolfAllActionsLikelihood = self.wolfPolicy(state)
+            wolfActionLikelihood = wolfAllActionsLikelihood.get(wolfAction, 0)
 
             sheepAction = allAgentsActions[sheepID]
-            sheepActionLikelihood = self.sheepPolicy(state, sheepAction)
+            sheepAllActionsLikelihood = self.sheepPolicy(state)
+            sheepActionLikelihood = sheepAllActionsLikelihood.get(sheepAction, 0)
+
             policyLikelihood = wolfActionLikelihood* sheepActionLikelihood
 
         return policyLikelihood

@@ -13,7 +13,7 @@ class Reset():
         initState = [[np.random.uniform(xMin, xMax),
                       np.random.uniform(yMin, yMax)]
                      for _ in range(self.numOfAgnet)]
-        return initState
+        return np.array(initState)
 
 
 def samplePosition(xBoundary, yBoundary):

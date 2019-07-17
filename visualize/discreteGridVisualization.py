@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from itertools import combinations
 import pygame as pg
 import sys
@@ -32,7 +32,6 @@ class ModifyOverlappingPoints:
                 pointsLocation[firstPointIndex], pointsLocation[secondPointIndex] = self.modifyPoints(
                     pointsLocation[firstPointIndex], pointsLocation[secondPointIndex])
         return pointsLocation
-
 
 
 class DrawCircles:

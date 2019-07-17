@@ -12,6 +12,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import time
 
+
 from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
 from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, RollOut, Expand, \
     MCTS, backup
@@ -219,7 +220,7 @@ if __name__ == "__main__":
                      trainSteps, modelSavePath in modelSavePaths.items()}
 
     # wrapper functions for action prior
-    uniformActionPrior = lambda state: {action: 1/len(actionSpace) for action in actionSpace}
+    uniformActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
     getActionPriorUniformFunction = lambda trainedModel: uniformActionPrior
     getActionPriorNNFunction = lambda trainedModel: GetActionDistNeuralNet(actionSpace, trainedModel)
 
