@@ -3,7 +3,7 @@ class TransitionFunction:
         self.bound_high = bound_high
         self.bound_low = bound_low
     def __call__(self, state, action):
-        new_state = state + action
+        new_state = state + action[0]
         if new_state < self.bound_low or new_state > self.bound_high:
             new_state = state
         

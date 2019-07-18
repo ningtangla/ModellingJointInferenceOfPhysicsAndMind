@@ -14,7 +14,7 @@ from src.play import SampleTrajectory, agentDistToGreedyAction, worldDistToActio
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
 from exec.evaluationFunctions import GetSavePath
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     qPosInit = (0, 0, 0, 0)
     numSimulations = 75
 
-    # functions for MCTS
+    # mujoco environment
     dirName = os.path.dirname(__file__)
     envModelPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
     mujocoModel = load_model_from_path(envModelPath)
@@ -45,8 +45,12 @@ def main():
 
     numSimulationFrames = 20
     transit = TransitionFunction(simulation, isTerminal, numSimulationFrames)
-    sheepTransit = lambda state, action: transit(state, [action, stationaryAgentPolicy(state)])
+    actionMagnitude = 5
+    heatSeekingDeterministicPolicy = HeatSeekingContinuesDeterministicPolicy(getWolfXPos, getSheepXPos, actionMagnitude)
+    heatSeekingDeterministicAction = lambda state: agentDistToGreedyAction(heatSeekingDeterministicPolicy(state))
+    sheepTransit = lambda state, action: transit(state, [action, heatSeekingDeterministicAction(state)])
 
+    # MCTS
     aliveBonus = 0.05
     deathPenalty = -1
     rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
@@ -73,10 +77,10 @@ def main():
 
     # All agents' policies
     mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
-    policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
+    policy = lambda state: [mcts(state), heatSeekingDeterministicAction(state)]
 
     # generate trajectories
-    numTrials = 1500
+    numTrials = 1000
     distToAction = lambda worldDist: worldDistToAction(agentDistToGreedyAction, worldDist)
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, distToAction)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]

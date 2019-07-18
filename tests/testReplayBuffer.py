@@ -23,21 +23,23 @@ class TestReplayBuffer(unittest.TestCase):
 
     @data(([[(np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))], 0)],
             [(np.asarray([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))], 1)]],
-           2, [(np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]), [np.asarray((0, 10)), np.asarray((7, 7))], 12)],
+           2, [[(np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]), [np.asarray((0, 10)), np.asarray((7, 7))], 12)],
+               [(np.asarray([[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]), [np.asarray((10, 0)), np.asarray((7, 7))], 43)]],
            2),
           ([[(np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))], 0)],
             [(np.asarray([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))], 1)]],
-           3, [(np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]), [np.asarray((0, 10)), np.asarray((7, 7))], 12)],
+           3, [[(np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]), [np.asarray((0, 10)), np.asarray((7, 7))], 12)]],
            3),
           ([[(np.asarray([[-4, 0, -4, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))], 0)],
             [(np.asarray([[-3, 0, -3, 0, 0, 0], [4, 0, 4, 0, 0, 0]]), [np.asarray((10, 0)), np.asarray((0, 0))], 1)]],
-           10, [(np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]), [np.asarray((0, 10)), np.asarray((7, 7))], 12)],
-           3))
+           10, [[(np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]), [np.asarray((0, 10)), np.asarray((7, 7))], 12)],
+                [(np.asarray([[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]), [np.asarray((10, 0)), np.asarray((7, 7))], 43)]],
+           4))
     @unpack
-    def testSaveToBuffer(self, buffer, windowSize, trajectory, groundTruthNewBufferSize):
+    def testSaveToBuffer(self, buffer, windowSize, trajectories, groundTruthNewBufferSize):
         originalBufferSize = len(buffer)
         saveToBuffer = SaveToBuffer(windowSize)
-        updatedBuffer = saveToBuffer(buffer, trajectory)
+        updatedBuffer = saveToBuffer(buffer, trajectories)
         newBufferSize = len(updatedBuffer)
 
         self.assertEqual(groundTruthNewBufferSize, newBufferSize)
@@ -49,7 +51,7 @@ class TestReplayBuffer(unittest.TestCase):
         else:
             self.assertFalse(compareFirstTrajectoryAfterUpdate)
 
-        isLastTrajectoryInBufferCorrect = self.compareTrajectories(trajectory, updatedBuffer[-1])
+        isLastTrajectoryInBufferCorrect = self.compareTrajectories(trajectories[-1], updatedBuffer[-1])
         self.assertTrue(isLastTrajectoryInBufferCorrect)
 
 
