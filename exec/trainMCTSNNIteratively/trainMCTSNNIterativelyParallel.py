@@ -41,12 +41,14 @@ class GenerateTrajectoriesParallel:
 
     def __call__(self, oneConditionDf):
         startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
-        endSampleIndexes = s 
-        __import__('ipdb').set_trace()
-        sampleIdStrings = list(map(str, range(self.numSample)))
+        endSampleIndexes = np.concatenate([startSampleIndexes[1:], [self.numSample]])
+        startEndIndexesPair = zip(startSampleIndexes, endSampleIndexes)
         parameters = self.readParametersFromDf(oneConditionDf)
+        __import__('ipdb').set_trace()
         parametersString = json.dumps(parameters)
-        cmdList = [['python3', self.codeFileName, parametersString, startSampleIndex] for sampleIndex in sampleIdStrings]
+        cmdList = [['python3', self.codeFileName, parametersString, str(startSampleIndex), str(endSampleIndex)] 
+                for startSampleIndex, endSampleIndex in startEndIndexesPair]
+        __import__('ipdb').set_trace()
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.wait()
@@ -141,7 +143,7 @@ class IterativePlayAndTrain:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrajectoriesPerIteration'] = [25]#[256]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [100]#[256]
     manipulatedVariables['miniBatchSize'] = [512]
     manipulatedVariables['learningRate'] = [0.01]
 
@@ -180,8 +182,9 @@ def main():
   
     #generate trajectory 
     generateTrajectoriesCodeName = 'generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py'
+    numToUseCores = 4
     getGenerateTrajectoriesParallel = lambda numTrajectoriesPerIteration: GenerateTrajectoriesParallel(generateTrajectoriesCodeName, numTrajectoriesPerIteration,
-            readParametersFromDf)
+            numToUseCores, readParametersFromDf)
     
     #trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit,
