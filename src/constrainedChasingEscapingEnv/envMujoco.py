@@ -57,7 +57,6 @@ class TransitionFunction:
         self.simulation.data.qpos[:] = oldQPos
         self.simulation.data.qvel[:] = oldQVel
         self.simulation.data.ctrl[:] = actions.flatten()
-
         for simulationFrame in range(self.numSimulationFrames):
             self.simulation.step()
             self.simulation.forward()

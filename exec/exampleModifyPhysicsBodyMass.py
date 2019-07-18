@@ -14,16 +14,16 @@ def main():
     # transition function
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
-    sheepBodyMassIndex = 6
-    wolfBodyMassIndex = 7
-    smallMass = 5
-    largeMass = 10
+    agentsBodyMassIndex = [6, 7]
     physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [smallMass, smallMass] 
+    physicsSmallMassModel.body_mass[agentsBodyMassIndex] = [4, 5] 
     physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [largeMass, largeMass] 
+    physicsLargeMassModel.body_mass[agentsBodyMassIndex] = [8, 10] 
     physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
     physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
+    #set_constants fit for mujoco_py version >= 2.0, no fit for 1.50 
+    physicsSmallMassSimulation.set_constants()
+    physicsLargeMassSimulation.set_constants()
 
     sheepId = 0
     wolfId = 1

@@ -12,10 +12,11 @@ from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
 from psutil import virtual_memory, disk_usage
+import math
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from exec.evaluationFunctions import GetSavePath, readParametersFromDf, LoadTrajectories
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
@@ -32,16 +33,20 @@ def loadData(path):
 
 
 class GenerateTrajectoriesParallel:
-    def __init__(self, codeFileName, numSample, readParametersFromDf):
+    def __init__(self, codeFileName, numSample, numCmdList, readParametersFromDf):
         self.codeFileName = codeFileName
         self.numSample = numSample
+        self.numCmdList = numCmdList
         self.readParametersFromDf = readParametersFromDf
 
     def __call__(self, oneConditionDf):
+        startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
+        endSampleIndexes = s 
+        __import__('ipdb').set_trace()
         sampleIdStrings = list(map(str, range(self.numSample)))
         parameters = self.readParametersFromDf(oneConditionDf)
         parametersString = json.dumps(parameters)
-        cmdList = [['python3', self.codeFileName, parametersString, sampleIndex] for sampleIndex in sampleIdStrings]
+        cmdList = [['python3', self.codeFileName, parametersString, startSampleIndex] for sampleIndex in sampleIdStrings]
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.wait()
@@ -111,11 +116,11 @@ class IterativePlayAndTrain:
             trajectories = self.loadTrajectories(conditionDfOneIteration)
             processedTrajectories = self.preProcessTrajectories(trajectories)
             updatedBuffer = self.saveToBuffer(buffer, processedTrajectories)
-            # if len(updatedBuffer) >= self.windowSize:
-            sampledBatch = sampleBatchFromBuffer(updatedBuffer) #
-            trainData = [list(varBatch) for varBatch in zip(*sampledBatch)] #
-            updatedNNModel = trainNN(NNModel, trainData)    #
-            NNModel = updatedNNModel    #
+            #if len(updatedBuffer) >= self.windowSize:
+            sampledBatch = sampleBatchFromBuffer(updatedBuffer) 
+            trainData = [list(varBatch) for varBatch in zip(*sampledBatch)] 
+            updatedNNModel = trainNN(NNModel, trainData)    
+            NNModel = updatedNNModel    
 
             buffer = updatedBuffer
 

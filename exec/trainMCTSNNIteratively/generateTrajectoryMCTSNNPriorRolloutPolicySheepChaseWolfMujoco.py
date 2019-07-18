@@ -109,15 +109,16 @@ def main():
     getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
-    sampleIndex = int(sys.argv[2])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
     beginTime = time.time()
     trajectory = sampleTrajectory(policy)
     processTime = time.time() - beginTime
 
     # if not os.path.isfile(trajectorySavePath):
 
-    parametersForTrajectoryPath['sampleIndex'] = sampleIndex
-    parametersForTrajectoryPath['sampleTrajectoryTime'] = processTime
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    #parametersForTrajectoryPath['sampleTrajectoryTime'] = processTime
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
     saveData(trajectory, trajectorySavePath)
 
