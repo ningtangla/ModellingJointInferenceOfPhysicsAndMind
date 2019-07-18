@@ -17,23 +17,16 @@ def main():
 
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
-    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSimulation = mujoco.MjSim(physicsModel)
-
-    sheepBodyMassIndex = 6
-    wolfBodyMassIndex = 7
-    # smallMass = 5
-    # largeMass = 10
+    agentsBodyMassIndex = [6, 7]
     physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    # physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [smallMass, smallMass]
-    physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [4, 5]
-
+    physicsSmallMassModel.body_mass[agentsBodyMassIndex] = [4, 5]
     physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    # physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [largeMass, largeMass]
-    physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [8, 10]
-
+    physicsLargeMassModel.body_mass[agentsBodyMassIndex] = [8, 10]
     physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
     physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
+    # set_constants fit for mujoco_py version >= 2.0, no fit for 1.50
+    physicsSmallMassSimulation.set_constants()
+    physicsLargeMassSimulation.set_constants()
 
     sheepId = 0
     wolfId = 1
@@ -50,14 +43,13 @@ def main():
     transit = transitSmallMassAgents
 
 
-
     # reset function
     qPosInit = (0, 0, 0, 0)     # (initial position of sheep, initial position of wolf)
     qVelInit = (0, 0, 0, 0)     # (initial velocity of sheep, initial velocity of wolf)
     qPosInitNoise = 9.7         # adds some randomness to the initial positions
     qVelInitNoise = 5           # adds some randomness to the initial velocities
     numAgent = 2
-    reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
+    reset = ResetUniform(physicsSmallMassSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
 
     # sample trajectory
     maxRunningSteps = 10        # max possible length of the trajectory/episode
@@ -89,7 +81,7 @@ def main():
     policy = lambda state: [{approximatePolicy(state): 1} for approximatePolicy in approximatePolicyList]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 10
+    dataIndex = 11
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 

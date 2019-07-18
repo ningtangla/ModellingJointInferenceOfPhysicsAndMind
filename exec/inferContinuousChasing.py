@@ -41,22 +41,17 @@ def main():
     # transition function
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
-    sheepBodyMassIndex = 6
-    wolfBodyMassIndex = 7
-    # smallMass = 5
-    # largeMass = 10
-    # physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    # physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [smallMass, smallMass]
-    # physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    # physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [largeMass, largeMass]
-
+    agentsBodyMassIndex = [6, 7]
     physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [4, 5]
+    physicsSmallMassModel.body_mass[agentsBodyMassIndex] = [4, 5]
     physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [8, 10]
+    physicsLargeMassModel.body_mass[agentsBodyMassIndex] = [8, 10]
 
     physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
     physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
+    # set_constants fit for mujoco_py version >= 2.0, no fit for 1.50
+    physicsSmallMassSimulation.set_constants()
+    physicsLargeMassSimulation.set_constants()
 
     sheepId = 0
     wolfId = 1
@@ -69,6 +64,7 @@ def main():
     numSimulationFrames = 20
     transitSmallMassAgents = TransitionFunction(physicsSmallMassSimulation, isTerminal, numSimulationFrames)
     transitLargeMassAgents = TransitionFunction(physicsLargeMassSimulation, isTerminal, numSimulationFrames)
+
     transition = TransitTwoMassPhysics(transitSmallMassAgents, transitLargeMassAgents)
 
     # Neural Network
@@ -101,7 +97,7 @@ def main():
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 10
+    dataIndex = 11
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0
@@ -111,7 +107,6 @@ def main():
     chasingSpace = list(it.permutations(chasingAgents))
     chasingSpace.append(('random', 'random'))
     pullingSpace = ['smallMass', 'largeMass']
-    # pullingSpace = list(it.permutations(pullingHypo))
     numOfAgents = len(chasingAgents)
     actionHypo = list(it.product(actionSpace, repeat=numOfAgents))
     iterables = [chasingSpace, pullingSpace, actionHypo]

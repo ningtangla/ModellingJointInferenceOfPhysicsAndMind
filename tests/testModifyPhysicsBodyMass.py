@@ -1,6 +1,8 @@
 import sys
 import os
 import mujoco_py as mujoco
+import copy
+
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 
@@ -27,14 +29,16 @@ class TestEnvMujoco(unittest.TestCase):
         # transition function
         dirName = os.path.dirname(__file__)
         physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
-        sheepBodyMassIndex = 6
-        wolfBodyMassIndex = 7
+        agentsBodyMassIndex = [6, 7]
         physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-        physicsSmallMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [smallMass, smallMass] 
+        physicsSmallMassModel.body_mass[agentsBodyMassIndex] = [smallMass, smallMass]
         physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
-        physicsLargeMassModel.body_mass[[sheepBodyMassIndex, wolfBodyMassIndex]] = [largeMass, largeMass] 
+        physicsLargeMassModel.body_mass[agentsBodyMassIndex] = [largeMass, largeMass]
         physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
         physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
+        # set_constants fit for mujoco_py version >= 2.0, no fit for 1.50
+        physicsSmallMassSimulation.set_constants()
+        physicsLargeMassSimulation.set_constants()
 
         sheepId = 0
         wolfId = 1
@@ -43,7 +47,7 @@ class TestEnvMujoco(unittest.TestCase):
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
         killzoneRadius = 2
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-        
+
         numSimulationFrames = 20
         transitSmallMassAgents = TransitionFunction(physicsSmallMassSimulation, isTerminal, numSimulationFrames)
         transitLargeMassAgents = TransitionFunction(physicsLargeMassSimulation, isTerminal, numSimulationFrames)
@@ -51,9 +55,10 @@ class TestEnvMujoco(unittest.TestCase):
         nextStateInLargeMassTransition = transitLargeMassAgents(state, allAgentsActions)
         stateChangeInSmallMassTransition = nextStateInSmallMassTransition - state
         stateChangeInLargeMassTransition = nextStateInLargeMassTransition - state
-        
-        trueMassRatio = smallMass/largeMass
+
+        trueMassRatio = smallMass / largeMass
         self.assertTrue(np.allclose(stateChangeInLargeMassTransition, stateChangeInSmallMassTransition * trueMassRatio))
-        
+
+
 if __name__ == '__main__':
     unittest.main()
