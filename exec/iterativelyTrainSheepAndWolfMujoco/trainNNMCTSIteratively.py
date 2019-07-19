@@ -252,7 +252,7 @@ def main():
 
     learningThresholdFactor = 4
     numIterations = 2000  # 2000
-    numSimulations = 10  # 200
+    numSimulations = 200  # 200
 
     maxRunningSteps = 30
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
