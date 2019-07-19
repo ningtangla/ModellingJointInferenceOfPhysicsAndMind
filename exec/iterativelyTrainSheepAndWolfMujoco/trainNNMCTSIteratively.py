@@ -422,43 +422,45 @@ def main():
         pathParametersAtIteration = generatePathParametersAtIteration(iterationIndex)
 
 # sheep play
-        approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
+        # approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
 
-        getSheepPolicy = getSheepMCTS(approximateWolfPolicy)
-        sheepPolicy = getSheepPolicy(sheepNNModel)
-        wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
-        policyForSheepTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+        # getSheepPolicy = getSheepMCTS(approximateWolfPolicy)
+        # sheepPolicy = getSheepPolicy(sheepNNModel)
+        # wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
+        # policyForSheepTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
-        trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
-        getSheepTrajectorySavePath = GetSavePath(
-            trajectoriesForSheepTrainSaveDirectory, trajectorySaveExtension, NNFixedParameters)
+        # trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
+        # getSheepTrajectorySavePath = GetSavePath(
+        #     trajectoriesForSheepTrainSaveDirectory, trajectorySaveExtension, NNFixedParameters)
 
-        sheepDataSetPath = getSheepTrajectorySavePath(NNFixedParameters)
-        saveToPickle(trajectoriesForSheepTrain, sheepDataSetPath)
+        # sheepDataSetPath = getSheepTrajectorySavePath(NNFixedParameters)
+        # saveToPickle(trajectoriesForSheepTrain, sheepDataSetPath)
 
-        # sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
-        sheepDataSetTrajectories = trajectoriesForSheepTrain
+        # # sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
+        # sheepDataSetTrajectories = trajectoriesForSheepTrain
 
-        processedSheepTrajectories = preProcessSheepTrajectories(sheepDataSetTrajectories)
-        updatedSheepBuffer = saveToBuffer(sheepBuffer, processedSheepTrajectories)
-        if len(updatedSheepBuffer) >= learningThresholdFactor * miniBatchSize:
-            sheepSampledBatch = sampleBatchFromBuffer(updatedBuffer)
-            sheepTrainData = [list(varBatch) for varBatch in zip(*sheepSampledBatch)]
-            updatedSheepNNModel = trainNN(sheepNNModel, sheepTrainData)
-            sheepNNModel = updatedSheepNNModel
+        # processedSheepTrajectories = preProcessSheepTrajectories(sheepDataSetTrajectories)
+        # updatedSheepBuffer = saveToBuffer(sheepBuffer, processedSheepTrajectories)
+        # if len(updatedSheepBuffer) >= learningThresholdFactor * miniBatchSize:
+        #     sheepSampledBatch = sampleBatchFromBuffer(updatedBuffer)
+        #     sheepTrainData = [list(varBatch) for varBatch in zip(*sheepSampledBatch)]
+        #     updatedSheepNNModel = trainNN(sheepNNModel, sheepTrainData)
+        #     sheepNNModel = updatedSheepNNModel
 
-        sheepBuffer = updatedSheepBuffer
+        # sheepBuffer = updatedSheepBuffer
 
-        # sheep train
+        # # sheep train
 
-        getSheepModelSavePath = GetSavePath(
-            sheepNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
-        sheepNNModelSavePaths = getSheepModelSavePath({'killzoneRadius': killzoneRadius})
-        savedVariablesSheep = saveVariables(sheepNNModel, sheepNNModelSavePaths)
+        # getSheepModelSavePath = GetSavePath(
+        #     sheepNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
+        # sheepNNModelSavePaths = getSheepModelSavePath({'killzoneRadius': killzoneRadius})
+        # savedVariablesSheep = saveVariables(sheepNNModel, sheepNNModelSavePaths)
 
 
 # wolf play
-        approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
+        approximateSheepPolicy = lambda state: (0, 0)
+
+        # approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
         getWolfPolicy = getWolfMCTS(approximateSheepPolicy)
         wolfPolicy = getWolfPolicy(wolfNNModel)
         sheepPolicy = lambda state: {approximateSheepPolicy(state): 1}
