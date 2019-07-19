@@ -66,6 +66,33 @@ class LoadTrajectories:
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
 
+class GenerateAllSampleIndexSavePaths:
+    def __init__(self, getSavePath):
+        self.getSavePath = getSavePath
+
+    def __call__(self, numSamples, pathParameters):
+        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) +
+                                                             [('sampleIndex', sampleIndex)])
+        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex) for sampleIndex in range(numSamples)}
+        allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
+                        allIndexParameters.items()}
+
+        return allSavePaths
+
+
+class SaveAllTrajectories:
+    def __init__(self, saveData, generateAllSampleIndexSavePaths):
+        self.saveData = saveData
+        self.generateAllSampleIndexSavePaths = generateAllSampleIndexSavePaths
+
+    def __call__(self, trajectories, pathParameters):
+        numSamples = len(trajectories)
+        allSavePaths = self.generateAllSampleIndexSavePaths(numSamples, pathParameters)
+        saveTrajectory = lambda sampleIndex: self.saveData(trajectories[sampleIndex], allSavePaths[sampleIndex])
+        [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
+
+        return None
+
 class GetAgentCoordinateFromTrajectoryAndStateDf:
     def __init__(self, stateIndex, coordinates):
         self.stateIndex = stateIndex
