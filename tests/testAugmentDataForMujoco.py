@@ -10,7 +10,7 @@ import unittest
 from ddt import ddt, data, unpack
 import numpy as np
 import math
-from trainNNEscapePolicyMujocoWithAugmentation.augmentData import GenerateSymmetricData, \
+from evaluateAugmentationWithinMujoco.augmentData import GenerateSymmetricData, \
     GenerateSymmetricState, GenerateSymmetricDistribution, CalibrateState
 from analyticGeometryFunctions import transitePolarToCartesian
 from dataTools import createSymmetricVector
@@ -37,16 +37,16 @@ class TestGenerateData(unittest.TestCase):
             np.array([1, 0]),
             np.array([-1, 1])
         ]
-        self.xPosIndex = [2, 3]
-        self.qPosindex = [0, 1]
+        self.xPosIndex = [0, 1]
+        self.velIndex = [2, 3]
 
-    @data((2, 6, [1, 0, 1, 0, 10, 10, 0, 1, 0, 1, 10, 10], [1, 1], [0, 1, 0, 1, 10, 10, 1, 0, 1, 0, 10, 10]))
+    @data((2, 4, [1, 0, 10, 10, 0, 1, 10, 10], [1, 1], [0, 1, 10, 10, 1, 0, 10, 10]))
     @unpack
     def testGenerateSymmetricState(self, numOfAgent, stateDim, state, symmetry,
                                    groundTruth):
         round = lambda state: np.round(state, 10)
         calibrateState = CalibrateState(xBoundary, yBoundary, round)
-        generateSymmetricState = GenerateSymmetricState(numOfAgent, stateDim, self.xPosIndex, self.qPosindex,
+        generateSymmetricState = GenerateSymmetricState(numOfAgent, stateDim, self.xPosIndex, self.velIndex,
                                                         createSymmetricVector,
                                                         calibrateState)
         testState = generateSymmetricState(state, np.array(symmetry))
@@ -65,17 +65,17 @@ class TestGenerateData(unittest.TestCase):
 
     # (0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)
     @data((
-        [[1, 0.5, 1, 0.5, 0, 0, 2, 0.5, 2, 0.5, 0, 0], [0.25, 0.3, 0, 0, 0.45, 0, 0, 0], [1]], 2, 6,
+        [[1, 0.5, 0, 0, 2, 0.5, 0, 0], [0.25, 0.3, 0, 0, 0.45, 0, 0, 0], [1]], 2, 4,
         [
-            np.array([[1, 0.5, 1, 0.5, 0, 0, 2, 0.5, 2, 0.5, 0, 0], [0.25, 0.3, 0, 0, 0.45, 0, 0, 0]]),
-            np.array([[0.5, 1, 0.5, 1, 0, 0, 0.5, 2, 0.5, 2, 0, 0], [0.3, 0.25, 0, 0, 0.45, 0, 0,0]]),  # symmetry: [1,1]
-            np.array([[-1, 0.5, -1 ,0.5,0, 0, -2, 0.5, -2, 0.5, 0, 0], [0.25, 0, 0.3, 0, 0, 0, 0, 0.45]]),  # symmetry: [0,1]
-            np.array([[1,-0.5,1, -0.5,0,0,2,-0.5, 2, -0.5,0,0], [0, 0.3, 0, 0.25, 0, 0, 0.45, 0]]),  # symmetry: [1,0]
-            np.array([[-0.5,-1,-0.5, -1,0,0, -0.5,-2, -0.5, -2,0,0],[0, 0, 0.25, 0.3, 0, 0.45, 0, 0]]),
+            np.array([[1, 0.5, 0, 0, 2, 0.5, 0, 0], [0.25, 0.3, 0, 0, 0.45, 0, 0, 0]]),
+            np.array([[0.5, 1, 0, 0, 0.5, 2, 0, 0], [0.3, 0.25, 0, 0, 0.45, 0, 0,0]]),  # symmetry: [1,1]
+            np.array([[-1 ,0.5,0, 0, -2, 0.5, 0, 0], [0.25, 0, 0.3, 0, 0, 0, 0, 0.45]]),  # symmetry: [0,1]
+            np.array([[1, -0.5,0,0,2, -0.5,0,0], [0, 0.3, 0, 0.25, 0, 0, 0.45, 0]]),  # symmetry: [1,0]
+            np.array([[-0.5, -1,0,0, -0.5, -2,0,0],[0, 0, 0.25, 0.3, 0, 0.45, 0, 0]]),
             # symmetry: [-1,1]
-            np.array([[-0.5,1,-0.5, 1,0,0,-0.5,2,-0.5, 2,0,0],[0.3, 0, 0.25, 0, 0, 0, 0, 0.45]]),  # symmetry: [0,1]
-            np.array([[0.5,-1,0.5, -1,0,0,0.5,-2, 0.5, -2,0,0],[0, 0.25, 0, 0.3, 0, 0, 0.45, 0]]),  # symmetry: [1,0]
-            np.array([[-1,-0.5,-1, -0.5,0,0,-2,-0.5, -2, -0.5,0,0],[0, 0, 0.3, 0.25, 0, 0.45, 0, 0]])
+            np.array([[-0.5, 1,0,0,-0.5, 2,0,0],[0.3, 0, 0.25, 0, 0, 0, 0, 0.45]]),  # symmetry: [0,1]
+            np.array([[0.5, -1,0,0, 0.5, -2,0,0],[0, 0.25, 0, 0.3, 0, 0, 0.45, 0]]),  # symmetry: [1,0]
+            np.array([[-1, -0.5,0,0,-2, -0.5,0,0],[0, 0, 0.3, 0.25, 0, 0.45, 0, 0]])
         ]  # symmetry: [-1,1]
     ))
     @unpack
@@ -83,7 +83,7 @@ class TestGenerateData(unittest.TestCase):
                                   groundTruth):
         round = lambda state: np.round(state, 10)
         calibrateState = CalibrateState(xBoundary, yBoundary, round)
-        generateSymmetricState = GenerateSymmetricState(numOfAgent, stateDim, self.xPosIndex, self.qPosindex,
+        generateSymmetricState = GenerateSymmetricState(numOfAgent, stateDim, self.xPosIndex, self.velIndex,
                                                         createSymmetricVector,
                                                         calibrateState)
         generateSymmetricDistribution = GenerateSymmetricDistribution(
