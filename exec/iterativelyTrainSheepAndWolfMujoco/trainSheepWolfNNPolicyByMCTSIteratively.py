@@ -8,6 +8,7 @@ import numpy as np
 from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
+import random
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
@@ -22,6 +23,39 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
+
+
+class ProcessTrajectoryForNN:
+    def __init__(self, agentId, actionIndex, actionToOneHot):
+        self.agentId = agentId
+        self.actionIndex = actionIndex
+        self.actionToOneHot = actionToOneHot
+
+    def __call__(self, trajectories):
+        stateActionPairs = [
+            pair for trajectory in trajectories for pair in trajectory]
+        stateActionPairsFiltered = list(filter(
+            lambda pair: pair[self.actionIndex] is not None and pair[0][1][2] < 9.7, stateActionPairs))
+        print("{} data points remain after filtering".format(
+            len(stateActionPairsFiltered)))
+        stateActionPairsProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]))
+                                     for state, actions, actionDist in stateActionPairsFiltered]
+
+        random.shuffle(stateActionPairsProcessed)
+        trainData = [[state for state, action in stateActionPairsProcessed],
+                     [action for state, action in stateActionPairsProcessed]]
+
+        return trainData
+
+
+class ActionToOneHot:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def __call__(self, action):
+        oneHotAction = np.asarray([1 if (np.array(action) == np.array(
+            self.actionSpace[index])).all() else 0 for index in range(len(self.actionSpace))])
+        return oneHotAction
 
 
 class ApproximatePolicy:
@@ -47,102 +81,38 @@ class ApproximatePolicy:
         return actionBatch
 
 
-class PreparePolicy:
-    def __init__(self, getWolfPolicy, getSheepPolicy):
-        self.getWolfPolicy = getWolfPolicy
-        self.getSheepPolicy = getSheepPolicy
+class GetMcts():
+    def __init__(self, actionSpace, numSimulations, selectChild, isTerminal, maxRolloutSteps, rewardFunction, rolloutHeuristic, transit):
+        self.numSimulations = numSimulations
+        self.selectChild = selectChild
+        self.actionSpace = actionSpace
+        self.isTerminal = isTerminal
+        self.maxRolloutSteps = maxRolloutSteps
+        self.rewardFunction = rewardFunction
+        self.rolloutHeuristic = rolloutHeuristic
+        self.transit = transit
+        self.numActionSpace = len(actionSpace)
 
-    def __call__(self, NNModel):
-        wolfPolicy = self.getWolfPolicy(NNModel)
-        sheepPolicy = self.getSheepPolicy(NNModel)
-        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+    def __call__(self, NNPolicy):
+        getUniformActionPrior = lambda state: {action: 1 / self.numActionSpace for action in self.actionSpace}
+        transitInMCTS = lambda state, action: self.transit(state, [action, NNPolicy(state)])
+        initializeChildrenUniformPrior = InitializeChildren(self.actionSpace, transitInMCTS,
+                                                            getUniformActionPrior)
 
-        return policy
-
-
-class GenerateTrajectories:
-    def __init__(self, numTrajectoriesPerIteration, sampleTrajectory, preparePolicy, saveAllTrajectories):
-        self.numTrajectoriesPerIteration = numTrajectoriesPerIteration
-        self.sampleTrajectory = sampleTrajectory
-        self.preparePolicy = preparePolicy
-        self.saveAllTrajectories = saveAllTrajectories
-
-    def __call__(self, iteration, NNModel, pathParameters):
-        policy = self.preparePolicy(NNModel)
-        trajectories = [self.sampleTrajectory(
-            policy) for trial in range(self.numTrajectoriesPerIteration)]
-        self.saveAllTrajectories(trajectories, pathParameters)
-
-        return None
-
-
-class ProcessTrajectoryForNN:
-    def __init__(self, actionToOneHot, agentId):
-        self.actionToOneHot = actionToOneHot
-        self.agentId = agentId
-
-    def __call__(self, trajectory):
-        processTuple = lambda state, actions, actionDist: \
-            (np.asarray(state).flatten(), self.actionToOneHot(
-                actions[self.agentId]))
-        processedTrajectory = [processTuple(*triple) for triple in trajectory]
-
-        return processedTrajectory
-
-
-class IterativePlayAndTrain:
-    def __init__(self, numIterations, learningThresholdFactor, saveNNModel, getGenerateTrajectories,
-                 preProcessTrajectories, getSampleBatchFromBuffer, getTrainNN, getNNModel, loadTrajectories,
-                 getSaveToBuffer, generatePathParametersAtIteration, getModelSavePath, restoreVariables):
-        self.numIterations = numIterations
-        self.learningThresholdFactor = learningThresholdFactor
-        self.saveNNModel = saveNNModel
-        self.getGenerateTrajectories = getGenerateTrajectories
-        self.preProcessTrajectories = preProcessTrajectories
-        self.getSampleBatchFromBuffer = getSampleBatchFromBuffer
-        self.getTrainNN = getTrainNN
-        self.getNNModel = getNNModel
-        self.loadTrajectories = loadTrajectories
-        self.getSaveToBuffer = getSaveToBuffer
-        self.generatePathParametersAtIteration = generatePathParametersAtIteration
-        self.getModelSavePath = getModelSavePath
-        self.restoreVariables = restoreVariables
-
-    def __call__(self, oneConditionDf):
-        numTrajectoriesPerIteration = oneConditionDf.index.get_level_values(
-            'numTrajectoriesPerIteration')[0]
-        generateTrajectories = self.getGenerateTrajectories(
-            numTrajectoriesPerIteration)
-        trainNN = self.getTrainNN(learningRate)
-        NNModel = self.getNNModel()
-        startTime = time.time()
-
-        for iterationIndex in range(self.numIterations):
-            print("ITERATION INDEX: ", iterationIndex)
-            pathParametersAtIteration = self.generatePathParametersAtIteration(
-                oneConditionDf, iterationIndex)
-            modelSavePath = self.getModelSavePath(pathParametersAtIteration)
-
-            self.saveNNModel(NNModel, pathParametersAtIteration)
-            generateTrajectories(iterationIndex, NNModel,
-                                 pathParametersAtIteration)
-            trajectories = self.loadTrajectories(pathParametersAtIteration)
-            processedTrajectories = self.preProcessTrajectories(trajectories)
-
-            trainData = ProcessTrajectoryForNN(processedTrajectories)
-            updatedNNModel = trainNN(NNModel, trainData)
-            NNModel = updatedNNModel
-
-        endTime = time.time()
-        print("Time taken for {} iterations: {} seconds".format(
-            self.numIterations, (endTime - startTime)))
+        expand = Expand(self.isTerminal, initializeChildrenUniformPrior)
+        rolloutPolicy = lambda state: self.actionSpace[np.random.choice(range(self.numActionSpace))]
+        rollout = RollOut(rolloutPolicy, self.maxRolloutSteps, transitInMCTS, self.rewardFunction, self.isTerminal,
+                          self.rolloutHeuristic)
+        mcts = MCTS(self.numSimulations, self.selectChild, expand, rollout, backup, establishPlainActionDist)
+        return mcts
 
 
 def main():
-    numIterations = 1000
-    numTrajectoriesPerIteration = 100
-    numSimulations = 150
-    maxRunningSteps = 30
+    numIterations = 10
+    numTrajectoriesPerIteration = 2
+    numSimulations = 10
+    maxRunningSteps = 10
+    trainSteps = 1000
 
     killzoneRadius = 2
     qPosInitNoise = 9.7
@@ -154,15 +124,8 @@ def main():
                          'rolloutHeuristicWeight': rolloutHeuristicWeight, 'maxRunningSteps': maxRunningSteps}
     NNModelSaveExtension = ''
 
-    dirName = os.path.dirname(__file__)
-    sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'trainNNEscapePolicyMujoco', 'trainedNNModels')
-    wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                            'trainNNChasePolicyMujoco', 'trainedNNModels')
-
-    getSheepModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
-
     # Mujoco environment
+    dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
@@ -170,16 +133,14 @@ def main():
     qPosInit = (0, 0, 0, 0)
     qVelInit = (0, 0, 0, 0)
     numAgents = 2
-    qVelInitNoise = 8
-    qPosInitNoise = 9.7
     reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
+    actionIndex = 1
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-    killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
     numSimulationFrames = 20
@@ -191,7 +152,6 @@ def main():
 
     # neural network init and save path
     numStateSpace = 12
-    numActionSpace = len(sheepActionSpace)
     learningRate = 0.0001
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
@@ -199,12 +159,17 @@ def main():
     initializedNNModel = generatePolicyNet(hiddenWidths)
 
     # train NN models
-    trainSteps = 1000
-
     reportInterval = 500
     lossChangeThreshold = 1e-6
     lossHistorySize = 10
+
     trainNN = Train(trainSteps, learningRate, lossChangeThreshold, lossHistorySize, reportInterval, summaryOn=False, testData=None)
+
+    wolfActionToOneHot = ActionToOneHot(wolfActionSpace)
+    preProcessWolfTrajectories = ProcessTrajectoryForNN(wolfId, actionIndex, wolfActionToOneHot)
+
+    sheepActionToOneHot = ActionToOneHot(sheepActionSpace)
+    preProcessSheepTrajectories = ProcessTrajectoryForNN(sheepId, actionIndex, sheepActionToOneHot)
 
     # MCTS init
     cInit = 1
@@ -212,18 +177,18 @@ def main():
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    getUniformActionPrior = lambda state: {action: 1 / numActionSpace for action in sheepActionSpace}
-
     aliveBonus = 0.05
     deathPenalty = -1
-    rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+    sheepRewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+    wolfRewardFunction = RewardFunctionCompete(-aliveBonus, -deathPenalty, isTerminal)
 
     rolloutHeuristicWeight = 0.1
     maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
 
-    sheepRolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
-    wolfRolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
+    getSheepMCTS = GetMcts(sheepActionSpace, numSimulations, selectChild, isTerminal, maxRolloutSteps, sheepRewardFunction, rolloutHeuristic, transit)
+
+    getWolfMCTS = GetMcts(wolfActionSpace, numSimulations, selectChild, isTerminal, maxRolloutSteps, wolfRewardFunction, rolloutHeuristic, transit)
 
     # sample trajectory
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
@@ -236,143 +201,105 @@ def main():
         combineDict(NNFixedParameters,
                     {'iteration': iterationIndex})
 
+# load save dir
+    trajectorySaveExtension = '.pickle'
+
+    trajectoriesForSheepTrainSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                                          'trajectoriesForSheepTrain')
+    if not os.path.exists(trajectoriesForSheepTrainSaveDirectory):
+        os.makedirs(trajectoriesForSheepTrainSaveDirectory)
+
+    sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                             'SheepWolfIterationPolicy', 'sheepPolicy')
+    if not os.path.exists(sheepNNModelSaveDirectory):
+        os.makedirs(sheepNNModelSaveDirectory)
+
+    trajectoriesForWolfTrainSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                                         'trajectoriesForWolfTrain')
+    if not os.path.exists(trajectoriesForWolfTrainSaveDirectory):
+        os.makedirs(trajectoriesForWolfTrainSaveDirectory)
+
+    wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                            'WolfWolfIterationPolicy', 'wolfPolicy')
+    if not os.path.exists(wolfNNModelSaveDirectory):
+        os.makedirs(wolfNNModelSaveDirectory)
+
+
 # load wolf baseline for init iteration
     wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                                     'SheepWolfBaselinePolicy', 'wolfBaselineNNPolicy')
-
     baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
                               'qPosInitNoise': 9.7, 'qVelInitNoise': 8,
                               'rolloutHeuristicWeight': 0.1, 'maxRunningSteps': 25}
-
     getWolfBaselineModelSavePath = GetSavePath(wolfBaselineNNModelSaveDirectory, NNModelSaveExtension, baselineSaveParameters)
-
-    wolfBaselineNNModelSavePath = getWolfBaselineModelSavePath({'trainSteps': trainSteps})
+    baselineModelTrainSteps = 1000
+    wolfBaselineNNModelSavePath = getWolfBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
     wolfBaselienModel = restoreVariables(initializedNNModel, wolfBaselineNNModelSavePath)
-    approximateWolfBaselinePolicy = ApproximatePolicy(wolfBaselienModel, wolfActionSpace)
-    wolfBaselineNNPolicy = lambda state: {approximateWolfBaselinePolicy(state): 1}
 
-    approximateWolfPolicy = approximateWolfBaselinePolicy
-
+    wolfNNModel = wolfBaselienModel
+    startTime = time.time()
     for iterationIndex in range(numIterations):
         print("ITERATION INDEX: ", iterationIndex)
         pathParametersAtIteration = generatePathParametersAtIteration(iterationIndex)
 
-
 # sheep play
-        transitInSheepMCTS = lambda state, action: transit(state, [action, approximateWolfPolicy(state)])
-        initializeChildrenUniformPriorForSheep = InitializeChildren(sheepActionSpace, transitInSheepMCTS,
-                                                                    getUniformActionPrior)
-        expand = Expand(isTerminal, initializeChildrenUniformPriorForSheep)
-        sheepRollout = RollOut(sheepRolloutPolicy, maxRolloutSteps, transitInSheepMCTS, rewardFunction, isTerminal,
-                               rolloutHeuristic)
-        mctsSheep = MCTS(numSimulations, selectChild, expand, sheepRollout, backup, establishPlainActionDist)
-
+        approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
+        mctsSheep = getSheepMCTS(approximateWolfPolicy)
         wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
         policyForSheepTrain = lambda state: [mctsSheep(state), wolfPolicy(state)]
 
         trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
-        trajectoriesForSheepTrainSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                                              'trajectoriesForSheepTrain')
-        if not os.path.exists(trajectoriesForSheepTrainSaveDirectory):
-            os.makedirs(trajectoriesForSheepTrainSaveDirectory)
-        trajectorySaveExtension = '.pickle'
         getSheepTrajectorySavePath = GetSavePath(
             trajectoriesForSheepTrainSaveDirectory, trajectorySaveExtension, NNFixedParameters)
+
         sheepDataSetPath = getSheepTrajectorySavePath(NNFixedParameters)
-        sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
+        saveToPickle(trajectoriesForSheepTrain, sheepDataSetPath)
 
-        actionIndex = 1
-        sheepActionToOneHot = ActionToOneHot(sheepActionSpace)
-        preProcessSheepTrajectories = ProcessTrajectoryForNN(sheepActionToOneHot, agentId)
+        # sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
+        sheepDataSetTrajectories = trajectoriesForSheepTrain
         sheepTrainData = preProcessSheepTrajectories(sheepDataSetTrajectories)
-
-        # preProcessSheepTrajectories = PreProcessTrajectories(
-        #     sheepId, actionIndex, sheepActionToOneHot)
-        # sheepStateActionPairsProcessed = preProcessSheepTrajectories(
-        #     sheepDataSetTrajectories)
-        # random.shuffle(sheepStateActionPairsProcessed)
-        # sheepTrainData = [[state for state, action in sheepStateActionPairsProcessed],
-        #                   [action for state, action in sheepStateActionPairsProcessed]]
-
 
 # sheep train
         updatedSheepNNModel = trainNN(generatePolicyNet(hiddenWidths), sheepTrainData)
-        # NNmodel save path
-        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                                 'SheepWolfIterationPolicy', 'sheepPolicy')
-        if not os.path.exists(sheepNNModelSaveDirectory):
-            os.makedirs(sheepNNModelSaveDirectory)
 
         getSheepModelSavePath = GetSavePath(
             sheepNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
-
         sheepNNModelSavePaths = getSheepModelSavePath({'trainSteps': trainSteps})
-
-        # save trained model variables
         savedVariablesSheep = saveVariables(updatedSheepNNModel, sheepNNModelSavePaths)
 
-        SheepNNModel = updatedSheepNNModel
 
-###############
 # wolf play
+        sheepNNModel = updatedSheepNNModel
 
-        approximateSheepPolicy = ApproximatePolicy(SheepNNModel, sheepActionSpace)
-        transitInWolfMCTS = lambda state, action: transit(state, [action, approximateSheepPolicy(state)])
-        initializeChildrenUniformPriorForWolf = InitializeChildren(sheepActionSpace, transitInWolfMCTS,
-                                                                   getUniformActionPrior)
-        expand = Expand(isTerminal, initializeChildrenUniformPriorForWolf)
-
-        wolfRollout = RollOut(wolfRolloutPolicy, maxRolloutSteps, transitInWolfMCTS, rewardFunction, isTerminal,
-                              rolloutHeuristic)
-        mctsWolf = MCTS(numSimulations, selectChild, expand, wolfRollout, backup, establishPlainActionDist)
-
+        approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
+        mctsWolf = getWolfMCTS(approximateSheepPolicy)
+        sheepPolicy = lambda state: {approximateSheepPolicy(state): 1}
         policyForWolfTrain = lambda state: [sheepPolicy(state), mctsWolf(state)]
 
         trajectoriesForWolfTrain = [sampleTrajectory(policyForWolfTrain) for _ in range(numTrajectoriesPerIteration)]
 
-        trajectoriesForWolfTrainSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                                             'trajectoriesForWolfTrain')
-        if not os.path.exists(trajectoriesForWolfTrainSaveDirectory):
-            os.makedirs(trajectoriesForWolfTrainSaveDirectory)
-
-        trajectorySaveExtension = '.pickle'
         getWolfTrajectorySavePath = GetSavePath(
             trajectoriesForWolfTrainSaveDirectory, trajectorySaveExtension, NNFixedParameters)
         wolfDataSetPath = getWolfTrajectorySavePath(NNFixedParameters)
-        wolfDataSetTrajectories = loadFromPickle(wolfDataSetPath)
+        saveToPickle(trajectoriesForWolfTrain, wolfDataSetPath)
 
-        actionIndex = 1
-        wolfActionToOneHot = ActionToOneHot(wolfActionSpace)
-        preProcessWolfTrajectories = ProcessTrajectoryForNN(wolfActionToOneHot, agentId)
+        # wolfDataSetTrajectories = loadFromPickle(wolfDataSetPath)
+        wolfDataSetTrajectories = trajectoriesForWolfTrain
         wolfTrainData = preProcessWolfTrajectories(wolfDataSetTrajectories)
 
-        # preProcessWolfTrajectories = PreProcessTrajectoriesNN(
-        #     wolfId, actionIndex, wolfActionToOneHot)
-        # wolfStateActionPairsProcessed = preProcessWolfTrajectories(
-        #     wolfDataSetTrajectories)
-        # random.shuffle(wolfStateActionPairsProcessed)
-        # wolfTrainData = [[state for state, action in wolfStateActionPairsProcessed],
-        #                  [action for state, action in wolfStateActionPairsProcessed]]
-
-
 # wolf train
-        updatedWolfNNModel = trainNN(generatePolicyNet(hiddenWidths), sheepTrainData)
-        # NNmodel save path
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                                'WolfWolfIterationPolicy', 'wolfPolicy')
-        if not os.path.exists(wolfNNModelSaveDirectory):
-            os.makedirs(wolfNNModelSaveDirectory)
+        updatedWolfNNModel = trainNN(generatePolicyNet(hiddenWidths), wolfTrainData)
 
         getWolfModelSavePath = GetSavePath(
             wolfNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
-
         wolfNNModelSavePaths = getWolfModelSavePath({'trainSteps': trainSteps})
-
-        # save trained model variables
         savedVariablesWolf = saveVariables(updatedWolfNNModel, wolfNNModelSavePaths)
 
         wolfNNModel = updatedWolfNNModel
-        approximateWolfPolicy = ApproximatePolicy(updatedWolfNNModel, wolfActionSpace)
+
+    endTime = time.time()
+    print("Time taken for {} iterations: {} seconds".format(
+        self.numIterations, (endTime - startTime)))
 
 
 if __name__ == '__main__':

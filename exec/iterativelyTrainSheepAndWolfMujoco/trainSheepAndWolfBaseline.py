@@ -19,13 +19,6 @@ import random
 from collections import OrderedDict
 
 
-def loadData(path):
-    pklFile = open(path, "rb")
-    dataSet = pickle.load(pklFile)
-    pklFile.close()
-    return dataSet
-
-
 class ActionToOneHot:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
