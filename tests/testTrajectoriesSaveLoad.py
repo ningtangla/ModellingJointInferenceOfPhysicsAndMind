@@ -80,7 +80,7 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
 
         groundTruthNumTrials = parameters['numTrials']
         self.assertEqual(numTrials, groundTruthNumTrials)
-
+    
     @data(({'numTrials': 50, 'qPosInit': [0, 0, 0, 0]}, {'maxRunningSteps': 2, 'numSimulations': 800}, ['sampleIndex']))
     @unpack
     def testLoadMultipleTrajectoriesFromOneFile(self, parameters, fixedParameters, fuzzySearchParameterNames):

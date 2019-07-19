@@ -59,9 +59,12 @@ class LoadTrajectories:
     def __call__(self, parameters):
         parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
         genericSavePath = self.getSavePath(parametersWithFuzzy)
-        filesNames = glob.glob(genericSavePath)
-        trajectories = list(np.array([self.loadFromPickle(fileName) for fileName in filesNames]).flatten())
-        return trajectories
+        filesNames = glob.glob(genericSavePath) 
+        mergedTrajectories = []
+        for fileName in filesNames:
+            oneFileTrajectories = self.loadFromPickle(fileName)
+            mergedTrajectories.extend(oneFileTrajectories)
+        return mergedTrajectories
 
 class GetAgentCoordinateFromTrajectoryAndStateDf:
     def __init__(self, stateIndex, coordinates):
