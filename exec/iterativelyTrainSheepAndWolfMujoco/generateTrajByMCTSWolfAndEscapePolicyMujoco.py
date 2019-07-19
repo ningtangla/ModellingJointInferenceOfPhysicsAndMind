@@ -73,12 +73,10 @@ def main():
     dirName = os.path.dirname(__file__)
     sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                              'trainNNEscapePolicyMujoco', 'trainedNNModels')
-    numSimulations = 10
     killzoneRadius = 2
     qPosInitNoise = 9.7
     qVelInitNoise = 8
     rolloutHeuristicWeight = 0.1
-    maxRunningSteps = 25
 
     NNFixedParameters = {'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,
                          'qPosInitNoise': qPosInitNoise, 'qVelInitNoise': qVelInitNoise,

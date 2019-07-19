@@ -48,25 +48,25 @@ def main():
     numSimulationFrames = 20
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    numActionSpace = len(actionSpace)
+    sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    numActionSpace = len(sheepActionSpace)
 
     # wolf heatSeeking Policy
     wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6), (-8, 0), (-6, -6), (0, -8), (6, -6)]
-    wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getSheepXPos, getWolfXPos,
-                                                        computeAngleBetweenVectors)
+    heatSeekingPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getSheepXPos, getWolfXPos,
+                                                               computeAngleBetweenVectors)
 
     # transit in sheep simulation
-    transitInSheepMCTS = lambda state, action: transit(state, [action, chooseGreedyAction(wolfPolicy(state))])
+    transitInSheepMCTS = lambda state, action: transit(state, [action, chooseGreedyAction(heatSeekingPolicy(state))])
 
-    # MCTS
+    # MCTS sheep
     cInit = 1
     cBase = 100
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    getUniformActionPrior = lambda state: {action: 1 / numActionSpace for action in actionSpace}
-    initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTS,
+    getUniformActionPrior = lambda state: {action: 1 / numActionSpace for action in sheepActionSpace}
+    initializeChildrenUniformPrior = InitializeChildren(sheepActionSpace, transitInSheepMCTS,
                                                         getUniformActionPrior)
     expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
@@ -74,20 +74,20 @@ def main():
     deathPenalty = -1
     rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
-    rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
     rolloutHeuristicWeight = 0.1
     maxRolloutSteps = 10
     rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTS, rewardFunction, isTerminal,
                       rolloutHeuristic)
 
-    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
+    mctsSheep = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
     # sample trajectory
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # generate trajectories
-    policy = lambda state: [mcts(state), wolfPolicy(state)]
+    policy = lambda state: [mctsSheep(state), heatSeekingPolicy(state)]
     trajectories = [sampleTrajectory(policy) for _ in range(numSamples)]
 
     # saving trajectories

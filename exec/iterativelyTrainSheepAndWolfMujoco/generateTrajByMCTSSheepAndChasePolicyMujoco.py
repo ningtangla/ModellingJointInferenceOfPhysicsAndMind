@@ -102,10 +102,10 @@ def main():
     approximateChasePolicy = ApproximatePolicy(restoredChaseNNModel, sheepActionSpace)
     chaseNNPolicy = lambda state: {approximateChasePolicy(state): 1}
 
-    # transit in sheep simulation
+    # transit for MCTS sheep simulation
     transitInSheepMCTS = lambda state, action: transit(state, [action, approximateChasePolicy(state)])
 
-    # MCTS
+    # MCTS sheep
     cInit = 1
     cBase = 100
     calculateScore = ScoreChild(cInit, cBase)
@@ -116,8 +116,8 @@ def main():
                                                         getUniformActionPrior)
     expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
-    aliveBonus = -0.05
-    deathPenalty = 1
+    aliveBonus = 0.05
+    deathPenalty = -1
     rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
     rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
@@ -127,18 +127,19 @@ def main():
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTS, rewardFunction, isTerminal,
                       rolloutHeuristic)
 
-    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
+    mctsSheep = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
     # sample trajectory
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # generate trajectories
-    policy = lambda state: [mcts(state), chaseNNPolicy(state)]
+    policy = lambda state: [mctsSheep(state), chaseNNPolicy(state)]
     trajectories = [sampleTrajectory(policy) for _ in range(numSamples)]
 
     # saving trajectories
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                            'generateTrajectoriesNNWolfMCTSSheepMujoco')
+
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
 
