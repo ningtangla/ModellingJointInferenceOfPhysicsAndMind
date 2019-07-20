@@ -37,6 +37,7 @@ class GetMcts():
         self.terminalRewardList = terminalRewardList
 
     def __call__(self, agentId, NNModel, othersPolicy):
+        # need fix
         if agentId == 0:
             transitInMCTS = lambda state, selfAction: self.transit(state, [selfAction, othersPolicy(state)])
         if agentId == 1:
@@ -57,41 +58,37 @@ class GetMcts():
 
 
 class PreparePolicyOneAgentGuideMCTS:
-    def __init__(self, getMCTS, approximatePolicy):
+    def __init__(self, getMCTS, approximatePolicy, approximateActionPrior):
         self.getMCTS = getMCTS
         self.approximatePolicy = approximatePolicy
+        self.approximateActionPrior = approximateActionPrior
 
     def __call__(self, agentId, multiAgentNNmodel):
-        multiAgnetPolicyList = [self.approximatePolicy(NNModel) for NNModel in multiAgentNNmodel]
-        othersPolicy = multiAgnetPolicyList.copy()
-        del othersPolicy[agentId]
         selfNNmodel = multiAgentNNmodel[agentId]
-        multiAgnetPolicyList[agentId] = self.getMCTS(agentId, selfNNmodel, othersPolicy)
+        approximatePolicyList = [self.approximatePolicy(NNModel) for NNModel in multiAgentNNmodel]
+        approximateActionPriorList = [self.approximateActionPrior(NNModel)for NNModel in multiAgentNNmodel]
+        approximateOthersPolicyList = approximatePolicyList.copy()
+        del approximateOthersPolicyList[agentId]
+        approximateOthersPolicy = approximateOthersPolicyList.pop()
+        approximateActionPriorList[agentId] = self.getMCTS(agentId, selfNNmodel, approximateOthersPolicy)
+        multiAgnetPolicy = lambda state: [policy(state) for policy in approximateActionPriorList]
 
-        return multiAgnetPolicyList
+        # approximateOthersPolicy = lambda state: (0, 0)  # static sheep
+        # wolfPolicy = self.getMCTS(agentId, selfNNmodel, approximateOthersPolicy)
+        # sheepPolicy = lambda state: approximateOtherActionPrior(state)
+        # multiAgnetPolicy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+
+        return multiAgnetPolicy
 
 
-class TrainOneAgent:
-    def __init__(self, numTrajectoriesPerIteration, trajectoriesForTrainSaveDirectoryList, trajectorySaveExtension, actionToOneHot,
-                 removeTerminalTupleFromTrajectory, addValuesToTrajectoryList, learningThresholdFactor, miniBatchSize, saveToBuffer,
-                 sampleBatchFromBuffer, trainNN, nnModelSaveDirectoryList, killzoneRadius, sampleTrajectory):
+class GenerateTrajectories:
+    def __init__(self, numTrajectoriesPerIteration, sampleTrajectory, trajectoriesForTrainSaveDirectoryList, trajectorySaveExtension):
         self.numTrajectoriesPerIteration = numTrajectoriesPerIteration
+        self.sampleTrajectory = sampleTrajectory
         self.trajectoriesForTrainSaveDirectoryList = trajectoriesForTrainSaveDirectoryList
         self.trajectorySaveExtension = trajectorySaveExtension
-        self.actionToOneHot = actionToOneHot
-        self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
-        self.addValuesToTrajectoryList = addValuesToTrajectoryList
-        self.learningThresholdFactor = learningThresholdFactor
-        self.miniBatchSize = miniBatchSize
-        self.saveToBuffer = saveToBuffer
-        self.sampleBatchFromBuffer = sampleBatchFromBuffer
-        self.trainNN = trainNN
-        self.nnModelSaveDirectoryList = nnModelSaveDirectoryList
-        self.killzoneRadius = killzoneRadius
-        self.sampleTrajectory = sampleTrajectory
 
-    def __call__(self, agentId, multiAgentPolicyList, NNModel, replayBuffer, pathParametersAtIteration):
-        multiAgentPolicy = lambda state: multiAgentPolicyList
+    def __call__(self, agentId, multiAgentPolicy, pathParametersAtIteration):
         trajectoriesForAgentTrain = [self.sampleTrajectory(multiAgentPolicy) for _ in range(self.numTrajectoriesPerIteration)]
         trajectoriesForAgentTrainSaveDirectory = self.trajectoriesForTrainSaveDirectoryList[agentId]
 
@@ -100,12 +97,52 @@ class TrainOneAgent:
 
         saveToPickle(trajectoriesForAgentTrain, dataSetPath)
 
-        processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(self.actionToOneHot, sheepId)
+        return trajectoriesForAgentTrain
 
-        addValuesToTrajectory = addValuesToTrajectoryList[agentId]
+
+class PreprocessMultiAgentTrajectories:
+    def __init__(self, actionToOneHot, addValuesToTrajectoryList, removeTerminalTupleFromTrajectory, trajectorySaveExtension):
+        self.actionToOneHot = actionToOneHot
+        self.addValuesToTrajectoryList = addValuesToTrajectoryList
+        self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
+        self.trajectorySaveExtension = trajectorySaveExtension
+
+    def __call__(self, agentId, trajectoriesForAgentTrain):
+
+        processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(self.actionToOneHot, agentId)
+        addValuesToTrajectory = self.addValuesToTrajectoryList[agentId]
         preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, self.removeTerminalTupleFromTrajectory, processTrajectoryForNN)
-
         processedTrajectories = preProcessTrajectories(trajectoriesForAgentTrain)
+
+        return processedTrajectories
+
+
+class SaveModel:
+    def __init__(self, nnModelSaveDirectoryList, NNModelSaveExtension, killzoneRadius):
+        self.nnModelSaveDirectoryList = nnModelSaveDirectoryList
+        self.NNModelSaveExtension = NNModelSaveExtension
+        self.killzoneRadius = killzoneRadius
+
+    def __call__(self, agentId, NNModel, pathParametersAtIteration):
+        nnModelDirectory = self.nnModelSaveDirectoryList[agentId]
+        getModelSavePath = GetSavePath(
+            nnModelDirectory, self.NNModelSaveExtension, pathParametersAtIteration)
+        nnModelSavePaths = getModelSavePath({'killzoneRadius': self.killzoneRadius})
+        savedVariablesWolf = saveVariables(NNModel, nnModelSavePaths)
+
+
+class TrainOneAgent:
+    def __init__(self, trajectorySaveExtension,
+                 learningThresholdFactor, miniBatchSize, saveToBuffer,
+                 sampleBatchFromBuffer, trainNN):
+        self.learningThresholdFactor = learningThresholdFactor
+        self.miniBatchSize = miniBatchSize
+        self.saveToBuffer = saveToBuffer
+        self.sampleBatchFromBuffer = sampleBatchFromBuffer
+        self.trainNN = trainNN
+
+    def __call__(self, agentId, NNModel, replayBuffer, processedTrajectories, pathParametersAtIteration):
+
         updatedReplayBuffer = self.saveToBuffer(replayBuffer, processedTrajectories)
 
         if len(updatedReplayBuffer) >= self.learningThresholdFactor * self.miniBatchSize:
@@ -115,12 +152,6 @@ class TrainOneAgent:
             NNModel = updatedWolfNNModel
 
         replayBuffer = updatedReplayBuffer
-        nnModelDirectory = self.nnModelSaveDirectoryList[agentId]
-        getModelSavePath = GetSavePath(
-            nnModelDirectory, NNModelSaveExtension, pathParametersAtIteration)
-        nnModelSavePaths = getModelSavePath({'killzoneRadius': self.killzoneRadius})
-        savedVariablesWolf = saveVariables(NNModel, nnModelSavePaths)
-
         return NNModel, replayBuffer
 
 
@@ -170,9 +201,6 @@ def main():
     addValuesToWolfTrajectory = AddValuesToTrajectory(wolfAccumulateRewards)
 
     addValuesToTrajectoryList = [addValuesToSheepTrajectory, addValuesToWolfTrajectory]
-    # sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    # wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6), (-8, 0), (-6, -6), (0, -8), (6, -6)]
-    # numActionSpace = len(sheepActionSpace)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
@@ -183,7 +211,7 @@ def main():
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    numSimulations = 200  # 200
+    numSimulations = 20  # 200
     getMCTS = GetMcts(actionSpace, numSimulations, selectChild, isTerminal, transit, terminalRewardList)
 
     # sample trajectory
@@ -301,98 +329,33 @@ def main():
     numIterations = 2000
     startTime = time.time()
 
-    approximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)  # need fix import
-    preparePolicyOneAgentGuideMCTS = PreparePolicyOneAgentGuideMCTS(getMCTS, approximatePolicy)
-    trainOneAgent = TrainOneAgent(numTrajectoriesPerIteration, trajectoriesForTrainSaveDirectoryList, trajectorySaveExtension, actionToOneHot, removeTerminalTupleFromTrajectory, addValuesToTrajectoryList, learningThresholdFactor, miniBatchSize, saveToBuffer, sampleBatchFromBuffer, trainNN, nnModelSaveDirectoryList, killzoneRadius, sampleTrajectory)
+    approximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
+    approximateActionPrior = lambda NNmodel: ApproximateActionPrior(NNmodel, actionSpace)
+    preparePolicyOneAgentGuideMCTS = PreparePolicyOneAgentGuideMCTS(getMCTS, approximatePolicy, approximateActionPrior)
+    generateTrajectories = GenerateTrajectories(numTrajectoriesPerIteration, sampleTrajectory, trajectoriesForTrainSaveDirectoryList, trajectorySaveExtension)
+    preprocessMultiAgentTrajectories = PreprocessMultiAgentTrajectories(actionToOneHot, addValuesToTrajectoryList, removeTerminalTupleFromTrajectory, trajectorySaveExtension)
+    trainOneAgent = TrainOneAgent(trajectorySaveExtension, learningThresholdFactor, miniBatchSize, saveToBuffer, sampleBatchFromBuffer, trainNN)
+    saveModel = SaveModel(nnModelSaveDirectoryList, NNModelSaveExtension, killzoneRadius)
+    agentIdList = [sheepId, wolfId]
 
     for iterationIndex in range(numIterations):
         print("ITERATION INDEX: ", iterationIndex)
         pathParametersAtIteration = generatePathParametersAtIteration(iterationIndex)
+
         multiAgentNNmodel = [sheepNNModel, wolfNNModel]
 
-        multiAgentPolicyForSheepTrain = preparePolicyOneAgentGuideMCTS(sheepId, multiAgentNNmodel)
-        updatedSheepNNModel, replayBuffer = trainOneAgent(sheepId, multiAgentPolicyForSheepTrain, sheepNNModel, replayBuffer, pathParametersAtIteration)
-
-        multiAgentNNmodel = [updatedSheepNNModel, wolfNNModel]
-        multiAgentPolicyForWolfTrain = preparePolicyOneAgentGuideMCTS(wolfId, multiAgentNNmodel)
-        updatedWolfNNModel, replayBuffer = trainOneAgent(wolfId, multiAgentPolicyForWolfTrain, wolfNNModel, replayBuffer, pathParametersAtIteration)
-
-        sheepNNModel = updatedSheepNNModel
-        wolfNNModel = updatedWolfNNModel
+        for agentId in agentIdList:
+            multiAgentPolicy = preparePolicyOneAgentGuideMCTS(agentId, multiAgentNNmodel)
+            trajectoriesForAgentTrain = generateTrajectories(agentId, multiAgentPolicy, pathParametersAtIteration)
+            processedTrajectories = preprocessMultiAgentTrajectories(agentId, trajectoriesForAgentTrain)
+            NNModel = multiAgentNNmodel[agentId]
+            updatedNNModel, replayBuffer = trainOneAgent(agentId, NNModel, replayBuffer, processedTrajectories, pathParametersAtIteration)
+            saveModel(agentId, updatedNNModel, pathParametersAtIteration)
+            multiAgentNNmodel[agentId] = updatedNNModel
 
     endTime = time.time()
     print("Time taken for {} iterations: {} seconds".format(
         self.numIterations, (endTime - startTime)))
-
-
-# sheep play
-#         approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
-#         sheepPolicy = getSheepMCTS(sheepId, sheepNNModel, approximateWolfPolicy)
-#         wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
-#         policyForSheepTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
-
-#         trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
-#         getSheepTrajectorySavePath = GetSavePath(
-#             trajectoriesForSheepTrainSaveDirectory, trajectorySaveExtension, pathParametersAtIteration)
-
-#         sheepDataSetPath = getSheepTrajectorySavePath(pathParametersAtIteration)
-#         saveToPickle(trajectoriesForSheepTrain, sheepDataSetPath)
-
-#         # sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
-#         sheepDataSetTrajectories = trajectoriesForSheepTrain
-
-# # sheep train
-#         processedSheepTrajectories = preProcessSheepTrajectories(sheepDataSetTrajectories)
-#         updatedReplayBuffer = saveToBuffer(replayBuffer, processedSheepTrajectories)
-#         if len(updatedReplayBuffer) >= learningThresholdFactor * miniBatchSize:
-#             sheepSampledBatch = sampleBatchFromBuffer(updatedReplayBuffer)
-#             sheepTrainData = [list(varBatch) for varBatch in zip(*sheepSampledBatch)]
-#             updatedSheepNNModel = trainNN(sheepNNModel, sheepTrainData)
-#             sheepNNModel = updatedSheepNNModel
-
-#         replayBuffer = updatedReplayBuffer
-
-#         getSheepModelSavePath = GetSavePath(
-#             sheepNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
-#         sheepNNModelSavePaths = getSheepModelSavePath({'killzoneRadius': killzoneRadius})
-#         savedVariablesSheep = saveVariables(sheepNNModel, sheepNNModelSavePaths)
-
-
-# wolf play
-#         approximateSheepPolicy = lambda state: (0, 0)  # static sheep
-#         # approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
-#         wolfPolicy = getWolfMCTS(wolfId, wolfNNModel, approximateSheepPolicy)
-#         sheepPolicy = lambda state: {approximateSheepPolicy(state): 1}
-#         policyForWolfTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
-
-#         trajectoriesForWolfTrain = [sampleTrajectory(policyForWolfTrain) for _ in range(numTrajectoriesPerIteration)]
-
-#         getWolfTrajectorySavePath = GetSavePath(
-#             trajectoriesForWolfTrainSaveDirectory, trajectorySaveExtension, pathParametersAtIteration)
-#         wolfDataSetPath = getWolfTrajectorySavePath(pathParametersAtIteration)
-#         saveToPickle(trajectoriesForWolfTrain, wolfDataSetPath)
-
-#         wolfDataSetTrajectories = loadFromPickle(wolfDataSetPath)
-
-# # wolf train
-#         processedWolfTrajectories = preProcessWolfTrajectories(wolfDataSetTrajectories)
-#         updatedReplayBuffer = saveToBuffer(replayBuffer, processedWolfTrajectories)
-#         if len(updatedReplayBuffer) >= learningThresholdFactor * miniBatchSize:
-#             wolfSampledBatch = sampleBatchFromBuffer(updatedReplayBuffer)
-#             wolfTrainData = [list(varBatch) for varBatch in zip(*wolfSampledBatch)]
-#             updatedWolfNNModel = trainNN(wolfNNModel, wolfTrainData)
-#             wolfNNModel = updatedWolfNNModel
-
-#         replayBuffer = updatedReplayBuffer
-
-#         getWolfModelSavePath = GetSavePath(
-#             wolfNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
-#         wolfNNModelSavePaths = getWolfModelSavePath({'killzoneRadius': killzoneRadius})
-#         savedVariablesWolf = saveVariables(wolfNNModel, wolfNNModelSavePaths)
-
-#     endTime = time.time()
-#     print("Time taken for {} iterations: {} seconds".format(
-#         self.numIterations, (endTime - startTime)))
 
 
 if __name__ == '__main__':
