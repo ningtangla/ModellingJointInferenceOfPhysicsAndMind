@@ -36,11 +36,11 @@ class GetMcts():
         self.numActionSpace = len(actionSpace)
         self.terminalReward = terminalReward
 
-    def __call__(self, agentId, NNPolicy):
+    def __call__(self, agentId, othersNNPolicy):
         if agentId == 0:
-            transitInMCTS = lambda state, selfAction: self.transit(state, [selfAction, NNPolicy(state)])
+            transitInMCTS = lambda state, selfAction: self.transit(state, [selfAction, othersNNPolicy(state)])
         if agentId == 1:
-            transitInMCTS = lambda state, selfAction: self.transit(state, [NNPolicy(state), selfAction])
+            transitInMCTS = lambda state, selfAction: self.transit(state, [othersNNPolicy(state), selfAction])
 
         getApproximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, self.actionSpace)
         getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(self.actionSpace, transitInMCTS, getApproximateActionPrior(NNModel))
@@ -56,75 +56,97 @@ class GetMcts():
 
 
 def main():
-    # Mujoco environment
-    dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
-    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSimulation = mujoco.MjSim(physicsModel)
+    # manipulated parameters and other important parameters
 
-    # MDP function
-    qPosInit = (0, 0, 0, 0)
-    qVelInit = [0, 0, 0, 0]
-    numAgents = 2
-    qVelInitNoise = 8
-    qPosInitNoise = 9.7
-    reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    manipulatedVariables = OrderedDict()
+    # manipulatedVariables['numTrajectoriesPerIteration'] = [1]
+    # manipulatedVariables['miniBatchSize'] = [64]
+    # manipulatedVariables['learningRate'] = [0.001]
+    # manipulatedVariables['bufferSize'] = [2000]
 
+    # levelNames = list(manipulatedVariables.keys())
+    # levelValues = list(manipulatedVariables.values())
+    # modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    # toSplitFrame = pd.DataFrame(index=modelIndex)
+
+    numTrajectoriesPerIteration = 1
+    miniBatchSize = 64
+    learningRate = 0.001
+    bufferSize = 2000
+
+    learningThresholdFactor = 4
+    numIterations = 2000  # 2000
+    numSimulations = 200  # 200
+
+    maxRunningSteps = 25
+    NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
+
+    # pre-process the trajectory for training the neural network
     sheepId = 0
     wolfId = 1
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
+    playAliveBonus = 1 / maxRunningSteps
+    playDeathPenalty = -1
+    playKillzoneRadius = 2
+    playIsTerminal = IsTerminal(playKillzoneRadius, getSheepXPos, getWolfXPos)
+    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
 
-    maxRunningSteps = 25
-    sheepAliveBonus = 1 / maxRunningSteps
-    wolfAlivePenalty = -sheepAliveBonus
-    sheepTerminalPenalty = -1
-    wolfTerminalReward = 1
+    decay = 1
+    accumulateRewards = AccumulateRewards(decay, playReward)
+    addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
+
+    sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6), (-8, 0), (-6, -6), (0, -8), (6, -6)]
+    numActionSpace = len(sheepActionSpace)
+
+    actionIndex = 1
+    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+    removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
+
+    wolfActionToOneHot = ActionToOneHot(wolfActionSpace)
+    sheepActionToOneHot = ActionToOneHot(sheepActionSpace)
+
+    processSheepTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(sheepActionToOneHot, sheepId)
+    preProcessSheepTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory,
+                                                         processSheepTrajectoryForNN)
+
+    processWolfTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(wolfActionToOneHot, wolfId)
+    preProcessWolfTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory,
+                                                        processWolfTrajectoryForNN)
+
+    # Mujoco environment
+    dirName = os.path.dirname(__file__)
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    physicsSimulation = mujoco.MjSim(physicsModel)
+    qPosInit = (0, 0, 0, 0)
+    qVelInit = [0, 0, 0, 0]
+    numAgents = 2
+    qVelInitNoise = 1
+    qPosInitNoise = 9.7
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
     numSimulationFrames = 20
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+    reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
-    sheepPlayReward = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
-    wolfPlayReward = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-
-    decay = 1
-    sheepAccumulateRewards = AccumulateRewards(decay, sheepPlayReward)
-    wolfAccumulateRewards = AccumulateRewards(decay, wolfPlayReward)
-
-    addValuesToSheepTrajectory = AddValuesToTrajectory(sheepAccumulateRewards)
-    addValuesToWolfTrajectory = AddValuesToTrajectory(wolfAccumulateRewards)
-
-    sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    wolfActionSpace = [(8, 0), (6, 6), (0, 8), (-6, 6), (-8, 0), (-6, -6), (0, -8), (6, -6)]
-    numActionSpace = len(sheepActionSpace)
-
-    # NNGuidedMCTS init
+    # MCTS init
     cInit = 1
     cBase = 100
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    numSimulations = 200  # 200
-    getSheepMCTS = GetMcts(sheepActionSpace, numSimulations, selectChild, isTerminal, transit, sheepTerminalPenalty)
-    getWolfMCTS = GetMcts(wolfActionSpace, numSimulations, selectChild, isTerminal, transit, wolfTerminalReward)
+    terminalReward = 1
+    terminalPenalty = -1
 
-    # transitInSheepMCTS = lambda state, selfAction: transit(state, [selfAction, wolfNNPolicy(state)])  # self other
-    # approximateActionPrior = ApproximatePolicy(actionSpace)
-    # initializeChildrenNNPrior = InitializeChildren(actionSpace, transitInMCTS, approximateActionPrior)
-
-    # getExpandNNPrior = lambda NNModel: Expand(isTerminal, InitializeChildren)
-    # getStateFromNode = lambda node: list(node.id.values())[0]
-    # getEstimateValue = lambda NNModel: EstimateValueFromNode(terminalReward, isTerminal, getStateFromNode, ApproximateValueFunction(NNModel))
-
-    # numSimulations = 200
-    # getMCTSNNPriorValue = lambda NNModel: MCTS(numSimulations, selectChild, getExpandNNPrior(NNModel), getEstimateValue(NNModel), backup, establishPlainActionDist)
+    getSheepMCTS = GetMcts(sheepActionSpace, numSimulations, selectChild, isTerminal, transit, terminalPenalty)
+    getWolfMCTS = GetMcts(wolfActionSpace, numSimulations, selectChild, isTerminal, transit, terminalReward)
 
     # sample trajectory
-    # maxRunningSteps = 25
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # neural network init and save path
@@ -134,29 +156,14 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+    getNNModel = lambda: generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     # replay buffer
-    bufferSize = 2000
-    saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 64
-    sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
-
-    # pre-process the trajectory for training the neural network
-    actionIndex = 1
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
-    removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-
-    wolfActionToOneHot = ActionToOneHot(wolfActionSpace)
-    sheepActionToOneHot = ActionToOneHot(sheepActionSpace)
-
-    processSheepTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(sheepActionToOneHot, sheepId)
-    preProcessSheepTrajectories = PreProcessTrajectories(addValuesToSheepTrajectory, removeTerminalTupleFromTrajectory, processSheepTrajectoryForNN)
-
-    processWolfTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(wolfActionToOneHot, wolfId)
-    preProcessWolfTrajectories = PreProcessTrajectories(addValuesToWolfTrajectory, removeTerminalTupleFromTrajectory, processWolfTrajectoryForNN)
+    getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # function to train NN model
+    batchSizeForTrainFunction = 0
     terminalThreshold = 1e-6
     lossHistorySize = 10
     initActionCoeff = 1
@@ -172,13 +179,12 @@ def main():
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRate = 0.001
-    learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
-                    learningRateModifier(learningRate),
-                    terminalController, coefficientController,
-                    trainReporter)
+    learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
+    getTrainNN = lambda learningRate: Train(numTrainStepsPerIteration, batchSizeForTrainFunction, sampleData,
+                                            learningRateModifier(learningRate),
+                                            terminalController, coefficientController, trainReporter)
 
+    trainNN = getTrainNN(learningRate)
     # functions to iteratively play and train the NN
     combineDict = lambda dict1, dict2: dict(
         list(dict1.items()) + list(dict2.items()))
@@ -189,7 +195,6 @@ def main():
 
 
 # load save dir
-    NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesForSheepTrainSaveDirectory = os.path.join(dirName, '..', '..', 'data',
@@ -214,7 +219,8 @@ def main():
 
 
 # load wolf baseline for init iteration
-    # wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','SheepWolfBaselinePolicy', 'wolfBaselineNNPolicy')
+    # wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+    #                                                 'SheepWolfBaselinePolicy', 'wolfBaselineNNPolicy')
     # baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
     #                           'qPosInitNoise': 9.7, 'qVelInitNoise': 8,
     #                           'rolloutHeuristicWeight': 0.1, 'maxRunningSteps': 25}
@@ -223,70 +229,60 @@ def main():
     # wolfBaselineNNModelSavePath = getWolfBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
     # wolfBaselienModel = restoreVariables(initializedNNModel, wolfBaselineNNModelSavePath)
     # wolfNNModel = wolfBaselienModel
-    wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
-# load sheep baseline for init iteration
-    # sheepBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','SheepWolfBaselinePolicy', 'sheepBaselineNNPolicy')
-    # baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
-    #                           'qPosInitNoise': 9.7, 'qVelInitNoise': 8,
-    #                           'rolloutHeuristicWeight': 0.1, 'maxRunningSteps': 25}
-    # getSheepBaselineModelSavePath = GetSavePath(sheepBaselineNNModelSaveDirectory, NNModelSaveExtension, baselineSaveParameters)
-    # baselineModelTrainSteps = 1000
-    # sheepBaselineNNModelSavePath = getSheepBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
-    # sheepBaselienModel = restoreVariables(initializedNNModel, sheepBaselineNNModelSavePath)
-    # sheepNNModel = sheepBaselienModel
-    sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
-
+    sampleBatchFromBuffer = getSampleBatchFromBuffer(miniBatchSize)
+    saveToBuffer = SaveToBuffer(bufferSize)
     replayBuffer = []
 
-    numTrajectoriesPerIteration = 1
-    learningThresholdFactor = 4
-    numIterations = 2000
+    wolfNNModel = getNNModel()
+    sheepNNModel = getNNModel()
+
     startTime = time.time()
     for iterationIndex in range(numIterations):
         print("ITERATION INDEX: ", iterationIndex)
         pathParametersAtIteration = generatePathParametersAtIteration(iterationIndex)
 
 # sheep play
-#         approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
+        approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
 
-#         getSheepPolicy = getSheepMCTS(sheepId, approximateWolfPolicy)
-#         sheepPolicy = getSheepPolicy(sheepNNModel)
-#         wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
-#         policyForSheepTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+        getSheepPolicy = getSheepMCTS(sheepId, approximateWolfPolicy)
+        sheepPolicy = getSheepPolicy(sheepNNModel)
+        wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
+        policyForSheepTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
-#         trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
-#         getSheepTrajectorySavePath = GetSavePath(
-#             trajectoriesForSheepTrainSaveDirectory, trajectorySaveExtension, NNFixedParameters)
+        trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
+        getSheepTrajectorySavePath = GetSavePath(
+            trajectoriesForSheepTrainSaveDirectory, trajectorySaveExtension, NNFixedParameters)
 
-#         sheepDataSetPath = getSheepTrajectorySavePath(NNFixedParameters)
-#         saveToPickle(trajectoriesForSheepTrain, sheepDataSetPath)
+        sheepDataSetPath = getSheepTrajectorySavePath(NNFixedParameters)
+        saveToPickle(trajectoriesForSheepTrain, sheepDataSetPath)
 
-#         # sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
-#         sheepDataSetTrajectories = trajectoriesForSheepTrain
+        # sheepDataSetTrajectories = loadFromPickle(sheepDataSetPath)
+        sheepDataSetTrajectories = trajectoriesForSheepTrain
 
-# # sheep train
-#         processedSheepTrajectories = preProcessSheepTrajectories(sheepDataSetTrajectories)
-#         updatedReplayBuffer = saveToBuffer(replayBuffer, processedSheepTrajectories)
-#         if len(updatedReplayBuffer) >= learningThresholdFactor * miniBatchSize:
-#             sheepSampledBatch = sampleBatchFromBuffer(updatedReplayBuffer)
-#             sheepTrainData = [list(varBatch) for varBatch in zip(*sheepSampledBatch)]
-#             updatedSheepNNModel = trainNN(sheepNNModel, sheepTrainData)
-#             sheepNNModel = updatedSheepNNModel
 
-#         replayBuffer = updatedReplayBuffer
+# sheep train
+        processedSheepTrajectories = preProcessSheepTrajectories(sheepDataSetTrajectories)
+        updatedReplayBuffer = saveToBuffer(replayBuffer, processedSheepTrajectories)
+        if len(updatedReplayBuffer) >= learningThresholdFactor * miniBatchSize:
+            sheepSampledBatch = sampleBatchFromBuffer(updatedReplayBuffer)
+            sheepTrainData = [list(varBatch) for varBatch in zip(*sheepSampledBatch)]
+            updatedSheepNNModel = trainNN(sheepNNModel, sheepTrainData)
+            sheepNNModel = updatedSheepNNModel
 
-#         getSheepModelSavePath = GetSavePath(
-#             sheepNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
-#         sheepNNModelSavePaths = getSheepModelSavePath({'killzoneRadius': killzoneRadius})
-#         savedVariablesSheep = saveVariables(sheepNNModel, sheepNNModelSavePaths)
+        replayBuffer = updatedReplayBuffer
+
+        getSheepModelSavePath = GetSavePath(
+            sheepNNModelSaveDirectory, NNModelSaveExtension, pathParametersAtIteration)
+        sheepNNModelSavePaths = getSheepModelSavePath({'killzoneRadius': killzoneRadius})
+        savedVariablesSheep = saveVariables(sheepNNModel, sheepNNModelSavePaths)
 
 
 # wolf play
-        approximateSheepPolicy = lambda state: (0, 0)  # fixed sheep
+        # approximateSheepPolicy = lambda state: (0, 0)
 
-        # approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
-        getWolfPolicy = getWolfMCTS(wolfId, approximateSheepPolicy)
+        approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
+        getWolfPolicy = getWolfMCTS(woflId, approximateSheepPolicy)
         wolfPolicy = getWolfPolicy(wolfNNModel)
         sheepPolicy = lambda state: {approximateSheepPolicy(state): 1}
         policyForWolfTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
@@ -298,7 +294,8 @@ def main():
         wolfDataSetPath = getWolfTrajectorySavePath(NNFixedParameters)
         saveToPickle(trajectoriesForWolfTrain, wolfDataSetPath)
 
-        wolfDataSetTrajectories = loadFromPickle(wolfDataSetPath)
+        # wolfDataSetTrajectories = loadFromPickle(wolfDataSetPath)
+        wolfDataSetTrajectories = trajectoriesForWolfTrain
 
 # wolf train
         processedWolfTrajectories = preProcessWolfTrajectories(wolfDataSetTrajectories)
