@@ -36,21 +36,22 @@ class GetMcts():
         self.numActionSpace = len(actionSpace)
         self.terminalReward = terminalReward
 
-    def __call__(self, agentId, othersNNPolicy):
+    def __call__(self, agentId, NNModel, othersNNPolicy):
+
         if agentId == 0:
             transitInMCTS = lambda state, selfAction: self.transit(state, [selfAction, othersNNPolicy(state)])
         if agentId == 1:
             transitInMCTS = lambda state, selfAction: self.transit(state, [othersNNPolicy(state), selfAction])
 
-        getApproximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, self.actionSpace)
-        getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(self.actionSpace, transitInMCTS, getApproximateActionPrior(NNModel))
+        getApproximateActionPrior = ApproximateActionPrior(NNModel, self.actionSpace)
+        getInitializeChildrenNNPrior = InitializeChildren(self.actionSpace, transitInMCTS, getApproximateActionPrior)
 
-        getExpandNNPrior = lambda NNModel: Expand(self.isTerminal, getInitializeChildrenNNPrior(NNModel))
+        getExpandNNPrior = Expand(self.isTerminal, getInitializeChildrenNNPrior)
         getStateFromNode = lambda node: list(node.id.values())[0]
-        getEstimateValue = lambda NNModel: EstimateValueFromNode(self.terminalReward, self.isTerminal, getStateFromNode, ApproximateValueFunction(NNModel))
+        getEstimateValue = EstimateValueFromNode(self.terminalReward, self.isTerminal, getStateFromNode, ApproximateValueFunction(NNModel))
 
-        getMCTSNNPriorValue = lambda NNModel: MCTS(self.numSimulations, self.selectChild, getExpandNNPrior(NNModel),
-                                                   getEstimateValue(NNModel), backup, establishPlainActionDist)
+        getMCTSNNPriorValue = MCTS(self.numSimulations, self.selectChild, getExpandNNPrior,
+                                   getEstimateValue, backup, establishPlainActionDist)
 
         return getMCTSNNPriorValue
 
@@ -245,10 +246,12 @@ def main():
 # sheep play
         approximateWolfPolicy = ApproximatePolicy(wolfNNModel, wolfActionSpace)
 
-        getSheepPolicy = getSheepMCTS(sheepId, approximateWolfPolicy)
-        sheepPolicy = getSheepPolicy(sheepNNModel)
+        getSheepPolicy = getSheepMCTS(sheepId, sheepNNModel, approximateWolfPolicy)
+
+        # sheepPolicy = getSheepPolicy(sheepNNModel)
         wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
-        policyForSheepTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+
+        policyForSheepTrain = lambda state: [getSheepPolicy(state), wolfPolicy(state)]
 
         trajectoriesForSheepTrain = [sampleTrajectory(policyForSheepTrain) for _ in range(numTrajectoriesPerIteration)]
         getSheepTrajectorySavePath = GetSavePath(
@@ -282,10 +285,9 @@ def main():
         # approximateSheepPolicy = lambda state: (0, 0)
 
         approximateSheepPolicy = ApproximatePolicy(sheepNNModel, sheepActionSpace)
-        getWolfPolicy = getWolfMCTS(woflId, approximateSheepPolicy)
-        wolfPolicy = getWolfPolicy(wolfNNModel)
+        getWolfPolicy = getWolfMCTS(woflId, wolfNNmodel, approximateSheepPolicy)
         sheepPolicy = lambda state: {approximateSheepPolicy(state): 1}
-        policyForWolfTrain = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+        policyForWolfTrain = lambda state: [sheepPolicy(state), getWolfPolicy(state)]
 
         trajectoriesForWolfTrain = [sampleTrajectory(policyForWolfTrain) for _ in range(numTrajectoriesPerIteration)]
 
