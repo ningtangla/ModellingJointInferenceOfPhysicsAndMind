@@ -252,26 +252,41 @@ def restoreVariables(model, path):
 
 
 class ApproximatePolicy:
-    def __init__(self, model, actionSpace):
+    def __init__(self, actionSpace):
         self.actionSpace = actionSpace
-        self.model = model
 
-    def __call__(self, stateBatch):
+    def __call__(self, NNModel, stateBatch):
         if np.array(stateBatch).ndim == 3:
             stateBatch = [np.concatenate(state) for state in stateBatch]
         if np.array(stateBatch).ndim == 2:
             stateBatch = np.concatenate(stateBatch)
         if np.array(stateBatch).ndim == 1:
             stateBatch = np.array([stateBatch])
-        graph = self.model.graph
+        graph = NNModel.graph
         state_ = graph.get_collection_ref("inputs")[0]
         actionIndices_ = graph.get_collection_ref("actionIndices")[0]
-        actionIndices = self.model.run(actionIndices_, feed_dict={state_: stateBatch})
+        actionIndices = NNModel.run(actionIndices_, feed_dict={state_: stateBatch})
         actionBatch = [self.actionSpace[i] for i in actionIndices]
         if len(actionBatch) == 1:
             actionBatch = actionBatch[0]
         return actionBatch
 
+def approximateValue(NNModel, stateBatch):
+    scalarOutput = False
+    if np.array(stateBatch).ndim == 3:
+        stateBatch = [np.concatenate(state) for state in stateBatch]
+    if np.array(stateBatch).ndim == 2:
+        stateBatch = np.concatenate(stateBatch)
+    if np.array(stateBatch).ndim == 1:
+        stateBatch = np.array([stateBatch])
+        scalarOutput = True
+    graph = NNModel.graph
+    state_ = graph.get_collection_ref("inputs")[0]
+    valuePrediction_ = graph.get_collection_ref("values")[0]
+    valuePrediction = NNModel.run(valuePrediction_, feed_dict={state_: stateBatch})
+    if scalarOutput:
+        valuePrediction = valuePrediction[0][0]
+    return valuePrediction
 
 class ApproximateActionPrior:
     def __init__ (self, policyValueNet, actionSpace):
