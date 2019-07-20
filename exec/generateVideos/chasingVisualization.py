@@ -81,8 +81,8 @@ class ChaseTrialWithTraj:
                 currentDir = os.getcwd()
                 parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
                 saveImageDir = os.path.join(os.path.join(parentDir, '..', 'data',
-                                                         'trainNNEscapePolicyMujoco',
-                                                         'demo'), self.imageFolderName)
+                                                         'trainMCTSNNIteratively', 'replayBufferStartWithTrainedModel',
+                                                         'evaluationVideos20kTrainSteps', 'demo'), self.imageFolderName)
                 if not os.path.exists(saveImageDir):
                     os.makedirs(saveImageDir)
                 pg.image.save(screen, saveImageDir + '/' + format(timeStep, '04') + ".png")

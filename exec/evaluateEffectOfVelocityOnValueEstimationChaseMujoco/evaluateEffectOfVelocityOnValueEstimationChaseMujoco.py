@@ -94,9 +94,9 @@ class ComputeMeanValue:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['initDistance'] = [4, 8]#[2, 4, 8, 16]
+    manipulatedVariables['initDistance'] = [2, 4, 8, 16]
     manipulatedVariables['initVelocityDirection'] = ['towards', 'away', 'stationary']
-    numSamples = 10#200
+    numSamples = 200
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
     levelNames = list(manipulatedVariables.keys())
@@ -124,7 +124,8 @@ def main():
         os.makedirs(qPosInitSaveDirectory)
     qPosInitSaveParameters = {'numSamples': numSamples}
     qPosInitSaveExtension = '.pickle'
-    getQPosInitSavePath = GetSavePath(qPosInitSaveDirectory, qPosInitSaveExtension, qPosInitSaveParameters)
+    getQPosInitSavePathFromDict = GetSavePath(qPosInitSaveDirectory, qPosInitSaveExtension, qPosInitSaveParameters)
+    getQPosInitSavePathFromDistance = lambda initDistance: getQPosInitSavePathFromDict({'initDistance': initDistance})
 
     # generate init q positions
     withinBounds = WithinBounds((-9.7, -9.7, -9.7, -9.7), (9.7, 9.7, 9.7, 9.7))
@@ -134,7 +135,7 @@ def main():
     getInitState = GetInitStateFromWolfVelocityDirection([0, 1], [2, 3], computeVectorNorm, 4)
 
     # do the evaluation
-    computeMeanValue = ComputeMeanValue(numSamples, approximateValue, getQPosInitSavePath, generateInitQPos,
+    computeMeanValue = ComputeMeanValue(numSamples, approximateValue, getQPosInitSavePathFromDistance, generateInitQPos,
                                         saveToPickle, loadFromPickle, getInitState)
     valueDf = toSplitFrame.groupby(levelNames).apply(computeMeanValue)
 
@@ -144,9 +145,10 @@ def main():
 
     for direction, grp in valueDf.groupby('initVelocityDirection'):
         grp.index = grp.index.droplevel('initVelocityDirection')
-        grp.plot(marker='o', ax=axForDraw, label=direction)
+        grp.plot(marker='o', ax=axForDraw, label=direction, y='value')
 
     plt.ylabel('estimated value')
+    plt.title('Value estimation in chasing task')
     plt.legend(loc='best')
     plt.show()
 

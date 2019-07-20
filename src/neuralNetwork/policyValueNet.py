@@ -172,6 +172,7 @@ class Train:
         self.reporter = trainReporter
 
     def __call__(self, model, trainingData):
+        print("ENTER TRAIN")
         graph = model.graph
         state_ = graph.get_collection_ref("inputs")[0]
         groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")

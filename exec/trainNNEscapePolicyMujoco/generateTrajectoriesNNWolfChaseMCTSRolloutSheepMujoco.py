@@ -5,6 +5,7 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
 import mujoco_py as mujoco
 import numpy as np
+import time
 
 from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -17,7 +18,7 @@ from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePat
 
 
 def main():
-    numSamples = 750
+    numSamples = 300
     maxRunningSteps = 25
     numSimulations = 100
     wolfNNModelPath = '/Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainedNNModels/killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999'
@@ -93,7 +94,10 @@ def main():
 
     # generate trajectories
     policy = lambda state: [mcts(state), NNPolicy(state)]
+    startTime = time.time()
     trajectories = [sampleTrajectory(policy) for _ in range(numSamples)]
+    endTime = time.time()
+    print("Time taken for generating {} trajectories = {} seconds".format(numSamples, (endTime-startTime)))
 
     # saving trajectories
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'trainingTrajectories')

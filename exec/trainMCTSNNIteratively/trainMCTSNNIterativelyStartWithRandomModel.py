@@ -82,10 +82,10 @@ class PreProcessTrajectories:
 
 
 class IterativePlayAndTrain:
-    def __init__(self, preTrainedModelPath, numIterations, learningThresholdFactor, saveNNModel, getGenerateTrajectories,
+    def __init__(self, numIterations, learningThresholdFactor, saveNNModel, getGenerateTrajectories,
                  preProcessTrajectories, getSampleBatchFromBuffer, getTrainNN, getNNModel, loadTrajectories,
                  getSaveToBuffer, generatePathParametersAtIteration, getModelSavePath, restoreVariables):
-        self.preTrainedModelPath = preTrainedModelPath
+        # self.preTrainedModelPath = preTrainedModelPath
         self.numIterations = numIterations
         self.learningThresholdFactor = learningThresholdFactor
         self.saveNNModel = saveNNModel
@@ -110,7 +110,7 @@ class IterativePlayAndTrain:
         trainNN = self.getTrainNN(learningRate)
 
         NNModel = self.getNNModel()
-        NNModel = self.restoreVariables(NNModel, self.preTrainedModelPath)
+        # NNModel = self.restoreVariables(NNModel, self.preTrainedModelPath)
         buffer = []
         saveToBuffer = self.getSaveToBuffer(bufferSize)
         startTime = time.time()
@@ -147,7 +147,7 @@ def main():
     manipulatedVariables['learningRate'] = [0.0001]
     manipulatedVariables['bufferSize'] = [2000]
     learningThresholdFactor = 4
-    numIterations = 10000
+    numIterations = 20000
     numSimulations = 200
 
     levelNames = list(manipulatedVariables.keys())
@@ -171,7 +171,7 @@ def main():
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithTrainedModel', 'trainedNNModels')
+                                        'replayBufferStartWithRandomModel', 'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -181,7 +181,7 @@ def main():
     # trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                           'replayBufferStartWithTrainedModel', 'trajectories')
+                                           'replayBufferStartWithRandomModel', 'trajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectoryExtension = '.pickle'
@@ -302,8 +302,8 @@ def main():
     combineDict = lambda dict1, dict2: dict(list(dict1.items()) + list(dict2.items()))
     generatePathParametersAtIteration = lambda oneConditionDf, iterationIndex: \
         combineDict(readParametersFromDf(oneConditionDf), {'iteration': iterationIndex})
-    preTrainedModelPath = os.path.join('wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
-    iterativePlayAndTrain = IterativePlayAndTrain(preTrainedModelPath, numIterations, learningThresholdFactor,
+    # preTrainedModelPath = os.path.join('wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+    iterativePlayAndTrain = IterativePlayAndTrain(numIterations, learningThresholdFactor,
                                                   saveNNModel, getGenerateTrajectories, preProcessTrajectories,
                                                   getSampleBatchFromBuffer, getTrainNN, getNNModel, loadTrajectories,
                                                   SaveToBuffer, generatePathParametersAtIteration, getNNModelSavePath,

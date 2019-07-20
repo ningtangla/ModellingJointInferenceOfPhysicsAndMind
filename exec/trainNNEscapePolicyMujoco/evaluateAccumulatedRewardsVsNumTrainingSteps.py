@@ -81,11 +81,11 @@ class GenerateTrajectories:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['policy'] = ['mcts', 'NN']
+    manipulatedVariables['policy'] = ['NN']#['mcts', 'NN']
     manipulatedVariables['evaluationMaxRunningSteps'] = [25]
-    manipulatedVariables['trainSteps'] = list(range(0, 100000, 10000)) + [100000-1]
+    manipulatedVariables['trainSteps'] = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
     killzoneRadius = 2
-    evalNumSamples = 100
+    evalNumSamples = 75
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
 
