@@ -37,7 +37,7 @@ class GetMcts():
         self.terminalRewardList = terminalRewardList
 
     def __call__(self, agentId, NNModel, othersPolicy):
-        # need fix
+        # need fix index for agent num >2
         if agentId == 0:
             transitInMCTS = lambda state, selfAction: self.transit(state, [selfAction, othersPolicy(state)])
         if agentId == 1:
@@ -45,7 +45,6 @@ class GetMcts():
 
         getApproximateActionPrior = ApproximateActionPrior(NNModel, self.actionSpace)
         getInitializeChildrenNNPrior = InitializeChildren(self.actionSpace, transitInMCTS, getApproximateActionPrior)
-
         getExpandNNPrior = Expand(self.isTerminal, getInitializeChildrenNNPrior)
         getStateFromNode = lambda node: list(node.id.values())[0]
         terminalReward = self.terminalRewardList[agentId]
@@ -72,11 +71,6 @@ class PreparePolicyOneAgentGuideMCTS:
         approximateOthersPolicy = approximateOthersPolicyList.pop()
         approximateActionPriorList[agentId] = self.getMCTS(agentId, selfNNmodel, approximateOthersPolicy)
         multiAgnetPolicy = lambda state: [policy(state) for policy in approximateActionPriorList]
-
-        # approximateOthersPolicy = lambda state: (0, 0)  # static sheep
-        # wolfPolicy = self.getMCTS(agentId, selfNNmodel, approximateOthersPolicy)
-        # sheepPolicy = lambda state: approximateOtherActionPrior(state)
-        # multiAgnetPolicy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
         return multiAgnetPolicy
 
@@ -117,6 +111,27 @@ class PreprocessMultiAgentTrajectories:
         return processedTrajectories
 
 
+class TrainOneAgent:
+    def __init__(self, trajectorySaveExtension,
+                 learningThresholdFactor, miniBatchSize, saveToBuffer,
+                 sampleBatchFromBuffer, trainNN):
+        self.learningThresholdFactor = learningThresholdFactor
+        self.miniBatchSize = miniBatchSize
+        self.saveToBuffer = saveToBuffer
+        self.sampleBatchFromBuffer = sampleBatchFromBuffer
+        self.trainNN = trainNN
+
+    def __call__(self, agentId, NNModel, replayBuffer, processedTrajectories):
+        updatedReplayBuffer = self.saveToBuffer(replayBuffer, processedTrajectories)
+
+        if len(updatedReplayBuffer) >= self.learningThresholdFactor * self.miniBatchSize:
+            sampledBatch = self.sampleBatchFromBuffer(updatedReplayBuffer)
+            trainData = [list(varBatch) for varBatch in zip(*sampledBatch)]
+            updatedWolfNNModel = self.trainNN(NNModel, trainData)
+
+        return updatedWolfNNModel, updatedReplayBuffer
+
+
 class SaveModel:
     def __init__(self, nnModelSaveDirectoryList, NNModelSaveExtension, killzoneRadius):
         self.nnModelSaveDirectoryList = nnModelSaveDirectoryList
@@ -129,30 +144,6 @@ class SaveModel:
             nnModelDirectory, self.NNModelSaveExtension, pathParametersAtIteration)
         nnModelSavePaths = getModelSavePath({'killzoneRadius': self.killzoneRadius})
         savedVariablesWolf = saveVariables(NNModel, nnModelSavePaths)
-
-
-class TrainOneAgent:
-    def __init__(self, trajectorySaveExtension,
-                 learningThresholdFactor, miniBatchSize, saveToBuffer,
-                 sampleBatchFromBuffer, trainNN):
-        self.learningThresholdFactor = learningThresholdFactor
-        self.miniBatchSize = miniBatchSize
-        self.saveToBuffer = saveToBuffer
-        self.sampleBatchFromBuffer = sampleBatchFromBuffer
-        self.trainNN = trainNN
-
-    def __call__(self, agentId, NNModel, replayBuffer, processedTrajectories, pathParametersAtIteration):
-
-        updatedReplayBuffer = self.saveToBuffer(replayBuffer, processedTrajectories)
-
-        if len(updatedReplayBuffer) >= self.learningThresholdFactor * self.miniBatchSize:
-            wolfSampledBatch = self.sampleBatchFromBuffer(updatedReplayBuffer)
-            trainData = [list(varBatch) for varBatch in zip(*wolfSampledBatch)]
-            updatedWolfNNModel = self.trainNN(NNModel, trainData)
-            NNModel = updatedWolfNNModel
-
-        replayBuffer = updatedReplayBuffer
-        return NNModel, replayBuffer
 
 
 def main():
@@ -336,22 +327,27 @@ def main():
     preprocessMultiAgentTrajectories = PreprocessMultiAgentTrajectories(actionToOneHot, addValuesToTrajectoryList, removeTerminalTupleFromTrajectory, trajectorySaveExtension)
     trainOneAgent = TrainOneAgent(trajectorySaveExtension, learningThresholdFactor, miniBatchSize, saveToBuffer, sampleBatchFromBuffer, trainNN)
     saveModel = SaveModel(nnModelSaveDirectoryList, NNModelSaveExtension, killzoneRadius)
+
     agentIdList = [sheepId, wolfId]
+    if len(agentIdList) == 1:
+        approximatePolicy = lambda NNmodel: lambda state: (0, 0)
+        approximateActionPrior = lambda NNmodel: stationaryAgentPolicy
+        print('Train single agent')
 
     for iterationIndex in range(numIterations):
         print("ITERATION INDEX: ", iterationIndex)
         pathParametersAtIteration = generatePathParametersAtIteration(iterationIndex)
-
         multiAgentNNmodel = [sheepNNModel, wolfNNModel]
 
         for agentId in agentIdList:
             multiAgentPolicy = preparePolicyOneAgentGuideMCTS(agentId, multiAgentNNmodel)
             trajectoriesForAgentTrain = generateTrajectories(agentId, multiAgentPolicy, pathParametersAtIteration)
             processedTrajectories = preprocessMultiAgentTrajectories(agentId, trajectoriesForAgentTrain)
-            NNModel = multiAgentNNmodel[agentId]
-            updatedNNModel, replayBuffer = trainOneAgent(agentId, NNModel, replayBuffer, processedTrajectories, pathParametersAtIteration)
-            saveModel(agentId, updatedNNModel, pathParametersAtIteration)
-            multiAgentNNmodel[agentId] = updatedNNModel
+            agentNNModel = multiAgentNNmodel[agentId]
+            updatedAgentNNModel, updatedReplayBuffer = trainOneAgent(agentId, agentNNModel, replayBuffer, processedTrajectories)
+            saveModel(agentId, updatedAgentNNModel, pathParametersAtIteration)
+            multiAgentNNmodel[agentId] = updatedAgentNNModel
+            replayBuffer = updatedReplayBuffer
 
     endTime = time.time()
     print("Time taken for {} iterations: {} seconds".format(
