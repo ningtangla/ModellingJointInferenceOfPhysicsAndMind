@@ -127,9 +127,10 @@ class TrainOneAgent:
         if len(updatedReplayBuffer) >= self.learningThresholdFactor * self.miniBatchSize:
             sampledBatch = self.sampleBatchFromBuffer(updatedReplayBuffer)
             trainData = [list(varBatch) for varBatch in zip(*sampledBatch)]
-            updatedWolfNNModel = self.trainNN(NNModel, trainData)
+            updatedNNModel = self.trainNN(NNModel, trainData)
+            NNModel = updatedNNModel
 
-        return updatedWolfNNModel, updatedReplayBuffer
+        return NNModel, updatedReplayBuffer
 
 
 class SaveModel:
