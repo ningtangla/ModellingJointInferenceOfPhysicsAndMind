@@ -14,12 +14,12 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 def main():
     # transition function
     dirName = os.path.dirname(__file__)
-    #physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', '1leasedChasing.xml')
-    physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'chase10.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'leased.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
-    initQPos = np.random.uniform(-5, 5, 24)
-    physicsSimulation.data.qpos[:] = initQPos
+    #initQPos = np.random.uniform(-5, 5, 24)
+    #physicsSimulation.data.qpos[:] = initQPos
+    __import__('ipdb').set_trace()
     action = np.array([0,0,-1,-1,0,0])
     physicsSimulation.data.ctrl[:] = action
     physicsViewer = mujoco.MjViewer(physicsSimulation)

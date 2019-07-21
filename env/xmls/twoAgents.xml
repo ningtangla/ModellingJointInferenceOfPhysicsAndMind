@@ -25,13 +25,14 @@
             <joint axis="1 0 0" damping="0" name="prey0" pos="0 0 0" type="slide"/>
             <joint axis="0 1 0" damping="0" name="prey1" pos="0 0 0" type="slide"/>
             <geom type="sphere" size="0.2" mass="8" rgba="0 1 0 1"/>
-        </body>
+            <site name="prey" pos="0 0 0" type="sphere" size="0.01"/>
+	</body>
 	<body name="predator" pos="0 0 0">
             <joint axis="1 0 0" damping="0" name="predator0" pos="0 0 0" type="slide"/>
             <joint axis="0 1 0" damping="0" name="predator1" pos="0 0 0" type="slide"/>
       <!--      <joint axis="0 0 1" damping="0" name="predator2" pos="0 0 0" type="slide"/> -->
             <geom type="sphere" size="0.2" mass="10" rgba="1 0 0 1"/>
-    	    <site name="end1" pos="0 0 0" type="sphere" size="0.01"/>
+    	    <site name="predator" pos="0 0 0" type="sphere" size="0.01"/>
 	</body>
     </worldbody>
 
