@@ -71,12 +71,12 @@ class PrepareMultiAgentNNPolicyWithAgentSelfNNGuidedMCTS:
         otherAgentNNPolicy = [self.approximatePolicy(NNModel) for NNModel in otherAgentNNModel]
         selfNNModel = multiAgentNNModel[agentId]
         selfAgentNNGuidedMCTSPolicy = self.composeSingleAgentGuidedMCTS(agentId, selfNNModel, otherAgentNNPolicy)
-        multiAgentPolicyList = otherAgentNNPolicy.copy()
-        multiAgentPolicyList.insert(agentId, selfAgentNNGuidedMCTSPolicy)
+        multiAgentPolicy = otherAgentNNPolicy.copy()
+        multiAgentPolicy.insert(agentId, selfAgentNNGuidedMCTSPolicy)
 
-        multiAgentPolicy = lambda state: [policy(state) for policy in multiAgentPolicyList]
+        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
 
-        return multiAgentPolicy
+        return policy
 
 
 class PreprocessTrajectoriesForBuffer:
@@ -237,17 +237,6 @@ def main():
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-    # functions to iteratively play and train the NN
-    combineDict = lambda dict1, dict2: dict(
-        list(dict1.items()) + list(dict2.items()))
-
-    combinePathParametersWithIteration = lambda iterationIndex: \
-        combineDict(fixedParameters, {'iteration': iterationIndex})
-
-    combinePathParametersWithAgentId = lambda agentId, pathParametersAtIteration: \
-        combineDict(pathParametersAtIteration, {'agentId': agentId})
-
-
 # load wolf baseline for init iteration
     # wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','SheepWolfBaselinePolicy', 'wolfBaselineNNPolicy')
     # baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
@@ -287,13 +276,11 @@ def main():
     trainableAgentIds = [wolfId]
     for iterationIndex in range(numIterations):
         print("ITERATION INDEX: ", iterationIndex)
-        pathParametersAtIteration = combinePathParametersWithIteration(iterationIndex)
 
         for agentId in trainableAgentIds:
-            multiAgentPolicy = prepareMultiAgentPolicy(agentId, multiAgentNNmodel)
-            trajectories = [sampleTrajectory(multiAgentPolicy) for _ in range(numTrajectoriesPerIteration)]
-            pathParameters = combinePathParametersWithAgentId(agentId, pathParametersAtIteration)
-
+            policy = prepareMultiAgentPolicy(agentId, multiAgentNNmodel)
+            trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
+            pathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId} 
             trajectorySavePath = generateTrajectorySavePath(pathParameters)
             saveToPickle(trajectories, trajectorySavePath)
 
