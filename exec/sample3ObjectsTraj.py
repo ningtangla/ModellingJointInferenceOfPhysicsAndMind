@@ -73,7 +73,7 @@ def main():
 
     randomPolicy = RandomPolicy(actionSpace)
 
-    policy = lambda state: [wolfPolicy(state[:2]), sheepPolicy(state[:2]), randomPolicy(state)]
+    policy = lambda state: [sheepPolicy(state[:2]), wolfPolicy(state[:2]), randomPolicy(state)]
 
     trajectory = sampleTrajectory(policy)
     dataIndex = 15

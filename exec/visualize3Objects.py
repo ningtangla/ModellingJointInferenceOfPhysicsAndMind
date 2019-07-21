@@ -20,7 +20,7 @@ pd.set_option('display.max_columns', None)
 
 def main():
     dirName = os.path.dirname(__file__)
-    dataIndex = 15
+    dataIndex = 14
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
 

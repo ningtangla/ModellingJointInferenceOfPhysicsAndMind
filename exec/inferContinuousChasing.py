@@ -5,7 +5,7 @@ DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-from src.inferChasing.continuousPolicy import Policy, RandomPolicy
+from src.inferChasing.continuousPolicy import TwoAgentsPolicy, RandomPolicy
 from src.inferChasing.continuousTransition import TransitTwoMassPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
     InferContinuousChasingAndDrawDemo
@@ -92,7 +92,7 @@ def main():
 
     # random Policy
     randomPolicy = RandomPolicy(actionSpace)
-    policy = Policy(wolfPolicy, sheepPolicy, randomPolicy)
+    policy = TwoAgentsPolicy(wolfPolicy, sheepPolicy, randomPolicy)
 
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)

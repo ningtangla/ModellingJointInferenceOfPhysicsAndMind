@@ -6,15 +6,15 @@ class TransitTwoMassPhysics:
         self.transitLargeMass = transitLargeMass
 
     def __call__(self, physics, state, allAgentsActions, nextState):
-        sameState = lambda state1, state2: np.all(state1 == state2)
         if physics == 'smallMass':
             nextIntendedState = self.transitSmallMass(state, allAgentsActions)
         else:
             nextIntendedState = self.transitLargeMass(state, allAgentsActions)
-            # print(np.all(nextIntendedState == self.transitSmallMass(state, allAgentsActions)))
-
-        transitionLikelihood = 1 if sameState(nextIntendedState, nextState) else 0
+        # print('intended', nextIntendedState[0][0])
+        # print('actual', nextState[0][0])
+        transitionLikelihood = 1 if np.all(nextIntendedState == nextState) else 0
         return transitionLikelihood
+
 
 class TransitConstantPhysics:
     def __init__(self, transitAgents):
@@ -22,6 +22,5 @@ class TransitConstantPhysics:
 
     def __call__(self, physics, state, allAgentsActions, nextState):
         agentsNextIntendedState = self.transitAgents(state, allAgentsActions)
-        sameState = lambda state1, state2: np.all(state1 == state2)
-        transitionLikelihood = 1 if sameState(agentsNextIntendedState, nextState) else 0
+        transitionLikelihood = 1 if np.all(agentsNextIntendedState == nextState) else 0
         return transitionLikelihood
