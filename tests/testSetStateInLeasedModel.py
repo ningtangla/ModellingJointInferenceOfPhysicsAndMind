@@ -22,18 +22,21 @@ class TestEnvMujoco(unittest.TestCase):
         self.ropeJointIndex = list(range(self.nJoint/self.nDimJointEachBody)) - self.agentJointIndex
         self.nRopeBody = len(self.ropeJointIndex) / self.nDimJoint
     
-    @data((np.array([-3, 3, 5, 5, -8, -8]+[0]*int(self.nRopeBody)), np.array([0,0, 1, 1, -1, -1]))
+    @data((np.array([-3, 3, 5, 5, -8, -8]+[0]*int(self.nRopeBody)), np.array([0, 0, 1, 1, -1, -1]))
     @unpack
     def testSetState(self, qPosToSet, action)
-    physicsSimulation.data.ctrl[:] = action
-    physicsViewer = mujoco.MjViewer(physicsSimulation)
-    physicsSimulation.step()
-    newQPos = 
-    numSimulationFrames = 100000
-    for frameIndex in range(numSimulationFrames):
+        qPosFromXML = self.physicsSimulation.data.qPos
+        qVelFromXML = self.physicsSimulation.data.
+        self.assertTrue(np.all(
+        physicsSimulation.data.ctrl[:] = action
+        physicsViewer = mujoco.MjViewer(physicsSimulation)
         physicsSimulation.step()
-        physicsSimulation.forward()
-        physicsViewer.render()
+        newQPos = 
+        numSimulationFrames = 100000
+        for frameIndex in range(numSimulationFrames):
+            physicsSimulation.step()
+            physicsSimulation.forward()
+            physicsViewer.render()
 
 if __name__ == '__main__':
     main()

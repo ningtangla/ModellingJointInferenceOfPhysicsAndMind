@@ -105,7 +105,7 @@
 <!--tendon part-->
     <tendon>
         <spatial limited="true" range="0 .25" stiffness="10" damping=".6" width="0.01">
-            <site site="end1"/>
+            <site site="predator"/>
             <site site="middle1"/>
         </spatial>
     </tendon>
@@ -160,7 +160,7 @@
     <tendon>
         <spatial limited="true" range="0 .25" stiffness="10" damping=".6" width="0.01">
             <site site="middle9"/>
-            <site site="end2"/>
+            <site site="dragger"/>
         </spatial>
     </tendon>
 
