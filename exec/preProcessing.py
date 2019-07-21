@@ -1,6 +1,7 @@
 import numpy as np
 from functools import reduce
 
+
 class AccumulateRewards:
     def __init__(self, decay, rewardFunction):
         self.decay = decay
@@ -9,7 +10,7 @@ class AccumulateRewards:
     def __call__(self, trajectory):
         rewards = [self.rewardFunction(state, action) for state, action, actionDist in trajectory]
         accumulateReward = lambda accumulatedReward, reward: self.decay * accumulatedReward + reward
-        accumulatedRewards = np.array([reduce(accumulateReward, reversed(rewards[TimeT: ])) for TimeT in range(len(rewards))])
+        accumulatedRewards = np.array([reduce(accumulateReward, reversed(rewards[TimeT:])) for TimeT in range(len(rewards))])
 
         return accumulatedRewards
 
@@ -63,6 +64,7 @@ class PreProcessTrajectories:
 
         return processedTrajectories
 
+
 class ActionToOneHot:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
@@ -71,6 +73,3 @@ class ActionToOneHot:
         oneHotAction = np.asarray([1 if (np.array(action) == np.array(
             self.actionSpace[index])).all() else 0 for index in range(len(self.actionSpace))])
         return oneHotAction
-
-
-
