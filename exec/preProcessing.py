@@ -69,7 +69,7 @@ class ProcessTrajectoryForPolicyValueNet:
 
     def __call__(self, trajectory):
         processTuple = lambda state, actions, actionDist, value: \
-            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), np.array([value[self.agentId]]))
         processedTrajectory = [processTuple(*triple) for triple in trajectory]
 
         return processedTrajectory

@@ -30,7 +30,7 @@ from src.episode import SampleTrajectory, chooseGreedyAction
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [chooseGreedyAction(policy(state)) for policy in othersPolicy]
     multiAgentActions.insert(agentId, selfAction)
-    transitInMCTS = transit(state, multiAgentActions)
+    transitInMCTS = transit(state, multiAgentActions)#name
     return transitInMCTS
 
 
@@ -216,8 +216,7 @@ def main():
     learningRate = 0.001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
-                    learningRateModifier(learningRate),
-                    terminalController, coefficientController,
+                    learningRateModifier, terminalController, coefficientController,
                     trainReporter)
 
     # load save dir
