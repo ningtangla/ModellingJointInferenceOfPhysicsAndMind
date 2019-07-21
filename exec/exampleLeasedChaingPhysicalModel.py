@@ -17,13 +17,16 @@ def main():
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'leased.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
-    #initQPos = np.random.uniform(-5, 5, 24)
-    #physicsSimulation.data.qpos[:] = initQPos
-    __import__('ipdb').set_trace()
+    initQPos = np.array([1,1,2,2,-4,-4] + [0]*18)
+    physicsSimulation.data.qpos[:] = initQPos
+    physicsSimulation.step()
+    physicsSimulation.forward()
     action = np.array([0,0,-1,-1,0,0])
-    physicsSimulation.data.ctrl[:] = action
+    #physicsSimulation.data.ctrl[:] = action
     physicsViewer = mujoco.MjViewer(physicsSimulation)
     numSimulationFrames = 100000
+    initQPos = np.array([9,-9, 4, 4, -4,-4] + [0]*18)
+    physicsSimulation.data.qpos[:] = initQPos
     for frameIndex in range(numSimulationFrames):
         physicsSimulation.step()
         physicsSimulation.forward()
