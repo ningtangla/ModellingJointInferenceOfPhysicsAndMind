@@ -62,12 +62,12 @@ class PreparePolicy:
 
 
 class GenerateTrajectories:
-    def __init__(self, allSampleTrajectories, saveTrajectories, restoreNNModel, preparePolicy):
+    def __init__(self, allSampleTrajectories, getTrajectorySavePathFromDf, saveTrajectories, restoreNNModel, preparePolicy):
         self.allSampleTrajectories = allSampleTrajectories
+        self.getTrajectorySavePathFromDf = getTrajectorySavePathFromDf
         self.saveTrajectories = saveTrajectories
         self.restoreNNModel = restoreNNModel
         self.preparePolicy = preparePolicy
-        self.mctsFlag = False
 
     def __call__(self, oneConditionDf):
         startTime = time.time()
@@ -75,16 +75,10 @@ class GenerateTrajectories:
         policyName = oneConditionDf.index.get_level_values('policyName')[0]
         self.restoreNNModel(iteration)
         policy = self.preparePolicy(policyName)
-        if policyName == 'mctsHeuristic' and self.mctsFlag == False:
+        trajectorySavePath = self.getTrajectorySavePathFromDf(oneConditionDf)
+        if not os.path.isfile(trajectorySavePath):
             trajectories = [sampleTrajectory(policy) for sampleTrajectory in self.allSampleTrajectories]
-            self.mctsFlag = True
-            self.mctsTrajectories = trajectories
-        elif policyName == 'mctsHeuristic' and self.mctsFlag == True:
-            trajectories = self.mctsTrajectories
-        else:
-            trajectories = [sampleTrajectory(policy) for sampleTrajectory in self.allSampleTrajectories]
-
-        self.saveTrajectories(trajectories, oneConditionDf)
+            self.saveTrajectories(trajectories, trajectorySavePath)
         endTime = time.time()
         print("Time for iteration {} = {}".format(iteration, (endTime - startTime)))
 
@@ -94,8 +88,8 @@ class GenerateTrajectories:
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     evalNumSimulations = 20  # 200
-    evalNumTrials = 10  # 1000
-    evalMaxRunningSteps = 20
+    evalNumTrials = 2  # 1000
+    evalMaxRunningSteps = 3
     manipulatedVariables = OrderedDict()
     manipulatedVariables['iteration'] = [0, 10, 20]
     manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
@@ -211,19 +205,17 @@ def main():
     trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    generateAllSampleIndexSavePaths = GenerateAllSampleIndexSavePaths(getTrajectorySavePath)
-    saveAllTrajectories = SaveAllTrajectories(saveToPickle, generateAllSampleIndexSavePaths)
-    saveAllTrajectoriesFromDf = lambda trajectories, df: saveAllTrajectories(trajectories, readParametersFromDf(df))
+    getTrajectorySavePathFromDf = lambda  df: getTrajectorySavePath(readParametersFromDf(df))
 
     # function to generate trajectories
     restoreNNModelFromIteration = RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
-    generateTrajectories = GenerateTrajectories(allSampleTrajectories, saveAllTrajectoriesFromDf, restoreNNModelFromIteration, preparePolicy)
+    generateTrajectories = GenerateTrajectories(allSampleTrajectories, getTrajectorySavePathFromDf, saveToPickle, restoreNNModelFromIteration, preparePolicy)
 
     # run all trials and save trajectories
     toSplitFrame.groupby(levelNames).apply(generateTrajectories)
 
     # compute statistics on the trajectories
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, ['sampleIndex'，'policyName'])
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
     decay = 1
     accumulateRewards = AccumulateRewards(decay, rewardFunction)
@@ -231,7 +223,6 @@ def main():
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
-    print(statisticsDf)
     # plot the statistics
     fig = plt.figure()
     axis = fig.add_subplot(1, 1, 1)
