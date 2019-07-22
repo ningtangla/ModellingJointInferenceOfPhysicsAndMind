@@ -275,7 +275,16 @@ def main():
     multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
     replayBuffer = []
 
-    for iterationIndex in range(numIterations):
+    restoredIteration = 0
+    for agentId in trainableAgentIds:
+        fixedParameters.update({'agentId': agentId})
+        getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
+        initNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+        modelPath = getNNModelSavePath({'iterationIndex': restoredIteration})
+        restoreNNModelFromIteration = restoreVariables(initNNModel, modelPath)
+        multiAgentNNmodel[agentId] = restoreNNModelFromIteration
+
+    for iterationIndex in range(restoredIteration, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
         for agentId in trainableAgentIds:
