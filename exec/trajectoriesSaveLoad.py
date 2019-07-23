@@ -2,8 +2,9 @@ import pickle
 import os
 import glob
 import pandas as pd
-import numpy as np 
+import numpy as np
 import itertools as it
+
 
 def loadFromPickle(path):
     pickleIn = open(path, 'rb')
@@ -40,8 +41,8 @@ class GetSavePath:
 def readParametersFromDf(oneConditionDf):
     indexLevelNames = oneConditionDf.index.names
     parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-    #return parameters
-    return {'iteration':'[0-20]','policyName':'NNPolicy'}
+    return parameters
+
 
 def conditionDfFromParametersDict(parametersDict):
     levelNames = list(parametersDict.keys())
@@ -50,15 +51,16 @@ def conditionDfFromParametersDict(parametersDict):
     conditionDf = pd.DataFrame(index=modelIndex)
     return conditionDf
 
+
 class LoadTrajectories:
-    def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames = []):
+    def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames=[]):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
         self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
-    def __call__(self, parameters, parametersWithSpecificValues = {}):
+    def __call__(self, parameters, parametersWithSpecificValues={}):
         parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
-        productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()]) 
+        productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()])
         parametersFinal = np.array([dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in productedSpecificValues])
         genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
         filesNames = np.array([glob.glob(savePath) for savePath in genericSavePath]).flatten()
@@ -67,6 +69,7 @@ class LoadTrajectories:
             oneFileTrajectories = self.loadFromPickle(fileName)
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
+
 
 class GenerateAllSampleIndexSavePaths:
     def __init__(self, getSavePath):
@@ -95,6 +98,7 @@ class SaveAllTrajectories:
 
         return None
 
+
 class GetAgentCoordinateFromTrajectoryAndStateDf:
     def __init__(self, stateIndex, coordinates):
         self.stateIndex = stateIndex
@@ -116,7 +120,7 @@ class ConvertTrajectoryToStateDf:
 
     def __call__(self, trajectory):
         indexLevels = {levelName: getLevelValueRange(trajectory) for levelName, getLevelValueRange in
-                            self.getAllLevelsValueRange.items()}
+                       self.getAllLevelsValueRange.items()}
         emptyDf = self.getDfFromIndexLevelDict(indexLevels)
         extractTrajectoryInformation = lambda df: pd.Series({columnName: extractColumnValue(trajectory, df) for
                                                              columnName, extractColumnValue in
