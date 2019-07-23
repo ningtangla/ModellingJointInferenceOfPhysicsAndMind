@@ -285,7 +285,7 @@ def main():
         loadTrajectories = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
         restoredIterationIndexRange = range(min(0, restoredIteration - bufferSize), restoredIteration)
         restoredTraj = loadTrajectories(parameters={'agentId': agentId}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
-        preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(trajectories)
+        preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTraj)
         replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
     for iterationIndex in range(restoredIteration, numIterations):
