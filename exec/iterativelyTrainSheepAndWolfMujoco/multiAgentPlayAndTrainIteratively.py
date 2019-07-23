@@ -132,7 +132,7 @@ def main():
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
-    maxRunningSteps = 25
+    maxRunningSteps = 20
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
@@ -167,7 +167,6 @@ def main():
     getStateFromNode = lambda node: list(node.id.values())[0]
 
     # sample trajectory
-    maxRunningSteps = 25
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # neural network init
@@ -184,7 +183,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 64
+    miniBatchSize = 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -310,7 +309,7 @@ def main():
 
     endTime = time.time()
     print("Time taken for {} iterations: {} seconds".format(
-        self.numIterations, (endTime - startTime)))
+        numIterations, (endTime - startTime)))
 
 
 if __name__ == '__main__':

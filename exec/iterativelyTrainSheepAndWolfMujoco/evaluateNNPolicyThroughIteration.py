@@ -87,11 +87,11 @@ class GenerateTrajectories:
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
-    evalNumSimulations = 20  # 200
-    evalNumTrials = 2  # 1000
-    evalMaxRunningSteps = 3
+    evalNumSimulations = 200  # 200
+    evalNumTrials = 1000  # 1000
+    evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = [0, 10, 20]
+    manipulatedVariables['iteration'] = [0, 1000, 2000]
     manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
 
     levelNames = list(manipulatedVariables.keys())
@@ -154,8 +154,8 @@ def main():
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
-    trainMaxRunningSteps = 25
-    trainNumSimulations = 20
+    trainMaxRunningSteps = 20
+    trainNumSimulations = 200
     trainLearningRate = 0.0001
     trainBufferSize = 2000
     trainMiniBatchSize = 256
@@ -205,7 +205,7 @@ def main():
     trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    getTrajectorySavePathFromDf = lambda  df: getTrajectorySavePath(readParametersFromDf(df))
+    getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
 
     # function to generate trajectories
     restoreNNModelFromIteration = RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
