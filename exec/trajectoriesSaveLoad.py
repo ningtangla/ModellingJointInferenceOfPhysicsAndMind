@@ -62,7 +62,10 @@ class LoadTrajectories:
         productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()])
         parametersFinal = np.array([dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in productedSpecificValues])
         genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
-        filesNames = np.concatenate([glob.glob(savePath) for savePath in genericSavePath])
+        if len(genericSavePath) != 0:
+            filesNames = np.concatenate([glob.glob(savePath) for savePath in genericSavePath])
+        else:
+            filesNames = []
         mergedTrajectories = []
         for fileName in filesNames:
             oneFileTrajectories = self.loadFromPickle(fileName)
