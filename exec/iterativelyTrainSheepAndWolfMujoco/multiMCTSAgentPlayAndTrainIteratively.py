@@ -69,11 +69,11 @@ class PrepareMultiAgentPolicy:
 
     def __call__(self, multiAgentNNModel):
         multiAgentApproximatePolicy = np.array([self.approximatePolicy(NNModel) for NNModel in multiAgentNNModel])
-        otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId+1:]])\
-                for agentId in self.MCTSAgentIds])
+        otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])
+                                                  for agentId in self.MCTSAgentIds])
         MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
-        MCTSAgentsPolicy = np.array([self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy) 
-                for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
+        MCTSAgentsPolicy = np.array([self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy)
+                                     for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
         multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
         policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
@@ -166,7 +166,6 @@ def main():
     getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
 
     getStateFromNode = lambda node: list(node.id.values())[0]
-    # getMCTS = GetMcts(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
 
     # sample trajectory
     maxRunningSteps = 25
@@ -215,7 +214,7 @@ def main():
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRate = 0.001
+    learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
                     learningRateModifier, terminalController, coefficientController,
@@ -237,6 +236,7 @@ def main():
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
+
 # load wolf baseline for init iteration
     # wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','SheepWolfBaselinePolicy', 'wolfBaselineNNPolicy')
     # baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
@@ -275,9 +275,12 @@ def main():
     multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
     replayBuffer = []
 
+# restore model
     restoredIteration = 0
     for agentId in trainableAgentIds:
         modelPath = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId})
+        if restoredIteration == 0:
+            saveVariables(initNNModel, modelPath)
         restoreNNModelFromIteration = restoreVariables(initNNModel, modelPath)
         multiAgentNNmodel[agentId] = restoreNNModelFromIteration
 
