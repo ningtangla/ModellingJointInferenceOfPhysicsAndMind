@@ -284,6 +284,12 @@ def main():
         restoreNNModelFromIteration = restoreVariables(initNNModel, modelPath)
         multiAgentNNmodel[agentId] = restoreNNModelFromIteration
 
+    loadTrajectories = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
+    restoredIterationIndexRange = range(min(0, restoredIteration - bufferSize), restoredIteration)
+    restoredTraj = loadTrajectories(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
+    preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTraj)
+    replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
+
     for iterationIndex in range(restoredIteration, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
