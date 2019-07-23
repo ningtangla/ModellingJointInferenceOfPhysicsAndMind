@@ -9,13 +9,13 @@ import pickle
 import time
 import mujoco_py as mujoco
 
-from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, RollOut, Expand, \
     MCTS, backup, establishPlainActionDist
 from src.episode import SampleTrajectory, chooseGreedyAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from exec.evaluationFunctions import GetSavePath
+from exec.trajectoriesSaveLoad import GetSavePath
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateActionPrior, ApproximateValueFunction, \
     Train, saveVariables, restoreVariables, sampleData
@@ -36,7 +36,7 @@ def main():
     numAgents = 2
     qPosInitNoise = 9.7
     qVelInitNoise = 0
-    reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
@@ -68,7 +68,7 @@ def main():
     initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     
     maxRunningSteps = 10
-    numSimulations = 2#50
+    numSimulations = 50
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInitNoise': qPosInitNoise, 'qPosInit': qPosInit,
                             'numSimulations': numSimulations}
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBuffer',
@@ -109,17 +109,17 @@ def main():
     getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
-    sampleIndex = int(sys.argv[2])
-    beginTime = time.time()
-    trajectory = sampleTrajectory(policy)
-    processTime = time.time() - beginTime
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
 
-    # if not os.path.isfile(trajectorySavePath):
-
-    parametersForTrajectoryPath['sampleIndex'] = sampleIndex
-    parametersForTrajectoryPath['sampleTrajectoryTime'] = processTime
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
-    saveData(trajectory, trajectorySavePath)
+    if not os.path.isfile(trajectorySavePath):
+    #parametersForTrajectoryPath['sampleTrajectoryTime'] = processTime
+        beginTime = time.time()
+        trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
+        processTime = time.time() - beginTime
+        saveData(trajectories, trajectorySavePath)
 
 
 if __name__ == "__main__":

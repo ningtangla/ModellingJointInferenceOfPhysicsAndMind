@@ -2,7 +2,7 @@ import pickle
 import os
 import glob
 import pandas as pd
-
+import numpy as np 
 
 def loadFromPickle(path):
     pickleIn = open(path, 'rb')
@@ -30,6 +30,8 @@ class GetSavePath:
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
+        fileName = fileName.replace("[", "(")
+        fileName = fileName.replace("]", ")")
 
         path = os.path.join(self.dataDirectory, fileName)
 
@@ -46,37 +48,23 @@ def conditionDfFromParametersDict(parametersDict):
     levelValues = list(parametersDict.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     conditionDf = pd.DataFrame(index=modelIndex)
-
     return conditionDf
 
 class LoadTrajectories:
-    def __init__(self, getSavePath, loadFromPickle):
+    def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames = []):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
+        self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters):
-        parameters['sampleIndex'] = '*'
-        genericSavePath = self.getSavePath(parameters)
-        print("generic save path: ", genericSavePath)
+        parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
+        genericSavePath = self.getSavePath(parametersWithFuzzy)
         filesNames = glob.glob(genericSavePath)
-        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
-
-        return trajectories
-
-
-class LoadMultipleTrajectoriesFile:
-    def __init__(self, getSavePath, loadFromPickle):
-        self.getSavePath = getSavePath
-        self.loadFromPickle = loadFromPickle
-
-    def __call__(self, oneConditionDf):
-        indexLevelNames = oneConditionDf.index.names
-        parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-        filePath = self.getSavePath(parameters)
-        with open(filePath, 'rb') as file:
-            trajectories = self.loadFromPickle(file)
-
-        return trajectories
+        mergedTrajectories = []
+        for fileName in filesNames:
+            oneFileTrajectories = self.loadFromPickle(fileName)
+            mergedTrajectories.extend(oneFileTrajectories)
+        return mergedTrajectories
 
 class GenerateAllSampleIndexSavePaths:
     def __init__(self, getSavePath):
@@ -104,7 +92,6 @@ class SaveAllTrajectories:
         [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
 
         return None
-
 
 class GetAgentCoordinateFromTrajectoryAndStateDf:
     def __init__(self, stateIndex, coordinates):

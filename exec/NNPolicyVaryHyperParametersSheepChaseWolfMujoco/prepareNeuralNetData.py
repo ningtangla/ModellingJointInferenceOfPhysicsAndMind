@@ -6,7 +6,7 @@ sys.path.append(os.path.join(dirName, '..', '..'))
 import numpy as np
 import pickle
 
-from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
 from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, RollOut, Expand, \
     MCTS, backup
 from src.play import SampleTrajectory
@@ -17,9 +17,9 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 
 
 def main():
-    maxRunningSteps = 1#10
+    maxRunningSteps = 1  # 10
     qPosInit = (0, 0, 0, 0)
-    numSimulations = 2#75
+    numSimulations = 2  # 75
 
     # functions for MCTS
     envModelName = 'twoAgents'
@@ -54,7 +54,7 @@ def main():
     selectChild = SelectChild(calculateScore)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    actionPriorUniform = {action: 1/len(actionSpace) for action in actionSpace}
+    actionPriorUniform = {action: 1 / len(actionSpace) for action in actionSpace}
     getActionPriorUniform = lambda state: actionPriorUniform
 
     initializeChildren = InitializeChildren(actionSpace, sheepTransit, getActionPriorUniform)
@@ -73,7 +73,7 @@ def main():
     policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
 
     # generate trajectories
-    numTrials = 2#1500
+    numTrials = 2  # 1500
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset)
     trajectories = [sampleTrajectory(policy) for trial in range(numTrials)]
 

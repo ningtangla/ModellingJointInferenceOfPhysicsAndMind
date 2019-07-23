@@ -1,6 +1,5 @@
 import numpy as np 
 from random import randint
-from wrapperFunctions import rearrangeList
 
 
 class Reset:
@@ -102,6 +101,8 @@ class GetAgentsForce:
 
         unorderedAgentsForce = [pulledAgentForce, noPullAgentForce, pullingAgentForce]
         agentsIDOrder = [self.pulledAgentIndex, self.noPullingAgentIndex, self.pullingAgentIndex]
+
+        rearrangeList = lambda unorderedList, order: list(np.array(unorderedList)[np.array(order).argsort()])
         agentsForce = rearrangeList(unorderedAgentsForce, agentsIDOrder)
         return agentsForce
 
