@@ -45,16 +45,15 @@ class GenerateTrajectoriesParallel:
         self.numCmdList = numCmdList
         self.readParametersFromDf = readParametersFromDf
 
-    def __call__(self, oneConditionDf):
+    def __call__(self, parameters):
         startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
         endSampleIndexes = np.concatenate([startSampleIndexes[1:], [self.numSample]])
         startEndIndexesPair = zip(startSampleIndexes, endSampleIndexes)
-        parameters = self.readParametersFromDf(oneConditionDf)
         parametersString = dict([(key, str(value)) for key, value in parameters.items()])
         parametersStringJS = json.dumps(parametersString)
         cmdList = [['python3', self.codeFileName, parametersStringJS, str(startSampleIndex), str(endSampleIndex)] 
                 for startSampleIndex, endSampleIndex in startEndIndexesPair]
-        #print(cmdList)
+        print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.wait()
@@ -91,7 +90,8 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numToUseCores, readParametersFromDf)
     # run all trials and save trajectories
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallel)
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)

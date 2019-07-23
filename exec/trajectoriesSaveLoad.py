@@ -40,9 +40,8 @@ class GetSavePath:
 def readParametersFromDf(oneConditionDf):
     indexLevelNames = oneConditionDf.index.names
     parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-    #return parameters
-    return {'iteration':'[0-20]','policyName':'NNPolicy'}
-
+    return parameters
+    
 def conditionDfFromParametersDict(parametersDict):
     levelNames = list(parametersDict.keys())
     levelValues = list(parametersDict.values())
@@ -61,7 +60,7 @@ class LoadTrajectories:
         productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()]) 
         parametersFinal = np.array([dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in productedSpecificValues])
         genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
-        filesNames = np.array([glob.glob(savePath) for savePath in genericSavePath]).flatten()
+        filesNames = np.concatenate([glob.glob(savePath) for savePath in genericSavePath])
         mergedTrajectories = []
         for fileName in filesNames:
             oneFileTrajectories = self.loadFromPickle(fileName)

@@ -4,6 +4,7 @@ import os
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
+import json
 import numpy as np
 from collections import OrderedDict
 import pandas as pd
@@ -79,37 +80,6 @@ class PrepareMultiAgentPolicy:
         return policy
 
 
-class PreprocessTrajectoriesForBuffer:
-    def __init__(self, addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory):
-        self.addMultiAgentValuesToTrajectory = addMultiAgentValuesToTrajectory
-        self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
-
-    def __call__(self, trajectories):
-        trajectoriesWithValues = [self.addMultiAgentValuesToTrajectory(trajectory) for trajectory in trajectories]
-        filteredTrajectories = [self.removeTerminalTupleFromTrajectory(trajectory) for trajectory in trajectoriesWithValues]
-        return filteredTrajectories
-
-
-class TrainOneAgent:
-    def __init__(self, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets,
-                 sampleBatchFromBuffer, trainNN):
-        self.numTrajectoriesToStartTrain = numTrajectoriesToStartTrain
-        self.sampleBatchFromBuffer = sampleBatchFromBuffer
-        self.processTrajectoryForPolicyValueNets = processTrajectoryForPolicyValueNets
-        self.trainNN = trainNN
-
-    def __call__(self, agentId, multiAgentNNmodel, updatedReplayBuffer):
-        NNModel = multiAgentNNmodel[agentId]
-        if len(updatedReplayBuffer) >= self.numTrajectoriesToStartTrain:
-            sampledBatch = self.sampleBatchFromBuffer(updatedReplayBuffer)
-            processedBatch = self.processTrajectoryForPolicyValueNets[agentId](sampledBatch)
-            trainData = [list(varBatch) for varBatch in zip(*processedBatch)]
-            updatedNNModel = self.trainNN(NNModel, trainData)
-            NNModel = updatedNNModel
-
-        return NNModel
-
-
 def main():
     # Mujoco environment
     dirName = os.path.dirname(__file__)
@@ -183,7 +153,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 16
+    miniBatchSize = 64
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -223,12 +193,12 @@ def main():
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'iterativelyTrainMultiAgent', 'multiMCTSAgent', 'trajectories')
+                                             'iterativelyTrainMultiAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'iterativelyTrainMultiAgent', 'multiMCTSAgent', 'NNModel')
+                                        'iterativelyTrainMultiAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
@@ -264,75 +234,42 @@ def main():
     #otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
     composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
     prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
-    preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
-    numTrajectoriesToStartTrain = 4 * miniBatchSize
-    trainOneAgent = TrainOneAgent(numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
+    # load save dir
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    trajectorySaveExtension = '.pickle'
+    NNModelSaveExtension = ''
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                             'iterativelyTrainMultiAgent', 'multiMCTSAgent', 'trajectories')
+    if not os.path.exists(trajectoriesSaveDirectory):
+        os.makedirs(trajectoriesSaveDirectory)
+
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                        'iterativelyTrainMultiAgent', 'multiMCTSAgent', 'NNModel')
+    if not os.path.exists(NNModelSaveDirectory):
+        os.makedirs(NNModelSaveDirectory)
+
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
+    generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
+
+    # load NN
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
     multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+    iterationIndex = parametersForTrajectoryPath['iterationIndex']
     for agentId in trainableAgentIds:
-        modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
-        saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
-
-    #generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
-    numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
-    numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse) 
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
-    trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
-    cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
-    print(cmdList) 
-    fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
-    
-    #load trajectory function for trainBreak
-    loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
-   
-# initRreplayBuffer   
-    replayBuffer = []
-    trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters) 
-    preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
-    replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
-
-# restore model
-    restoredIteration = 1
-    for agentId in trainableAgentIds:
-        modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId})
-        restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
+        modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId})
+        restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
         multiAgentNNmodel[agentId] = restoredNNModel
 
-    restoredIterationIndexRange = range(restoredIteration)
-    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
-    preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
-    replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
-
-    numTrajectoriesPerIteration = 1
-    numIterations = 20000
-    for iterationIndex in range(restoredIteration, numIterations):
-        print("ITERATION INDEX: ", iterationIndex)
-
-        policy = prepareMultiAgentPolicy(multiAgentNNmodel)
-        trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
-        trajectoryPathParameters = {'iterationIndex': iterationIndex}
-        trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
+    # sample and save trajectories
+    policy = prepareMultiAgentPolicy(multiAgentNNmodel)
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
+    if not os.path.isfile(trajectorySavePath):
+        trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
-
-        for agentId in trainableAgentIds:
-            preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
-            updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
-
-            updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
-            NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
-            NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
-            saveVariables(updatedAgentNNModel, NNModelSavePath)
-
-            multiAgentNNmodel[agentId] = updatedAgentNNModel
-            replayBuffer = updatedReplayBuffer
-
-    endTime = time.time()
-    print("Time taken for {} iterations: {} seconds".format(
-        self.numIterations, (endTime - startTime)))
-
 
 if __name__ == '__main__':
     main()
