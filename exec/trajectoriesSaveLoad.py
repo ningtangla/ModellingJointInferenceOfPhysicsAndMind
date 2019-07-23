@@ -3,6 +3,7 @@ import os
 import glob
 import pandas as pd
 import numpy as np 
+import itertools as it
 
 def loadFromPickle(path):
     pickleIn = open(path, 'rb')
@@ -30,8 +31,6 @@ class GetSavePath:
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
-        fileName = fileName.replace("[", "(")
-        fileName = fileName.replace("]", ")")
 
         path = os.path.join(self.dataDirectory, fileName)
 
@@ -41,7 +40,8 @@ class GetSavePath:
 def readParametersFromDf(oneConditionDf):
     indexLevelNames = oneConditionDf.index.names
     parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
-    return parameters
+    #return parameters
+    return {'iteration':'[0-20]','policyName':'NNPolicy'}
 
 def conditionDfFromParametersDict(parametersDict):
     levelNames = list(parametersDict.keys())
@@ -56,10 +56,12 @@ class LoadTrajectories:
         self.loadFromPickle = loadFromPickle
         self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
-    def __call__(self, parameters):
+    def __call__(self, parameters, parametersWithSpecificValues = {}):
         parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
-        genericSavePath = self.getSavePath(parametersWithFuzzy)
-        filesNames = glob.glob(genericSavePath)
+        productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()]) 
+        parametersFinal = np.array([dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in productedSpecificValues])
+        genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
+        filesNames = np.array([glob.glob(savePath) for savePath in genericSavePath]).flatten()
         mergedTrajectories = []
         for fileName in filesNames:
             oneFileTrajectories = self.loadFromPickle(fileName)
