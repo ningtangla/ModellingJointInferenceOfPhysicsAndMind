@@ -54,7 +54,7 @@ class GenerateSymmetricState:
         symmetricState = []
         for state in groupedState:
             state[self.xPosIndex] = self.calibrateState(createSymmetricVector(symmetry, state[self.xPosIndex]))
-            state[self.velIndex] = np.round(createSymmetricVector(symmetry, state[self.velIndex]), 10)
+            state[self.velIndex] = self.calibrateState(createSymmetricVector(symmetry, state[self.velIndex]))
             symmetricState.append(state)
         flattenedState = np.concatenate(symmetricState)
         return flattenedState
