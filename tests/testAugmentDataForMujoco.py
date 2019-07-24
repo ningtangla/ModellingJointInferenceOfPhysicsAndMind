@@ -14,6 +14,7 @@ from evaluateAugmentationWithinMujoco.augmentData import GenerateSymmetricData, 
     GenerateSymmetricState, GenerateSymmetricDistribution, CalibrateState
 from evaluateByStateDimension.preprocessData import AddFramesForTrajectory
 from analyticGeometryFunctions import transitePolarToCartesian
+from evaluateByStateDimension.evaluate import ModifyEscaperInputState
 from dataTools import createSymmetricVector
 xBoundary = [-10, 10]
 yBoundary = [-10, 10]
@@ -110,9 +111,19 @@ class TestGenerateData(unittest.TestCase):
     def testAddFramesForTrajectory(self, stateIndex, trajectory, numOfFrame, groundTruth):
         addFrameForTraj = AddFramesForTrajectory(stateIndex)
         newTraj = addFrameForTraj(trajectory, numOfFrame)
-        print(newTraj)
         for index in range(len(groundTruth)):
             self.assertTrue(np.all(np.array(newTraj[index][stateIndex] == np.array(groundTruth[index][stateIndex]))))
+
+    @data((3, 4, [[0,1,2],[0,1,2]], [[2,2,3],[2,2,3]]))
+    @unpack
+    def testModifyEscaperInputState(self, numOfFrame, stateDim, initState, nextState):
+        removeIndex = [2]
+        modifyInputState = ModifyEscaperInputState(removeIndex, numOfFrame, stateDim)
+        firstModify = modifyInputState(initState)
+        print(firstModify)
+        self.assertTrue(np.all(np.array(firstModify) == np.array([0,1,0,1]*3)))
+        secondModify = modifyInputState(nextState)
+        self.assertTrue(np.all(np.array(secondModify) == np.array([0,1,0,1]*2 + [2,2,2,2])))
 
 
 if __name__ == "__main__":
