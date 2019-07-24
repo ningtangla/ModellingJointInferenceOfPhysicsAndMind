@@ -44,8 +44,9 @@ def main():
     evalNumTrials = 1000  
     evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = [0, 10, 20]
-    manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
+    manipulatedVariables['selfIterationIndex'] = [0, 10, 20]
+    manipulatedVariables['otherIteration'] = [-1, 0, 10]
+    manipulatedVariables['agentId'] = [0, 1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
