@@ -92,10 +92,10 @@ def main():
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
     trainMaxRunningSteps = 20
-    trainNumSimulations = 20
+    trainNumSimulations = 200
 
-    evalNumSimulations = 20  # 200
-    evalNumTrials = 1000
+    evalNumSimulations = 200  # 200
+    evalNumTrials = 100
     evalMaxRunningSteps = 20
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)

@@ -40,12 +40,12 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
-    evalNumTrials = 1000 
+    evalNumTrials = 100
     evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0, 10, 20]
-    manipulatedVariables['otherIteration'] = [-1]
-    manipulatedVariables['selfId'] = [1]
+    manipulatedVariables['selfIteration'] = [0, 400, 800]
+    manipulatedVariables['otherIteration'] = [-1, 400, 800]
+    manipulatedVariables['selfId'] = [0, 1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -75,7 +75,7 @@ def main():
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     
     trainMaxRunningSteps = 20
-    trainNumSimulations = 20
+    trainNumSimulations = 200
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
@@ -90,7 +90,7 @@ def main():
 
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.5*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse) 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numCmdList, readParametersFromDf)
@@ -135,7 +135,7 @@ def main():
         drawPerformanceLine(grp, axForDraw, selfId)
         plotCounter += 1
 
-    plt.title('iterative training in chasing task with killzone radius = 2 and numSim = 200\nStart with random model')
+    # plt.title('iterative training in chasing task with killzone radius = 2 and numSim = 200\nStart with random model')
     plt.legend(loc='best')
     plt.show()
     
