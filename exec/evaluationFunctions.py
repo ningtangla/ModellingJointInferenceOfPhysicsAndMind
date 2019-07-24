@@ -11,7 +11,6 @@ class ComputeStatistics:
         allMeasurements = [self.measurementFunction(trajectory) for trajectory in allTrajectories]
         measurementMean = np.mean(allMeasurements)
         measurementStd = np.std(allMeasurements)
-
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
 
 class GenerateInitQPosUniform:

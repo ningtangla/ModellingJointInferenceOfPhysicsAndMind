@@ -37,7 +37,7 @@ class RestoreNNModel:
         self.restoreVariables = restoreVariables
 
     def __call__(self, agentId, iteration):
-        modelPath = self.getModelSavePath({'agentId': agenId, 'iterationIndex': iteration})
+        modelPath = self.getModelSavePath({'agentId': agentId, 'iterationIndex': iteration})
         restoredNNModel = self.restoreVariables(self.multiAgentNNModel[agentId], modelPath)
 
         return restoredNNModel
@@ -90,7 +90,6 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     trainMaxRunningSteps = 20
     trainNumSimulations = 20
@@ -104,12 +103,15 @@ def main():
                                         'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+    multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
 
     # functions to get prediction from NN
-    restoreNNModel = RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
-    NNPolicy = ApproximatePolicy(initializedNNModel, actionSpace)
+    restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
 
-    # policy
+    # function to prepare policy
+    selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+    otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+    preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
     # generate a set of starting conditions to maintain consistency across all the conditions
     evalQPosInitNoise = 0
@@ -143,15 +145,17 @@ def main():
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
 
-    selfIteration = parametersForTrajectoryPath['selfIteration']
-    selfId = parametersForTrajectoryPath['agentId']
-    otherIds = [ :selfId] + [selfId+1: ] 
-    restoreNNModel(iteration, agentId)
-    policy = preparePolicy(policyName)
+    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+    selfId = int(parametersForTrajectoryPath['selfId'])
+    multiAgentIterationIndex = [otherIteration] * numAgents
+    multiAgentIterationIndex[selfId] = selfIteration
+
+    restoredMultiAgentNNModel = [restoreNNModel(agentId, multiAgentIterationIndex[agentId]) for agentId in range(numAgents)]
+    policy = preparePolicy(selfId, multiAgentNNmodel)
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
-    #if not os.path.isfile(trajectorySavePath):
-    #parametersForTrajectoryPath['sampleTrajectoryTime'] = processTime
+    
     beginTime = time.time()
     trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
     processTime = time.time() - beginTime
