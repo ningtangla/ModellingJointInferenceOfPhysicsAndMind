@@ -36,7 +36,9 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def drawPerformanceLine(dataDf, axForDraw, agentId):
     for key, grp in dataDf.groupby('otherIteration'):
         grp.index = grp.index.droplevel('otherIteration')
-        grp.plot(ax=axForDraw, title='agentId={}'.format(agentId), y='mean', yerr='std', marker='o', label='otherIteration={}'.format(key))
+        grp['agentMean'] = grp['mean'][agentId]
+        grp['agentStd'] = grp['std'][agentId]
+        grp.plot(ax=axForDraw, title='agentId={}'.format(agentId), y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
@@ -61,9 +63,15 @@ def main():
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-    alivePenalty = -0.05
-    deathBonus = 1
-    rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
+    
+    sheepAliveBonus = 1 / maxRunningSteps
+    wolfAlivePenalty = -sheepAliveBonus
+    sheepTerminalPenalty = -1
+    wolfTerminalReward = 1
+    
+    rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
+    rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
+    rewardMultiAgents = [rewardSheep, rewardWolf]
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
@@ -116,8 +124,8 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
     decay = 1
-    accumulateRewards = AccumulateRewards(decay, rewardFunction)
-    measurementFunction = lambda trajectory: accumulateRewards(trajectory)[0]
+    accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
+    measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
