@@ -12,6 +12,7 @@ import numpy as np
 import math
 from evaluateAugmentationWithinMujoco.augmentData import GenerateSymmetricData, \
     GenerateSymmetricState, GenerateSymmetricDistribution, CalibrateState
+from evaluateByStateDimension.preprocessData import AddFramesForTrajectory
 from analyticGeometryFunctions import transitePolarToCartesian
 from dataTools import createSymmetricVector
 xBoundary = [-10, 10]
@@ -102,6 +103,16 @@ class TestGenerateData(unittest.TestCase):
         for key in symmetricDict.keys():
             self.assertTrue(
                 np.all(np.array(symmetricDict[key]) == np.array( groundTruthDict[key])))
+
+    @data((0, [[[0,0,0,0],[1]], [[1,1,1,1],[1]], [[2,2,2,2],[1]], [[3,3,3,3],[1]]], 3,
+           [[[0,0,0,0,1,1,1,1,2,2,2,2],[1]], [[1,1,1,1,2,2,2,2,3,3,3,3],[1]]]))
+    @unpack
+    def testAddFramesForTrajectory(self, stateIndex, trajectory, numOfFrame, groundTruth):
+        addFrameForTraj = AddFramesForTrajectory(stateIndex)
+        newTraj = addFrameForTraj(trajectory, numOfFrame)
+        print(newTraj)
+        for index in range(len(groundTruth)):
+            self.assertTrue(np.all(np.array(newTraj[index][stateIndex] == np.array(groundTruth[index][stateIndex]))))
 
 
 if __name__ == "__main__":
