@@ -32,7 +32,7 @@ class GetSavePath:
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
-
+        
         path = os.path.join(self.dataDirectory, fileName)
 
         return path

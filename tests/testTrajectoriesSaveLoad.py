@@ -43,7 +43,7 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
 
     @data(('..', '.txt', {'qPosInit': (1, 2, 3, 4), 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
            '../numSimulations=12_numTrials=23_qPosInit=(1,2,3,4)_trainSteps=2.txt'),
-          ('', '.pickle', {'qPosInit': [1, 2, 3, 4], 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
+          ('', '.pickle', {'qPosInit': (1, 2, 3, 4), 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
            'numSimulations=12_numTrials=23_qPosInit=(1,2,3,4)_trainSteps=2.pickle'))
     @unpack
     def testGetSavePathWithFixedParameters(self, dataDirectory, extension, fixedParameters, parameters, groundTruthPath):
@@ -81,7 +81,7 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
         groundTruthNumTrials = parameters['numTrials']
         self.assertEqual(numTrials, groundTruthNumTrials)
     
-    @data(({'numTrials': 50, 'qPosInit': [0, 0, 0, 0]}, {'maxRunningSteps': 2, 'numSimulations': 800}, ['sampleIndex']))
+    @data(({'numTrials': 50, 'qPosInit': (0, 0, 0, 0)}, {'maxRunningSteps': 2, 'numSimulations': 800}, ['sampleIndex']))
     @unpack
     def testLoadMultipleTrajectoriesFromOneFile(self, parameters, fixedParameters, fuzzySearchParameterNames):
         getSavePath = GetSavePath('testData', '.pickle', fixedParameters)

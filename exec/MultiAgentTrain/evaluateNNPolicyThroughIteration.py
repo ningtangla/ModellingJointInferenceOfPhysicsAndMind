@@ -90,7 +90,7 @@ def main():
     evalNumTrials = 1000  # 1000
     evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = [0, 1000, 2000]
+    manipulatedVariables['iteration'] = [0, 100, 200]
     manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
 
     levelNames = list(manipulatedVariables.keys())
@@ -154,7 +154,7 @@ def main():
     initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     trainMaxRunningSteps = 20
-    trainNumSimulations = 200
+    trainNumSimulations = 20
     trainLearningRate = 0.0001
     trainBufferSize = 2000
     trainMiniBatchSize = 256
@@ -163,7 +163,7 @@ def main():
     NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'iterativelyTrainMultiAgent', 'NNModel')
+                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -195,8 +195,8 @@ def main():
     allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
     # save evaluation trajectories
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'iterativelyTrainMultiAgent',
-                                       'evaluateNNPolicy', 'evaluationTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
+                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
