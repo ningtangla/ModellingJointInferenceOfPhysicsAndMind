@@ -156,10 +156,11 @@ def main():
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
     
-    beginTime = time.time()
-    trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
-    processTime = time.time() - beginTime
-    saveToPickle(trajectories, trajectorySavePath)
+    if not os.path.isfile(trajectorySavePath):
+        beginTime = time.time()
+        trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
+        processTime = time.time() - beginTime
+        saveToPickle(trajectories, trajectorySavePath)
     
 if __name__ == '__main__':
     main()
