@@ -29,15 +29,15 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
-from exec.preProcessing import AccumulateRewards
+from exec.preProcessing import AccumulateRewards, AccumulateMultiAgentRewards
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def drawPerformanceLine(dataDf, axForDraw, agentId):
     for key, grp in dataDf.groupby('otherIteration'):
         grp.index = grp.index.droplevel('otherIteration')
-        grp['agentMean'] = grp['mean'][agentId]
-        grp['agentStd'] = grp['std'][agentId]
+        grp['agentMean'] = np.array([value[agentId] for value in grp['mean'].values])
+        grp['agentStd'] = np.array([value[agentId] for value in grp['std'].values])
         grp.plot(ax=axForDraw, title='agentId={}'.format(agentId), y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
 
 def main():
@@ -63,7 +63,8 @@ def main():
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-    
+   
+    maxRunningSteps = 20
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
