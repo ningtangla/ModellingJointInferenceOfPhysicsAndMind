@@ -30,6 +30,7 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from exec.preProcessing import AccumulateRewards
+from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def drawPerformanceLine(dataDf, axForDraw, numSimulations, trainSteps):
@@ -37,33 +38,11 @@ def drawPerformanceLine(dataDf, axForDraw, numSimulations, trainSteps):
         grp.index = grp.index.droplevel('modelLearnRate')
         grp.plot(ax=axForDraw, title='numSimulations={}, trainSteps={}'.format(numSimulations, trainSteps), y='mean', yerr='std', marker='o', label='learnRate={}'.format(key))
 
-
-class GenerateTrajectoriesParallel:
-    def __init__(self, codeFileName, numSample, numCmdList, readParametersFromDf):
-        self.codeFileName = codeFileName
-        self.numSample = numSample
-        self.numCmdList = numCmdList
-        self.readParametersFromDf = readParametersFromDf
-
-    def __call__(self, parameters):
-        startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
-        endSampleIndexes = np.concatenate([startSampleIndexes[1:], [self.numSample]])
-        startEndIndexesPair = zip(startSampleIndexes, endSampleIndexes)
-        parametersString = dict([(key, str(value)) for key, value in parameters.items()])
-        parametersStringJS = json.dumps(parametersString)
-        cmdList = [['python3', self.codeFileName, parametersStringJS, str(startSampleIndex), str(endSampleIndex)] 
-                for startSampleIndex, endSampleIndex in startEndIndexesPair]
-        print(cmdList)
-        processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
-        for proc in processList:
-            proc.wait()
-        return cmdList
-
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     evalNumSimulations = 20  # 200
-    evalNumTrials = 2  # 1000
-    evalMaxRunningSteps = 3
+    evalNumTrials = 1000  
+    evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
     manipulatedVariables['iteration'] = [0, 10, 20]
     manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
@@ -95,13 +74,13 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'iterativelyTrainMultiAgent',
-                                       'evaluateNNPolicy', 'evaluationTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
+                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
-    trainMaxRunningSteps = 25
+    trainMaxRunningSteps = 20
     trainNumSimulations = 20
     trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 

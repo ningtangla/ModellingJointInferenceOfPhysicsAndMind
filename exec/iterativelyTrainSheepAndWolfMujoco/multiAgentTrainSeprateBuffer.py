@@ -6,7 +6,7 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 # import ipdb
 
 import numpy as np
-from collections import OrderedDict
+from collections import OrderedDict, deque
 import pandas as pd
 import mujoco_py as mujoco
 
@@ -270,8 +270,9 @@ def main():
     numTrajectoriesPerIteration = 1
     numIterations = 20
     multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-    replayBuffer = []
+
     trainableAgentIds = [wolfId]
+    replayBuffer = {agentId: [] for agentId in trainableAgentIds}
 
     restoredIteration = 0
     for agentId in trainableAgentIds:
@@ -285,7 +286,7 @@ def main():
         restoredIterationIndexRange = range(min(0, restoredIteration - bufferSize), restoredIteration)
         restoredTraj = loadTrajectories(parameters={'agentId': agentId}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
         preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTraj)
-        replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
+        replayBuffer[agentId] = saveToBuffer(replayBuffer[agentId], preProcessedRestoredTrajectories)
 
     for iterationIndex in range(restoredIteration, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
@@ -298,14 +299,14 @@ def main():
             saveToPickle(trajectories, trajectorySavePath)
 
             preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
-            updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
+            updatedReplayBuffer = saveToBuffer(replayBuffer[agentId], preProcessedTrajectories)
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelSavePath = generateNNModelSavePath(pathParameters)
             saveVariables(updatedAgentNNModel, NNModelSavePath)
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
-            replayBuffer = updatedReplayBuffer
+            replayBuffer[agentId] = updatedReplayBuffer
 
     endTime = time.time()
     print("Time taken for {} iterations: {} seconds".format(
