@@ -90,7 +90,7 @@ def main():
     evalNumTrials = 1000  # 1000
     evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = [0, 100, 200]
+    manipulatedVariables['iteration'] = [0, 50, 100]
     manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
 
     levelNames = list(manipulatedVariables.keys())
@@ -163,7 +163,7 @@ def main():
     NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                        'multiAgentTrain', 'multiAgentSeprateBuffer', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -196,7 +196,7 @@ def main():
 
     # save evaluation trajectories
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
+                                       'multiAgentTrain', 'multiAgentSeprateBuffer', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
