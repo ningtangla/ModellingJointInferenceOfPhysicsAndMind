@@ -97,7 +97,8 @@ def chooseGreedyAction(actionDist):
 def sampleAction(actionDist):
     actions = list(actionDist.keys())
     probs = list(actionDist.values())
-    selectedIndex = list(np.random.multinomial(1, probs)).index(1)
+    normlizedProbs = [prob / sum(probs) for prob in probs]
+    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
     selectedAction = actions[selectedIndex]
     return selectedAction
 
