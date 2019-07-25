@@ -24,7 +24,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction 
+from src.episode import SampleTrajectory, sampleAction 
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -97,8 +97,8 @@ def main():
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     
-    iterationIndex = parametersForTrajectoryPath['iterationIndex']
-    agentId = parametersForTrajectoryPath['agentId']
+    iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
+    agentId = int(parametersForTrajectoryPath['agentId'])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     parametersForTrajectoryPath['agentId'] = agentId
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)

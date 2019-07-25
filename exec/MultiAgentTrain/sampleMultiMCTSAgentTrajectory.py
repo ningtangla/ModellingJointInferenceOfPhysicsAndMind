@@ -82,6 +82,7 @@ class PrepareMultiAgentPolicy:
 
 def main():
     #check file exists or not
+    dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                              'multiAgentTrain', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
@@ -104,7 +105,6 @@ def main():
     if not os.path.isfile(trajectorySavePath):
     
         # Mujoco environment
-        dirName = os.path.dirname(__file__)
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
