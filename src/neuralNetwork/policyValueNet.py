@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
+
 class GenerateModel:
     def __init__(self, numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.01, seed=128):
         self.numStateSpace = numStateSpace
@@ -61,13 +62,14 @@ class GenerateModel:
                     tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
                 outputFCLayer = tf.layers.Dense(units=self.numActionSpace, activation=None, kernel_initializer=initWeight,
                                                 bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
-                outputLayerActivation_ = outputFCLayer(activation_)
+                actionOutputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collections(["weights", f"weight/{outputFCLayer.kernel.name}"], outputFCLayer.kernel)
                 tf.add_to_collections(["biases", f"bias/{outputFCLayer.bias.name}"], outputFCLayer.bias)
-                tf.add_to_collections(["activations", f"activation/{outputLayerActivation_.name}"], outputLayerActivation_)
+                tf.add_to_collections(["activations", f"activation/{actionOutputLayerActivation_.name}"],
+                                      actionOutputLayerActivation_)
 
             with tf.name_scope("actionOutputs"):
-                actionDistributions_ = tf.nn.softmax(outputLayerActivation_, name="distributions")
+                actionDistributions_ = tf.nn.softmax(actionOutputLayerActivation_, name="distributions")
                 actionIndices_ = tf.argmax(actionDistributions_, axis=1, name="indices")
                 tf.add_to_collection("actionDistributions", actionDistributions_)
                 tf.add_to_collection("actionIndices", actionIndices_)
@@ -84,18 +86,20 @@ class GenerateModel:
 
                 outputFCLayer = tf.layers.Dense(units=1, activation=None, kernel_initializer=initWeight,
                                                 bias_initializer=initBias, name="fc{}".format(len(valueLayerWidths) + 1))
-                outputLayerActivation_ = outputFCLayer(activation_)
+                valueOutputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collections(["weights", f"weight/{outputFCLayer.kernel.name}"], outputFCLayer.kernel)
                 tf.add_to_collections(["biases", f"bias/{outputFCLayer.bias.name}"], outputFCLayer.bias)
-                tf.add_to_collections(["activations", f"activation/{outputLayerActivation_.name}"], outputLayerActivation_)
+                tf.add_to_collections(["activations", f"activation/{valueOutputLayerActivation_.name}"],
+                                      valueOutputLayerActivation_)
 
             with tf.name_scope("valueOutputs"):
-                values_ = tf.identity(outputLayerActivation_, name="values")
+                values_ = tf.identity(valueOutputLayerActivation_, name="values")
                 tf.add_to_collection("values", values_)
 
             with tf.name_scope("evaluate"):
                 with tf.name_scope("action"):
-                    crossEntropy_ = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionDistributions_, labels=groundTruthAction_)
+                    crossEntropy_ = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionOutputLayerActivation_,
+                                                                               labels=groundTruthAction_)
                     actionLoss_ = tf.reduce_mean(crossEntropy_, name='loss')
                     tf.add_to_collection("actionLoss", actionLoss_)
                     actionLossSummary = tf.summary.scalar("actionLoss", actionLoss_)
@@ -183,10 +187,12 @@ class Train:
         valueLoss_ = graph.get_collection_ref("valueLoss")[0]
         actionAccuracy_ = graph.get_collection_ref("actionAccuracy")[0]
         valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
+        evaluations_ = {"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_,
+                        "valueAcc": valueAccuracy_}
         trainOp = graph.get_collection_ref("trainOp")[0]
         fullSummaryOp = graph.get_collection_ref('summaryOps')[0]
         trainWriter = graph.get_collection_ref('writers')[0]
-        fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_}, trainOp, fullSummaryOp]
+        fetches = [evaluations_, trainOp, fullSummaryOp]
 
         evalDict = None
         trainingDataList = list(zip(*trainingData))
@@ -203,6 +209,49 @@ class Train:
             evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
 
             self.reporter(evalDict, stepNum, trainWriter, summary)
+
+            if self.terminalController(evalDict, stepNum):
+                break
+
+        return model
+
+
+class TrainWithCustomizedFetches:
+    def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController,
+                 coefficientController, trainReporter, prepareFetches):
+        self.maxStepNum = maxStepNum
+        self.batchSize = batchSize
+        self.sampleData = sampleData
+        self.learningRateModifier = learningRateModifier
+        self.terminalController = terimnalController
+        self.coefficientController = coefficientController
+        self.reporter = trainReporter
+        self.prepareFetches = prepareFetches
+
+    def __call__(self, model, trainingData):
+        graph = model.graph
+        state_ = graph.get_collection_ref("inputs")[0]
+        groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")
+        learningRate_ = graph.get_collection_ref("learningRate")[0]
+        actionLossCoef_, valueLossCoef_ = graph.get_collection_ref("lossCoefs")
+        trainOp = graph.get_collection_ref("trainOp")[0]
+        fetches = [self.prepareFetches(graph), trainOp]
+
+        evalDict = None
+        trainingDataList = list(zip(*trainingData))
+
+        for stepNum in range(1, self.maxStepNum + 1):
+            if self.batchSize == 0:
+                stateBatch, actionBatch, valueBatch = trainingData
+            else:
+                stateBatch, actionBatch, valueBatch = self.sampleData(trainingDataList, self.batchSize)
+            learningRate = self.learningRateModifier(stepNum)
+            actionLossCoef, valueLossCoef = self.coefficientController(evalDict)
+            feedDict = {state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch,
+                        learningRate_: learningRate, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
+            reportDict, _ = model.run(fetches, feed_dict=feedDict)
+            evalDict = reportDict['evaluations']
+            self.reporter(stepNum, model, reportDict)
 
             if self.terminalController(evalDict, stepNum):
                 break
