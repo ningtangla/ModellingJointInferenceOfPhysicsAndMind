@@ -42,10 +42,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
-    evalNumTrials = 100
-    evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0, 400, 800]
+    manipulatedVariables['selfIteration'] = [-1, 400, 800]
     manipulatedVariables['otherIteration'] = [-1, 400, 800]
     manipulatedVariables['selfId'] = [0, 1]
 
@@ -98,11 +96,13 @@ def main():
         saveVariables(multiAgentNNmodel[agentId], modelPath)
 
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
+    evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse) 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numCmdList, readParametersFromDf)
+    
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
     toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
@@ -139,7 +139,7 @@ def main():
     for selfId, grp in statisticsDf.groupby('selfId'):
         grp.index = grp.index.droplevel('selfId')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-        #axForDraw.set_ylim(13, 15)
+        axForDraw.set_ylim(-1, 1)
         plt.ylabel('Accumulated rewards')
         drawPerformanceLine(grp, axForDraw, selfId)
         plotCounter += 1
