@@ -38,16 +38,29 @@ class ProcessTrajectoryForNN:
 
         return processedTrajectory
 
+class ZeroValueInState:
+    def __init__(self, valueIndex):
+        self.valueIndex = valueIndex
+
+    def __call__(self, state):
+        stateArray = np.array(state)
+        stateArray[self.valueIndex] = 0
+        return stateArray
+
+
 class AddFramesForTrajectory:
-    def __init__(self, stateIndex):
+    def __init__(self, stateIndex, zeroValueInState):
         self.stateIndex = stateIndex
+        self.zeroValueInState = zeroValueInState
     def __call__(self, trajectory, numOfFrame):
         augmentedTraj = list()
         for index in range(len(trajectory)):
+            toCombinedStates = [trajectory[index-num+1][self.stateIndex] if index-num+1>0 else trajectory[0][self.stateIndex] for num in range(numOfFrame, 0, -1)]
             if index < numOfFrame-1:
-                continue
-            toCombinedStates = list(reversed([trajectory[index-num][self.stateIndex] for num in range(numOfFrame)]))
-            newState = np.concatenate(toCombinedStates)
+                zeroedToCombinedStates = [self.zeroValueInState(toCombinedStates[num]) if num < numOfFrame-index-1 else toCombinedStates[num] for num in range(numOfFrame)]
+                newState = np.concatenate(zeroedToCombinedStates)
+            else:
+                newState = np.concatenate(toCombinedStates)
             restInfo = trajectory[index][1:]
             newStep = [newState] + list(restInfo)
             augmentedTraj.append(newStep)
@@ -135,7 +148,9 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
     stateIndexInTrajectory = 0
-    addFramesForTrajectory = AddFramesForTrajectory(stateIndexInTrajectory)
+    zeroIndex = [2,3,6,7]
+    zeroValueInState = ZeroValueInState(zeroIndex)
+    addFramesForTrajectory = AddFramesForTrajectory(stateIndexInTrajectory, zeroValueInState)
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory,
                                                     removeTerminalTupleFromTrajectory,
                                                     processTrajectoryForNN,
