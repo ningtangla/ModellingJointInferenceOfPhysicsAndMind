@@ -279,8 +279,6 @@ def main():
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse) 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
-    cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
-    print(cmdList) 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     
@@ -289,12 +287,16 @@ def main():
    
 # initRreplayBuffer   
     replayBuffer = []
-    trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters) 
+    
+    restoredIteration = 1190
+    if restoredIteration == 0:
+        cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
+        print(cmdList)
+    trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
     preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
 # restore model
-    restoredIteration = 1190
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -307,7 +309,7 @@ def main():
 
     numTrajectoriesPerIteration = 1
     numIterations = 20000
-    for iterationIndex in range(restoredIteration, numIterations):
+    for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
@@ -315,10 +317,11 @@ def main():
         trajectoryPathParameters = {'iterationIndex': iterationIndex}
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
+        
+        preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
+        updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
 
         for agentId in trainableAgentIds:
-            preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
-            updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}

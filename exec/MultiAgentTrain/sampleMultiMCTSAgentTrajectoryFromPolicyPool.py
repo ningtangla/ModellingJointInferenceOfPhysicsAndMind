@@ -89,7 +89,7 @@ def main():
     
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 20 
-    numSimulations = 200
+    numSimulations = 20
     killzoneRadius = 2
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     

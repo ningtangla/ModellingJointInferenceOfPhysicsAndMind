@@ -56,6 +56,7 @@ class PreparePolicy:
         return policy
 
 def main():
+    dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
                                         'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
@@ -78,7 +79,6 @@ def main():
     if not os.path.isfile(trajectorySavePath):
     
         # Mujoco environment
-        dirName = os.path.dirname(__file__)
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
@@ -135,6 +135,7 @@ def main():
         getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents,
                                                                   evalQPosInitNoise, evalQVelInitNoise)
 
+        evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
         evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
@@ -143,7 +144,6 @@ def main():
         evalMaxRunningSteps = 20
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
                                                              getResetFromTrial(trial), chooseGreedyAction)
-        evalNumTrials = 1000
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
