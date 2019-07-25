@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 # import ipdb
@@ -267,13 +268,13 @@ def main():
 
 # initRreplayBuffer
     replayBuffer = {agentId: [] for agentId in trainableAgentIds}
-    
+
     restoredIteration = 0
     for agentId in trainableAgentIds:
         trajectoryBeforeTrainPathParamters.update({'agentId': agentId})
         if restoredIteration == 0:
             cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
-            print(cmdList) 
+            print(cmdList)
         trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
         preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
         replayBuffer[agentId] = saveToBuffer(replayBuffer[agentId], preProcessedTrajectoriesBeforeTrain)

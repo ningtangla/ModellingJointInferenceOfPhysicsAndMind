@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -181,7 +182,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256
+    miniBatchSize = 2
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -249,23 +250,23 @@ def main():
     for agentId in trainableAgentIds:
         modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
-    
+
     #generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
-    numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse) 
+    numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
-    
+
     #load trajectory function for trainBreak
     loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
-   
-# initRreplayBuffer   
+
+# initRreplayBuffer
     replayBuffer = []
-    
+
     restoredIteration = 0
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
@@ -295,7 +296,7 @@ def main():
         trajectoryPathParameters = {'iterationIndex': iterationIndex}
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
-        
+
         preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
         updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
 

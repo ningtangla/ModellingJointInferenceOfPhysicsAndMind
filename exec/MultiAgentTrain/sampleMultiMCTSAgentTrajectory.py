@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -87,15 +88,15 @@ def main():
                                              'multiAgentTrain', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
-    
+
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 20 
+    maxRunningSteps = 20
     numSimulations = 200
     killzoneRadius = 2
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-    
+
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-     
+
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
@@ -103,7 +104,7 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
-    
+
         # Mujoco environment
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)

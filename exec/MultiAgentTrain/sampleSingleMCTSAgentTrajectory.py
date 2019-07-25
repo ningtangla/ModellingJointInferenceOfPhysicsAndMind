@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -24,7 +25,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, sampleAction 
+from src.episode import SampleTrajectory, sampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -92,19 +93,19 @@ def main():
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-    
+
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
-    
+
     iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
     agentId = int(parametersForTrajectoryPath['agentId'])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     parametersForTrajectoryPath['agentId'] = agentId
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    
+
     if not os.path.isfile(trajectorySavePath):
-    
+
         # Mujoco environment
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
@@ -178,14 +179,14 @@ def main():
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
         startTime = time.time()
-        
+
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
         prepareMultiAgentPolicy = PrepareMultiAgentNNPolicyWithAgentSelfNNGuidedMCTS(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy)
 
         # load NN
         multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-        
+
         restoredMultiAgentNNModel = [restoreVariables(multiAgentNNmodel[agentId], generateNNModelSavePath({'iterationIndex':iterationIndex, 'agentId': agentId}))\
                 for agentId in agentIds]
 

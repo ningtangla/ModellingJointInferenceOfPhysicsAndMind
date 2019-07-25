@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -195,7 +196,7 @@ def main():
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     initMultiAgentNNModel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-    
+
     # replay buffer
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
@@ -252,7 +253,7 @@ def main():
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-    
+
     startTime = time.time()
     trainableAgentIds = [wolfId, sheepId]
 
@@ -286,7 +287,7 @@ def main():
 
 # initRreplayBuffer
     replayBuffer = []
-    
+
     restoredIteration = 0
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
@@ -317,7 +318,7 @@ def main():
         trajectoryPathParameters = {'iterationIndex': iterationIndex}
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
-        
+
         preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
         updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
         replayBuffer = updatedReplayBuffer
