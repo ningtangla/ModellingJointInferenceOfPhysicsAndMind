@@ -15,6 +15,7 @@ from trajectoriesSaveLoad import GetSavePath
 from collections import OrderedDict
 from reward import RewardFunctionCompete
 from preProcessing import AccumulateRewards
+from evaluateByStateDimension.preprocessData import ZeroValueInState
 import policyValueNet as net
 import mujoco_py as mujoco
 import state
@@ -32,19 +33,20 @@ def dictToFileName(parameters):
     return modelName
 
 class ModifyEscaperInputState:
-    def __init__(self, index, numOfFrame, stateDim):
-        self.removeIndex = index
+    def __init__(self, removeIndex, numOfFrame, stateDim, zeroValueInState):
+        self.removeIndex = removeIndex
         self.numOfFrame = numOfFrame
         self.stateDim = stateDim
-        self.previousFrame = list()
+        self.zeroValueInState = zeroValueInState
+        self.previousFrame = None
 
     def __call__(self, worldState):
         state = [np.delete(state, self.removeIndex) for state in worldState]
         nnState = np.asarray(state).flatten()
-        if len(self.previousFrame) < self.numOfFrame*self.stateDim:
-            while len(self.previousFrame) < self.numOfFrame*self.stateDim:
-                self.previousFrame = np.concatenate([self.previousFrame, nnState])
-            return self.previousFrame
+        if self.previousFrame is None:
+            currentFrame = np.concatenate([self.zeroValueInState(nnState) if num+1<self.numOfFrame else nnState for num in range(self.numOfFrame)])
+            self.previousFrame = currentFrame
+            return currentFrame
         else:
             toDeleteIndex = [index for index in range(self.stateDim)]
             deleteLastFrame = np.delete(self.previousFrame, toDeleteIndex)
