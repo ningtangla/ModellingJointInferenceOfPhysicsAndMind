@@ -12,7 +12,7 @@ import numpy as np
 import math
 from evaluateAugmentationWithinMujoco.augmentData import GenerateSymmetricData, \
     GenerateSymmetricState, GenerateSymmetricDistribution, CalibrateState
-from evaluateByStateDimension.preprocessData import AddFramesForTrajectory
+from evaluateByStateDimension.preprocessData import AddFramesForTrajectory, ZeroValueInState
 from analyticGeometryFunctions import transitePolarToCartesian
 from evaluateByStateDimension.evaluate import ModifyEscaperInputState
 from dataTools import createSymmetricVector
@@ -105,11 +105,12 @@ class TestGenerateData(unittest.TestCase):
             self.assertTrue(
                 np.all(np.array(symmetricDict[key]) == np.array( groundTruthDict[key])))
 
-    @data((0, [[[0,0,0,0],[1]], [[1,1,1,1],[1]], [[2,2,2,2],[1]], [[3,3,3,3],[1]]], 3,
-           [[[0,0,0,0,1,1,1,1,2,2,2,2],[1]], [[1,1,1,1,2,2,2,2,3,3,3,3],[1]]]))
+    @data((0, [[[0,1,0,1],[1]], [[1,1,1,1],[1]], [[2,2,2,2],[1]], [[3,3,3,3],[1]]], 3,
+           [[[0,0,0,0,0,0,0,0,0,1,0,1],[1]],[[0,0,0,0,0,1,0,1,1,1,1,1],[1]],[[0,1,0,1,1,1,1,1,2,2,2,2],[1]], [[1,1,1,1,2,2,2,2,3,3,3,3],[1]]]))
     @unpack
     def testAddFramesForTrajectory(self, stateIndex, trajectory, numOfFrame, groundTruth):
-        addFrameForTraj = AddFramesForTrajectory(stateIndex)
+        zeroValueInState = ZeroValueInState([1,3])
+        addFrameForTraj = AddFramesForTrajectory(stateIndex, zeroValueInState)
         newTraj = addFrameForTraj(trajectory, numOfFrame)
         for index in range(len(groundTruth)):
             self.assertTrue(np.all(np.array(newTraj[index][stateIndex] == np.array(groundTruth[index][stateIndex]))))
@@ -118,12 +119,12 @@ class TestGenerateData(unittest.TestCase):
     @unpack
     def testModifyEscaperInputState(self, numOfFrame, stateDim, initState, nextState):
         removeIndex = [2]
-        modifyInputState = ModifyEscaperInputState(removeIndex, numOfFrame, stateDim)
+        zeroValueInState = ZeroValueInState([1,3])
+        modifyInputState = ModifyEscaperInputState(removeIndex, numOfFrame, stateDim, zeroValueInState)
         firstModify = modifyInputState(initState)
-        print(firstModify)
-        self.assertTrue(np.all(np.array(firstModify) == np.array([0,1,0,1]*3)))
+        self.assertTrue(np.all(np.array(firstModify) == np.array([0,0,0,0]*2 + [0,1,0,1])))
         secondModify = modifyInputState(nextState)
-        self.assertTrue(np.all(np.array(secondModify) == np.array([0,1,0,1]*2 + [2,2,2,2])))
+        self.assertTrue(np.all(np.array(secondModify) == np.array([0,0,0,0] + [0,1,0,1] + [2,2,2,2])))
 
 
 if __name__ == "__main__":
