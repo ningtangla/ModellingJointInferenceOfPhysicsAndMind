@@ -107,9 +107,8 @@ class GenerateDistribution:
                 'mctsActionDistribution': mctsAD
             } for mctsAD, nnAD in zip(mctsActionDistribution,
                                       nnActionDistribution)]
-        file = open(saveFilePath, 'wb')
-        pickle.dump(data, file)
-        file.close()
+        with open(saveFilePath, 'wb') as file:
+            pickle.dump(data, file)
         return data
 
 

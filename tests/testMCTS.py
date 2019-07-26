@@ -8,7 +8,7 @@ from anytree import AnyNode as Node
 from src.algorithms.mcts import ScoreChild, SelectChild, Expand, RollOut, backup, InitializeChildren  
 from src.algorithms.mcts import establishPlainActionDist, establishSoftmaxActionDist
 from src.simple1DEnv import TransitionFunction, RewardFunction, Terminal
-
+from src.episode import chooseGreedyAction
 
 @ddt
 class TestMCTS(unittest.TestCase):

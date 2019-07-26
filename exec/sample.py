@@ -8,16 +8,25 @@ import mujoco_py as mujoco
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
-from src.constrainedChasingEscapingEnv.envMujoco import Reset
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
 
 def main():
     # transition function
+
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
-    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSimulation = mujoco.MjSim(physicsModel)
+    agentsBodyMassIndex = [6, 7]
+    physicsSmallMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    physicsSmallMassModel.body_mass[agentsBodyMassIndex] = [4, 5]
+    physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    physicsLargeMassModel.body_mass[agentsBodyMassIndex] = [8, 10]
+    physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
+    physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
+    # set_constants fit for mujoco_py version >= 2.0, no fit for 1.50
+    physicsSmallMassSimulation.set_constants()
+    physicsLargeMassSimulation.set_constants()
 
     sheepId = 0
     wolfId = 1
@@ -28,7 +37,11 @@ def main():
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
     numSimulationFrames = 20
-    transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+    transitSmallMassAgents = TransitionFunction(physicsSmallMassSimulation, isTerminal, numSimulationFrames)
+    transitLargeMassAgents = TransitionFunction(physicsLargeMassSimulation, isTerminal, numSimulationFrames)
+
+    transit = transitSmallMassAgents
+
 
     # reset function
     qPosInit = (0, 0, 0, 0)     # (initial position of sheep, initial position of wolf)
@@ -36,7 +49,7 @@ def main():
     qPosInitNoise = 9.7         # adds some randomness to the initial positions
     qVelInitNoise = 5           # adds some randomness to the initial velocities
     numAgent = 2
-    reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
+    reset = ResetUniform(physicsSmallMassSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
 
     # sample trajectory
     maxRunningSteps = 10        # max possible length of the trajectory/episode
@@ -68,7 +81,7 @@ def main():
     policy = lambda state: [{approximatePolicy(state): 1} for approximatePolicy in approximatePolicyList]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 5
+    dataIndex = 11
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 
