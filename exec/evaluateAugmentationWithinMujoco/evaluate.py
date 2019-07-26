@@ -170,7 +170,7 @@ def main():
     getModelSavePath = GetSavePath(trainedModelDir, "")
     escaperNumStateSpace = 8
     generateEscaperModel = net.GenerateModel(escaperNumStateSpace, numActionSpace, regularizationFactor)
-    generateEscaperPolicy = lambda model: net.ApproximateActionPrior(model, actionSpace)
+    generateEscaperPolicy = lambda model: net.ApproximatePolicy(model, actionSpace)
     qPosIndex = [0, 1]
     modifyEscaperInputState = ModifyEscaperInputState(qPosIndex)
     preparePolicy = PreparePolicy(modifyEscaperInputState)
