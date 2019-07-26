@@ -98,9 +98,7 @@ class GenerateModel:
 
             with tf.name_scope("evaluate"):
                 with tf.name_scope("action"):
-                    crossEntropy_ = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionOutputLayerActivation_,
-                                                                               labels=groundTruthAction_)
-                    actionLoss_ = tf.reduce_mean(crossEntropy_, name='loss')
+                    actionLoss_ = tf.losses.mean_squared_error(actionDistributions_, groundTruthAction_)
                     tf.add_to_collection("actionLoss", actionLoss_)
                     actionLossSummary = tf.summary.scalar("actionLoss", actionLoss_)
 
@@ -110,7 +108,7 @@ class GenerateModel:
                     actionAccuracySummary = tf.summary.scalar("actionAccuracy", actionAccuracy_)
 
                 with tf.name_scope("value"):
-                    valueLoss_ = tf.sqrt(tf.losses.mean_squared_error(groundTruthValue_, values_), name="loss")
+                    valueLoss_ = tf.losses.mean_squared_error(groundTruthValue_, values_)
                     tf.add_to_collection("valueLoss", valueLoss_)
                     valueLossSummary = tf.summary.scalar("valueLoss", valueLoss_)
 
