@@ -72,15 +72,17 @@ class LoadTrajectories:
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
 
-
 class GenerateAllSampleIndexSavePaths:
     def __init__(self, getSavePath):
         self.getSavePath = getSavePath
 
     def __call__(self, numSamples, pathParameters):
-        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) +
-                                                             [('sampleIndex', sampleIndex)])
-        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex) for sampleIndex in range(numSamples)}
+        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
+        genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
+        existingFilesNames = glob.glob(genericSavePath)
+        numExistingFiles = len(existingFilesNames)
+        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
+                              range(numSamples)}
         allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
                         allIndexParameters.items()}
 
@@ -97,6 +99,7 @@ class SaveAllTrajectories:
         allSavePaths = self.generateAllSampleIndexSavePaths(numSamples, pathParameters)
         saveTrajectory = lambda sampleIndex: self.saveData(trajectories[sampleIndex], allSavePaths[sampleIndex])
         [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
+        print("SAVED TRAJECTORIES")
 
         return None
 

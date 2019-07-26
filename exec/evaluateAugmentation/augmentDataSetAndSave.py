@@ -12,7 +12,7 @@ import pickle
 from analyticGeometryFunctions import transitePolarToCartesian
 from dataTools import createSymmetricVector
 from collections import OrderedDict
-from evaluationFunctions import GetSavePath
+from trajectoriesSaveLoad import GetSavePath
 from augmentDataForNN import GenerateSymmetricData, GenerateSymmetricDistribution, GenerateSymmetricState, CalibrateState
 
 

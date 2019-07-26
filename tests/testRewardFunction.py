@@ -6,7 +6,7 @@ import unittest
 from ddt import ddt, unpack, data
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 
