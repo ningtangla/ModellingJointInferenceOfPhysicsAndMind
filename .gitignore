@@ -9,6 +9,9 @@ tbdata
 .idea
 data
 .DS_Store
+/__pycache__
 __pycache__/
 .DS_Store/
-.idea/
+*/__pycache__
+*/.DS_Store
+*/.idea

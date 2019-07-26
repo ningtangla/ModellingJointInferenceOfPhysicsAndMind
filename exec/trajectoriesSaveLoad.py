@@ -55,6 +55,7 @@ class LoadTrajectories:
     def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames=[]):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
+<<<<<<< HEAD
         self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters, parametersWithSpecificValues={}):
@@ -71,6 +72,17 @@ class LoadTrajectories:
             oneFileTrajectories = self.loadFromPickle(fileName)
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
+=======
+
+    def __call__(self, parameters):
+        parameters['sampleIndex'] = '*'
+        genericSavePath = self.getSavePath(parameters)
+        filesNames = glob.glob(genericSavePath)
+        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
+        print("LOADED {} TRAJECTORIES".format(len(trajectories)))
+
+        return trajectories
+>>>>>>> mctsMujocoSingleAgent
 
 
 class GenerateAllSampleIndexSavePaths:
@@ -78,9 +90,12 @@ class GenerateAllSampleIndexSavePaths:
         self.getSavePath = getSavePath
 
     def __call__(self, numSamples, pathParameters):
-        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) +
-                                                             [('sampleIndex', sampleIndex)])
-        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex) for sampleIndex in range(numSamples)}
+        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
+        genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
+        existingFilesNames = glob.glob(genericSavePath)
+        numExistingFiles = len(existingFilesNames)
+        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
+                              range(numSamples)}
         allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
                         allIndexParameters.items()}
 
@@ -97,6 +112,7 @@ class SaveAllTrajectories:
         allSavePaths = self.generateAllSampleIndexSavePaths(numSamples, pathParameters)
         saveTrajectory = lambda sampleIndex: self.saveData(trajectories[sampleIndex], allSavePaths[sampleIndex])
         [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
+        print("SAVED TRAJECTORIES")
 
         return None
 

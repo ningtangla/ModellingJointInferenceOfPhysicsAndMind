@@ -38,42 +38,6 @@ class PreparePolicy:
         return policy
 
 
-<<<<<<< HEAD
-class QPosInitStdDevForIteration:
-    def __init__(self, minIterLinearRegion, stdDevMin, maxIterLinearRegion, stdDevMax):
-        self.minIterLinearRegion = minIterLinearRegion
-        self.stdDevMin = stdDevMin
-        self.maxIterLinearRegion = maxIterLinearRegion
-        self.stdDevMax = stdDevMax
-
-    def __call__(self, iteration):
-        if iteration < self.minIterLinearRegion:
-            stdDev = self.stdDevMin
-        elif iteration > self.maxIterLinearRegion:
-            stdDev = self.stdDevMax
-        else:
-            constant = (self.stdDevMin * self.maxIterLinearRegion - self.stdDevMax * self.minIterLinearRegion) / (self.maxIterLinearRegion - self.minIterLinearRegion)
-            stdDev = constant + (self.stdDevMax - self.stdDevMin) / (self.maxIterLinearRegion - self.minIterLinearRegion) * iteration
-
-        return (0, 0, stdDev, stdDev)
-
-
-class GetSampleTrajectoryForIteration:
-    def __init__(self, getQPosInitStdDev, getReset, getSampleTrajectoryFromReset):
-        self.getQPosInitStdDev = getQPosInitStdDev
-        self.getReset = getReset
-        self.getSampleTrajectoryFromReset = getSampleTrajectoryFromReset
-
-    def __call__(self, iteration):
-        qPosInitStdDev = self.getQPosInitStdDev(iteration)
-        reset = self.getReset(qPosInitStdDev)
-        sampleTrajectory = self.getSampleTrajectoryFromReset(reset)
-
-        return sampleTrajectory
-
-
-=======
->>>>>>> mctsMujocoSingleAgent
 class GenerateTrajectories:
     def __init__(self, numTrajectoriesPerIteration, sampleTrajectory, preparePolicy, saveAllTrajectories):
         self.numTrajectoriesPerIteration = numTrajectoriesPerIteration
@@ -118,10 +82,10 @@ class PreProcessTrajectories:
 
 
 class IterativePlayAndTrain:
-    def __init__(self, preTrainedModelPath, numIterations, learningThresholdFactor, saveNNModel, getGenerateTrajectories,
+    def __init__(self, numIterations, learningThresholdFactor, saveNNModel, getGenerateTrajectories,
                  preProcessTrajectories, getSampleBatchFromBuffer, getTrainNN, getNNModel, loadTrajectories,
                  getSaveToBuffer, generatePathParametersAtIteration, getModelSavePath, restoreVariables):
-        self.preTrainedModelPath = preTrainedModelPath
+        # self.preTrainedModelPath = preTrainedModelPath
         self.numIterations = numIterations
         self.learningThresholdFactor = learningThresholdFactor
         self.saveNNModel = saveNNModel
@@ -146,7 +110,7 @@ class IterativePlayAndTrain:
         trainNN = self.getTrainNN(learningRate)
 
         NNModel = self.getNNModel()
-        NNModel = self.restoreVariables(NNModel, self.preTrainedModelPath)
+        # NNModel = self.restoreVariables(NNModel, self.preTrainedModelPath)
         buffer = []
         saveToBuffer = self.getSaveToBuffer(bufferSize)
         startTime = time.time()
@@ -172,7 +136,7 @@ class IterativePlayAndTrain:
             buffer = updatedBuffer
 
         endTime = time.time()
-        print("Time taken for {} iterations: {} seconds".format(self.numIterations, (endTime - startTime)))
+        print("Time taken for {} iterations: {} seconds".format(self.numIterations, (endTime-startTime)))
 
 
 def main():
@@ -183,7 +147,7 @@ def main():
     manipulatedVariables['learningRate'] = [0.0001]
     manipulatedVariables['bufferSize'] = [2000]
     learningThresholdFactor = 4
-    numIterations = 10000
+    numIterations = 20000
     numSimulations = 200
 
     levelNames = list(manipulatedVariables.keys())
@@ -207,7 +171,7 @@ def main():
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithTrainedModel', 'trainedNNModels')
+                                        'replayBufferStartWithRandomModel', 'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -217,7 +181,7 @@ def main():
     # trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                           'replayBufferStartWithTrainedModel', 'trajectories')
+                                           'replayBufferStartWithRandomModel', 'trajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectoryExtension = '.pickle'
@@ -232,13 +196,8 @@ def main():
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-<<<<<<< HEAD
-    playAliveBonus = 1 / maxRunningSteps
-    playDeathPenalty = -1
-=======
     playAlivePenalty = -0.05
     playDeathBonus = 1
->>>>>>> mctsMujocoSingleAgent
     playKillzoneRadius = 2
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepXPos, getWolfXPos)
     playReward = RewardFunctionCompete(playAlivePenalty, playDeathBonus, playIsTerminal)
@@ -286,13 +245,8 @@ def main():
 
     # functions to make predictions from NN
     getApproximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, actionSpace)
-<<<<<<< HEAD
-    getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
-                                                                      getApproximateActionPrior(NNModel))
-=======
     getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, transitInWolfMCTSSimulation,
                                                                    getApproximateActionPrior(NNModel))
->>>>>>> mctsMujocoSingleAgent
     getExpandNNPrior = lambda NNModel: Expand(isTerminal, getInitializeChildrenNNPrior(NNModel))
 
     getStateFromNode = lambda node: list(node.id.values())[0]
@@ -318,7 +272,7 @@ def main():
                                                                                        saveAllTrajectories)
 
     # replay buffer
-    getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
+    getUniformSamplingProbabilities = lambda buffer: [(1/len(buffer)) for _ in buffer]
     getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # function to train NN model
@@ -340,16 +294,16 @@ def main():
     learningRateDecayStep = 1
     learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     getTrainNN = lambda learningRate: Train(numTrainStepsPerIteration, batchSizeForTrainFunction, sampleData,
-                                            learningRateModifier(learningRate),
-                                            terminalController, coefficientController,
-                                            trainReporter)
+                                                      learningRateModifier(learningRate),
+                                                      terminalController, coefficientController,
+                                                      trainReporter)
 
     # functions to iteratively play and train the NN
     combineDict = lambda dict1, dict2: dict(list(dict1.items()) + list(dict2.items()))
     generatePathParametersAtIteration = lambda oneConditionDf, iterationIndex: \
         combineDict(readParametersFromDf(oneConditionDf), {'iteration': iterationIndex})
-    preTrainedModelPath = os.path.join('wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
-    iterativePlayAndTrain = IterativePlayAndTrain(preTrainedModelPath, numIterations, learningThresholdFactor,
+    # preTrainedModelPath = os.path.join('wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+    iterativePlayAndTrain = IterativePlayAndTrain(numIterations, learningThresholdFactor,
                                                   saveNNModel, getGenerateTrajectories, preProcessTrajectories,
                                                   getSampleBatchFromBuffer, getTrainNN, getNNModel, loadTrajectories,
                                                   SaveToBuffer, generatePathParametersAtIteration, getNNModelSavePath,

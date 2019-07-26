@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class ResetUniform:
+class Reset:
     def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
