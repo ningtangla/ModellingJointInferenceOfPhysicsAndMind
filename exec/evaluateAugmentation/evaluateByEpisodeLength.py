@@ -18,8 +18,8 @@ import math
 from episode import SampleTrajectory, chooseGreedyAction
 from analyticGeometryFunctions import transitePolarToCartesian, \
     computeAngleBetweenVectors
-from evaluationFunctions import GetSavePath, ComputeStatistics, \
-    LoadMultipleTrajectoriesFile
+from trajectoriesSaveLoad import GetSavePath, LoadMultipleTrajectoriesFile
+from evaluationFunctions import ComputeStatistics
 from augmentDataForNN import GenerateSymmetricData, GenerateSymmetricDistribution, GenerateSymmetricState, CalibrateState
 from dataTools import createSymmetricVector
 import trainTools
@@ -218,10 +218,10 @@ def main():
     # split & apply
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionDist']
-    independentVariables['trainingDataSize'] = [size for size in range(5000, 61000, 5000)]
-    independentVariables['batchSize'] = [2048, 4096]
+    independentVariables['trainingDataSize'] = [size for size in range(500, 10500, 500)]
+    independentVariables['batchSize'] = [128, 256]
     independentVariables['augmented'] = [True, False]
-    independentVariables['trainingStep'] = [20000]
+    independentVariables['trainingStep'] = [5000]
     independentVariables['neuronsPerLayer'] = [64]
     independentVariables['sharedLayers'] = [3]
     independentVariables['actionLayers'] = [1]
@@ -281,7 +281,7 @@ def main():
                         y=yStatistic,
                         ax=ax,
                         label=linekey,
-                        title="step:{}".format(subplotKey))
+                        title="batchSize:{}".format(subplotKey))
             plt.ylim(bottom=ylimBot, top=ylimTop)
         numOfPlot += 1
     plt.legend(loc='best')
