@@ -109,6 +109,32 @@ class DrawBackground:
         return
 
 
+class DrawBackgroundWithObstacles:
+    def __init__(self, screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth):
+        self.screen = screen
+        self.screenColor = screenColor
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.allObstaclePos = allObstaclePos
+        self.lineColor = lineColor
+        self.lineWidth = lineWidth
+
+    def __call__(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    exit()
+        self.screen.fill(self.screenColor)
+        rectPos = [self.xBoundary[0], self.yBoundary[0], self.xBoundary[1], self.yBoundary[1]]
+        pg.draw.rect(self.screen, self.lineColor, rectPos, self.lineWidth)
+        [pg.draw.rect(self.screen, self.lineColor, obstaclePos, self.lineWidth) for obstaclePos in
+         self.allObstaclePos]
+
+        return
+
+
 class DrawState:
     def __init__(self, screen, circleSize, positionIndex, drawBackGround):
         self.screen = screen

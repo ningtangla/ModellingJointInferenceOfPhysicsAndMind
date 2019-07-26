@@ -2,14 +2,13 @@ import sys
 import os
 
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..'))
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+sys.path.append(os.path.join(DIRNAME, '..', '..'))
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-from src.inferChasing.inference import Observe
 from exec.trajectoriesSaveLoad import loadFromPickle
-from visualize.continuousVisualization import ScaleTrajectory, AdjustDfFPStoTraj,\
-    DrawBackground, DrawState, ChaseTrialWithTraj
+from exec.generateVideos.chasingVisualization import DrawBackground, DrawState, ChaseTrialWithTraj, Observe
+from exec.generateVideos.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
 from visualize.initialization import initializeScreen
 
 import pandas as pd
@@ -20,7 +19,7 @@ pd.set_option('display.max_columns', None)
 def main():
     dirName = os.path.dirname(__file__)
     dataIndex = 5
-    dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
+    dataPath = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBufferStartWithTrainedModel', 'evaluationTrajectories20kTrainSteps', 'iteration=19999_maxRunningSteps=20_numTrials=500_policyName=NNPolicy_sampleIndex=493_trainBufferSize=2000_trainLearningRate=0.0001_trainMiniBatchSize=256_trainNumSimulations=200_trainNumTrajectoriesPerIteration=1.pickle')
     trajectory = loadFromPickle(dataPath)
 
     stateIndex = 0
@@ -35,6 +34,9 @@ def main():
     lineWidth = 3
     xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
     yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+    obstacle1Pos = [377.5, 270, 45, 60]
+    obstacle2Pos = [377.5, 470, 45, 60]
+    allObstaclePos = [obstacle1Pos, obstacle2Pos]
     screenColor = THECOLORS['black']
     lineColor = THECOLORS['white']
 
