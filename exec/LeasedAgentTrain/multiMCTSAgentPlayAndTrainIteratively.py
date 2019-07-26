@@ -27,6 +27,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import SampleTrajectory, sampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
+
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
     multiAgentActions.insert(agentId, selfAction)
@@ -114,14 +115,14 @@ class TrainOneAgent:
 def main():
     # Mujoco environment
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leashed.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
     # MDP function
-    qPosInit = (0, 0, 0, 0)
-    qVelInit = [0, 0, 0, 0]
-    numAgents = 2
+    qPosInit = (0, 0, 0, 0, 0, 0)
+    qVelInit = [0, 0, 0, 0, 0, 0]
+    numAgents = 3
     qVelInitNoise = 8
     qPosInitNoise = 9.7
     reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
@@ -129,6 +130,7 @@ def main():
     agentIds = list(range(numAgents))
     sheepId = 0
     wolfId = 1
+    masterId = 2
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
@@ -139,7 +141,8 @@ def main():
 
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
-    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
+    masterTerminalReward = 0
+    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, masterTerminalReward]
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
@@ -149,7 +152,9 @@ def main():
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-    rewardMultiAgents = [rewardSheep, rewardWolf]
+    rewardMaster = RewardFunctionCompete(0, 0, isTerminal)
+
+    rewardMultiAgents = [rewardSheep, rewardWolf, rewardMaster]
 
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
@@ -170,7 +175,7 @@ def main():
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, sampleAction)
 
     # neural network init
-    numStateSpace = 12
+    numStateSpace = numAgents * 6
     numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
     sharedWidths = [128]
@@ -223,12 +228,12 @@ def main():
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'multiAgentTrain', 'multiMCTSAgent', 'trajectories')
+                                             'leashedAgentTrain', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                        'leashedAgentTrain', 'multiMCTSAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
@@ -251,17 +256,17 @@ def main():
         modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
 
-    #generate and load trajectories before train parallelly
+    # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.8 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    #load trajectory function for trainBreak
+    # load trajectory function for trainBreak
     loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
 
 # initRreplayBuffer
