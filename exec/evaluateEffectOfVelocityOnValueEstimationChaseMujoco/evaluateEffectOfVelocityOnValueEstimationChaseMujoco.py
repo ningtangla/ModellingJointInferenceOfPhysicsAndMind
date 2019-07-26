@@ -10,11 +10,11 @@ import random
 from collections import OrderedDict
 from matplotlib import pyplot as plt
 
-from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateValueFunction, restoreVariables
+from src.neuralNetwork.policyValueNet import GenerateModel, ApproximateValue, restoreVariables
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle, loadFromPickle
 from src.constrainedChasingEscapingEnv.envMujoco import WithinBounds
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeVectorNorm
-from exec.evaluationFunctions import conditionDfFromParametersDict
+from exec.trajectoriesSaveLoad import conditionDfFromParametersDict
 
 
 class GenerateInitQPosTwoAgentsGivenDistance:

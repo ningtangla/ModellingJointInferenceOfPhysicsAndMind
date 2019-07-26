@@ -5,20 +5,26 @@ import random
 def stationaryAgentPolicy(state):
     return {(0, 0): 1}
 
-class RandomActionLikelihood:
+
+class UniformPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
+
     def __call__(self, state):
-        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+        likelihood = {action: 1 / len(self.actionSpace) for action in self.actionSpace}
         return likelihood
+
 
 class RandomPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
-    def __call__(self, state):
-        actionDist = {action: 1/len(self.actionSpace) for action in self.actionSpace}
 
-        return actionDist
+    def __call__(self, state):
+        likelihood = {action: 1 / len(self.actionSpace) for action in self.actionSpace}
+        sampleLikelihood = list(likelihood.values())
+        actionIndex = list(np.random.multinomial(1, sampleLikelihood)).index(1)
+        randomAction = list(likelihood.keys())[actionIndex]
+        return randomAction
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
@@ -36,12 +42,11 @@ class HeatSeekingDiscreteDeterministicPolicy:
         optimalActionList = [action for action in angleBetweenVectors.keys() if angleBetweenVectors[action] == min(angleBetweenVectors.values())]
         action = random.choice(optimalActionList)
         actionDist = {action: 1}
-
         return actionDist
 
 
 class HeatSeekingContinuesDeterministicPolicy:
-    def __init__(self,  getPredatorPos, getPreyPos, actionMagnitude):
+    def __init__(self, getPredatorPos, getPreyPos, actionMagnitude):
         self.getPredatorPos = getPredatorPos
         self.getPreyPos = getPreyPos
         self.actionMagnitude = actionMagnitude
@@ -64,10 +69,10 @@ class ActHeatSeeking:
         self.calculateAngle = calculateAngle
         self.lowerBoundAngle = lowerBoundAngle
         self.upperBoundAngle = upperBoundAngle
-        
+
     def __call__(self, heatSeekingDirection):
-        heatActionAngle = {mvmtVector: self.calculateAngle(heatSeekingDirection, mvmtVector) 
-                                              for mvmtVector in self.actionSpace}
+        heatActionAngle = {mvmtVector: self.calculateAngle(heatSeekingDirection, mvmtVector)
+                           for mvmtVector in self.actionSpace}
 
         angleWithinRange = lambda angle: self.lowerBoundAngle <= angle < self.upperBoundAngle
         movementAnglePair = zip(self.actionSpace, heatActionAngle.values())
@@ -78,7 +83,7 @@ class ActHeatSeeking:
         unchosenFilter = [action in chosenActions for action in self.actionSpace]
         unchosenActions = [action for action, index in zip(self.actionSpace, unchosenFilter) if not index]
 
-        return [chosenActions, unchosenActions]  
+        return [chosenActions, unchosenActions]
 
 
 class HeatSeekingDiscreteStochasticPolicy:

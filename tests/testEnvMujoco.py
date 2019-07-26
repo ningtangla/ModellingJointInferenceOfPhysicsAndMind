@@ -87,6 +87,7 @@ class TestEnvMujoco(unittest.TestCase):
         isWithinBounds = self.withinBounds(qPos)
         self.assertEqual(isWithinBounds, groundTruthWithinBounds)
 
+<<<<<<< HEAD
     # @data(((-5, -5, 5, 5), (0, 0, 0, 0), (0.1, 0.2, 0.3, 0.4), (0, 0, 0, 0)),
     #       ((7, 8, 3, 4), (0, 0, 0, 0), (0.3, 0.2, 0.6, 0.5), (0, 0, 0, 0)))
     # @unpack
@@ -113,6 +114,35 @@ class TestEnvMujoco(unittest.TestCase):
     #     isStDevCorrect = all(np.abs(std-qPosInitStDev) < 0.1)
     #     self.assertTrue(isMeanCorrect)
     #     self.assertTrue(isStDevCorrect)
+=======
+    @unittest.skip
+    @data(((-5, -5, 5, 5), (0, 0, 0, 0), (0.1, 0.2, 0.3, 0.4), (0, 0, 0, 0)),
+          ((7, 8, 3, 4), (0, 0, 0, 0), (0.3, 0.2, 0.6, 0.5), (0, 0, 0, 0)))
+    @unpack
+    def testResetGaussian(self, qPosInit, qVelInit, qPosInitStDev, qVelInitStDev):
+        resetGaussian = ResetGaussian(self.simulation, qPosInit, qVelInit, self.numAgent, qPosInitStDev, qVelInitStDev,
+                                      self.withinBounds)
+        allStartState = [resetGaussian() for trial in range(100000)]
+
+        # check all init states have correct shape
+        isStateShapeCorrect = all(np.shape(startState) == (2, 6) for startState in allStartState)
+        self.assertTrue(isStateShapeCorrect)
+
+        # check all init states are within bounds
+        qPosFromState = lambda state: state[:, :2].flatten()
+        allInitQpos = [qPosFromState(startState) for startState in allStartState]
+        isQPosWithinBounds = [self.withinBounds(initQPos) for initQPos in allInitQpos]
+        self.assertTrue(isQPosWithinBounds)
+
+        # check if the init QPos distribution is gaussian
+        allInitQposArray = np.asarray(allInitQpos)
+        mean = np.mean(allInitQposArray, axis=0)
+        isMeanCorrect = all(np.abs(mean-qPosInit) < 0.1)
+        std = np.std(allInitQposArray, axis=0)
+        isStDevCorrect = all(np.abs(std-qPosInitStDev) < 0.1)
+        self.assertTrue(isMeanCorrect)
+        self.assertTrue(isStDevCorrect)
+>>>>>>> develop
 
 
 if __name__ == "__main__":

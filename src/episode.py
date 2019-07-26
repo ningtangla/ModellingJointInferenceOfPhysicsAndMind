@@ -55,6 +55,27 @@ class SampleTrajectory:
         return trajectory
 
 
+
+class Sample3ObjectsTrajectory:
+    def __init__(self, maxRunningSteps, transit, reset, chooseAction):
+        self.maxRunningSteps = maxRunningSteps
+        self.transit = transit
+        self.reset = reset
+        self.chooseAction = chooseAction
+
+    def __call__(self, policy):
+        state = self.reset()
+        trajectory = []
+        for runningStep in range(self.maxRunningSteps):
+            actionDists = policy(state)
+            action = [self.chooseAction(actionDist) for actionDist in actionDists]
+            trajectory.append((state, action, actionDists))
+            nextState = self.transit(state, action)
+            state = nextState
+
+        return trajectory
+
+
 class SampleTrajectoryTerminationProbability:
     def __init__(self, terminationProbability, transit, isTerminal, reset, chooseAction):
         self.terminationProbability = terminationProbability
@@ -94,9 +115,16 @@ def chooseGreedyAction(actionDist):
     return selectedAction
 
 
-def sampleActionFromActionDist(actionDist):
+def sampleAction(actionDist):
     actions = list(actionDist.keys())
     probs = list(actionDist.values())
-    sampledActionIndex = np.random.choice(len(actions), p=probs)
-    selectedAction = actions[sampledActionIndex]
+    normlizedProbs = [prob / sum(probs) for prob in probs]
+    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
+    selectedAction = actions[selectedIndex]
     return selectedAction
+
+
+def getPairedTrajectory(agentsTrajectory):
+    timeStepCount = len(agentsTrajectory[0])
+    pairedTraj = [[agentTrajectory[timeStep] for agentTrajectory in agentsTrajectory] for timeStep in range(timeStepCount)]
+    return pairedTraj

@@ -9,8 +9,7 @@ import numpy as np
 import pandas as pd
 
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, GetAgentCoordinateFromTrajectoryAndStateDf, \
-    GetSavePath, LoadTrajectories, loadFromPickle, readParametersFromDf, GenerateAllSampleIndexSavePaths
-from exec.evaluationFunctions import conditionDfFromParametersDict
+        conditionDfFromParametersDict, GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths
 
 
 @ddt
@@ -118,6 +117,87 @@ class TestTrajectoriesSaveLoad(unittest.TestCase):
         self.assertEqual(allPaths, groundTruthAllPaths)
 
 
+    @data(('..', '.txt', {'qPosInit': (1, 2, 3, 4), 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
+           '../numSimulations=12_numTrials=23_qPosInit=(1,2,3,4)_trainSteps=2.txt'),
+          ('', '.pickle', {'qPosInit': (1, 2, 3, 4), 'numSimulations': 12}, {'numTrials': 23, 'trainSteps': 2},
+           'numSimulations=12_numTrials=23_qPosInit=(1,2,3,4)_trainSteps=2.pickle'))
+    @unpack
+    def testGetSavePathWithFixedParameters(self, dataDirectory, extension, fixedParameters, parameters, groundTruthPath):
+        getSavePath = GetSavePath(dataDirectory, extension, fixedParameters)
+        path = getSavePath(parameters)
+        self.assertEqual(path, groundTruthPath)
+
+
+    @data(('..', '.txt', {'numTrials': 23, 'trainSteps': 2}, '../numTrials=23_trainSteps=2.txt'),
+          ('', '.pickle', {'numTrials': 23, 'trainSteps': 2}, 'numTrials=23_trainSteps=2.pickle'))
+    @unpack
+    def testGetSavePathWithoutFixedParameters(self, dataDirectory, extension, parameters, groundTruthPath):
+        getSavePath = GetSavePath(dataDirectory, extension)
+        path = getSavePath(parameters)
+        self.assertEqual(path, groundTruthPath)
+
+
+    @data((pd.DataFrame(index=pd.MultiIndex.from_tuples([(100, (-4, 0, 4, 0))], names=['numTrials', 'qPosInit'])),
+           {'numTrials': 100, 'qPosInit': (-4, 0, 4, 0)}))
+    @unpack
+    def testReadParametersFromDf(self, df, groundTruthParameters):
+        parameters = readParametersFromDf(df)
+        self.assertEqual(parameters, groundTruthParameters)
+
+
+    @data(({'numTrials': 100, 'qPosInit': (-4, 0, 4, 0)}, {'maxRunningSteps': 15, 'numSimulations': 200,
+        'sheepPolicyName': 'MCTS'}, ['sampleIndex']))
+    @unpack
+    def testLoadMultipleTrajectoriesFromMultipleFiles(self, parameters, fixedParameters, fuzzySearchParameterNames):
+        getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
+        loadTrajectories = LoadTrajectories(getSavePath, loadFromPickle, fuzzySearchParameterNames)
+        loadedTrajectories = loadTrajectories(parameters)
+        numTrials = len(loadedTrajectories)
+
+        groundTruthNumTrials = parameters['numTrials']
+        self.assertEqual(numTrials, groundTruthNumTrials)
+    
+    @data(({'numTrials': 50, 'qPosInit': (0, 0, 0, 0)}, {'maxRunningSteps': 2, 'numSimulations': 800}, ['sampleIndex']))
+    @unpack
+    def testLoadMultipleTrajectoriesFromOneFile(self, parameters, fixedParameters, fuzzySearchParameterNames):
+        getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
+        loadTrajectories = LoadTrajectories(getSavePath, loadFromPickle, fuzzySearchParameterNames)
+        loadedTrajectories = loadTrajectories(parameters)
+        numTrials = len(loadedTrajectories)
+
+        groundTruthNumTrials = parameters['numTrials']
+        self.assertEqual(numTrials, groundTruthNumTrials)
+    
+    @data(({'numTrials': 100, 'qPosInit': (-4, 0, 4, 0)}, {'maxRunningSteps': 15, 'numSimulations': 200,
+                                                           'sheepPolicyName': 'MCTS'}, ['sampleIndex']))
+    @unpack
+    def testLoadTrajectoriesQPosInit(self, parameters, fixedParameters, fuzzySearchParameterNames):
+        getSavePath = GetSavePath('testData', '.pickle', fixedParameters)
+        loadTrajectories = LoadTrajectories(getSavePath, loadFromPickle, fuzzySearchParameterNames)
+        loadedTrajectories = loadTrajectories(parameters)
+        initTimeStep = 0
+        stateIndex = 0
+        qPosIndex = 0
+        numQPosEachAgent = 2
+        allInitStates = [trajectory[initTimeStep][stateIndex] for trajectory in loadedTrajectories]
+        allQPosInit = [initState[:, qPosIndex:qPosIndex+numQPosEachAgent].flatten() for initState in allInitStates]
+
+        groundTruthQPosInit = parameters['qPosInit']
+
+        allTruthValues = np.asarray([np.all(qPosInit == groundTruthQPosInit) for qPosInit in allQPosInit])
+        self.assertTrue(np.all(allTruthValues))
+
+
+
+ #   @data((GetSavePath('..', '.pickle', {'numTrials': 25, 'maxRunningSteps': 3}), 3, {'numSimulations': 20},
+ #          {0: os.path.join('..', 'maxRunningSteps=3_numSimulations=20_numTrials=25_sampleIndex=0.pickle'),
+ #           1: os.path.join('..', 'maxRunningSteps=3_numSimulations=20_numTrials=25_sampleIndex=1.pickle'),
+ #           2: os.path.join('..', 'maxRunningSteps=3_numSimulations=20_numTrials=25_sampleIndex=2.pickle')}))
+ #   @unpack
+ #   def testGenerateAllSampleIndexSavePaths(self, getSavePath, numSamples, pathParameters, groundTruthAllPaths):
+ #       generateAllSampleIndexSavePaths = GenerateAllSampleIndexSavePaths(getSavePath)
+ #       allPaths = generateAllSampleIndexSavePaths(numSamples, pathParameters)
+ #       self.assertEqual(allPaths, groundTruthAllPaths)
 
 
 if __name__ == '__main__':

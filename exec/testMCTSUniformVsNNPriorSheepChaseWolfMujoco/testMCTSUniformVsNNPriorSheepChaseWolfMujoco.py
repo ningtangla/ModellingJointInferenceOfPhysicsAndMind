@@ -12,7 +12,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import time
 
-from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
 from src.algorithms.mcts import CalculateScore, SelectChild, InitializeChildren, selectGreedyAction, RollOut, Expand, \
     MCTS, backup
 from src.play import SampleTrajectory
@@ -159,7 +160,7 @@ if __name__ == "__main__":
     numAgents = 2
     qPosInitNoise = 6
     qVelInitNoise = 0
-    reset = Reset(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    reset = ResetUniform(envModelName, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     sheepId = 0
     wolfId = 1
@@ -219,7 +220,7 @@ if __name__ == "__main__":
                      trainSteps, modelSavePath in modelSavePaths.items()}
 
     # wrapper functions for action prior
-    uniformActionPrior = lambda state: {action: 1/len(actionSpace) for action in actionSpace}
+    uniformActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
     getActionPriorUniformFunction = lambda trainedModel: uniformActionPrior
     getActionPriorNNFunction = lambda trainedModel: GetActionDistNeuralNet(actionSpace, trainedModel)
 
