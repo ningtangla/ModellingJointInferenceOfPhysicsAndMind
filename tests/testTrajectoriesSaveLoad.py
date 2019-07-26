@@ -9,12 +9,7 @@ import numpy as np
 import pandas as pd
 
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, GetAgentCoordinateFromTrajectoryAndStateDf, \
-<<<<<<< HEAD
-        conditionDfFromParametersDict, GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle
-=======
-    GetSavePath, LoadTrajectories, loadFromPickle, readParametersFromDf, GenerateAllSampleIndexSavePaths
-from exec.evaluationFunctions import conditionDfFromParametersDict
->>>>>>> mctsMujocoSingleAgent
+        conditionDfFromParametersDict, GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths
 
 
 @ddt

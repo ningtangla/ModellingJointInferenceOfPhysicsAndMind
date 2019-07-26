@@ -7,8 +7,8 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Local import
-from src.constrainedChasingEscapingEnv.envNoPhysics import Reset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.envNoPhysics import RandomReset, TransiteForNoPhysics, IsTerminal, StayInBoundaryByReflectVelocity, CheckBoundary
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeVectorNorm
 
 
@@ -31,14 +31,6 @@ class TestEnvNoPhysics(unittest.TestCase):
         self.isTerminal = IsTerminal(
             self.getPredatorPos, self.getPreyPos, self.minDistance)
         self.transition = TransiteForNoPhysics(self.stayInBoundaryByReflectVelocity)
-
-    @data((np.array([[0, 0], [0, 0]]), [0, 0], np.array([[0, 0], [0, 0]])), (np.array([[9, 5], [2, 7]]), [0, 0], np.array([[9, 5], [2, 7]])))
-    @unpack
-    def testReset(self, initPosition, initPositionNoise, groundTruthReturnedInitialState):
-        reset = Reset(self.numOfAgent, initPosition, initPositionNoise)
-        returnedInitialState = reset()
-        truthValue = returnedInitialState == groundTruthReturnedInitialState
-        self.assertTrue(truthValue.all())
 
     @data((np.array([[0, 0], [0, 0]]), np.array([[0, 0], [0, 0]]), np.array([[0, 0], [0, 0]])), (np.array([[1, 2], [3, 4]]), np.array([[1, 0], [0, 1]]), np.array([[2, 2], [3, 5]])))
     @unpack

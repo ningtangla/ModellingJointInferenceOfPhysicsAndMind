@@ -55,7 +55,6 @@ class LoadTrajectories:
     def __init__(self, getSavePath, loadFromPickle, fuzzySearchParameterNames=[]):
         self.getSavePath = getSavePath
         self.loadFromPickle = loadFromPickle
-<<<<<<< HEAD
         self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters, parametersWithSpecificValues={}):
@@ -72,18 +71,6 @@ class LoadTrajectories:
             oneFileTrajectories = self.loadFromPickle(fileName)
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
-=======
-
-    def __call__(self, parameters):
-        parameters['sampleIndex'] = '*'
-        genericSavePath = self.getSavePath(parameters)
-        filesNames = glob.glob(genericSavePath)
-        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
-        print("LOADED {} TRAJECTORIES".format(len(trajectories)))
-
-        return trajectories
->>>>>>> mctsMujocoSingleAgent
-
 
 class GenerateAllSampleIndexSavePaths:
     def __init__(self, getSavePath):

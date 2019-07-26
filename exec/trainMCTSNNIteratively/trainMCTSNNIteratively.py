@@ -9,12 +9,12 @@ from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, Reset
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValueFunction, \
-    ApproximateActionPrior, restoreVariables
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
@@ -37,8 +37,6 @@ class PreparePolicy:
 
         return policy
 
-
-<<<<<<< HEAD
 class QPosInitStdDevForIteration:
     def __init__(self, minIterLinearRegion, stdDevMin, maxIterLinearRegion, stdDevMax):
         self.minIterLinearRegion = minIterLinearRegion
@@ -71,9 +69,6 @@ class GetSampleTrajectoryForIteration:
 
         return sampleTrajectory
 
-
-=======
->>>>>>> mctsMujocoSingleAgent
 class GenerateTrajectories:
     def __init__(self, numTrajectoriesPerIteration, sampleTrajectory, preparePolicy, saveAllTrajectories):
         self.numTrajectoriesPerIteration = numTrajectoriesPerIteration
@@ -232,13 +227,8 @@ def main():
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-<<<<<<< HEAD
     playAliveBonus = 1 / maxRunningSteps
     playDeathPenalty = -1
-=======
-    playAlivePenalty = -0.05
-    playDeathBonus = 1
->>>>>>> mctsMujocoSingleAgent
     playKillzoneRadius = 2
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepXPos, getWolfXPos)
     playReward = RewardFunctionCompete(playAlivePenalty, playDeathBonus, playIsTerminal)
@@ -267,7 +257,7 @@ def main():
     qVelInitNoise = 8
     qPosInitNoise = 9.7
 
-    reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+    reset = reset(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
@@ -285,19 +275,14 @@ def main():
     selectChild = SelectChild(calculateScore)
 
     # functions to make predictions from NN
-    getApproximateActionPrior = lambda NNModel: ApproximateActionPrior(NNModel, actionSpace)
-<<<<<<< HEAD
-    getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
-                                                                      getApproximateActionPrior(NNModel))
-=======
+    getApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
     getInitializeChildrenNNPrior = lambda NNModel: InitializeChildren(actionSpace, transitInWolfMCTSSimulation,
-                                                                   getApproximateActionPrior(NNModel))
->>>>>>> mctsMujocoSingleAgent
+                                                                   getApproximatePolicy(NNModel))
     getExpandNNPrior = lambda NNModel: Expand(isTerminal, getInitializeChildrenNNPrior(NNModel))
 
     getStateFromNode = lambda node: list(node.id.values())[0]
     getEstimateValue = lambda NNModel: \
-        EstimateValueFromNode(playDeathBonus, isTerminal, getStateFromNode, ApproximateValueFunction(NNModel))
+        EstimateValueFromNode(playDeathBonus, isTerminal, getStateFromNode, ApproximateValue(NNModel))
 
     # wrapper for MCTS
     getMCTSNNPriorValue = lambda NNModel: MCTS(numSimulations, selectChild, getExpandNNPrior(NNModel),
