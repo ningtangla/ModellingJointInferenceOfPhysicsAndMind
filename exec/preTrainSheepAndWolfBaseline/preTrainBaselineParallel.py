@@ -2,6 +2,7 @@ import time
 import sys
 import os
 DIRNAME = os.path.dirname(__file__)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 # import ipdb
 
@@ -110,34 +111,6 @@ class TrainOneAgent:
 
         return NNModel
 
-# class SampleTrajectory:
-#     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
-#         self.maxRunningSteps = maxRunningSteps
-#         self.transit = transit
-#         self.isTerminal = isTerminal
-#         self.reset = reset
-#         self.chooseAction = chooseAction
-
-#     def __call__(self, policy):
-#         startTime = time.time()
-#         state = self.reset()
-
-#         while self.isTerminal(state):
-#             state = self.reset()
-
-#         trajectory = []
-#         for runningStep in range(self.maxRunningSteps):
-#             if self.isTerminal(state):
-#                 trajectory.append((state, None, None))
-#                 break
-#             actionDists = policy(state)
-#             action = [self.chooseAction(actionDist) for actionDist in actionDists]
-#             trajectory.append((state, action, actionDists))
-#             nextState = self.transit(state, action)
-#             state = nextState
-#         print(time.time()- startTime)
-
-#         return trajectory
 
 
 def main():
@@ -213,7 +186,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 64  # 256
+    miniBatchSize = 250  # 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -243,14 +216,14 @@ def main():
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRate = 0.0001
-    numTrajectoriesToTrain = 256
+    numTrajectoriesToTrain = miniBatchSize * 4
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
                     learningRateModifier, terminalController, coefficientController,
                     trainReporter)
 
     # load save dir
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'numTrajectories': numTrajectoriesToTrain}
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
@@ -282,30 +255,28 @@ def main():
     multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
     
     # generate and load trajectories before train parallelly
-    # sampleTrajectoryFileName = 'sampleSingleMCTSAgentTrajectory.py'
-    # numCpuCores = os.cpu_count()
-    # print(numCpuCores)
-    # numCpuToUse = int(1)
-    # numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
+    sampleTrajectoryFileName = 'sampleSingleMCTSAgentTrajectory.py'
+    numCpuCores = os.cpu_count()
+    print(numCpuCores)
+    numCpuToUse = int(0.25*numCpuCores)
+    numCmdList = min(numTrajectoriesToTrain, numCpuToUse)
 
 # initRreplayBuffer
     replayBuffer = {agentId: [] for agentId in trainableAgentIds}
-    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
-    # fuzzySearchParameterNames = ['sampleIndex']
-    # loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToTrain, numCmdList)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
     for agentId in trainableAgentIds:
         print("training agent {}".format(agentId))
         policy = prepareMultiAgentPolicy(agentId, multiAgentNNmodel)
-        trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesToTrain)]
         pathParameters = {'agentId': agentId}
-        trajectorySavePath = generateTrajectorySavePath(pathParameters)
-        saveToPickle(trajectories, trajectorySavePath)
-        # cmdList = generateTrajectoriesParallel(pathParameters)
-        # print(cmdList)
 
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
+        cmdList = generateTrajectoriesParallel(pathParameters)
+        print(cmdList)
+
+        trajectories = loadTrajectoriesForParallel(pathParameters)
         preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
         updatedReplayBuffer = saveToBuffer(replayBuffer[agentId], preProcessedTrajectories)
 

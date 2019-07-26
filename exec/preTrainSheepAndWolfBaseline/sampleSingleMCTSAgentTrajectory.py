@@ -2,6 +2,7 @@ import time
 import sys
 import os
 DIRNAME = os.path.dirname(__file__)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
 import json

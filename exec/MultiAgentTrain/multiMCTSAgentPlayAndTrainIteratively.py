@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -23,11 +24,11 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, sampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
-    multiAgentActions = [chooseGreedyAction(policy(state)) for policy in othersPolicy]
+    multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
     multiAgentActions.insert(agentId, selfAction)
     transitInSelfMCTS = transit(state, multiAgentActions)
     return transitInSelfMCTS
@@ -159,7 +160,6 @@ def main():
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    numSimulations = 20  # 200
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     getApproximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
     getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
@@ -167,7 +167,7 @@ def main():
     getStateFromNode = lambda node: list(node.id.values())[0]
 
     # sample trajectory
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, sampleAction)
 
     # neural network init
     numStateSpace = 12
@@ -182,7 +182,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 16
+    miniBatchSize = 2
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -218,6 +218,7 @@ def main():
                     trainReporter)
 
     # load save dir
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
@@ -234,33 +235,11 @@ def main():
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-# load wolf baseline for init iteration
-    # wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','SheepWolfBaselinePolicy', 'wolfBaselineNNPolicy')
-    # baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
-    #                           'qPosInitNoise': 9.7, 'qVelInitNoise': 8,
-    #                           'rolloutHeuristicWeight': 0.1, 'maxRunningSteps': 25}
-    # getWolfBaselineModelSavePath = GetSavePath(wolfBaselineNNModelSaveDirectory, NNModelSaveExtension, baselineSaveParameters)
-    # baselineModelTrainSteps = 1000
-    # wolfBaselineNNModelSavePath = getWolfBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
-    # wolfBaselienModel = restoreVariables(initializedNNModel, wolfBaselineNNModelSavePath)
-
-# load sheep baseline for init iteration
-    # sheepBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','SheepWolfBaselinePolicy', 'sheepBaselineNNPolicy')
-    # baselineSaveParameters = {'numSimulations': 10, 'killzoneRadius': 2,
-    #                           'qPosInitNoise': 9.7, 'qVelInitNoise': 8,
-    #                           'rolloutHeuristicWeight': 0.1, 'maxRunningSteps': 25}
-    # getSheepBaselineModelSavePath = GetSavePath(sheepBaselineNNModelSaveDirectory, NNModelSaveExtension, baselineSaveParameters)
-    # baselineModelTrainSteps = 1000
-    # sheepBaselineNNModelSavePath = getSheepBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
-    # sheepBaselienModel = restoreVariables(initializedNNModel, sheepBaselineNNModelSavePath)
-
-    # multiAgentNNmodel = [sheepBaseLineModel, wolfBaseLineModel]
-
     startTime = time.time()
-    trainableAgentIds = [wolfId]
+    trainableAgentIds = [sheepId, wolfId]
 
-    otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
-    #otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+    # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+    otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
     composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
     prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
@@ -276,25 +255,27 @@ def main():
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
-    numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse) 
+    numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
-    cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
-    print(cmdList) 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
-    
+
     #load trajectory function for trainBreak
     loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
-   
-# initRreplayBuffer   
+
+# initRreplayBuffer
     replayBuffer = []
-    trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters) 
+
+    restoredIteration = 0
+    if restoredIteration == 0:
+        cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
+        print(cmdList)
+    trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
     preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
 # restore model
-    restoredIteration = 0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -307,7 +288,7 @@ def main():
 
     numTrajectoriesPerIteration = 1
     numIterations = 20000
-    for iterationIndex in range(restoredIteration, numIterations):
+    for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
@@ -316,9 +297,10 @@ def main():
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
 
+        preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
+        updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
+
         for agentId in trainableAgentIds:
-            preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
-            updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}

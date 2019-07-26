@@ -22,36 +22,37 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
     HeatSeekingContinuesDeterministicPolicy
 from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from exec.evaluationFunctions import ComputeStatistics, GenerateInitQPosUniform
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, saveVariables, ApproximatePolicy
 from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos, GetAgentPosFromTrajectory, GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
-from exec.preProcessing import AccumulateRewards
+from exec.preProcessing import AccumulateRewards, AccumulateMultiAgentRewards
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
-def drawPerformanceLine(dataDf, axForDraw, numSimulations, trainSteps):
-    for key, grp in dataDf.groupby('modelLearnRate'):
-        grp.index = grp.index.droplevel('modelLearnRate')
-        grp.plot(ax=axForDraw, title='numSimulations={}, trainSteps={}'.format(numSimulations, trainSteps), y='mean', yerr='std', marker='o', label='learnRate={}'.format(key))
+def drawPerformanceLine(dataDf, axForDraw, agentId):
+    for key, grp in dataDf.groupby('otherIteration'):
+        grp.index = grp.index.droplevel('otherIteration')
+        grp['agentMean'] = np.array([value[agentId] for value in grp['mean'].values])
+        grp['agentStd'] = np.array([value[agentId] for value in grp['std'].values])
+        grp.plot(ax=axForDraw, title='agentId={}'.format(agentId), y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
-    evalNumSimulations = 20  # 200
-    evalNumTrials = 1000  
-    evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = [0, 10, 20]
-    manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']
+    manipulatedVariables['selfIteration'] = [-1, 400, 800, 1200]
+    manipulatedVariables['otherIteration'] = [-1, 400, 800, 1200]
+    manipulatedVariables['selfId'] = [0, 1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
+    numAgents = 2
     sheepId = 0
     wolfId = 1
     xPosIndex = [2, 3]
@@ -60,14 +61,48 @@ def main():
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-    alivePenalty = -0.05
-    deathBonus = 1
-    rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
+   
+    maxRunningSteps = 20
+    sheepAliveBonus = 1 / maxRunningSteps
+    wolfAlivePenalty = -sheepAliveBonus
+    sheepTerminalPenalty = -1
+    wolfTerminalReward = 1
+    
+    rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
+    rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
+    rewardMultiAgents = [rewardSheep, rewardWolf]
 
-    generateTrajectoriesCodeName = 'generateTrajByNNWolfAndStationarySheepMujoco.py'
-    numToUseCores = min(evalNumTrials, 4)
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    numActionSpace = len(actionSpace)
+    numStateSpace = 12
+    regularizationFactor = 1e-4
+    sharedWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
+    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+    
+    trainMaxRunningSteps = 20
+    trainNumSimulations = 200
+    NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    dirName = os.path.dirname(__file__)
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+    NNModelSaveExtension = ''
+    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+    
+    multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
+    for agentId  in range(numAgents):
+        modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
+        saveVariables(multiAgentNNmodel[agentId], modelPath)
+
+    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
+    evalNumTrials = 500
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.5*numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse) 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
-            numToUseCores, readParametersFromDf)
+            numCmdList, readParametersFromDf)
+    
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
     toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
@@ -80,9 +115,7 @@ def main():
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
-    trainMaxRunningSteps = 20
-    trainNumSimulations = 20
-    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda  df: getTrajectorySavePath(readParametersFromDf(df))
@@ -92,23 +125,29 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
     decay = 1
-    accumulateRewards = AccumulateRewards(decay, rewardFunction)
-    measurementFunction = lambda trajectory: accumulateRewards(trajectory)[0]
+    accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
+    measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
 
-    # plot the statistics
+  # plot the results
     fig = plt.figure()
-    axis = fig.add_subplot(1, 1, 1)
+    numColumns = len(manipulatedVariables['selfId'])
+    numRows = 1
+    plotCounter = 1
 
-    for policyName, grp in statisticsDf.groupby('policyName'):
-        grp.index = grp.index.droplevel('policyName')
-        grp.plot(y='mean', marker='o', label=policyName, ax=axis)
+    for selfId, grp in statisticsDf.groupby('selfId'):
+        grp.index = grp.index.droplevel('selfId')
+        axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+        axForDraw.set_ylim(-1, 1)
+        plt.ylabel('Accumulated rewards')
+        drawPerformanceLine(grp, axForDraw, selfId)
+        plotCounter += 1
 
-    plt.ylabel('Accumulated rewards')
-    plt.title('iterative training in chasing task with killzone radius = 2 and numSim = 200\nStart with random model')
+    # plt.title('iterative training in chasing task with killzone radius = 2 and numSim = 200\nStart with random model')
     plt.legend(loc='best')
     plt.show()
+    
 
 
 if __name__ == '__main__':
