@@ -5,7 +5,7 @@ import numpy as np
 import random
 import functools as ft
 import pickle
-from exec.evaluationFunctions import GetSavePath
+from exec.trajectoriesSaveLoad import GetSavePath
 
 
 class AccumulateRewards:

@@ -8,8 +8,9 @@ from ddt import ddt, data, unpack
 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, HeatSeekingContinuesDeterministicPolicy, ActHeatSeeking, HeatSeekingDiscreteStochasticPolicy
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from src.episode import chooseGreedyAction
 
 @ddt
 class TestContinuesActionPolicies(unittest.TestCase):
@@ -29,7 +30,7 @@ class TestContinuesActionPolicies(unittest.TestCase):
           (np.asarray([[7, 6, 7, 6, 0, 0], [7, 4, 7, 4, 0, 0]]), np.asarray((0, 0))))
     @unpack
     def testStationaryAgentPolicy(self, state, groundTruthAction):
-        action = stationaryAgentPolicy(state)
+        action = chooseGreedyAction(stationaryAgentPolicy(state))
 
         truthValue = np.array_equal(action, groundTruthAction)
         self.assertTrue(truthValue)
@@ -41,7 +42,7 @@ class TestContinuesActionPolicies(unittest.TestCase):
     def testHeatSeekingContinuesDeterministicPolicy(self, state, actionMagnitude, groundTruthWolfAction):
         heatSeekingPolicy = HeatSeekingContinuesDeterministicPolicy(self.getSheepXPos, self.getWolfXPos,
                                                                     actionMagnitude)
-        action = heatSeekingPolicy(state)
+        action = chooseGreedyAction(heatSeekingPolicy(state))
         truthValue = np.allclose(action, groundTruthWolfAction)
         self.assertTrue(truthValue)
 
@@ -65,7 +66,7 @@ class TestDiscreteActionPolicies(unittest.TestCase):
     @unpack
     def testHeatSeekingDiscreteDeterministicPolicy(self, state, groundTruthAction):
         heatSeekingPolicy = HeatSeekingDiscreteDeterministicPolicy(self.actionSpace, self.getPredatorPos, self.getPreyPos, computeAngleBetweenVectors)
-        action = heatSeekingPolicy(state)
+        action = chooseGreedyAction(heatSeekingPolicy(state))
         truthValue = np.allclose(action, groundTruthAction)
         self.assertTrue(truthValue)
 

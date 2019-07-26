@@ -87,6 +87,7 @@ class TestEnvMujoco(unittest.TestCase):
         isWithinBounds = self.withinBounds(qPos)
         self.assertEqual(isWithinBounds, groundTruthWithinBounds)
 
+    @unittest.skip
     @data(((-5, -5, 5, 5), (0, 0, 0, 0), (0.1, 0.2, 0.3, 0.4), (0, 0, 0, 0)),
           ((7, 8, 3, 4), (0, 0, 0, 0), (0.3, 0.2, 0.6, 0.5), (0, 0, 0, 0)))
     @unpack
