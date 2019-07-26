@@ -1,0 +1,1129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/3ObjectsDemo13/Demo.mp4" beforeDir="false" afterPath="$PROJECT_DIR$/demo/3ObjectsDemo13/Demo.mp4" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/3ObjectsDemo14/Demo.mp4" beforeDir="false" afterPath="$PROJECT_DIR$/demo/3ObjectsDemo14/Demo.mp4" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/3ObjectsDemo15/Demo.mp4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/inferContinuousChasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/inferContinuousChasing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/visualize3Objects.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/visualize3Objects.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trainedData/trajectory13.pickle" beforeDir="false" afterPath="$PROJECT_DIR$/trainedData/trajectory13.pickle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trainedData/trajectory14.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/trainedData/trajectory15.pickle" beforeDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/visualize3Objects.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="417">
+              <caret line="68" selection-start-line="68" selection-end-line="68" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/sample3ObjectsTraj.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="95">
+              <caret line="69" column="55" selection-start-line="69" selection-start-column="55" selection-end-line="69" selection-end-column="55" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="377">
+              <caret line="169" lean-forward="true" selection-start-line="169" selection-end-line="169" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Unit Test" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>transitAgents</find>
+      <find>getTransitionLikelihood</find>
+      <find>pullingAgents</find>
+      <find>normalizedPosterior</find>
+      <find>transform</find>
+      <find>chasingAgents</find>
+      <find>mindsPhysicsActionsIndex</find>
+      <find>pullingAgent</find>
+      <find>actionHypo</find>
+      <find>pulledAgentState</find>
+      <find>likelihood</find>
+      <find>Likelihood</find>
+      <find>noPullAgentState</find>
+      <find>getLikelihood</find>
+      <find>drawPerformanceLine</find>
+      <find>itertools</find>
+      <find>game</find>
+      <find>InitializeGame</find>
+      <find>pygame</find>
+      <find>pointsLocation</find>
+      <find>allAgentAction</find>
+      <find>array</find>
+      <find>positionIndex</find>
+      <find>wolfId</find>
+      <find>getWolfXPos</find>
+      <find>isTerminal</find>
+      <find>wolf</find>
+      <find>3</find>
+      <find>large</find>
+      <find>small</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>getMasterPos</replace>
+      <replace>pullersRelativeLocation</replace>
+      <replace>Force</replace>
+      <replace>Sheep</replace>
+      <replace>force</replace>
+      <replace>distanceForceRatio</replace>
+      <replace>getPolicyLikelihood</replace>
+      <replace>getTransitionLikelihood</replace>
+      <replace>isInferenceTerminal</replace>
+      <replace>getNoPullAgentForceProb</replace>
+      <replace>getPulledAgentForceProb</replace>
+      <replace>getMasterPolicyLik</replace>
+      <replace>getSheepPolicyLik</replace>
+      <replace>mind</replace>
+      <replace>transitionList</replace>
+      <replace>physics</replace>
+      <replace>posterior</replace>
+      <replace>transition</replace>
+      <replace>inferenceIndex</replace>
+      <replace>master</replace>
+      <replace>multiAgentsActionsSpace</replace>
+      <replace>pulledAgentPos</replace>
+      <replace>noPullAgentPos</replace>
+      <replace>Lik</replace>
+      <replace>it</replace>
+      <replace>screen</replace>
+      <replace>InitializeScreen</replace>
+      <replace>pg</replace>
+      <replace>allAgentsActions</replace>
+      <replace>np.array</replace>
+    </replaceStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/data</dir>
+    </dirStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" />
+        <option value="$USER_HOME$/Desktop/Gao Lab/Python/pythonpracticepublish/SourceCode/DiscreteBayesian.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/inferDiscreteChasing.py" />
+        <option value="$PROJECT_DIR$/src/play.py" />
+        <option value="$PROJECT_DIR$/tests/testDiscreteGridWrapperFunctions.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_21.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_22.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/forceLikelihood.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/wrappers.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/heatSeekingLikelihood.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/policyLikelihood.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/transitionLikelihood.py" />
+        <option value="$PROJECT_DIR$/tests/testDiscreteGridInference.py" />
+        <option value="$PROJECT_DIR$/visualize/drawLineDiscreteInference.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPriorMCTSNoPhysics/evaluatetNnGuidedMcts.py" />
+        <option value="$PROJECT_DIR$/tests/testEnvMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/try.py" />
+        <option value="$PROJECT_DIR$/exec/fixedActionStartFromRest.py" />
+        <option value="$PROJECT_DIR$/src/inferContinuousChasing/continuousPolicy.py" />
+        <option value="$PROJECT_DIR$/src/inferContinuousChasing/continuousTransition.py" />
+        <option value="$PROJECT_DIR$/src/inferContinuousChasing/inferenceWrapper.py" />
+        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/inference.py" />
+        <option value="$PROJECT_DIR$/visualize/discreteGridInferenceVisualization.py" />
+        <option value="$PROJECT_DIR$/visualize/discreteInferenceVisualization.py" />
+        <option value="$PROJECT_DIR$/src/inferChasing/inferenceWrapper.py" />
+        <option value="$PROJECT_DIR$/visualize/initialization.py" />
+        <option value="$PROJECT_DIR$/visualize/discreteGridVisualization.py" />
+        <option value="$PROJECT_DIR$/exec/drawDiscreteGridChasing.py" />
+        <option value="$PROJECT_DIR$/exec/visualizeChasing.py" />
+        <option value="$PROJECT_DIR$/src/neuralNetwork/policyValueNetTemp.py" />
+        <option value="$PROJECT_DIR$/src/inferChasing/discreteGridPolicy.py" />
+        <option value="$PROJECT_DIR$/exec/inferDiscreteChasing.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_24.py" />
+        <option value="$PROJECT_DIR$/visualize/continuousVisualization.py" />
+        <option value="$PROJECT_DIR$/src/inferChasing/inference.py" />
+        <option value="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" />
+        <option value="$PROJECT_DIR$/exec/SheepAndWolfNNOnlyPolicies/policy.py" />
+        <option value="$PROJECT_DIR$/visualize/inferenceVisualization.py" />
+        <option value="$PROJECT_DIR$/tests/testModifyPhysicsBodyMass.py" />
+        <option value="$PROJECT_DIR$/exec/sample.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" />
+        <option value="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" />
+        <option value="$PROJECT_DIR$/src/episode.py" />
+        <option value="$PROJECT_DIR$/exec/inferContinuousChasing.py" />
+        <option value="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" />
+        <option value="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" />
+        <option value="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" />
+        <option value="$PROJECT_DIR$/exec/visualize3Objects.py" />
+        <option value="$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="x" value="525" />
+    <option name="width" value="915" />
+    <option name="height" value="900" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator currentView="Scope" currentSubView="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope" proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope">
+        <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
+          <expand>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="exec" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="constrainedChasingEscapingEnv" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
+          <expand>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="demo" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="visualize" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="ProjectPane" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python&#10;Redshift" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings is-module-sdk="true">
+        <option name="myUseModuleSdk" value="true" />
+      </console-settings>
+    </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/exec" />
+      <recent name="$PROJECT_DIR$/src/inferChasing" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.infer3ObjectsContinChasing">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="true" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="drawDiscreteGridChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="infer3ObjectsContinChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="inferContinuousChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/inferContinuousChasing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="inferDiscreteChasing" type="PythonConfigurationType" factoryName="Python">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/inferDiscreteChasing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sample3ObjectsTraj" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="visualize3Objects" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="visualize3Objects" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/visualize3Objects.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Unittests in testModifyPhysicsBodyMass.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/testModifyPhysicsBodyMass.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.inferDiscreteChasing" />
+      <item itemvalue="Python.inferContinuousChasing" />
+      <item itemvalue="Python.visualize3Objects" />
+      <item itemvalue="Python.infer3ObjectsContinChasing" />
+      <item itemvalue="Python.sample3ObjectsTraj" />
+      <item itemvalue="Python tests.Unittests in testModifyPhysicsBodyMass.py" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.infer3ObjectsContinChasing" />
+        <item itemvalue="Python.visualize3Objects" />
+        <item itemvalue="Python.sample3ObjectsTraj" />
+        <item itemvalue="Python.visualize3Objects" />
+        <item itemvalue="Python.inferContinuousChasing" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="" />
+      <created>1561405020540</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1561405020540</updated>
+      <workItem from="1561405023773" duration="1307000" />
+      <workItem from="1561409639837" duration="81279000" />
+      <workItem from="1561775689538" duration="48922000" />
+      <workItem from="1562355478365" duration="57544000" />
+      <workItem from="1562975142081" duration="34495000" />
+      <workItem from="1563297484652" duration="204000" />
+      <workItem from="1563297717574" duration="415000" />
+      <workItem from="1563298153221" duration="45311000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TestHistory">
+    <history-entry file="pytest_in_testDiscreteGridEnv_py - 2019.06.25 at 18h 26m 16s.xml">
+      <configuration name="pytest in testDiscreteGridEnv.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_testDiscreteGridEnv_py - 2019.06.25 at 18h 42m 18s.xml">
+      <configuration name="pytest in testDiscreteGridEnv.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_testDiscreteGridEnv_py - 2019.06.25 at 21h 51m 53s.xml">
+      <configuration name="pytest in testDiscreteGridEnv.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_testPolicies_IssueShaozhe_py - 2019.06.25 at 21h 52m 18s.xml">
+      <configuration name="pytest in testPolicies_IssueShaozhe.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_testWrapperFunctions_py - 2019.06.25 at 21h 52m 21s.xml">
+      <configuration name="pytest in testWrapperFunctions.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_testEnvMujoco_py - 2019.07.12 at 16h 52m 03s.xml">
+      <configuration name="Unittests in testEnvMujoco.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_testEnvMujoco_py - 2019.07.12 at 16h 53m 02s.xml">
+      <configuration name="Unittests in testEnvMujoco.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_testModifyPhysicsBodyMass_py - 2019.07.17 at 19h 27m 38s.xml">
+      <configuration name="Unittests in testModifyPhysicsBodyMass.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_testModifyPhysicsBodyMass_py - 2019.07.17 at 19h 42m 06s.xml">
+      <configuration name="Unittests in testModifyPhysicsBodyMass.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_testModifyPhysicsBodyMass_py - 2019.07.18 at 08h 21m 31s.xml">
+      <configuration name="Unittests in testModifyPhysicsBodyMass.py" configurationId="tests" />
+    </history-entry>
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="269477000" />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.23414986" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.24167694" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49711815" visible="true" weight="0.270037" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.35881627" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.18618989" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.37114674" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5028818" side_tool="true" weight="0.29346487" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.38347718" />
+      <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.5647349" />
+      <window_info anchor="bottom" id="Messages" order="13" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" weight="0.20533141" />
+      <window_info anchor="right" id="R Graphics" order="4" />
+      <window_info anchor="right" id="R Packages" order="5" />
+      <window_info anchor="right" id="Database" order="6" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23847263" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.24167694" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4985591" visible="true" weight="0.22934648" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.18865599" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.18618989" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.20098643" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50144094" side_tool="true" weight="0.26880395" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.25524044" />
+      <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.10727497" />
+      <window_info anchor="bottom" id="Messages" order="13" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" weight="0.20605187" />
+      <window_info anchor="right" id="R Graphics" order="4" />
+      <window_info anchor="right" id="R Packages" order="5" />
+      <window_info anchor="right" id="Database" order="6" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ORDER">
+      <list>
+        <option value="0" />
+        <option value="2" />
+        <option value="3" />
+        <option value="1" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="RECENTLY_FILTERED_USER_GROUPS">
+                <collection />
+              </option>
+              <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+                <collection />
+              </option>
+              <option name="COLUMN_ORDER">
+                <list>
+                  <option value="0" />
+                  <option value="1" />
+                  <option value="2" />
+                  <option value="3" />
+                </list>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list />
+          </value>
+        </entry>
+        <entry key="User">
+          <value>
+            <list />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/mujoco-py" />
+    </ignored-roots>
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="state" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$drawDiscreteGridChasing.coverage" NAME="drawDiscreteGridChasing Coverage Results" MODIFIED="1563081352596" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$testDiscreteGridInference.coverage" NAME="testDiscreteGridInference Coverage Results" MODIFIED="1562975399745" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$Unittests_in_testEnvMujoco_py.coverage" NAME="Unittests in testEnvMujoco.py Coverage Results" MODIFIED="1562975581093" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$envDiscreteGrid.coverage" NAME="envDiscreteGrid Coverage Results" MODIFIED="1561653884198" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/constrainedChasingEscapingEnv" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$inference.coverage" NAME="inference Coverage Results" MODIFIED="1562019953690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/inferDiscreteGridChasing" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testPolicies_IssueShaozhe_TestPolicyFunctions_testHeatSeekingPolicy.coverage" NAME="pytest for testPolicies_IssueShaozhe.TestPolicyFunctions.testHeatSeekingPolicy Coverage Results" MODIFIED="1561482965763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$inferContinuousChasing.coverage" NAME="inferContinuousChasing Coverage Results" MODIFIED="1563464085592" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$visualize3Objects__1_.coverage" NAME="visualize3Objects Coverage Results" MODIFIED="1563683828184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$fixedActionStartFromRest.coverage" NAME="fixedActionStartFromRest Coverage Results" MODIFIED="1562976048677" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$Unittests_in_testModifyPhysicsBodyMass_py.coverage" NAME="Unittests in testModifyPhysicsBodyMass.py Coverage Results" MODIFIED="1563463287302" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$drawDiscreteGridChasing__1_.coverage" NAME="drawDiscreteGridChasing Coverage Results" MODIFIED="1561406020552" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$sample.coverage" NAME="sample Coverage Results" MODIFIED="1563464063482" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$sample3ObjectsTraj.coverage" NAME="sample3ObjectsTraj Coverage Results" MODIFIED="1563683812183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$try.coverage" NAME="try Coverage Results" MODIFIED="1561420827963" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_in_testWrapperFunctions_py.coverage" NAME="pytest in testWrapperFunctions.py Coverage Results" MODIFIED="1561524740526" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$inferDiscreteChasing.coverage" NAME="inferDiscreteChasing Coverage Results" MODIFIED="1563081416945" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$infer3ObjectsContinChasing.coverage" NAME="infer3ObjectsContinChasing Coverage Results" MODIFIED="1563683901298" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$wrappers.coverage" NAME="wrappers Coverage Results" MODIFIED="1562046779518" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/inferDiscreteGridChasing" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_in_testDiscreteGridEnv_py.coverage" NAME="pytest in testDiscreteGridEnv.py Coverage Results" MODIFIED="1561524682439" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$visualizeChasing.coverage" NAME="visualizeChasing Coverage Results" MODIFIED="1563082572135" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$DiscreteBayesian.coverage" NAME="DiscreteBayesian Coverage Results" MODIFIED="1561613940259" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Desktop/Gao Lab/Python/pythonpracticepublish/SourceCode" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$visualize3Objects.coverage" NAME="visualize3Objects Coverage Results" MODIFIED="1563583730085" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testDiscreteGridEnv_TestEnvironmentRandomizedCase.coverage" NAME="pytest for testDiscreteGridEnv.TestEnvironmentRandomizedCase Coverage Results" MODIFIED="1561492117006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testDiscreteGridEnv_TestEnvironment.coverage" NAME="pytest for testDiscreteGridEnv.TestEnvironment Coverage Results" MODIFIED="1561440168031" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testDiscreteGridEnv_TestEnvironment_testAgentsForceAction.coverage" NAME="pytest for testDiscreteGridEnv.TestEnvironment.testAgentsForceAction Coverage Results" MODIFIED="1561488935979" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_in_testPolicies_IssueShaozhe_py.coverage" NAME="pytest in testPolicies_IssueShaozhe.py Coverage Results" MODIFIED="1561524717293" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="evaluateCodeFragment">
+      <expression>
+        <expression-string>[str(mind) + str(physics)+str( action) for index, value in mindsPhysicsActionsDf.iterrows() for mind, physics, action in index]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len([index for index, value in mindsPhysicsActionsDf.iterrows()])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>[index for index, value in mindsPhysicsActionsDf.iterrows()]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string># [str(mind) + str(physics)+str( action) for index, value in mindsPhysicsActionsDf.iterrows() for *mind, physics, action in index]
+[index for index, value in mindsPhysicsActionsDf.iterrows()]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>[str(mind) + str(physics)+str( action) for index, value in mindsPhysicsActionsDf.iterrows() for *mind, physics, action in index]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>[str(mind) + str(physics)+str( action) for index, value in mindsPhysicsActionsDf.iterrows() for *mind, *physics, *action in index]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>[str(mind) + str(physics)+str( action) for index, value in mindsPhysicsActionsDf.iterrows() for mind, physics, action in *index]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>[(mind, physics, action) for index, value in mindsPhysicsActionsDf.iterrows() for mind, physics, action in index][0]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>[(mind, physics, action) for index, value in mindsPhysicsActionsDf.iterrows() for mind, physics, action in index]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>8*8*8*6*2</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>7*7*7*6*2</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len(inferenceIndex)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len(inferenceIndexr)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>trajectory[0][0][0]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>trajectory[0]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len(trajectory[0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len(trajectory)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>policy(['wolf', 'sheep'], state= observe(0), allAgentsActions = [(-7, 7), (-10, 0), (10,0)])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/0001.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/0009.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/demoPics/00003.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/demoPics/00076.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/mindInferencePlot.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/posterior">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/inferDiscreteChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="92" lean-forward="true" selection-start-line="92" selection-end-line="92" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NNModels/sheepNNModels/checkpoint">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="281">
+          <caret line="46" column="41" selection-start-line="46" selection-start-column="41" selection-end-line="46" selection-end-column="41" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trajectoriesSaveLoad.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="6" column="18" selection-start-line="6" selection-start-column="4" selection-end-line="6" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/SheepAndWolfNNOnlyPolicies/policy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="160">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/simple1DEnv.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/visualize/discreteGridVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/replayBuffer.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/visualizeNN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="10" column="42" lean-forward="true" selection-start-line="10" selection-start-column="42" selection-end-line="10" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/demo/demo3/demoPics/0001.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/demo/demo3/demoPics/0006.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/demo/demo3/demoPics/0008.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/demo/demo3/demoPics/0010.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/demo/demo3/demoPics/0000.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/demo/demo3/demoPics/0003.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envNoPhysics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1807" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/physicsInferencePlot10.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/mindInferencePlot10.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/testModifyPhysicsBodyMass.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="6" column="44" lean-forward="true" selection-start-line="6" selection-start-column="44" selection-end-line="6" selection-end-column="44" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/physicsInferencePlot11.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/policies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="263">
+          <caret line="15" selection-start-line="15" selection-end-line="15" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/env/xmls/twoAgents.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="24" column="33" lean-forward="true" selection-start-line="24" selection-start-column="33" selection-end-line="24" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/env/xmls/threeAgents.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="14" column="10" lean-forward="true" selection-start-line="14" selection-start-column="10" selection-end-line="14" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/inference.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-154">
+          <caret line="28" column="26" selection-start-line="28" selection-start-column="26" selection-end-line="28" selection-end-column="26" />
+          <folding>
+            <element signature="e#122#141#0" expanded="true" />
+            <element signature="e#2544#4070#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="155">
+          <caret line="287" selection-start-line="287" selection-end-line="287" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/visualizeChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="183">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/episode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-619">
+          <caret line="63" selection-start-line="63" selection-end-line="63" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/visualize/continuousVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="485">
+          <caret line="125" column="25" lean-forward="true" selection-start-line="125" selection-start-column="25" selection-end-line="125" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo13/00000.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo13/00011.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo13/00039.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/visualize/inferenceVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1120">
+          <caret line="56" selection-start-line="56" selection-end-line="56" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="193">
+          <caret line="42" column="39" lean-forward="true" selection-start-line="42" selection-start-column="39" selection-end-line="42" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sample.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="397">
+          <caret line="83" column="18" lean-forward="true" selection-start-line="83" selection-start-column="18" selection-end-line="83" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="457">
+          <caret line="68" selection-start-line="68" selection-end-line="68" />
+          <folding>
+            <element signature="e#280#1360#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousTransition.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="320">
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/inferContinuousChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="310">
+          <caret line="99" column="18" lean-forward="true" selection-start-line="99" selection-start-column="18" selection-end-line="99" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#1275#1715#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sample3ObjectsTraj.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="95">
+          <caret line="69" column="55" selection-start-line="69" selection-start-column="55" selection-end-line="69" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/visualize3Objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="417">
+          <caret line="68" selection-start-line="68" selection-end-line="68" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo14/00001.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo14/00000.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsDemo14/0002.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsDemo14/0007.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo/3ObjectsDemo14/0001.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="377">
+          <caret line="169" lean-forward="true" selection-start-line="169" selection-end-line="169" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

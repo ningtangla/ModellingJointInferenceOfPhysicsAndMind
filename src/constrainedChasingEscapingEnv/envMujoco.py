@@ -77,6 +77,49 @@ class TransitionFunction:
         return newState
 
 
+class Transition3Objects:
+    def __init__(self, simulation, numSimulationFrames):
+        self.simulation = simulation
+        self.numSimulationFrames = numSimulationFrames
+
+    def __call__(self, state, actions):
+        state = np.asarray(state)
+        # print("state", state)
+        actions = np.asarray(actions)
+        numAgent = len(state)
+
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+        numQPosEachAgent = int(numQPos / numAgent)
+        numQVelEachAgent = int(numQVel / numAgent)
+
+        oldQPos = state[:, 0:numQPosEachAgent].flatten()
+        oldQVel = state[:, -numQVelEachAgent:].flatten()
+
+        self.simulation.data.qpos[:] = oldQPos
+        self.simulation.data.qvel[:] = oldQVel
+        self.simulation.data.ctrl[:] = actions.flatten()
+
+        for simulationFrame in range(self.numSimulationFrames):
+            self.simulation.step()
+            self.simulation.forward()
+
+            newQPos, newQVel = self.simulation.data.qpos, self.simulation.data.qvel
+            newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent:, :numQPosEachAgent])
+
+            agentNewQPos = lambda agentIndex: newQPos[
+                                              numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)]
+            agentNewXPos = lambda agentIndex: newXPos[
+                                              numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)]
+            agentNewQVel = lambda agentIndex: newQVel[
+                                              numQVelEachAgent * agentIndex: numQVelEachAgent * (agentIndex + 1)]
+            agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewXPos(agentIndex),
+                                                               agentNewQVel(agentIndex)])
+            newState = np.asarray([agentNewState(agentIndex) for agentIndex in range(numAgent)])
+
+        return newState
+
+
 class IsTerminal:
     def __init__(self, minXDis, getAgent0Pos, getAgent1Pos):
         self.minXDis = minXDis

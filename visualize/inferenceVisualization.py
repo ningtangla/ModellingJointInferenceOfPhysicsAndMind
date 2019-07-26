@@ -136,7 +136,6 @@ class DrawContinuousInferenceResultNoPull:
                 self.saveImage(screen)
 
 
-
 class PlotInferenceProb:
     def __init__(self, xVariableName, yVaraibleName, groupIndex):
         self.xVariableName = xVariableName
@@ -145,9 +144,11 @@ class PlotInferenceProb:
 
     def __call__(self, inferenceDf, graphIndex):
         resultDf = inferenceDf.groupby(self.groupIndex).sum()
+        print(resultDf)
         graph = resultDf.T.plot()
         graph.set_xlabel(self.xVariableName)
         graph.set_ylabel(self.yVaraibleName)
+        plt.ylim([0, 1])
         dirName = os.path.dirname(__file__)
         plotPath = os.path.join(dirName, '..', 'demo')
         plt.savefig(os.path.join(plotPath, self.groupIndex + 'InferencePlot'+ str(graphIndex)))
