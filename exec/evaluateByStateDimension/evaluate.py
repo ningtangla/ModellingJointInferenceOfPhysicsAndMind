@@ -172,16 +172,15 @@ def main():
     # split
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionLabel']
-    independentVariables['trainingDataSize'] = [num for num in
-                                                range(2000, 20001, 2000)]
-    independentVariables['batchSize'] = [64]
+    independentVariables['trainingDataSize'] = [20000]
+    independentVariables['batchSize'] = [256]
     independentVariables['augment'] = [False]
-    independentVariables['trainingStep'] = [10000]
+    independentVariables['trainingStep'] = [num for num in range(5000, 100001, 5000)]
     independentVariables['neuronsPerLayer'] = [128]
     independentVariables['sharedLayers'] = [1]
     independentVariables['actionLayers'] = [1]
     independentVariables['valueLayers'] = [1]
-    independentVariables['numOfFrame'] = [1,3]
+    independentVariables['numOfFrame'] = [1,2,3]
     independentVariables['numOfStateSpace'] = [8]
 
     levelNames = list(independentVariables.keys())
@@ -195,12 +194,14 @@ def main():
     getGenerateEscaperModel = lambda numStateSpace: net.GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     generateEscaperPolicy = lambda model: net.ApproximateActionPrior(model, actionSpace)
     qPosIndex = [0, 1]
-    getModifyEscaperState = lambda numOfFrame, stateDim: ModifyEscaperInputState(qPosIndex, numOfFrame, stateDim)
+    zeroIndex = [2, 3, 6, 7]
+    zeroValueInState = ZeroValueInState(zeroIndex)
+    getModifyEscaperState = lambda numOfFrame, stateDim: ModifyEscaperInputState(qPosIndex, numOfFrame, stateDim, zeroValueInState)
     evaluate = EvaluateEscaperPerformance(chaserPolicy, allSampleTrajectory, measure, getGenerateEscaperModel, generateEscaperPolicy, PreparePolicy, getModelSavePath, getModifyEscaperState)
     statDF = toSplitFrame.groupby(levelNames).apply(evaluate)
 
     # plotbatchSize
-    xStatistic = "trainingDataSize"
+    xStatistic = "trainingStep"
     yStatistic = "mean"
     lineStatistic = "numOfFrame"
     subplotStatistic = "batchSize"
