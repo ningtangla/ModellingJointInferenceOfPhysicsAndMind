@@ -95,10 +95,10 @@ class GenerateTrajectories:
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     evalNumSimulations = 200
-    evalNumTrials = 1000
+    evalNumTrials = 600
     evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = list(range(0, 10000, 1000)) + [9500]
+    manipulatedVariables['iteration'] = list(range(0, 20000, 2000)) + [20000-1]
     manipulatedVariables['policyName'] = ['NNPolicy']#['NNPolicy', 'mctsHeuristic']
 
     levelNames = list(manipulatedVariables.keys())
@@ -124,34 +124,34 @@ def main():
 
     numSimulationFrames = 20
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-    sheepActionInSheepMCTSSimulation = lambda state: (0, 0)
-    transitInWolfMCTSSimulation = lambda state, action: transit(state, [sheepActionInSheepMCTSSimulation(state), action])
+    # sheepActionInSheepMCTSSimulation = lambda state: (0, 0)
+    # transitInWolfMCTSSimulation = lambda state, action: transit(state, [sheepActionInSheepMCTSSimulation(state), action])
 
     # MCTS
-    cInit = 1
-    cBase = 100
-    calculateScore = ScoreChild(cInit, cBase)
-    selectChild = SelectChild(calculateScore)
+    # cInit = 1
+    # cBase = 100
+    # calculateScore = ScoreChild(cInit, cBase)
+    # selectChild = SelectChild(calculateScore)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
 
-    getActionPriorUniform = lambda state: {action: 1/numActionSpace for action in actionSpace}
-    initializeChildren = InitializeChildren(actionSpace, transitInWolfMCTSSimulation, getActionPriorUniform)
-    expand = Expand(isTerminal, initializeChildren)
+    # getActionPriorUniform = lambda state: {action: 1/numActionSpace for action in actionSpace}
+    # initializeChildren = InitializeChildren(actionSpace, transitInWolfMCTSSimulation, getActionPriorUniform)
+    # expand = Expand(isTerminal, initializeChildren)
 
     alivePenalty = -0.05
     deathBonus = 1
     rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
 
-    rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    rolloutHeuristicWeight = 0.1
-    maxRolloutSteps = 10
-    rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-    rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
-                      rolloutHeuristic)
+    # rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    # rolloutHeuristicWeight = 0.1
+    # maxRolloutSteps = 10
+    # rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
+    # rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
+    #                   rolloutHeuristic)
 
-    mcts = MCTS(evalNumSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
+    # mcts = MCTS(evalNumSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
     # neural network init and save path
     numStateSpace = 12
@@ -174,7 +174,7 @@ def main():
                          'numTrajectoriesPerIteration': trainNumTrajectoriesPerIteration}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithRandomModel', 'trainedNNModels')
+                                        'replayBufferStartWithRandomModel', 'oldNNModel', 'trainedNNModels')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -182,10 +182,17 @@ def main():
     approximatePolicy = ApproximatePolicy(initializedNNModel, actionSpace)
     NNPolicy = lambda state: {approximatePolicy(state): 1}
 
+    # # wolf policy
+    # wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    # wolfNNModelPath = '/Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/trainMCTSNNIteratively/replayBufferStartWithTrainedModel/trainedNNModels/bufferSize=2000_iteration=19999_learningRate=0.0001_maxRunningSteps=20_miniBatchSize=256_numSimulations=200_numTrajectoriesPerIteration=1'
+    # restoreVariables(wolfNNModel, wolfNNModelPath)
+    # wolfActionForState = ApproximatePolicy(wolfNNModel, actionSpace)
+    # wolfPolicy = lambda state: {wolfActionForState(state): 1}
+
     # policy
-    getSheepPolicy = lambda policyName: stationaryAgentPolicy
-    allGetWolfPolicies = {'NNPolicy': NNPolicy, 'mctsHeuristic': mcts}
+    allGetWolfPolicies = {'NNPolicy': NNPolicy}#, 'mctsHeuristic': mcts}
     getWolfPolicy = lambda policyName: allGetWolfPolicies[policyName]
+    getSheepPolicy = lambda policyName: stationaryAgentPolicy
     preparePolicy = PreparePolicy(getSheepPolicy, getWolfPolicy)
 
     # generate a set of starting conditions to maintain consistency across all the conditions
@@ -204,7 +211,8 @@ def main():
 
     # save evaluation trajectories
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                       'replayBufferStartWithRandomModel', 'evaluationTrajectories10kTrainSteps')
+                                       'replayBufferStartWithRandomModel', 'oldNNModel',
+                                       'evaluationTrajectories20kTrainSteps')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -223,7 +231,7 @@ def main():
                                                 preparePolicy)
 
     # run all trials and save trajectories
-    toSplitFrame.groupby(levelNames).apply(generateTrajectories)
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectories)
 
     # compute statistics on the trajectories
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
@@ -243,7 +251,7 @@ def main():
         grp.plot(y='mean', marker='o', label=policyName, ax=axis)
 
     plt.ylabel('Accumulated rewards')
-    plt.title('iterative training in chasing task with killzone radius = 2 and numSim = 200\nStart with random model')
+    plt.title('iterative training in chase task with 1 train steps per iteration\nStart with random model')
     plt.legend(loc='best')
     plt.show()
 

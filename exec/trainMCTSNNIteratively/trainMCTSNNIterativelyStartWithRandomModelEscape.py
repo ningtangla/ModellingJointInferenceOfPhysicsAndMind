@@ -145,6 +145,7 @@ def main():
     manipulatedVariables['miniBatchSize'] = [256]
     manipulatedVariables['learningRate'] = [0.0001]
     manipulatedVariables['bufferSize'] = [2000]
+    numTrainStepsPerIteration = 10
     learningThresholdFactor = 4
     numIterations = 20000
     numSimulations = 200
@@ -170,7 +171,7 @@ def main():
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferEscapeStartWithRandomModel', 'trainedNNModels')
+                                        'replayBufferEscapeStartWithRandomModel10StepsPerIteration', 'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -180,7 +181,7 @@ def main():
     # trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                           'replayBufferEscapeStartWithRandomModel', 'trajectories')
+                                           'replayBufferEscapeStartWithRandomModel10StepsPerIteration', 'trajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectoryExtension = '.pickle'
@@ -292,7 +293,6 @@ def main():
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1
-    numTrainStepsPerIteration = 1
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1

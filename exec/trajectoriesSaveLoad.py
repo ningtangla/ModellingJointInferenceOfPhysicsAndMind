@@ -50,6 +50,7 @@ class LoadTrajectories:
     def __call__(self, parameters):
         parameters['sampleIndex'] = '*'
         genericSavePath = self.getSavePath(parameters)
+        print("GENERIC SAVE PATH: ", genericSavePath)
         filesNames = glob.glob(genericSavePath)
         trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
         print("LOADED {} TRAJECTORIES".format(len(trajectories)))
@@ -66,6 +67,7 @@ class GenerateAllSampleIndexSavePaths:
         genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
         existingFilesNames = glob.glob(genericSavePath)
         numExistingFiles = len(existingFilesNames)
+        print("{} FILES ALREADY EXIST".format(numExistingFiles))
         allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
                               range(numSamples)}
         allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
@@ -84,7 +86,6 @@ class SaveAllTrajectories:
         allSavePaths = self.generateAllSampleIndexSavePaths(numSamples, pathParameters)
         saveTrajectory = lambda sampleIndex: self.saveData(trajectories[sampleIndex], allSavePaths[sampleIndex])
         [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
-        print("SAVED TRAJECTORIES")
 
         return None
 

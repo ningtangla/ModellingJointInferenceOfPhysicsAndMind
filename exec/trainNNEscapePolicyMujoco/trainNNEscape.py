@@ -11,33 +11,51 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, \
     LearningRateModifier
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
+from exec.evaluationFunctions import conditionDfFromParametersDict
 
 import numpy as np
+from collections import OrderedDict
+
+
+class GetNNModel:
+    def __init__(self, getGenerateModel, sharedWidths, actionLayerWidths, valueLayerWidths):
+        self.getGenerateModel = getGenerateModel
+        self.sharedWidths = sharedWidths
+        self.actionLayerWidths = actionLayerWidths
+        self.valueLayerWidths = valueLayerWidths
+
+    def __call__(self, stateDimension):
+        generateModel = self.getGenerateModel(stateDimension)
+        model = generateModel(self.sharedWidths, self.actionLayerWidths, self.valueLayerWidths)
+
+        return model
 
 
 class ProcessTrajectoryForNN:
-    def __init__(self, actionToOneHot, agentId):
+    def __init__(self, actionToOneHot, agentId, reduceStateDimension):
         self.actionToOneHot = actionToOneHot
         self.agentId = agentId
+        self.reduceStateDimension = reduceStateDimension
 
     def __call__(self, trajectory):
         processTuple = lambda state, actions, actionDist, value: \
-            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+            (self.reduceStateDimension(state), self.actionToOneHot(actions[self.agentId]), value)
         processedTrajectory = [processTuple(*triple) for triple in trajectory]
 
         return processedTrajectory
 
 
 class PreProcessTrajectories:
-    def __init__(self, addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN):
+    def __init__(self, addValuesToTrajectory, removeTerminalTupleFromTrajectory, getProcessTrajectoryForNN):
         self.addValuesToTrajectory = addValuesToTrajectory
         self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
-        self.processTrajectoryForNN = processTrajectoryForNN
+        self.getProcessTrajectoryForNN = getProcessTrajectoryForNN
 
-    def __call__(self, trajectories):
+    def __call__(self, trajectories, stateDimension):
         trajectoriesWithValues = [self.addValuesToTrajectory(trajectory) for trajectory in trajectories]
         filteredTrajectories = [self.removeTerminalTupleFromTrajectory(trajectory) for trajectory in trajectoriesWithValues]
-        processedTrajectories = [self.processTrajectoryForNN(trajectory) for trajectory in filteredTrajectories]
+        processTrajectoryForNN = self.getProcessTrajectoryForNN(stateDimension)
+        processedTrajectories = [processTrajectoryForNN(trajectory) for trajectory in filteredTrajectories]
         allDataPoints = [dataPoint for trajectory in processedTrajectories for dataPoint in trajectory]
         trainData = [list(varBatch) for varBatch in zip(*allDataPoints)]
 
@@ -46,32 +64,37 @@ class PreProcessTrajectories:
 
 class TrainNNModel:
     def __init__(self, numTrainIterations, trainCheckPointInterval, readParametersFromDf,
-                 loadTrajectories, preProcessTrajectories, getModel, trainNNModel, getModelSavePath, saveVariables):
+                 loadTrajectories, preProcessTrajectories, getNNModel, trainNNModel, getModelSavePath, saveVariables):
         self.numTrainIterations = numTrainIterations
         self.trainCheckPointInterval = trainCheckPointInterval
         self.readParametersFromDf = readParametersFromDf
         self.loadTrajectories = loadTrajectories
         self.preProcessTrajectories = preProcessTrajectories
-        self.getModel = getModel
+        self.getNNModel = getNNModel
         self.trainNNModel = trainNNModel
         self.getModelSavePath = getModelSavePath
         self.saveVariables = saveVariables
 
-    def __call__(self):
+    def __call__(self, oneConditionDf):
+        stateDimension = oneConditionDf.index.get_level_values('stateDimension')[0]
         trajectories = self.loadTrajectories({})
-        trainData = self.preProcessTrajectories(trajectories)
-        NNModel = self.getModel()
+        trainData = self.preProcessTrajectories(trajectories, stateDimension)
+        NNModel = self.getNNModel(stateDimension)
         for iteration in range(self.numTrainIterations):
             updatedNNModel = self.trainNNModel(NNModel, trainData)
             NNModel = updatedNNModel
             if iteration % self.trainCheckPointInterval == 0 or iteration == self.numTrainIterations - 1:
-                pathParameters = {}
-                pathParameters['trainSteps'] = iteration
+                pathParameters = {'trainSteps': iteration, 'stateDimension': stateDimension}
                 modelSavePath = self.getModelSavePath(pathParameters)
                 self.saveVariables(NNModel, modelSavePath)
 
 
 def main():
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['stateDimension'] = [8, 12]
+
+    toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
+
     trainStepsEachIteration = 1
     trainCheckpointInterval = 200
     numTrainIterations = 100000
@@ -122,18 +145,20 @@ def main():
     actionIndex = 1
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForNN(actionToOneHot, sheepId)
+    reductionIndex = {8: [[[0], [1]], [0, 1, 4, 5]], 12: [[[0], [1]], [0, 1, 2, 3, 4, 5]]}
+    getReduceStateDimension = lambda stateDimension: lambda state: np.asarray(state)[reductionIndex[stateDimension]].flatten()
+    getProcessTrajectoryForNN = lambda stateDimension: ProcessTrajectoryForNN(actionToOneHot, sheepId,
+                                                                              getReduceStateDimension(stateDimension))
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory,
-                                                    processTrajectoryForNN)
+                                                    getProcessTrajectoryForNN)
 
     # neural network model
-    numStateSpace = 12
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
-    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    getNNModel = lambda: generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    getGenerateModel = lambda stateDimension: GenerateModel(stateDimension, numActionSpace, regularizationFactor)
+    getNNModel = GetNNModel(getGenerateModel, sharedWidths, actionLayerWidths, valueLayerWidths)
 
     # NN save path
     NNFixedParameters = {'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,
@@ -170,7 +195,9 @@ def main():
                                 loadTrajectories, preProcessTrajectories, getNNModel, trainNN, getNNModelSavePath,
                                 saveVariables)
 
-    trainNNModel()
+    levelNames = list(manipulatedVariables.keys())
+    toSplitFrame.groupby(levelNames).apply(trainNNModel)
+
 
 if __name__ == '__main__':
     main()

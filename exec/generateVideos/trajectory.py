@@ -30,11 +30,12 @@ class AdjustDfFPStoTraj:
         self.oldFPS = oldFPS
         self.newFPS = newFPS
 
-    def __call__(self, trajDf):
-        xValue = [value['xPos'] for key, value in trajDf.groupby('agentId')]
-        yValue = [value['yPos'] for key, value in trajDf.groupby('agentId')]
+    def __call__(self, trajectory):
+        agentNumber = len(trajectory[0])
+        xValue = [[state[agentIndex][0] for state in trajectory] for agentIndex in range(agentNumber)]
+        yValue = [[state[agentIndex][1] for state in trajectory] for agentIndex in range(agentNumber)]
 
-        timeStepsNumber = len(xValue[0])
+        timeStepsNumber = len(trajectory)
         adjustRatio = self.newFPS // (self.oldFPS - 1)
 
         insertPositionValue = lambda positionList: np.array(
@@ -43,7 +44,6 @@ class AdjustDfFPStoTraj:
         newXValue = [insertPositionValue(agentXPos) for agentXPos in xValue]
         newYValue = [insertPositionValue(agentYPos) for agentYPos in yValue]
 
-        agentNumber = len(xValue)
         newTimeStepsNumber = len(newXValue[0])
         getSingleState = lambda time: [(newXValue[agentIndex][time], newYValue[agentIndex][time]) for agentIndex in range(agentNumber)]
         newTraj = [getSingleState(time) for time in range(newTimeStepsNumber)]

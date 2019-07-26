@@ -10,11 +10,13 @@ from mujoco_py import load_model_from_path, MjSim
 
 from src.constrainedChasingEscapingEnv.measure import ComputeOptimalNextPos, DistanceBetweenActualAndOptimalNextPosition, \
     calculateCrossEntropy
-from src.constrainedChasingEscapingEnv.wrappers import GetStateFromTrajectory, GetAgentPosFromState, GetAgentPosFromTrajectory
+from src.constrainedChasingEscapingEnv.measure import GetStateFromTrajectory, GetAgentPosFromTrajectory
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.envMujoco import TransitionFunction, IsTerminal
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.play import agentDistToGreedyAction
+from src.episode import chooseGreedyAction
+
 
 @ddt
 class TestMeasurementFunctions(unittest.TestCase):
@@ -27,7 +29,7 @@ class TestMeasurementFunctions(unittest.TestCase):
         self.getWolfXPos = GetAgentPosFromState(self.wolfId, self.xPosIndex)
         self.optimalPolicy = HeatSeekingDiscreteDeterministicPolicy(self.actionSpace, self.getSheepXPos,
                                                                     self.getWolfXPos, computeAngleBetweenVectors)
-        self.getOptimalAction = lambda state: agentDistToGreedyAction(self.optimalPolicy(state))
+        self.getOptimalAction = lambda state: chooseGreedyAction(self.optimalPolicy(state))
         self.killzoneRadius = 0.5
         self.isTerminal = IsTerminal(self.killzoneRadius, self.getSheepXPos, self.getWolfXPos)
         self.dirName = os.path.dirname(__file__)
@@ -37,7 +39,7 @@ class TestMeasurementFunctions(unittest.TestCase):
         self.numSimulationFrames = 20
         self.transit = TransitionFunction(self.simulation, self.isTerminal, self.numSimulationFrames)
 
-        self.stationaryAgentAction = lambda state: agentDistToGreedyAction(stationaryAgentPolicy(state))
+        self.stationaryAgentAction = lambda state: chooseGreedyAction(stationaryAgentPolicy(state))
         self.sheepTransit = lambda state, action: self.transit(state, [action, self.stationaryAgentAction(state)])
         self.stateIndex = 0
         self.getInitStateFromTrajectory = GetStateFromTrajectory(0, self.stateIndex)
@@ -86,6 +88,7 @@ class TestMeasurementFunctions(unittest.TestCase):
     @unpack
     def testCrossEntropy(self, data, groundTruth):
         self.assertAlmostEqual(calculateCrossEntropy(data), groundTruth, places=5)
+
 
 if __name__ == "__main__":
     unittest.main()

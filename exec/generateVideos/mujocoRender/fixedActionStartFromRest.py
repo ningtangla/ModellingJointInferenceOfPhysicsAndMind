@@ -3,7 +3,7 @@ import os
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, TransitionFunction, IsTerminal
+from src.constrainedChasingEscapingEnv.envMujoco import Reset, TransitionFunction, IsTerminal
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 import mujoco_py as mujoco
@@ -12,7 +12,7 @@ import skvideo.io
 
 def main():
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', '..', 'env', 'xmls', 'chase10.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
     qPosInit = (-9.7, 0, -9.7, -9.7)
@@ -29,13 +29,13 @@ def main():
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
     numSimulationFrames = 1
 
-    reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
+    reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
     # viewer = mujoco.MjViewer(physicsSimulation)
     frames = []
 
-    maxRunningSteps = 50
+    maxRunningSteps = 100
     action = [(10, 0), (0, 0)]
     for step in range(maxRunningSteps):
         frame = physicsSimulation.render(1024, 1024, camera_name="center")

@@ -9,7 +9,7 @@ from ddt import ddt, data, unpack
 from mujoco_py import load_model_from_path, MjSim
 
 # Local import
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, TransitionFunction, IsTerminal, WithinBounds
+from src.constrainedChasingEscapingEnv.envMujoco import Reset, TransitionFunction, IsTerminal, WithinBounds
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 
@@ -37,7 +37,7 @@ class TestEnvMujoco(unittest.TestCase):
           ([1, 2, 3, 4], [5, 6, 7, 8], np.asarray([[1, 2, 1, 2, 5, 6], [3, 4, 3, 4, 7, 8]])))
     @unpack
     def testResetUniform(self, qPosInit, qVelInit, groundTruthReturnedInitialState):
-        resetUniform = ResetUniform(self.simulation, qPosInit, qVelInit, self.numAgent)
+        resetUniform = Reset(self.simulation, qPosInit, qVelInit, self.numAgent)
         returnedInitialState = resetUniform()
         truthValue = returnedInitialState == groundTruthReturnedInitialState
         self.assertTrue(truthValue.all())
@@ -87,32 +87,32 @@ class TestEnvMujoco(unittest.TestCase):
         isWithinBounds = self.withinBounds(qPos)
         self.assertEqual(isWithinBounds, groundTruthWithinBounds)
 
-    @data(((-5, -5, 5, 5), (0, 0, 0, 0), (0.1, 0.2, 0.3, 0.4), (0, 0, 0, 0)),
-          ((7, 8, 3, 4), (0, 0, 0, 0), (0.3, 0.2, 0.6, 0.5), (0, 0, 0, 0)))
-    @unpack
-    def testResetGaussian(self, qPosInit, qVelInit, qPosInitStDev, qVelInitStDev):
-        resetGaussian = ResetGaussian(self.simulation, qPosInit, qVelInit, self.numAgent, qPosInitStDev, qVelInitStDev,
-                                      self.withinBounds)
-        allStartState = [resetGaussian() for trial in range(100000)]
-
-        # check all init states have correct shape
-        isStateShapeCorrect = all(np.shape(startState) == (2, 6) for startState in allStartState)
-        self.assertTrue(isStateShapeCorrect)
-
-        # check all init states are within bounds
-        qPosFromState = lambda state: state[:, :2].flatten()
-        allInitQpos = [qPosFromState(startState) for startState in allStartState]
-        isQPosWithinBounds = [self.withinBounds(initQPos) for initQPos in allInitQpos]
-        self.assertTrue(isQPosWithinBounds)
-
-        # check if the init QPos distribution is gaussian
-        allInitQposArray = np.asarray(allInitQpos)
-        mean = np.mean(allInitQposArray, axis=0)
-        isMeanCorrect = all(np.abs(mean-qPosInit) < 0.1)
-        std = np.std(allInitQposArray, axis=0)
-        isStDevCorrect = all(np.abs(std-qPosInitStDev) < 0.1)
-        self.assertTrue(isMeanCorrect)
-        self.assertTrue(isStDevCorrect)
+    # @data(((-5, -5, 5, 5), (0, 0, 0, 0), (0.1, 0.2, 0.3, 0.4), (0, 0, 0, 0)),
+    #       ((7, 8, 3, 4), (0, 0, 0, 0), (0.3, 0.2, 0.6, 0.5), (0, 0, 0, 0)))
+    # @unpack
+    # def testResetGaussian(self, qPosInit, qVelInit, qPosInitStDev, qVelInitStDev):
+    #     resetGaussian = ResetGaussian(self.simulation, qPosInit, qVelInit, self.numAgent, qPosInitStDev, qVelInitStDev,
+    #                                   self.withinBounds)
+    #     allStartState = [resetGaussian() for trial in range(100000)]
+    #
+    #     # check all init states have correct shape
+    #     isStateShapeCorrect = all(np.shape(startState) == (2, 6) for startState in allStartState)
+    #     self.assertTrue(isStateShapeCorrect)
+    #
+    #     # check all init states are within bounds
+    #     qPosFromState = lambda state: state[:, :2].flatten()
+    #     allInitQpos = [qPosFromState(startState) for startState in allStartState]
+    #     isQPosWithinBounds = [self.withinBounds(initQPos) for initQPos in allInitQpos]
+    #     self.assertTrue(isQPosWithinBounds)
+    #
+    #     # check if the init QPos distribution is gaussian
+    #     allInitQposArray = np.asarray(allInitQpos)
+    #     mean = np.mean(allInitQposArray, axis=0)
+    #     isMeanCorrect = all(np.abs(mean-qPosInit) < 0.1)
+    #     std = np.std(allInitQposArray, axis=0)
+    #     isStDevCorrect = all(np.abs(std-qPosInitStDev) < 0.1)
+    #     self.assertTrue(isMeanCorrect)
+    #     self.assertTrue(isStDevCorrect)
 
 
 if __name__ == "__main__":

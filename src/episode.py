@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+
 class MultiAgentSampleTrajectory:
     def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
         self.agentNames = agentNames
@@ -93,3 +94,9 @@ def chooseGreedyAction(actionDist):
     return selectedAction
 
 
+def sampleActionFromActionDist(actionDist):
+    actions = list(actionDist.keys())
+    probs = list(actionDist.values())
+    sampledActionIndex = np.random.choice(len(actions), p=probs)
+    selectedAction = actions[sampledActionIndex]
+    return selectedAction

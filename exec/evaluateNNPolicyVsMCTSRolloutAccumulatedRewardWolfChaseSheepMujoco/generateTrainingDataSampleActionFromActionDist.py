@@ -8,7 +8,7 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
     backup, RollOut
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, Reset
-from src.episode import SampleTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, sampleActionFromActionDist
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
@@ -38,10 +38,10 @@ class GenerateTrajectories:
 def main():
     # manipulated variables and other important parameters
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['maxRunningSteps'] = [20]
+    manipulatedVariables['maxRunningSteps'] = [10]
     numSimulations = 100
-    numSamplesForCondition = {20: 1000}
-    killzoneRadius = 2
+    numSamplesForCondition = {10: 50}
+    killzoneRadius = 0.5
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
 
@@ -95,17 +95,17 @@ def main():
     qPosInit = (0, 0, 0, 0)
     qVelInit = (0, 0, 0, 0)
     qPosInitNoise = 9.7
-    qVelInitNoise = 8
+    qVelInitNoise = 5
     numAgent = 2
     reset = Reset(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
 
     getSampleTrajectory = lambda maxRunningSteps: SampleTrajectory(maxRunningSteps, transit, isTerminal, reset,
-                                                                   chooseGreedyAction)
+                                                                   sampleActionFromActionDist)
 
     # saving trajectories
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                            'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                           'trainingData')
+                                           'trainingDataSampleActionFromActionDist')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
 

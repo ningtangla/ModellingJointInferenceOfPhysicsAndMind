@@ -146,9 +146,9 @@ def main():
     manipulatedVariables['miniBatchSize'] = [256]
     manipulatedVariables['learningRate'] = [0.0001]
     manipulatedVariables['bufferSize'] = [2000]
-    numTrainStepsPerIteration = 1
+    numTrainStepsPerIteration = 10
     learningThresholdFactor = 4
-    numIterations = 40000
+    numIterations = 20000
     numSimulations = 200
 
     levelNames = list(manipulatedVariables.keys())
@@ -168,11 +168,11 @@ def main():
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     getNNModel = lambda: generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
-    maxRunningSteps = 20
+    maxRunningSteps = 35
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithRandomModel', 'oldNNModel', 'trainedNNModels')
+                                        'replayBufferStartWithRandomModel10StepsPerIterationChasingObstacle', 'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -182,7 +182,7 @@ def main():
     # trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                           'replayBufferStartWithRandomModel', 'oldNNModel', 'trajectories')
+                                           'replayBufferStartWithRandomModel10StepsPerIterationChasingObstacle', 'trajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectoryExtension = '.pickle'
@@ -218,7 +218,7 @@ def main():
 
     # Mujoco environment
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
     qPosInit = (0, 0, 0, 0)

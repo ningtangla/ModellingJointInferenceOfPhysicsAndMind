@@ -1,21 +1,18 @@
-import sys
 import os
+import sys
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
+from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, loadFromPickle
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData
-from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, \
-    LearningRateModifier
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory
-from exec.evaluationFunctions import conditionDfFromParametersDict
-
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, sampleData, saveVariables
+from src.neuralNetwork.trainTools import TrainReporter, TrainTerminalController, CoefficientCotroller, \
+    LearningRateModifier
 
 import numpy as np
-from collections import OrderedDict
 
 
 class ProcessTrajectoryForNN:
@@ -25,7 +22,7 @@ class ProcessTrajectoryForNN:
 
     def __call__(self, trajectory):
         processTuple = lambda state, actions, actionDist, value: \
-            (np.array(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
         processedTrajectory = [processTuple(*tup) for tup in trajectory]
 
         return processedTrajectory
@@ -47,68 +44,31 @@ class PreProcessTrajectories:
         return trainData
 
 
-class TrainNNModel:
-    def __init__(self, numTrainIterations, trainCheckPointInterval, readParametersFromDf,
-                 loadTrajectoriesFromDf, preProcessTrajectories, getModel, trainNNModel, getModelSavePath, saveVariables):
-        self.numTrainIterations = numTrainIterations
-        self.trainCheckPointInterval = trainCheckPointInterval
-        self.readParametersFromDf = readParametersFromDf
-        self.loadTrajectoriesFromDf = loadTrajectoriesFromDf
-        self.preProcessTrajectories = preProcessTrajectories
-        self.getModel = getModel
-        self.trainNNModel = trainNNModel
-        self.getModelSavePath = getModelSavePath
-        self.saveVariables = saveVariables
-
-    def __call__(self, oneConditionDf):
-        trajectories = self.loadTrajectoriesFromDf(oneConditionDf)
-        trainData = self.preProcessTrajectories(trajectories)
-        NNModel = self.getModel()
-        for iteration in range(self.numTrainIterations):
-            updatedNNModel = self.trainNNModel(NNModel, trainData)
-            NNModel = updatedNNModel
-            if iteration % self.trainCheckPointInterval == 0 or iteration == self.numTrainIterations - 1:
-                pathParameters = self.readParametersFromDf(oneConditionDf)
-                pathParameters['trainSteps'] = iteration
-                modelSavePath = self.getModelSavePath(pathParameters)
-                self.saveVariables(NNModel, modelSavePath)
-
-
 def main():
-    manipulatedVariables = OrderedDict()
-    manipulatedVariables['maxRunningSteps'] = [20]
+    # hyper parameters
     trainStepsEachIteration = 1
-    trainCheckpointInterval = 200
-    numTrainIterations = 100000
     learningRate = 0.0001
     miniBatchSize = 256
-
-    toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
+    numTrainIterations = 200000
+    trainCheckPointInterval = 200
 
     # get trajectory save path
+    trainDataNumSimulations = 125
+    trainDataKillzoneRadius = 2
+    trajectoryFixedParameters = {'numSimulations': trainDataNumSimulations, 'killzoneRadius': trainDataKillzoneRadius}
     dirName = os.path.dirname(__file__)
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                           'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                           'trainingData')
+                                           'trainWolfWithSheepNNPolicyMujoco', 'trainingData')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
-
-    numSimulations = 100
-    killzoneRadius = 2
-    qPosInitNoise = 9.7
-    qVelInitNoise = 8
-    rolloutHeuristicWeight = 0.1
-    trajectorySaveParameters = {'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,
-                                'qPosInitNoise': qPosInitNoise, 'qVelInitNoise': qVelInitNoise,
-                                'rolloutHeuristicWeight': rolloutHeuristicWeight}
     trajectorySaveExtension = '.pickle'
-    getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectorySaveExtension, trajectorySaveParameters)
+    getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectorySaveExtension, trajectoryFixedParameters)
 
     # load trajectories
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
-    loadTrajectoriesFromDf = lambda oneConditionDf: loadTrajectories(readParametersFromDf(oneConditionDf))
+    trajectories = loadTrajectories({})
 
-    # pre process trajectories
+    # pre-process trajectories
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
     sheepId = 0
@@ -135,30 +95,26 @@ def main():
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory,
                                                     processTrajectoryForNN)
 
-    # neural network model
+    trainData = preProcessTrajectories(trajectories)
+
+    # define NN Model
     numStateSpace = 12
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    getNNModel = lambda: generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    NNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
-    # NN save path
-    NNFixedParameters = {'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,
-                         'qPosInitNoise': qPosInitNoise, 'qVelInitNoise': qVelInitNoise,
-                         'rolloutHeuristicWeight': rolloutHeuristicWeight, 'miniBatchSize': miniBatchSize,
-                         'learningRate': learningRate}
-    dirName = os.path.dirname(__file__)
+    # path for saving NN
+    NNModelSaveParameters = {'numSimulations': trainDataNumSimulations, 'killzoneRadius': trainDataKillzoneRadius,
+                             'learningRate': learningRate, 'miniBatchSize': miniBatchSize}
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                        'stateDimension12', 'trainedNNModels')
-    if not os.path.exists(NNModelSaveDirectory):
-        os.makedirs(NNModelSaveDirectory)
-    NNModelSaveExtension = ''
-    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+                                           'trainWolfWithSheepNNPolicyMujoco', 'trainedNNModels2000TrainTrajectories')
+    NNModelExtension = ''
+    getNNModelPath = GetSavePath(NNModelSaveDirectory, NNModelExtension, NNModelSaveParameters)
 
-    # train NNModel
+    # train model
     terminalThreshold = 1e-6
     lossHistorySize = 10
     initActionCoeff = 1
@@ -177,12 +133,12 @@ def main():
     trainNN = Train(trainStepsEachIteration, miniBatchSize, sampleData, learningRateModifier,
                     terminalController, coefficientController, trainReporter)
 
-    # train model for condition
-    trainNNModel = TrainNNModel(numTrainIterations, trainCheckpointInterval, readParametersFromDf,
-                                loadTrajectoriesFromDf, preProcessTrajectories, getNNModel, trainNN, getNNModelSavePath,
-                                saveVariables)
-    levelNames = list(manipulatedVariables.keys())
-    toSplitFrame.groupby(levelNames).apply(trainNNModel)
+    for iteration in range(numTrainIterations):
+        updatedNNModel = trainNN(NNModel, trainData)
+        NNModel = updatedNNModel
+        if iteration % trainCheckPointInterval == 0 or iteration == numTrainIterations - 1:
+            modelSavePath = getNNModelPath({'trainSteps': iteration})
+            saveVariables(NNModel, modelSavePath)
 
 
 if __name__ == '__main__':

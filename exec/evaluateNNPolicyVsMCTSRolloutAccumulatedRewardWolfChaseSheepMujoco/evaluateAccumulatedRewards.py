@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 from exec.evaluationFunctions import conditionDfFromParametersDict, ComputeStatistics
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, ResetUniform, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, Reset, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, RollOut, backup, \
     establishPlainActionDist
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
@@ -18,9 +18,10 @@ from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, Ap
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle, \
     readParametersFromDf, LoadTrajectories, loadFromPickle
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
-from src.episode import SampleTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, chooseGreedyAction, sampleActionFromActionDist
 from exec.preProcessing import AccumulateRewards
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from exec.evaluationFunctions import GenerateInitQPosUniform
 
 
 def drawPerformanceLine(df, axForDraw):
@@ -71,11 +72,11 @@ class GenerateTrajectories:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['policy'] = ['NNMaxRunningSteps=10', 'heatSeeking']
-    manipulatedVariables['evaluationMaxRunningSteps'] = [10, 100]
-    manipulatedVariables['trainSteps'] = list(range(0, 100000, 10000)) + [100000-1]
-    killzoneRadius = 0.5
-    evalNumSamples = 100
+    manipulatedVariables['policy'] = ['NNMaxRunningSteps=20', 'heatSeeking']
+    manipulatedVariables['evaluationMaxRunningSteps'] = [20]#[10, 100]
+    manipulatedVariables['trainSteps'] = list(range(0, 10000, 1000)) + list(range(10000, 100000, 10000)) + [100000-1]
+    killzoneRadius = 2
+    evalNumSamples = 250
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
 
@@ -137,17 +138,19 @@ def main():
 
     # NN save path
     trainDataNumSimulations = 100
-    trainDataKillzoneRadius = 0.5
+    trainDataKillzoneRadius = 2
     trainDataQPosInitNoise = 9.7
-    trainDataQVelInitNoise = 5
+    trainDataQVelInitNoise = 8
     trainDataRolloutHeuristicWeight = 0.1
+    trainMiniBatchSize = 256
+    learningRate = 0.0001
     NNFixedParameters = {'numSimulations': trainDataNumSimulations, 'killzoneRadius': trainDataKillzoneRadius,
                          'qPosInitNoise': trainDataQPosInitNoise, 'qVelInitNoise': trainDataQVelInitNoise,
-                         'rolloutHeuristicWeight': trainDataRolloutHeuristicWeight}
+                         'rolloutHeuristicWeight': trainDataRolloutHeuristicWeight, 'miniBatchSize': trainMiniBatchSize, 'learningRate': learningRate}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                         'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                        'trainedNNModels')
+                                        'stateDimension12', 'trainedNNModels')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -168,8 +171,7 @@ def main():
                                                                  restoreNNModel)
     getMCTS = lambda iteration: mcts
     getHeatSeekingPolicy = lambda iteration: heatSeekingPolicy
-    allGetWolfPolicy = {'heatSeeking': getHeatSeekingPolicy, 'NNMaxRunningSteps=10': getNeuralNetPolicy(10),
-                       'NNMaxRunningSteps=100': getNeuralNetPolicy(100)}
+    allGetWolfPolicy = {'heatSeeking': getHeatSeekingPolicy, 'NNMaxRunningSteps=20': getNeuralNetPolicy(20)}
     getWolfPolicy = lambda policyName, iteration: allGetWolfPolicy[policyName](iteration)
     getSheepPolicy = lambda policyName, iteration: stationaryAgentPolicy
 
@@ -180,9 +182,12 @@ def main():
     qPosInitNoise = 0
     qVelInitNoise = 0
     numAgent = 2
-    allQPosInit = np.random.uniform(-9.7, 9.7, (evalNumSamples, 4))
-    allQVelInit = np.random.uniform(-5, 5, (evalNumSamples, 4))
-    getResetFromSampleIndex = lambda sampleIndex: ResetUniform(physicsSimulation, allQPosInit[sampleIndex],
+    getResetFromQPosInitDummy = lambda qPosInit: Reset(physicsSimulation, qPosInit, (0, 0, 0, 0), numAgent)
+    generateQPosInit = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
+    allQPosInit = [generateQPosInit() for _ in range(evalNumSamples)]
+    qVelInitRange = 8
+    allQVelInit = np.random.uniform(-qVelInitRange, qVelInitRange, (evalNumSamples, 4))
+    getResetFromSampleIndex = lambda sampleIndex: Reset(physicsSimulation, allQPosInit[sampleIndex],
                                                                allQVelInit[sampleIndex], numAgent, qPosInitNoise,
                                                                qVelInitNoise)
     getSampleTrajectory = lambda maxRunningSteps, sampleIndex: SampleTrajectory(maxRunningSteps, transit, isTerminal,
@@ -194,10 +199,10 @@ def main():
     # saving trajectories
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                            'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                           'evaluateAccumulatedRewardsEvaluationTrajectories')
+                                           'stateDimension12', 'evaluateAccumulatedRewardsEvaluationTrajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
-    trajectorySaveParameters = {}
+    trajectorySaveParameters = {'killzoneRadius': killzoneRadius, 'qVelInitNoise': qVelInitRange, 'miniBatchSize': trainMiniBatchSize, 'learningRate': learningRate}
     trajectorySaveExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectorySaveExtension, trajectorySaveParameters)
     generateAllSampleIndexPaths = GenerateAllSampleIndexSavePaths(getTrajectorySavePath)
@@ -229,10 +234,10 @@ def main():
     for maxEpisodeLen, grp in statisticsDf.groupby('evaluationMaxRunningSteps'):
         grp.index = grp.index.droplevel('evaluationMaxRunningSteps')
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-        axForDraw.set_title("max running steps in evaluation = {}".format(maxEpisodeLen))
+        axForDraw.set_title("max running steps in evaluation = {} minibatchSize = {}".format(maxEpisodeLen, trainMiniBatchSize))
         axForDraw.set_ylabel('accumulated rewards')
         drawPerformanceLine(grp, axForDraw)
-        axForDraw.set_ylim(-5, 0.5)
+        # axForDraw.set_ylim(-5, 0.5)
         plotCounter += 1
 
     plt.legend(loc='best')

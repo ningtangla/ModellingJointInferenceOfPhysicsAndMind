@@ -3,6 +3,18 @@ import os
 import numpy as np
 
 
+class Observe:
+    def __init__(self, stateIndex, trajectory):
+        self.stateIndex = stateIndex
+        self.trajectory = trajectory
+
+    def __call__(self, timeStep):
+        if timeStep >= len(self.trajectory):
+            return None
+        currentState = self.trajectory[timeStep][self.stateIndex]
+        return currentState
+
+
 class InitializeScreen:
     def __init__(self, screenWidth, screenHeight, fullScreen):
         self.screenWidth = screenWidth
@@ -37,6 +49,36 @@ class DrawBackground:
         self.screen.fill(self.screenColor)
         rectPos = [self.xBoundary[0], self.yBoundary[0], self.xBoundary[1], self.yBoundary[1]]
         pg.draw.rect(self.screen, self.lineColor, rectPos, self.lineWidth)
+        obstacle1Pos = [377.5, 270, 45, 60]
+        pg.draw.rect(self.screen, self.lineColor, obstacle1Pos, self.lineWidth)
+        obstacle2Pos = [377.5, 470, 45, 60]
+        pg.draw.rect(self.screen, self.lineColor, obstacle2Pos, self.lineWidth)
+
+        return
+
+
+class DrawBackgroundWithObstacles:
+    def __init__(self, screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth):
+        self.screen = screen
+        self.screenColor = screenColor
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.allObstaclePos = allObstaclePos
+        self.lineColor = lineColor
+        self.lineWidth = lineWidth
+
+    def __call__(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    exit()
+        self.screen.fill(self.screenColor)
+        rectPos = [self.xBoundary[0], self.yBoundary[0], self.xBoundary[1], self.yBoundary[1]]
+        pg.draw.rect(self.screen, self.lineColor, rectPos, self.lineWidth)
+        [pg.draw.rect(self.screen, self.lineColor, obstaclePos, self.lineWidth) for obstaclePos in self.allObstaclePos]
+
         return
 
 
@@ -80,9 +122,11 @@ class ChaseTrialWithTraj:
             if self.saveImage == True:
                 currentDir = os.getcwd()
                 parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
-                saveImageDir = os.path.join(os.path.join(parentDir, '..', 'data',
-                                                         'trainMCTSNNIteratively', 'replayBufferStartWithTrainedModel',
-                                                         'evaluationVideos20kTrainSteps', 'demo'), self.imageFolderName)
+                # saveImageDir = os.path.join(os.path.join(parentDir, '..', 'data',
+                #                                          'trainWolfWithSheepNNPolicyMujoco',
+                #                                          'evaluationTrajectoriesBothAgentsEqualMass', 'videos', 'demo'),
+                #                             self.imageFolderName)
+                saveImageDir = os.path.join('demo', self.imageFolderName)
                 if not os.path.exists(saveImageDir):
                     os.makedirs(saveImageDir)
                 pg.image.save(screen, saveImageDir + '/' + format(timeStep, '04') + ".png")
