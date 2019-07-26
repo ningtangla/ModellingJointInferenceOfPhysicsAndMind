@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+
 class MultiAgentSampleTrajectory:
     def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
         self.agentNames = agentNames
@@ -93,7 +94,16 @@ def chooseGreedyAction(actionDist):
     return selectedAction
 
 
+def sampleAction(actionDist):
+    actions = list(actionDist.keys())
+    probs = list(actionDist.values())
+    normlizedProbs = [prob / sum(probs) for prob in probs]
+    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
+    selectedAction = actions[selectedIndex]
+    return selectedAction
+
+
 def getPairedTrajectory(agentsTrajectory):
     timeStepCount = len(agentsTrajectory[0])
-    pairedTraj =[[agentTrajectory[timeStep] for agentTrajectory in agentsTrajectory] for timeStep in range(timeStepCount)]
+    pairedTraj = [[agentTrajectory[timeStep] for agentTrajectory in agentsTrajectory] for timeStep in range(timeStepCount)]
     return pairedTraj
