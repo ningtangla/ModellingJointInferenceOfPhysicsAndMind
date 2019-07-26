@@ -36,12 +36,23 @@ class RestoreNNModel:
         self.NNmodel = NNModel
         self.restoreVariables = restoreVariables
 
-    def __call__(self, iteration):
-        modelPath = self.getModelSavePath({'iterationIndex': iteration})
+    def __call__(self, NNModelPathParameter):
+        modelPath = self.getModelSavePath(NNModelPathParameter)
         restoredNNModel = self.restoreVariables(self.NNmodel, modelPath)
 
         return restoredNNModel
 
+class RestoreNNModelbyNumSimulations:
+    def __init__(self, getModelSavePath, NNModel, restoreVariables):
+        self.getModelSavePath = getModelSavePath
+        self.NNmodel = NNModel
+        self.restoreVariables = restoreVariables
+
+    def __call__(self, trainNumSimulations):
+        modelPath = self.getModelSavePath({'numSimulations': trainNumSimulations})
+        restoredNNModel = self.restoreVariables(self.NNmodel, modelPath)
+
+        return restoredNNModel
 
 class PreparePolicy:
     def __init__(self, getSheepPolicy, getWolfPolicy):
@@ -92,12 +103,14 @@ def main():
     initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     trainMaxRunningSteps = 25
-    trainNumSimulations = 20
-
+    
+    iteration=300
     evalNumSimulations = 20  # 200
     evalNumTrials = 2  # 1000
     evalMaxRunningSteps = 3
-    NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    
+
+    NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'iterationIndex':iteration, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
                                         'iterativelyTrainMultiAgent', 'NNModel')
@@ -105,7 +118,8 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
     # functions to get prediction from NN
-    restoreNNModel = RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
+    restoreNNModel=RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
+    #restoreNNModel = RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
     NNPolicy = ApproximatePolicy(initializedNNModel, actionSpace)
 
     # policy
@@ -138,22 +152,26 @@ def main():
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
-    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'iterationIndex':iteration, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    parametersForPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
 
-    iteration = parametersForTrajectoryPath['iteration']
-    policyName = parametersForTrajectoryPath['policyName']
-    restoreNNModel(iteration)
+    trainNumSimulations = parametersForPath['numSimulations']
+    iteration = parametersForPath['iteration']
+    policyName = parametersForPath['policyName']
+    NNModelPathParameter=parametersForPath.copy()
+    del  NNModelPathParameter['policyName']
+
+    restoreNNModel(NNModelPathParameter)
     policy = preparePolicy(policyName)
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
+    parametersForPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    trajectorySavePath = getTrajectorySavePath(parametersForPath)
     #if not os.path.isfile(trajectorySavePath):
-    #parametersForTrajectoryPath['sampleTrajectoryTime'] = processTime
+    #parametersForPath['sampleTrajectoryTime'] = processTime
     beginTime = time.time()
     trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
     processTime = time.time() - beginTime
