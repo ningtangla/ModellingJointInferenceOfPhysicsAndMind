@@ -2,18 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/3ObjectsDemo13/Demo.mp4" beforeDir="false" afterPath="$PROJECT_DIR$/demo/3ObjectsDemo13/Demo.mp4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/3ObjectsDemo14/Demo.mp4" beforeDir="false" afterPath="$PROJECT_DIR$/demo/3ObjectsDemo14/Demo.mp4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/3ObjectsDemo15/Demo.mp4" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferContinuousChasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/inferContinuousChasing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/visualize3Objects.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/visualize3Objects.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trainedData/trajectory13.pickle" beforeDir="false" afterPath="$PROJECT_DIR$/trainedData/trajectory13.pickle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trainedData/trajectory14.pickle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/trainedData/trajectory15.pickle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/.Rhistory" beforeDir="false" afterPath="$PROJECT_DIR$/exec/.Rhistory" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/evaluationFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/evaluationFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -24,10 +19,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/exec/visualize3Objects.py">
+        <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="417">
-              <caret line="68" selection-start-line="68" selection-end-line="68" />
+            <state relative-caret-position="120">
+              <caret line="6" column="22" selection-start-line="6" selection-start-column="22" selection-end-line="6" selection-end-column="22" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -36,25 +31,103 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/exec/sample3ObjectsTraj.py">
+        <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="95">
-              <caret line="69" column="55" selection-start-line="69" selection-start-column="55" selection-end-line="69" selection-end-column="55" />
+            <state relative-caret-position="-341">
+              <caret line="12" selection-start-line="12" selection-end-line="12" />
               <folding>
-                <element signature="e#0#9#0" expanded="true" />
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-2902">
+              <caret line="14" selection-start-line="14" selection-end-line="14" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py">
+        <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="377">
-              <caret line="169" lean-forward="true" selection-start-line="169" selection-end-line="169" />
+            <state relative-caret-position="784">
+              <caret line="106" column="4" selection-start-line="106" selection-start-column="4" selection-end-line="106" selection-end-column="4" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/visualizeChasing.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="29">
+              <caret line="6" selection-start-line="6" selection-end-line="6" />
+              <folding>
+                <element signature="e#0#34#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/visualize3Objects.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="6" selection-start-line="6" selection-end-line="6" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/visualize2Objects.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="260">
+              <caret line="13" selection-start-line="13" selection-end-line="13" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/visualize/continuousVisualization.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="340">
+              <caret line="17" selection-start-line="17" selection-end-line="17" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="504">
+              <caret line="138" selection-start-line="138" selection-end-line="138" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/env/xmls/leased.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="40">
+              <caret line="2" column="9" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -71,7 +144,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>transitAgents</find>
       <find>getTransitionLikelihood</find>
       <find>pullingAgents</find>
       <find>normalizedPosterior</find>
@@ -101,6 +173,7 @@
       <find>3</find>
       <find>large</find>
       <find>small</find>
+      <find>10</find>
     </findStrings>
     <replaceStrings>
       <replace>getMasterPos</replace>
@@ -144,12 +217,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/tests/testDiscreteGridEnv.py" />
-        <option value="$USER_HOME$/Desktop/Gao Lab/Python/pythonpracticepublish/SourceCode/DiscreteBayesian.py" />
-        <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/inferDiscreteChasing.py" />
-        <option value="$PROJECT_DIR$/src/play.py" />
-        <option value="$PROJECT_DIR$/tests/testDiscreteGridWrapperFunctions.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_21.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_22.py" />
         <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/forceLikelihood.py" />
         <option value="$PROJECT_DIR$/src/inferDiscreteGridChasing/wrappers.py" />
@@ -181,12 +248,10 @@
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_24.py" />
         <option value="$PROJECT_DIR$/visualize/continuousVisualization.py" />
         <option value="$PROJECT_DIR$/src/inferChasing/inference.py" />
-        <option value="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" />
         <option value="$PROJECT_DIR$/exec/SheepAndWolfNNOnlyPolicies/policy.py" />
         <option value="$PROJECT_DIR$/visualize/inferenceVisualization.py" />
         <option value="$PROJECT_DIR$/tests/testModifyPhysicsBodyMass.py" />
         <option value="$PROJECT_DIR$/exec/sample.py" />
-        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" />
         <option value="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" />
         <option value="$PROJECT_DIR$/src/episode.py" />
         <option value="$PROJECT_DIR$/exec/inferContinuousChasing.py" />
@@ -195,12 +260,19 @@
         <option value="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" />
         <option value="$PROJECT_DIR$/exec/visualize3Objects.py" />
         <option value="$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" />
+        <option value="$PROJECT_DIR$/exec/evaluationFunctions.py" />
+        <option value="$PROJECT_DIR$/exec/trajectoriesSaveLoad.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py" />
+        <option value="$PROJECT_DIR$/exec/visualize2Objects.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py" />
+        <option value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" fullScreen="true">
-    <option name="x" value="525" />
-    <option name="width" value="915" />
+    <option name="width" value="714" />
     <option name="height" value="900" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -244,7 +316,18 @@
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
               <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
-              <item name="demo" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="exec" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="exec" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+              <item name="evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="trainedData" type="9f88c78c:ScopeViewTreeModel$FileNode" />
             </path>
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
@@ -296,7 +379,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.infer3ObjectsContinChasing">
+  <component name="RunManager" selected="Python.evaluateAccumulatedRewards">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="ModellingJointInferenceOfPhysicsAndMind" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -341,6 +424,50 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="evaluateAccumulatedRewards" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="generateTrainingData" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="infer3ObjectsContinChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="ModellingJointInferenceOfPhysicsAndMind" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -355,28 +482,6 @@
       <option name="ADD_SOURCE_ROOTS" value="false" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="inferContinuousChasing" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="ModellingJointInferenceOfPhysicsAndMind" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="false" />
-      <option name="ADD_SOURCE_ROOTS" value="false" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/inferContinuousChasing.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -407,7 +512,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="sample3ObjectsTraj" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="trainNNModels" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="ModellingJointInferenceOfPhysicsAndMind" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -415,12 +520,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="false" />
       <option name="ADD_SOURCE_ROOTS" value="false" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/sample3ObjectsTraj.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -473,36 +578,21 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Unittests in testModifyPhysicsBodyMass.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <module name="ModellingJointInferenceOfPhysicsAndMind" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/testModifyPhysicsBodyMass.py&quot;" />
-      <option name="_new_targetType" value="&quot;PATH&quot;" />
-      <method v="2" />
-    </configuration>
     <list>
       <item itemvalue="Python.inferDiscreteChasing" />
-      <item itemvalue="Python.inferContinuousChasing" />
       <item itemvalue="Python.visualize3Objects" />
       <item itemvalue="Python.infer3ObjectsContinChasing" />
-      <item itemvalue="Python.sample3ObjectsTraj" />
-      <item itemvalue="Python tests.Unittests in testModifyPhysicsBodyMass.py" />
+      <item itemvalue="Python.generateTrainingData" />
+      <item itemvalue="Python.evaluateAccumulatedRewards" />
+      <item itemvalue="Python.trainNNModels" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.evaluateAccumulatedRewards" />
+        <item itemvalue="Python.trainNNModels" />
+        <item itemvalue="Python.generateTrainingData" />
         <item itemvalue="Python.infer3ObjectsContinChasing" />
         <item itemvalue="Python.visualize3Objects" />
-        <item itemvalue="Python.sample3ObjectsTraj" />
-        <item itemvalue="Python.visualize3Objects" />
-        <item itemvalue="Python.inferContinuousChasing" />
       </list>
     </recent_temporary>
   </component>
@@ -523,7 +613,7 @@
       <workItem from="1562975142081" duration="34495000" />
       <workItem from="1563297484652" duration="204000" />
       <workItem from="1563297717574" duration="415000" />
-      <workItem from="1563298153221" duration="45311000" />
+      <workItem from="1563298153221" duration="51958000" />
     </task>
     <servers />
   </component>
@@ -560,7 +650,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="269477000" />
+    <option name="totallyTimeSpent" value="276124000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -575,12 +665,12 @@
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.23414986" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14841498" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.24167694" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49711815" visible="true" weight="0.270037" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49711815" visible="true" weight="0.046855733" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.35881627" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -595,7 +685,7 @@
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="SciView" order="3" weight="0.20533141" />
+      <window_info active="true" anchor="right" id="SciView" order="3" visible="true" weight="0.27665707" />
       <window_info anchor="right" id="R Graphics" order="4" />
       <window_info anchor="right" id="R Packages" order="5" />
       <window_info anchor="right" id="Database" order="6" />
@@ -699,11 +789,14 @@
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$envDiscreteGrid.coverage" NAME="envDiscreteGrid Coverage Results" MODIFIED="1561653884198" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/constrainedChasingEscapingEnv" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$inference.coverage" NAME="inference Coverage Results" MODIFIED="1562019953690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/inferDiscreteGridChasing" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testPolicies_IssueShaozhe_TestPolicyFunctions_testHeatSeekingPolicy.coverage" NAME="pytest for testPolicies_IssueShaozhe.TestPolicyFunctions.testHeatSeekingPolicy Coverage Results" MODIFIED="1561482965763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$trainNNModels.coverage" NAME="trainNNModels Coverage Results" MODIFIED="1563921236565" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$inferContinuousChasing.coverage" NAME="inferContinuousChasing Coverage Results" MODIFIED="1563464085592" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$visualize3Objects__1_.coverage" NAME="visualize3Objects Coverage Results" MODIFIED="1563683828184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$fixedActionStartFromRest.coverage" NAME="fixedActionStartFromRest Coverage Results" MODIFIED="1562976048677" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$Unittests_in_testModifyPhysicsBodyMass_py.coverage" NAME="Unittests in testModifyPhysicsBodyMass.py Coverage Results" MODIFIED="1563463287302" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$evaluateAccumulatedRewards.coverage" NAME="evaluateAccumulatedRewards Coverage Results" MODIFIED="1563925192382" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$drawDiscreteGridChasing__1_.coverage" NAME="drawDiscreteGridChasing Coverage Results" MODIFIED="1561406020552" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$generateTrainingData.coverage" NAME="generateTrainingData Coverage Results" MODIFIED="1563909836969" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$sample.coverage" NAME="sample Coverage Results" MODIFIED="1563464063482" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$sample3ObjectsTraj.coverage" NAME="sample3ObjectsTraj Coverage Results" MODIFIED="1563683812183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$try.coverage" NAME="try Coverage Results" MODIFIED="1561420827963" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
@@ -818,24 +911,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/0001.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/0009.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/demoPics/00003.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/demo/continuousDemo/demoPics/00076.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/mindInferencePlot.png">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/posterior">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/inferDiscreteChasing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
@@ -849,26 +924,6 @@
     <entry file="file://$PROJECT_DIR$/NNModels/sheepNNModels/checkpoint">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="46" column="41" selection-start-line="46" selection-start-column="41" selection-end-line="46" selection-end-column="41" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/trajectoriesSaveLoad.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="6" column="18" selection-start-line="6" selection-start-column="4" selection-end-line="6" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/SheepAndWolfNNOnlyPolicies/policy.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="160">
@@ -878,16 +933,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/simple1DEnv.py">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/visualize/discreteGridVisualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="13" selection-start-line="13" selection-end-line="13" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/replayBuffer.py">
       <provider selected="true" editor-type-id="text-editor" />
@@ -989,30 +1034,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/visualizeChasing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="10" selection-start-line="10" selection-end-line="10" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/episode.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-619">
           <caret line="63" selection-start-line="63" selection-end-line="63" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/visualize/continuousVisualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="485">
-          <caret line="125" column="25" lean-forward="true" selection-start-line="125" selection-start-column="25" selection-end-line="125" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1024,33 +1049,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo13/00039.png">
       <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/visualize/inferenceVisualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1120">
-          <caret line="56" selection-start-line="56" selection-end-line="56" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="193">
-          <caret line="42" column="39" lean-forward="true" selection-start-line="42" selection-start-column="39" selection-end-line="42" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/sample.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="397">
-          <caret line="83" column="18" lean-forward="true" selection-start-line="83" selection-start-column="18" selection-end-line="83" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -1080,26 +1078,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/sample3ObjectsTraj.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="69" column="55" selection-start-line="69" selection-start-column="55" selection-end-line="69" selection-end-column="55" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/visualize3Objects.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="417">
-          <caret line="68" selection-start-line="68" selection-end-line="68" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/demo/3ObjectsInfDemo14/00001.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
@@ -1115,10 +1093,164 @@
     <entry file="file://$PROJECT_DIR$/demo/3ObjectsDemo14/0001.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/visualize/discreteGridVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="372">
+          <caret line="81" column="27" lean-forward="true" selection-start-line="81" selection-start-column="27" selection-end-line="81" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/visualize/inferenceVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="860">
+          <caret line="43" column="26" lean-forward="true" selection-start-line="43" selection-start-column="26" selection-end-line="43" selection-end-column="26" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="169" lean-forward="true" selection-start-line="169" selection-end-line="169" />
+        <state relative-caret-position="300">
+          <caret line="15" selection-start-line="15" selection-end-line="15" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sample3ObjectsTraj.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="156">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/trajectoriesSaveLoad.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sample.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="292">
+          <caret line="20" column="55" selection-start-line="20" selection-start-column="35" selection-end-line="20" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="138" selection-start-line="138" selection-end-line="138" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/env/xmls/leased.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="40">
+          <caret line="2" column="9" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/plotSummaryStatistics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-341">
+          <caret line="12" selection-start-line="12" selection-end-line="12" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/generateTrainingData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="6" column="22" selection-start-line="6" selection-start-column="22" selection-end-line="6" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/visualizeChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="29">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/visualize3Objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/visualize/continuousVisualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/visualize2Objects.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainNNModels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2902">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/evaluateAccumulatedRewards.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="784">
+          <caret line="106" column="4" selection-start-line="106" selection-start-column="4" selection-end-line="106" selection-end-column="4" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
