@@ -162,7 +162,7 @@ def main():
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    numSimulations = 200  # 200
+    numSimulations = 100  # 200
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     getApproximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
     getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
@@ -186,7 +186,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 250  # 256
+    miniBatchSize = 25  # 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -276,16 +276,16 @@ def main():
         cmdList = generateTrajectoriesParallel(pathParameters)
         print(cmdList)
 
-        trajectories = loadTrajectoriesForParallel(pathParameters)
-        preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
-        updatedReplayBuffer = saveToBuffer(replayBuffer[agentId], preProcessedTrajectories)
+        # trajectories = loadTrajectoriesForParallel(pathParameters)
+        # preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
+        # updatedReplayBuffer = saveToBuffer(replayBuffer[agentId], preProcessedTrajectories)
 
-        updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, replayBuffer[agentId])
-        NNModelSavePath = generateNNModelSavePath(pathParameters)
-        saveVariables(updatedAgentNNModel, NNModelSavePath)
+        # updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, replayBuffer[agentId])
+        # NNModelSavePath = generateNNModelSavePath(pathParameters)
+        # saveVariables(updatedAgentNNModel, NNModelSavePath)
 
-        multiAgentNNmodel[agentId] = updatedAgentNNModel
-        replayBuffer[agentId] = updatedReplayBuffer
+        # multiAgentNNmodel[agentId] = updatedAgentNNModel
+        # replayBuffer[agentId] = updatedReplayBuffer
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
