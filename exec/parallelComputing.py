@@ -4,11 +4,10 @@ import math
 import numpy as np
 
 class GenerateTrajectoriesParallel:
-    def __init__(self, codeFileName, numSample, numCmdList, readParametersFromDf):
+    def __init__(self, codeFileName, numSample, numCmdList):
         self.codeFileName = codeFileName
         self.numSample = numSample
         self.numCmdList = numCmdList
-        self.readParametersFromDf = readParametersFromDf
 
     def __call__(self, parameters):
         startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
