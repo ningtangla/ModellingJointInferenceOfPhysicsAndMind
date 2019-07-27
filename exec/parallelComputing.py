@@ -17,7 +17,7 @@ class GenerateTrajectoriesParallel:
         parametersStringJS = json.dumps(parametersString)
         cmdList = [['python3', self.codeFileName, parametersStringJS, str(startSampleIndex), str(endSampleIndex)] 
                 for startSampleIndex, endSampleIndex in startEndIndexesPair]
-        # print(cmdList)
+        print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.wait()
