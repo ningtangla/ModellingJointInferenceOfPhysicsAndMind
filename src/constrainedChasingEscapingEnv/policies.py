@@ -24,7 +24,8 @@ class RandomPolicy:
         sampleLikelihood = list(likelihood.values())
         actionIndex = list(np.random.multinomial(1, sampleLikelihood)).index(1)
         randomAction = list(likelihood.keys())[actionIndex]
-        return randomAction
+        actionDist = {randomAction: 1}
+        return actionDist
 
 
 class HeatSeekingDiscreteDeterministicPolicy:
