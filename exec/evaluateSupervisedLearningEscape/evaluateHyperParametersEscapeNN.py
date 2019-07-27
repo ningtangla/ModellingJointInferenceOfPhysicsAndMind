@@ -25,6 +25,7 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
+from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def drawPerformanceLine(dataDf, axForDraw, deth):
@@ -180,86 +181,6 @@ def main():
     # train models for all conditions
     statisticsDf = toSplitFrame.groupby(levelNames).apply(trainModelForConditions)
 
-    # # all agent policies
-    # getApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-    # actionMagnitude = 5
-    # heatSeekingDeterministicPolicy = HeatSeekingContinuesDeterministicPolicy(getWolfPos, getSheepPos, actionMagnitude)
-    # getWolfPolicy = lambda NNModel: heatSeekingDeterministicPolicy
-    # getPolicy = GetPolicy(getApproximatePolicy, getWolfPolicy)
-
-    # # sample trajectory for evaluation
-    # evalMaxRunningSteps = 15
-    # dirName = os.path.dirname(__file__)
-    # evalEnvModelPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
-    # evalModel = load_model_from_path(evalEnvModelPath)
-    # evalSimulation = MjSim(evalModel)
-    # evalKillzoneRadius = 0.5
-    # evalIsTerminal = IsTerminal(evalKillzoneRadius, getSheepPos, getWolfPos)
-    # evalNumSimulationFrames = 20
-    # transit = TransitionFunction(evalSimulation, evalIsTerminal, evalNumSimulationFrames)
-    # evalQVelInit = (0, 0, 0, 0)
-    # evalNumAgent = 2
-    # evalQPosInitNoise = 0
-    # evalQVelInitNoise = 0
-    # allEvalQPosInit = np.random.uniform(-9.7, 9.7, (evalNumTrials, 4))
-    # getResetFromQPosInit = lambda evalQPosInit: Reset(evalSimulation, evalQPosInit, evalQVelInit, evalNumAgent,
-    #                                                   evalQPosInitNoise, evalQVelInitNoise)
-    # getQPosInitFromTrialIndex = lambda trialIndex: allEvalQPosInit[trialIndex]
-    # getResetFromTrialIndex = lambda trialIndex: getResetFromQPosInit(getQPosInitFromTrialIndex(trialIndex))
-    # distToAction = lambda worldDist: worldDistToAction(agentDistToGreedyAction, worldDist)
-    # getSampleTrajectory = lambda trialIndex: SampleTrajectory(evalMaxRunningSteps, transit, evalIsTerminal,
-    #                                                           getResetFromTrialIndex(trialIndex), distToAction)
-
-    # # get save path for trajectories
-    # sheepPolicyName = 'NN'
-    # trajectoryFixedParameters = {'maxRunningSteps': evalMaxRunningSteps, 'numTrials': evalNumTrials,
-    #                              'sheepPolicyName': sheepPolicyName}
-    # trajectorySaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'NNPolicyVaryHyperParametersSheepEscapeWolfMujoco',
-    #                                        'trajectories', 'evaluate')
-    # if not os.path.exists(trajectorySaveDirectory):
-    #     os.makedirs(trajectorySaveDirectory)
-    # trajectoryExtension = '.pickle'
-    # getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
-
-    # # function to generate trajectories for evaluation
-    # dummyLearningRate = 0
-    # modelToRestoreVariables = generateModel(dummyLearningRate)
-    # getModelFromPath = lambda path: restoreVariables(modelToRestoreVariables, path)
-    # getModelPathFromParameters = lambda parameters: getModelSavePath(parameters)
-    # getModelFromParameters = lambda parameters: getModelFromPath(getModelPathFromParameters(parameters))
-    # getPolicyFromParameters = lambda parameters: getPolicy(getModelFromParameters(parameters))
-
-    # generateTrajectories = GenerateTrajectories(evalNumTrials, getPolicyFromParameters, getSampleTrajectory,
-    #                                             getTrajectorySavePath, saveData)
-
-    # # # generate trajectories for all conditions
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectories)
-
-    # # measurement Function
-    # initTimeStep = 0
-    # stateIndex = 0
-    # getInitStateFromTrajectory = GetStateFromTrajectory(initTimeStep, stateIndex)
-    # optimalPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getSheepPos, getWolfPos,
-    #                                                        computeAngleBetweenVectors)
-    # getOptimalAction = lambda state: agentDistToGreedyAction(optimalPolicy(state))
-    # stationaryAgentAction = lambda state: agentDistToGreedyAction(stationaryAgentPolicy(state))
-    # sheepTransit = lambda state, action: transit(state, [action, stationaryAgentAction(state)])
-    # computeOptimalNextPos = ComputeOptimalNextPos(getInitStateFromTrajectory, getOptimalAction, sheepTransit,
-    #                                               getSheepPos)
-    # measurementTimeStep = 1
-    # getNextStateFromTrajectory = GetStateFromTrajectory(measurementTimeStep, stateIndex)
-    # getPosAtNextStepFromTrajectory = GetAgentPosFromTrajectory(getSheepPos, getNextStateFromTrajectory)
-    # measurementFunction = DistanceBetweenActualAndOptimalNextPosition(computeOptimalNextPos,
-    #                                                                   getPosAtNextStepFromTrajectory)
-
-    # # compute statistics on the trajectories
-    # loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
-    # computeStatistics = ComputeStatistics(loadTrajectories, len)
-    # statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
-
-    # print("statisticsDf")
-    # print(statisticsDf)
-
     # plot the results
     fig = plt.figure()
     numColumns = len(manipulatedVariables['miniBatchSize'])
@@ -278,7 +199,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            # axForDraw.set_ylim(13, 15)
+            # axForDraw.set_ylim(1.4, 2.5)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)
