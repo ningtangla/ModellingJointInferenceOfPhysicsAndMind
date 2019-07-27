@@ -12,10 +12,11 @@ from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
 from psutil import virtual_memory, disk_usage
+import math
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from exec.evaluationFunctions import GetSavePath, readParametersFromDf, LoadTrajectories
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
@@ -32,16 +33,21 @@ def loadData(path):
 
 
 class GenerateTrajectoriesParallel:
-    def __init__(self, codeFileName, numSample, readParametersFromDf):
+    def __init__(self, codeFileName, numSample, numCmdList, readParametersFromDf):
         self.codeFileName = codeFileName
         self.numSample = numSample
+        self.numCmdList = numCmdList
         self.readParametersFromDf = readParametersFromDf
 
     def __call__(self, oneConditionDf):
-        sampleIdStrings = list(map(str, range(self.numSample)))
+        startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
+        endSampleIndexes = np.concatenate([startSampleIndexes[1:], [self.numSample]])
+        startEndIndexesPair = zip(startSampleIndexes, endSampleIndexes)
         parameters = self.readParametersFromDf(oneConditionDf)
-        parametersString = json.dumps(parameters)
-        cmdList = [['python3', self.codeFileName, parametersString, sampleIndex] for sampleIndex in sampleIdStrings]
+        parametersString = dict([(key, str(value)) for key, value in parameters.items()])
+        parametersStringJS = json.dumps(parametersString)
+        cmdList = [['python3', self.codeFileName, parametersStringJS, str(startSampleIndex), str(endSampleIndex)] 
+                for startSampleIndex, endSampleIndex in startEndIndexesPair]
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.wait()
@@ -76,7 +82,7 @@ class PreProcessTrajectories:
 
 class IterativePlayAndTrain:
     def __init__(self, windowSize, numIterations, trajectoriesPath, initializedNNModel, saveNNModel,
-                 getGenerateTrajectoriesParallel, loadTrajectories, preProcessTrajectories, saveToBuffer,
+                 getGenerateTrajectoriesParallel, readParametersFromDf, loadTrajectories, preProcessTrajectories, saveToBuffer,
                  getSampleBatchFromBuffer, getTrainNN):
         self.windowSize = windowSize
         self.numIterations = numIterations
@@ -84,6 +90,7 @@ class IterativePlayAndTrain:
         self.initializedNNModel = initializedNNModel
         self.saveNNModel = saveNNModel
         self.getGenerateTrajectoriesParallel = getGenerateTrajectoriesParallel
+        self.readParametersFromDf = readParametersFromDf
         self.loadTrajectories = loadTrajectories
         self.preProcessTrajectories = preProcessTrajectories
         self.saveToBuffer = saveToBuffer
@@ -101,6 +108,7 @@ class IterativePlayAndTrain:
 
         NNModel = self.initializedNNModel
         buffer = []
+        length = []
         usedVirtualMemory = []
         # percentDiskUsage = []
         for iterationIndex in range(self.numIterations):
@@ -108,22 +116,25 @@ class IterativePlayAndTrain:
             self.saveNNModel(NNModel, conditionDfOneIteration)
             print("iteration: ", iterationIndex)
             cmdListGenerateTra = generateTrajectoriesParallel(conditionDfOneIteration)
-            trajectories = self.loadTrajectories(conditionDfOneIteration)
+            trajectories = self.loadTrajectories(self.readParametersFromDf(conditionDfOneIteration))
+            print(len(trajectories))
             processedTrajectories = self.preProcessTrajectories(trajectories)
             updatedBuffer = self.saveToBuffer(buffer, processedTrajectories)
-            # if len(updatedBuffer) >= self.windowSize:
-            sampledBatch = sampleBatchFromBuffer(updatedBuffer) #
-            trainData = [list(varBatch) for varBatch in zip(*sampledBatch)] #
-            updatedNNModel = trainNN(NNModel, trainData)    #
-            NNModel = updatedNNModel    #
+            print(len(buffer))
+            if len(updatedBuffer) >= miniBatchSize:
+                sampledBatch = sampleBatchFromBuffer(updatedBuffer) 
+                trainData = [list(varBatch) for varBatch in zip(*sampledBatch)] 
+                updatedNNModel = trainNN(NNModel, trainData)    
+                NNModel = updatedNNModel    
 
             buffer = updatedBuffer
-
+            
+            length.append(np.mean([len(trajectory) for trajectory in trajectories]))
             virtualMemory = virtual_memory()
             usedVirtualMemory.append(virtualMemory.used)
             # diskUsage = disk_usage(self.trajectoriesPath)
             # percentDiskUsage.append(diskUsage.percent)
-
+    
         # plt.plot(percentDiskUsage, marker='o')
         # plt.title('percent disk usage')
         # plt.xlabel('iteration')
@@ -132,11 +143,11 @@ class IterativePlayAndTrain:
         plt.title('virtual memory')
         plt.xlabel('iteration')
         plt.show()
-
+        return length
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrajectoriesPerIteration'] = [25]#[256]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [100]#[256]
     manipulatedVariables['miniBatchSize'] = [512]
     manipulatedVariables['learningRate'] = [0.01]
 
@@ -158,7 +169,7 @@ def main():
     initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     maxRunningSteps = 10
-    numSimulations = 2#50
+    numSimulations = 50
     qPosInit = (0, 0, 0, 0)
     qPosInitNoise = 9.7
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInitNoise': qPosInitNoise, 'qPosInit': qPosInit,
@@ -175,8 +186,9 @@ def main():
   
     #generate trajectory 
     generateTrajectoriesCodeName = 'generateTrajectoryMCTSNNPriorRolloutPolicySheepChaseWolfMujoco.py'
+    numToUseCores = 4
     getGenerateTrajectoriesParallel = lambda numTrajectoriesPerIteration: GenerateTrajectoriesParallel(generateTrajectoriesCodeName, numTrajectoriesPerIteration,
-            readParametersFromDf)
+            numToUseCores, readParametersFromDf)
     
     #trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'qPosInit': qPosInit,
@@ -189,7 +201,8 @@ def main():
     getTrajectorySavePath = GetSavePath(trajectorySaveDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     #load trajectories
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadData, readParametersFromDf)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadData, fuzzySearchParameterNames)
 
     # pre-process the trajectory for training the neural network
     sheepId = 0
@@ -217,7 +230,7 @@ def main():
                                                     processTrajectoryForNN)
 
     # replay buffer
-    windowSize = 5000
+    windowSize = 2000
     saveToBuffer = SaveToBuffer(windowSize)
     getUniformSamplingProbabilities = lambda buffer: [(1/len(buffer)) for _ in buffer]
     getSampleBatchFromBuffer = lambda miniBatchSize: SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
@@ -245,16 +258,16 @@ def main():
                                                       terminalController, coefficientController,
                                                       trainReporter)
     # functions to iteratively play and train the NN
-    numIterations = 1#100#40#150
+    numIterations = 20#40#150
     iterativePlayAndTrain = IterativePlayAndTrain(windowSize, numIterations, trajectorySaveDirectory, initializedNNModel,
-                                                  saveNNModel, getGenerateTrajectoriesParallel, loadTrajectories,
+                                                  saveNNModel, getGenerateTrajectoriesParallel, readParametersFromDf, loadTrajectories,
                                                   preProcessTrajectories, saveToBuffer, getSampleBatchFromBuffer, getTrainNN)
     startTime = time.time()
     performanceDf = toSplitFrame.groupby(levelNames).apply(iterativePlayAndTrain)
     endTime = time.time()
     print("time for {} iterations = {}".format(numIterations, (endTime-startTime)))
-    # plt.plot(performanceDf.values[0])
-    # plt.show()
+    plt.plot(performanceDf.values[0])
+    plt.show()
 
 
 if __name__ == '__main__':

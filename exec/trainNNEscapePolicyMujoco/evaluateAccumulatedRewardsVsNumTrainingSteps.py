@@ -10,17 +10,16 @@ from matplotlib import pyplot as plt
 
 from exec.evaluationFunctions import conditionDfFromParametersDict, ComputeStatistics
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, ResetUniform, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, Reset, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, RollOut, backup, \
     establishPlainActionDist
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle, \
     readParametersFromDf, LoadTrajectories, loadFromPickle
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.preProcessing import AccumulateRewards
-from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from exec.evaluationFunctions import GenerateInitQPosUniform
 
 
 def drawPerformanceLine(df, axForDraw):
@@ -30,13 +29,12 @@ def drawPerformanceLine(df, axForDraw):
 
 
 class NeuralNetPolicy:
-    def __init__(self, maxRunningSteps, approximatePolicy, restoreNNModel):
-        self.maxRunningSteps = maxRunningSteps
+    def __init__(self, approximatePolicy, restoreNNModel):
         self.approximatePolicy = approximatePolicy
         self.restoreNNModel = restoreNNModel
 
-    def __call__(self, iteration):
-        self.restoreNNModel(self.maxRunningSteps, iteration)
+    def __call__(self, trainSteps):
+        self.restoreNNModel(trainSteps)
         return self.approximatePolicy
 
 
@@ -58,23 +56,36 @@ class GenerateTrajectories:
         self.preparePolicy = preparePolicy
         self.getSampleTrajectories = getSampleTrajectories
         self.saveTrajectories = saveTrajectories
+        self.mctsFlag = False
 
     def __call__(self, oneConditionDf):
         policyName = oneConditionDf.index.get_level_values('policy')[0]
         trainingSteps = oneConditionDf.index.get_level_values('trainSteps')[0]
         evaluationMaxRunningSteps = oneConditionDf.index.get_level_values('evaluationMaxRunningSteps')[0]
         policy = self.preparePolicy(policyName, trainingSteps)
-        allSampleTrajectories = self.getSampleTrajectories(evaluationMaxRunningSteps)
-        trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories]
-        self.saveTrajectories(trajectories, oneConditionDf)
+        if policyName == 'mcts' and self.mctsFlag == False:
+            self.mctsFlag = True
+            allSampleTrajectories = self.getSampleTrajectories(evaluationMaxRunningSteps)
+            trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories]
+            self.saveTrajectories(trajectories, oneConditionDf)
+            self.mctsTrajectories = trajectories
+        elif policyName == 'mcts' and self.mctsFlag == True:
+            self.saveTrajectories(self.mctsTrajectories, oneConditionDf)
+        elif policyName != 'mcts':
+            allSampleTrajectories = self.getSampleTrajectories(evaluationMaxRunningSteps)
+            trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories]
+            self.saveTrajectories(trajectories, oneConditionDf)
+
+        return None
 
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['evaluationMaxRunningSteps'] = [25, 100]
-    manipulatedVariables['trainSteps'] = list(range(0, 100000, 10000)) + [100000-1]
+    manipulatedVariables['policy'] = ['NN']#['mcts', 'NN']
+    manipulatedVariables['evaluationMaxRunningSteps'] = [25]
+    manipulatedVariables['trainSteps'] = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
     killzoneRadius = 2
-    evalNumSamples = 100
+    evalNumSamples = 75
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
 
@@ -96,34 +107,6 @@ def main():
 
     numSimulationFrames = 20
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-    sheepActionInWolfSimulation = lambda state: (0, 0)
-    transitInWolfMCTSSimulation = \
-        lambda state, wolfSelfAction: transit(state, [sheepActionInWolfSimulation(state), wolfSelfAction])
-
-    # MCTS
-    cInit = 1
-    cBase = 100
-    calculateScore = ScoreChild(cInit, cBase)
-    selectChild = SelectChild(calculateScore)
-
-    getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
-    initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInWolfMCTSSimulation,
-                                                        getUniformActionPrior)
-    expand = Expand(isTerminal, initializeChildrenUniformPrior)
-
-    alivePenalty = -0.05
-    deathBonus = 1
-    rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
-
-    rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-    rolloutHeuristicWeight = 0.1
-    maxRolloutSteps = 10
-    rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-    rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
-                      rolloutHeuristic)
-
-    numSimulations = 50
-    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
     # neural network model
     numStateSpace = 12
@@ -132,45 +115,71 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+
+    # wolf NN chase policy
+    wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    restoreVariables(wolfNNModel, '/Users/nishadsinghi/ModellingJointInferenceOfPhysicsAndMind/data/evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco/trainedNNModels/killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+    approximateWolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)
+    wolfPolicy = lambda state: {approximateWolfPolicy(state): 1}
+
+    # transit in sheep MCTS simulation
+    transitInSheepMCTSSimulation = lambda state, action: transit(state, [action, approximateWolfPolicy(state)])
+
+    # MCTS
+    cInit = 1
+    cBase = 100
+    calculateScore = ScoreChild(cInit, cBase)
+    selectChild = SelectChild(calculateScore)
+
+    getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
+    initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
+                                                        getUniformActionPrior)
+    expand = Expand(isTerminal, initializeChildrenUniformPrior)
+
+    alivePenalty = 0.05
+    deathBonus = -1
+    rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
+
+    rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+    rolloutHeuristicWeight = -0.1
+    maxRolloutSteps = 10
+    rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
+    rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
+                      rolloutHeuristic)
+
+    numSimulations = 50
+    mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
+
+    # NNModel for sheep policy
+    sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     # NN save path
     trainDataNumSimulations = 100
-    trainDataKillzoneRadius = 0.5
+    trainDataKillzoneRadius = 2
     trainDataQPosInitNoise = 9.7
-    trainDataQVelInitNoise = 5
-    trainDataRolloutHeuristicWeight = 0.1
+    trainDataQVelInitNoise = 8
+    trainDataRolloutHeuristicWeight = -0.1
+    trainDataMaxRunningSteps = 25
     NNFixedParameters = {'numSimulations': trainDataNumSimulations, 'killzoneRadius': trainDataKillzoneRadius,
                          'qPosInitNoise': trainDataQPosInitNoise, 'qVelInitNoise': trainDataQVelInitNoise,
-                         'rolloutHeuristicWeight': trainDataRolloutHeuristicWeight}
+                         'rolloutHeuristicWeight': trainDataRolloutHeuristicWeight, 'maxRunningSteps': trainDataMaxRunningSteps}
     dirName = os.path.dirname(__file__)
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                        'trainedNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNEscapePolicyMujoco', 'trainedNNModels')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
     # loading neural network
-    restoreNNModel = lambda maxRunningSteps, iteration: \
-        restoreVariables(initializedNNModel, getNNModelSavePath({'trainSteps': iteration, 'maxRunningSteps': maxRunningSteps}))
+    restoreNNModel = lambda trainSteps: restoreVariables(sheepNNModel, getNNModelSavePath({'trainSteps': trainSteps}))
 
     # functions to make prediction from NN
-    approximatePolicy = ApproximatePolicy(initializedNNModel, actionSpace)
-    approximatePolicyActionDist = lambda state: {approximatePolicy(state): 1}
+    approximateSheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace)
+    approximateSheepPolicyActionDist = lambda state: {approximateSheepPolicy(state): 1}
 
-    # heat seeking policy
-    heatSeekingPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getWolfXPos, getSheepXPos,
-                                                               computeAngleBetweenVectors)
-
-    # get wolf policies
-    getNeuralNetPolicy = lambda maxRunningSteps: NeuralNetPolicy(maxRunningSteps, approximatePolicyActionDist,
-                                                                 restoreNNModel)
-    getMCTS = lambda iteration: mcts
-    getHeatSeekingPolicy = lambda iteration: heatSeekingPolicy
-    allGetWolfPolicy = {'heatSeeking': getHeatSeekingPolicy, 'NNMaxRunningSteps=10': getNeuralNetPolicy(10),
-                       'NNMaxRunningSteps=100': getNeuralNetPolicy(100)}
-    getWolfPolicy = lambda policyName, iteration: allGetWolfPolicy[policyName](iteration)
-    getSheepPolicy = lambda policyName, iteration: stationaryAgentPolicy
+    getMCTS = lambda trainSteps: mcts
+    getNNPolicy = NeuralNetPolicy(approximateSheepPolicyActionDist, restoreNNModel)
+    allGetSheepPolicy = {'mcts': getMCTS, 'NN': getNNPolicy}
+    getWolfPolicy = lambda policyName, trainSteps: wolfPolicy
+    getSheepPolicy = lambda policyName, trainSteps: allGetSheepPolicy[policyName](trainSteps)
 
     # policy
     preparePolicy = PreparePolicy(getSheepPolicy, getWolfPolicy)
@@ -179,9 +188,11 @@ def main():
     qPosInitNoise = 0
     qVelInitNoise = 0
     numAgent = 2
-    allQPosInit = np.random.uniform(-9.7, 9.7, (evalNumSamples, 4))
-    allQVelInit = np.random.uniform(-5, 5, (evalNumSamples, 4))
-    getResetFromSampleIndex = lambda sampleIndex: ResetUniform(physicsSimulation, allQPosInit[sampleIndex],
+    getResetFromInitQPosDummy = lambda qPosInit: Reset(physicsSimulation, qPosInit, (0, 0, 0, 0), numAgent)
+    generateQPosInit = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromInitQPosDummy)
+    allQPosInit = [generateQPosInit() for _ in range(evalNumSamples)]
+    allQVelInit = np.random.uniform(-8, 8, (evalNumSamples, 4))
+    getResetFromSampleIndex = lambda sampleIndex: Reset(physicsSimulation, allQPosInit[sampleIndex],
                                                                allQVelInit[sampleIndex], numAgent, qPosInitNoise,
                                                                qVelInitNoise)
     getSampleTrajectory = lambda maxRunningSteps, sampleIndex: SampleTrajectory(maxRunningSteps, transit, isTerminal,
@@ -191,9 +202,8 @@ def main():
                                                         sampleIndex in range(evalNumSamples)]
 
     # saving trajectories
-    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                           'evaluateNNPolicyVsMCTSRolloutAccumulatedRewardWolfChaseSheepMujoco',
-                                           'evaluateAccumulatedRewardsEvaluationTrajectories')
+    trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainNNEscapePolicyMujoco',
+                                           'evaluationTrajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectorySaveParameters = {}
@@ -231,7 +241,6 @@ def main():
         axForDraw.set_title("max running steps in evaluation = {}".format(maxEpisodeLen))
         axForDraw.set_ylabel('accumulated rewards')
         drawPerformanceLine(grp, axForDraw)
-        axForDraw.set_ylim(-5, 0.5)
         plotCounter += 1
 
     plt.legend(loc='best')

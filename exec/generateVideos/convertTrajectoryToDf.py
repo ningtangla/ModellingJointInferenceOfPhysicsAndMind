@@ -11,10 +11,11 @@ from exec.evaluationFunctions import conditionDfFromParametersDict
 
 def main():
     DIRNAME = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data',
-                                       'evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco')
-    trajectoryParameters = {'killzoneRadius': 2, 'qVelInitRange': 10,
-                            'rolloutHeuristicWeight': 0.1, 'numSimulations': 50}
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'trainMCTSNNIteratively',
+                                       'replayBufferStartWithTrainedModel', 'evaluationTrajectories20kTrainSteps')
+    trajectoryParameters = {'iteration': 19999, 'maxRunningSteps': 20, 'numTrials': 500, 'policyName': 'NNPolicy',
+                            'trainBufferSize': 2000, 'trainLearningRate': 0.0001, 'trainMiniBatchSize': 256,
+                            'trainNumSimulations': 200, 'trainNumTrajectoriesPerIteration': 1}
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryParameters)
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
@@ -36,12 +37,13 @@ def main():
 
     trajectories = loadTrajectories({})
     numTrajectories = len(trajectories)
-    allDf = [convertTrajectoryToStateDf(trajectory) for trajectory in trajectories]
-    selectedDf = allDf[5:10]
+    selectedTrajectories = trajectories[0:10]
+    selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
     [saveToPickle(df, os.path.join(DIRNAME, '..', '..', 'data',
-                                   'evaluateNumTerminalTrajectoriesWolfChaseSheepMCTSRolloutMujoco', 'videosNumSim50',
-                                   'sampleIndex{}.pickle'.format(sampleIndex))) for df, sampleIndex in
+                                   'trainMCTSNNIteratively', 'replayBufferStartWithTrainedModel',
+                                   'evaluationVideos20kTrainSteps', 'sampleIndex{}.pickle'.format(sampleIndex)))
+     for df, sampleIndex in
      zip(selectedDf, range(numTrajectories))]
 
 

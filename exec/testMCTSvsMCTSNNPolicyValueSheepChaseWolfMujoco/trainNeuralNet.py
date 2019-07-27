@@ -3,12 +3,12 @@ import os
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
 
-from exec.evaluationFunctions import GetSavePath
-from src.neuralNetwork.policyValueNet import GenerateModelSeparateLastLayer, Train, saveVariables
-from src.constrainedChasingEscapingEnv.wrappers import GetAgentPosFromState
+from exec.trajectoriesSaveLoad import GetSavePath
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from src.neuralNetwork.trainTools import CoefficientController, TrainTerminalController, TrainReporter
+from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter
 
 import random
 import numpy as np
@@ -125,7 +125,7 @@ def main():
     learningRates = [1e-4, 1e-6, 1e-8, 1e-10, 1e-12]
     regularizationFactor = 1e-4
     hiddenWidths = [128, 128]
-    generatePolicyNet = GenerateModelSeparateLastLayer(numStateSpace, numActionSpace, learningRate, regularizationFactor)
+    generatePolicyNet = GenerateModel(numStateSpace, numActionSpace, learningRate, regularizationFactor)
 
     # train models
     allTrainSteps = [1, 1000, 5000, 25000]
