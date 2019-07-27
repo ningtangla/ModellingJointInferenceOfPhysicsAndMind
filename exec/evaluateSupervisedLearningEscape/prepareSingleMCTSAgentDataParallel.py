@@ -40,12 +40,14 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     sheepId = 0
+    wolfId = 1
 
     startTime = time.time()
 
-    numTrajectories = 3000
+    numTrajectories = 10000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
+    sampleTrajectoryFileName = 'sampleMCTSWolfTrajectory.py'
+    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
     numCpuToUse = int(0.25*numCpuCores)
@@ -63,7 +65,7 @@ def main():
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
-    trainableAgentIds = [sheepId]
+    trainableAgentIds = [wolfId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
