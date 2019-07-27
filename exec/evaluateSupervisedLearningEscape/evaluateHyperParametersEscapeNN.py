@@ -31,7 +31,7 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
         grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='actionLoss',
-                 title='deth: {}'.format(deth), marker='o', logx=True)
+                 marker='o', logx=False)
 
 
 class TrainModelForConditions:
@@ -50,22 +50,22 @@ class TrainModelForConditions:
         indexLevelNames = oneConditionDf.index.names
         parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
         modelSavePath = self.getModelSavePath(parameters)
-
         model = self.getNNModel(depth)
 
-        if not os.path.isfile(modelSavePath):
+        if not os.path.isfile(modelSavePath + '.index'):
             train = self.getTrain(trainSteps, miniBatchSize, learningRate)
             trainedModel = train(model, self.trainData)
             saveVariables(trainedModel, modelSavePath)
 
-            graph = trainedModel.graph
-            state_ = graph.get_collection_ref("inputs")[0]
-            groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")
-            actionLoss_ = graph.get_collection_ref("actionLoss")[0]
-            fetches = {"actionLoss": actionLoss_}
+        trainedModel = restoreVariables(model, modelSavePath)
+        graph = trainedModel.graph
+        state_ = graph.get_collection_ref("inputs")[0]
+        groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")
+        actionLoss_ = graph.get_collection_ref("actionLoss")[0]
+        fetches = {"actionLoss": actionLoss_}
 
-            stateBatch, actionBatch, valueBatch = self.trainData
-            evalDict = model.run(fetches, feed_dict={state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch})
+        stateBatch, actionBatch, valueBatch = self.trainData
+        evalDict = model.run(fetches, feed_dict={state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch})
 
         return pd.Series({'actionLoss': evalDict['actionLoss']})
 
@@ -77,10 +77,10 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['trainSteps'] = [0, 1000, 2000, 3000]
-    manipulatedVariables['depth'] = [1, 2, 3]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256]  # [64, 128, 256]
+    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4]  # [1e-2, 1e-3, 1e-4]
+    manipulatedVariables['trainSteps'] = [0, 2000, 4000, 6000]
+    manipulatedVariables['depth'] = [1, 2, 3]  # [1,2,3]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -128,8 +128,7 @@ def main():
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
     processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
-    preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory,
-                                                    processTrajectoryForNN)
+    preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
@@ -274,10 +273,14 @@ def main():
             group.index = group.index.droplevel('depth')
 
             axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-            # axForDraw.set_ylim(13, 15)
-            axForDraw.set_ylabel('miniBatchSize: {}'.format(miniBatchSize))
+            if plotCounter % numRows == 1:
+                axForDraw.set_ylabel('miniBatchSize: {}'.format(miniBatchSize))
+            if plotCounter <= numColumns:
+                axForDraw.set_title('depth: {}'.format(depth))
 
+            # axForDraw.set_ylim(13, 15)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
+
             drawPerformanceLine(group, axForDraw, depth)
             plotCounter += 1
 
