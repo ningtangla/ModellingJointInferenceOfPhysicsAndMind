@@ -9,7 +9,6 @@ import pickle
 from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
-from mujoco_py import load_model_from_path, MjSim
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
