@@ -72,7 +72,6 @@ class TrainModelForConditions:
 
 def main():
     # important parameters
-    evalNumTrials = 1000  # 200
     sheepId = 0
 
     # manipulated variables
