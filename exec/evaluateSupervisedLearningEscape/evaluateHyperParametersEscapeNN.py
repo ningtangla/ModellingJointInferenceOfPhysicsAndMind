@@ -26,6 +26,7 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
+from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def drawPerformanceLine(dataDf, axForDraw, deth):
@@ -202,6 +203,7 @@ def main():
                 axForDraw.set_title('depth: {}'.format(depth))
 
             axForDraw.set_ylim(1.4, 2.1)
+
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)
