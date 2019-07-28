@@ -53,7 +53,6 @@ def main():
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
 
-    print(startSampleIndex)
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
@@ -89,6 +88,7 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
+
         NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
         dirName = os.path.dirname(__file__)
         NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
@@ -118,7 +118,8 @@ def main():
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
-        modelPath = getNNModelSavePath({})
+        manipulatedVariables = json.loads(sys.argv[1])
+        modelPath = getNNModelSavePath(manipulatedVariables)
         sheepPolicy = restoreVariables(initNNModel, modelPath)
         wolfPolicy = stationaryAgentPolicy
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]

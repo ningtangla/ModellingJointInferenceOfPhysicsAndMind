@@ -37,37 +37,19 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
 
 def main():
     # important parameters
-    evalNumTrials = 1000  # 200
     sheepId = 0
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [16,64]  # [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-2]  # [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['trainSteps'] = [10]
-    manipulatedVariables['depth'] = [1]  # [1,2,3]
+    manipulatedVariables['miniBatchSize'] = [16,64]  # [64, 128, 256, 512]
+    manipulatedVariables['learningRate'] = [1e-2]  # [1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['trainSteps'] = [1] #[1,1000,2000,3000,4000,5000,10000]
+    manipulatedVariables['depth'] =  [2] #[2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
-
-    # Get dataset for training
-    DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                    'trajectories')
-    if not os.path.exists(dataSetDirectory):
-        os.makedirs(dataSetDirectory)
-
-    dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 20
-    dataSetNumSimulations = 100
-    killzoneRadius = 2
-
-    dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
-
-    getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
-    print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
     sheepId = 0
@@ -83,27 +65,6 @@ def main():
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    numActionSpace = len(actionSpace)
-    actionIndex = 1
-
-    # neural network init and save path
-    numStateSpace = 12
-    regularizationFactor = 1e-4
-    sharedWidths = [128]
-    actionLayerWidths = [128]
-    valueLayerWidths = [128]
-    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-
-    trainMaxRunningSteps = 20
-    trainNumSimulations = 100
-    killzoneRadius = 2
-    NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
-    dirName = os.path.dirname(__file__)
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                        'trainedModels')
-    NNModelSaveExtension = ''
-    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
     generateTrajectoriesCodeName = 'generateEvaluationTrajectory.py'
     evalNumTrials = 1000
@@ -124,6 +85,10 @@ def main():
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
+
+    trainMaxRunningSteps = 20
+    trainNumSimulations = 100
+    killzoneRadius = 2
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
