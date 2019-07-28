@@ -147,11 +147,13 @@ class TransitionFunctionWithoutXPos:
 
 
 class Transition3Objects:
-    def __init__(self, simulation, numSimulationFrames):
+    def __init__(self, simulation, isTerminal, numSimulationFrames):
         self.simulation = simulation
+        self.isTerminal = isTerminal
         self.numSimulationFrames = numSimulationFrames
 
     def __call__(self, state, actions):
+
         state = np.asarray(state)
         # print("state", state)
         actions = np.asarray(actions)
@@ -174,17 +176,21 @@ class Transition3Objects:
             self.simulation.forward()
 
             newQPos, newQVel = self.simulation.data.qpos, self.simulation.data.qvel
-            newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent:, :numQPosEachAgent])
+            newXPos = np.concatenate(self.simulation.data.site_xpos[:numAgent, :numQPosEachAgent])
 
-            agentNewQPos = lambda agentIndex: newQPos[
-                                              numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)]
-            agentNewXPos = lambda agentIndex: newXPos[
-                                              numQPosEachAgent * agentIndex: numQPosEachAgent * (agentIndex + 1)]
-            agentNewQVel = lambda agentIndex: newQVel[
-                                              numQVelEachAgent * agentIndex: numQVelEachAgent * (agentIndex + 1)]
-            agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewXPos(agentIndex),
-                                                               agentNewQVel(agentIndex)])
+            agentNewQPos = lambda agentIndex: newQPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (
+                        agentIndex + 1)]
+            agentNewXPos = lambda agentIndex: newXPos[numQPosEachAgent * agentIndex: numQPosEachAgent * (
+                        agentIndex + 1)]
+            agentNewQVel = lambda agentIndex: newQVel[numQVelEachAgent * agentIndex: numQVelEachAgent * (
+                        agentIndex + 1)]
+            agentNewState = lambda agentIndex: np.concatenate(
+                [agentNewQPos(agentIndex), agentNewXPos(agentIndex),
+                 agentNewQVel(agentIndex)])
             newState = np.asarray([agentNewState(agentIndex) for agentIndex in range(numAgent)])
+
+            if self.isTerminal(newState):
+                break
 
         return newState
 

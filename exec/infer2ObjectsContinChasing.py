@@ -12,7 +12,7 @@ from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneSte
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximateActionPrior
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 from exec.trajectoriesSaveLoad import loadFromPickle
 
 from visualize.initialization import initializeScreen
@@ -28,14 +28,6 @@ from pygame.color import THECOLORS
 import mujoco_py as mujoco
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
-
-def infer(inferenceIndex, transit, state, nextState):
-    mindsPhysicsActionsDf = pd.DataFrame(index=inferenceIndex)
-    getLikelihood = lambda mind, physics, action: transit(physics, state, action, nextState)
-    mindsPhysicsActionsDf['jointLikelihood'] = [getLikelihood(index[0], index[1], index[2])
-                                                        for index, value in mindsPhysicsActionsDf.iterrows()]
-    # print(mindsPhysicsActionsDf['jointLikelihood'])
-    return mindsPhysicsActionsDf
 
 def main():
     # transition function
@@ -81,13 +73,13 @@ def main():
     wolfModelPath = os.path.join(dirName, '..','NNModels','wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
     wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(wolfNNModel, wolfModelPath)
-    wolfPolicy = ApproximateActionPrior(wolfNNModel, actionSpace) # input state, return action distribution
+    wolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace) # input state, return action distribution
 
     # sheep NN Policy
     sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
     sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(sheepNNModel, sheepModelPath)
-    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace) # input state, return action distribution
+    sheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace) # input state, return action distribution
 
 
     # random Policy
@@ -111,8 +103,6 @@ def main():
     actionHypo = list(it.product(actionSpace, repeat=numOfAgents))
     iterables = [chasingSpace, pullingSpace, actionHypo]
     inferenceIndex = pd.MultiIndex.from_product(iterables, names=['mind', 'physics', 'action'])
-    # infer(inferenceIndex, policy, observe(0), observe(1))
-    # posteriorDf = infer(inferenceIndex, transition, observe(1), observe(2))
 
 # visualization
     fullScreen = False
@@ -163,22 +153,17 @@ def main():
 
     mindPhysicsActionName = ['mind', 'physics', 'action']
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
-
     inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,
                  isInferenceTerminal, observe, inferOneStep, drawInferenceResult)
-    # inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,
-    #              isInferenceTerminal, observe, inferOneStep)
 
     mindsPhysicsPrior = [1/ len(inferenceIndex)] * len(inferenceIndex)
     posteriorDf = inferContinuousChasingAndDrawDemo(mindsPhysicsPrior)
 
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
-#
+
     plotMindInferenceProb(posteriorDf, dataIndex)
     plotPhysicsInferenceProb(posteriorDf, dataIndex)
-#
-#     posteriorDf.to_csv("posterior.csv")
 
 if __name__ == '__main__':
     main()

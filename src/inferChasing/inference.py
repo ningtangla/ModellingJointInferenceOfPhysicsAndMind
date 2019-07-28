@@ -3,6 +3,16 @@
 import pandas as pd
 import pygame as pg
 
+class ObserveStateOnly:
+    def __init__(self, trajectory):
+        self.trajectory = trajectory
+
+    def __call__(self, timeStep):
+        if timeStep >= len(self.trajectory):
+            return None
+        currentState = self.trajectory[timeStep]
+        return currentState
+
 class Observe:
     def __init__(self, stateIndex, trajectory):
         self.stateIndex = stateIndex
@@ -80,7 +90,7 @@ class InferDiscreteChasingAndDrawDemo:
                 fpsClock.tick(self.fps)
                 game = self.visualize(currentState, mindsPhysicsPrior)
                 if self.saveImage is not None:
-                    self.saveImage(nextTimeStep, game)
+                    self.saveImage(game)
 
             nextState = self.observe(nextTimeStep)
             if nextState is None:

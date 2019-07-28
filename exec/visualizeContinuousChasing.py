@@ -7,7 +7,6 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 from src.inferChasing.inference import Observe
-
 from exec.trajectoriesSaveLoad import loadFromPickle
 from visualize.continuousVisualization import ScaleTrajectory, AdjustDfFPStoTraj,\
     DrawBackground, DrawState, ChaseTrialWithTraj
@@ -20,7 +19,7 @@ pd.set_option('display.max_columns', None)
 
 def main():
     dirName = os.path.dirname(__file__)
-    dataIndex = 14
+    dataIndex = 100
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
 
@@ -44,10 +43,12 @@ def main():
     positionIndex = [0, 1]
     drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
 
-    colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+    numberOfAgents = 3
+    chasingColors = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+    colorSpace = chasingColors[: numberOfAgents]
 
     FPS = 60
-    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='3ObjectsDemo' + str(dataIndex))
+    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='2ObjectsDemo' + str(dataIndex))
 
     rawXRange = [-10, 10]
     rawYRange = [-10, 10]

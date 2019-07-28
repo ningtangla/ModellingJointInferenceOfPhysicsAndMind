@@ -10,8 +10,9 @@ from src.inferChasing.continuousTransition import TransitTwoMassPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
     InferContinuousChasingAndDrawDemo
 
-from src.constrainedChasingEscapingEnv.envMujoco import Transition3Objects
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximateActionPrior
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 from exec.trajectoriesSaveLoad import loadFromPickle
 
 from visualize.initialization import initializeScreen
@@ -44,10 +45,17 @@ def main():
     physicsSmallMassSimulation.set_constants()
     physicsLargeMassSimulation.set_constants()
 
-    numSimulationFrames = 20
-    transitSmallMassAgents = Transition3Objects(physicsSmallMassSimulation, numSimulationFrames)
-    transitLargeMassAgents = Transition3Objects(physicsLargeMassSimulation, numSimulationFrames)
+    sheepId = 0
+    wolfId = 1
+    xPosIndex = [2, 3]
+    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
+    killzoneRadius = 2
+    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
+    numSimulationFrames = 20
+    transitSmallMassAgents = TransitionFunction(physicsSmallMassSimulation, isTerminal, numSimulationFrames)
+    transitLargeMassAgents = TransitionFunction(physicsLargeMassSimulation, isTerminal, numSimulationFrames)
     transition = TransitTwoMassPhysics(transitSmallMassAgents, transitLargeMassAgents)
 
     # Neural Network
@@ -65,13 +73,13 @@ def main():
                                  'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
     wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(wolfNNModel, wolfModelPath)
-    wolfPolicy = ApproximateActionPrior(wolfNNModel, actionSpace)  # input state, return action distribution
+    wolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)  # input state, return action distribution
 
     # sheep NN Policy
     sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
     sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(sheepNNModel, sheepModelPath)
-    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace) # input sheepstate, return action distribution
+    sheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace) # input sheepstate, return action distribution
 
     randomPolicy = RandomPolicy(actionSpace)
 
@@ -80,7 +88,7 @@ def main():
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 14
+    dataIndex = 100
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0

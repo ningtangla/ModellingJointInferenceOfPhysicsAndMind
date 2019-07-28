@@ -13,8 +13,6 @@ from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
 
 def main():
-    # transition function
-
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'twoAgents.xml')
     agentsBodyMassIndex = [6, 7]
@@ -22,6 +20,7 @@ def main():
     physicsSmallMassModel.body_mass[agentsBodyMassIndex] = [4, 5]
     physicsLargeMassModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsLargeMassModel.body_mass[agentsBodyMassIndex] = [8, 10]
+
     physicsSmallMassSimulation = mujoco.MjSim(physicsSmallMassModel)
     physicsLargeMassSimulation = mujoco.MjSim(physicsLargeMassModel)
     # set_constants fit for mujoco_py version >= 2.0, no fit for 1.50
