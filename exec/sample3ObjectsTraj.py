@@ -1,6 +1,7 @@
 import os
 import sys
 DIRNAME = os.path.dirname(__file__)
+dirName = '/Users/zhaominglu/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind/exec/sample3ObjectsTraj.py'
 sys.path.append(os.path.join(DIRNAME, '..'))
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction

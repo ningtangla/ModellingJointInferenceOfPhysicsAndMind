@@ -19,8 +19,8 @@ pd.set_option('display.max_columns', None)
 
 def main():
     dirName = os.path.dirname(__file__)
-    dataIndex = 100
-    dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
+    dataIndex = 2
+    dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedTraj'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
 
     stateIndex = 0
@@ -48,7 +48,7 @@ def main():
     colorSpace = chasingColors[: numberOfAgents]
 
     FPS = 60
-    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='2ObjectsDemo' + str(dataIndex))
+    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True)
 
     rawXRange = [-10, 10]
     rawYRange = [-10, 10]
@@ -62,7 +62,15 @@ def main():
     getTrajectory = lambda rawTrajectory: scaleTrajectory(adjustFPS(rawTrajectory))
     positionList = [observe(index) for index in range(len(trajectory))]
     positionListToDraw = getTrajectory(positionList)
-    chaseTrial(positionListToDraw)
+
+    currentDir = os.getcwd()
+    parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
+    imageFolderName = 'leasedObjectsDemo' + str(dataIndex)
+    saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), imageFolderName)
+    if not os.path.exists(saveImageDir):
+        os.makedirs(saveImageDir)
+
+    chaseTrial(positionListToDraw, saveImageDir)
 
 
 if __name__ == '__main__':
