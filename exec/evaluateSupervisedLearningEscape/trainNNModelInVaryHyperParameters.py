@@ -2,7 +2,7 @@ import sys
 import os
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import random
 import numpy as np
 import pickle
@@ -11,7 +11,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from mujoco_py import load_model_from_path, MjSim
 
-import time
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
@@ -53,10 +52,10 @@ class TrainModelForConditions:
         modelSavePath = self.getModelSavePath(parameters)
         model = self.getNNModel(depth)
 
-        # if not os.path.isfile(modelSavePath + '.index'):
-        train = self.getTrain(trainSteps, miniBatchSize, learningRate)
-        trainedModel = train(model, self.trainData)
-        saveVariables(trainedModel, modelSavePath)
+        if not os.path.isfile(modelSavePath + '.index'):
+            train = self.getTrain(trainSteps, miniBatchSize, learningRate)
+            trainedModel = train(model, self.trainData)
+            saveVariables(trainedModel, modelSavePath)
 
         trainedModel = restoreVariables(model, modelSavePath)
         graph = trainedModel.graph
@@ -73,16 +72,14 @@ class TrainModelForConditions:
 
 def main():
     # important parameters
-    start = time.time()
-    evalNumTrials = 1000  # 200
     sheepId = 0
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [256]  # [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-4]  # [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['trainSteps'] = [4000]
-    manipulatedVariables['depth'] = [10]  # [1,2,3]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256]  # [64, 128, 256]
+    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4]  # [1e-2, 1e-3, 1e-4]
+    manipulatedVariables['trainSteps'] = [0, 2000, 4000, 6000]
+    manipulatedVariables['depth'] = [1, 2, 3]  # [1,2,3]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -183,7 +180,6 @@ def main():
     statisticsDf = toSplitFrame.groupby(levelNames).apply(trainModelForConditions)
 
     # plot the results
-    print('time {}'.format(time.time()-start))
     fig = plt.figure()
     numColumns = len(manipulatedVariables['miniBatchSize'])
     numRows = len(manipulatedVariables['depth'])
@@ -201,7 +197,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            axForDraw.set_ylim(1.4, 2.1)
+            # axForDraw.set_ylim(13, 15)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)
