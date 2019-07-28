@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 import unittest
 from ddt import ddt, data, unpack
-import src.neuralNetwork.policyValueNet as net
+import src.neuralNetwork.policyValueNetWithActionL2NormLoss as net
 import numpy as np 
 
 @ddt
@@ -11,7 +11,7 @@ class TestPolicyValueNet(unittest.TestCase):
         self.numStateSpace = 4
         self.numActionSpace = 8
         self.summaryPath = None
-        self.generateModel = net.GenerateModel(self.numStateSpace, self.numActionSpace)
+        self.generateModel = net.GenerateModelActionL2Loss(self.numStateSpace, self.numActionSpace)
     
     @data(([], [], [], [[4, 8], [4, 1]]),
           ([6], [], [], [[4, 6], [6, 8], [6, 1]]),
@@ -55,16 +55,16 @@ class TestPolicyValueNet(unittest.TestCase):
        
         actionDist_ = graph.get_collection_ref("actionDistributions")[0]
         actionProbsBatch = model.run(actionDist_, feed_dict={state_: stateBatch}) 
-        groundTruthCrossEntropy = np.mean([np.sum(np.multiply(-np.log(actionProb), actionOneHot)) for actionProb, actionOneHot in zip(actionProbsBatch, actionBatch)])
-        NNCrossEntropy = evalDict['actionLoss']
+        groundTruthActionL2Norm = np.mean([np.sum(np.(-np.log(actionProb), actionOneHot) for actionProb, actionOneHot in zip(actionProbsBatch, actionBatch)])
+        NNActionL2Norm = evalDict['actionLoss']
         print(groundTruthCrossEntropy, NNCrossEntropy) 
         self.assertAlmostEqual(groundTruthCrossEntropy, NNCrossEntropy)
 
         valuePrediction_ = graph.get_collection_ref("values")[0]
         valuePredictionBatch = model.run(valuePrediction_, feed_dict={state_: stateBatch})
-        groundTruthL2Norm = np.mean([np.sqrt(np.sum(np.power(valuePrediction - value, 2))/len(value) for valuePrediction, value in zip(valuePredictionBatch, valueBatch)])
-        NNL2Norm = evalDict['valueLoss']
-        print(groundTruthL2Norm, NNL2Norm) 
+        groundTruthValueL2Norm = np.mean([np.sqrt(np.sum(np.power(valuePrediction - value, 2))/len(value)) for valuePrediction, value in zip(valuePredictionBatch, valueBatch)])
+        NNValueL2Norm = evalDict['valueLoss']
+        print(groundValueTruthL2Norm, NNValueL2Norm) 
         self.assertAlmostEqual(groundTruthL2Norm, NNL2Norm)
 
 if __name__ == "__main__":

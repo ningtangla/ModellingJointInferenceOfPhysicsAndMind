@@ -6,26 +6,13 @@ def stationaryAgentPolicy(state):
     return {(0, 0): 1}
 
 
-class UniformPolicy:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
-
-    def __call__(self, state):
-        likelihood = {action: 1 / len(self.actionSpace) for action in self.actionSpace}
-        return likelihood
-
-
 class RandomPolicy:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
 
     def __call__(self, state):
         likelihood = {action: 1 / len(self.actionSpace) for action in self.actionSpace}
-        sampleLikelihood = list(likelihood.values())
-        actionIndex = list(np.random.multinomial(1, sampleLikelihood)).index(1)
-        randomAction = list(likelihood.keys())[actionIndex]
-        return randomAction
-
+        return likelihood
 
 class HeatSeekingDiscreteDeterministicPolicy:
     def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
