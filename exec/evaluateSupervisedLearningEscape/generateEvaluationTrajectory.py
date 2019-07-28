@@ -33,7 +33,7 @@ from exec.preProcessing import AccumulateRewards
 
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                        'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -42,6 +42,7 @@ def main():
     trainMaxRunningSteps = 20
     trainNumSimulations = 100
     killzoneRadius = 2
+    sheepId = 0
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
@@ -90,12 +91,12 @@ def main():
 
         NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
-                                            'NNModel')
+        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
+                                            'trainedModels')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
-        depth = parametersForTrajectoryPath['depth']
+        depth = int(parametersForTrajectoryPath['depth'])
         initNNModel = generateModel(sharedWidths, actionLayerWidths * depth, valueLayerWidths)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
@@ -118,7 +119,7 @@ def main():
 
         # save evaluation trajectories
         modelPath = getNNModelSavePath({})
-        sheepPolicy = restoreVariables(initNNmodel, modelPath)
+        sheepPolicy = restoreVariables(initNNModel, modelPath)
         wolfPolicy = stationaryAgentPolicy
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 

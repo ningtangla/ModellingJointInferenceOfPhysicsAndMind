@@ -42,9 +42,9 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [16]  # [64, 128, 256]
+    manipulatedVariables['miniBatchSize'] = [16,64]  # [64, 128, 256]
     manipulatedVariables['learningRate'] = [1e-2]  # [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['trainSteps'] = [1]
+    manipulatedVariables['trainSteps'] = [10]
     manipulatedVariables['depth'] = [1]  # [1,2,3]
 
     levelNames = list(manipulatedVariables.keys())
@@ -54,7 +54,7 @@ def main():
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                     'trajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -100,7 +100,7 @@ def main():
     killzoneRadius = 2
     NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                         'trainedModels')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
@@ -110,8 +110,8 @@ def main():
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
-                                                                numCmdList, readParametersFromDf)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials,numCmdList)
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
@@ -119,7 +119,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
