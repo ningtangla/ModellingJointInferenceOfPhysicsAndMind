@@ -46,7 +46,7 @@ def drawPerformanceLine(dataDf, axForDraw, miniBatchSize):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp = grp.droplevel('learningRate')
         grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean',
-                             title='miniBatchSize: {}'.format(miniBatchSize), marker='o', logx=True)
+                 title='miniBatchSize: {}'.format(miniBatchSize), marker='o', logx=True)
 
 
 class ActionToOneHot:
@@ -73,7 +73,7 @@ class PreProcessTrajectories:
         tuplesFiltered = list(filter(lambda tup: tup[self.actionIndex] is not None, allTimeStepTuples))
         print("{} data points remain after filtering".format(len(tuplesFiltered)))
         tuplesProcessed = [(np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
-                                     for state, actions, actionDist, value in tuplesFiltered]
+                           for state, actions, actionDist, value in tuplesFiltered]
 
         return tuplesProcessed
 
@@ -152,7 +152,7 @@ class GenerateTrajectories:
 
 def main():
     # important parameters
-    evalNumTrials = 100#200
+    evalNumTrials = 100  # 200
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
@@ -232,7 +232,7 @@ def main():
     coefficientController = CoefficientController(initActionCoeff, initValueCoeff)
     reportInterval = 500
     getTrain = lambda trainSteps, batchSize: Train(trainSteps, batchSize, terminalController, coefficientController,
-                                        TrainReporter(trainSteps, reportInterval))
+                                                   TrainReporter(trainSteps, reportInterval))
 
     # get path to save trained models
     modelFixedParameters = {'dataSetMaxRunningSteps': dataSetMaxRunningSteps, 'dataSetQPosInit': dataSetQPosInit,
@@ -288,7 +288,7 @@ def main():
     trajectoryFixedParameters = {'maxRunningSteps': evalMaxRunningSteps, 'numTrials': evalNumTrials,
                                  'sheepPolicyName': sheepPolicyName}
     trajectorySaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'NNPolicyVaryHyperParametersSheepEscapeWolfMujoco',
-                                      'trajectories', 'evaluate')
+                                           'trajectories', 'evaluate')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectoryExtension = '.pickle'
@@ -313,7 +313,7 @@ def main():
     stateIndex = 0
     getInitStateFromTrajectory = GetStateFromTrajectory(initTimeStep, stateIndex)
     optimalPolicy = HeatSeekingDiscreteDeterministicPolicy(actionSpace, getSheepPos, getWolfPos,
-                                                              computeAngleBetweenVectors)
+                                                           computeAngleBetweenVectors)
     getOptimalAction = lambda state: agentDistToGreedyAction(optimalPolicy(state))
     stationaryAgentAction = lambda state: agentDistToGreedyAction(stationaryAgentPolicy(state))
     sheepTransit = lambda state, action: transit(state, [action, stationaryAgentAction(state)])

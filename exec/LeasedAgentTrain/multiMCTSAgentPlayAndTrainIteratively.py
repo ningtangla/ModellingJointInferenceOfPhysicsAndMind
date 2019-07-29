@@ -115,14 +115,14 @@ class TrainOneAgent:
 def main():
     # Mujoco environment
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
     # MDP function
-    qPosInit = (0, 0, 0, 0)
-    qVelInit = [0, 0, 0, 0]
-    numAgents = 2
+    qPosInit = (0, 0, 0, 0, 0, 0)
+    qVelInit = [0, 0, 0, 0, 0, 0]
+    numAgents = 3
     qVelInitNoise = 8
     qPosInitNoise = 9.7
     reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
@@ -130,6 +130,7 @@ def main():
     agentIds = list(range(numAgents))
     sheepId = 0
     wolfId = 1
+    masterId = 2
     xPosIndex = [2, 3]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
@@ -140,7 +141,8 @@ def main():
 
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
-    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
+    masterTerminalReward = 0
+    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, masterTerminalReward]
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
@@ -150,7 +152,9 @@ def main():
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-    rewardMultiAgents = [rewardSheep, rewardWolf]
+    rewardMaster = RewardFunctionCompete(0, 0, isTerminal)
+
+    rewardMultiAgents = [rewardSheep, rewardWolf, rewardMaster]
 
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
@@ -171,7 +175,7 @@ def main():
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, sampleAction)
 
     # neural network init
-    numStateSpace = 12
+    numStateSpace = numAgents * 6
     numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
     sharedWidths = [128]
@@ -183,7 +187,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256
+    miniBatchSize = 2 # 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -219,17 +223,17 @@ def main():
                     trainReporter)
 
     # load save dir
-    numSimulations = 200
+    numSimulations = 200 # 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'multiAgentTrain', 'multiMCTSAgent', 'trajectories')
+                                             'leashedAgentTrain', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                        'leashedAgentTrain', 'multiMCTSAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
