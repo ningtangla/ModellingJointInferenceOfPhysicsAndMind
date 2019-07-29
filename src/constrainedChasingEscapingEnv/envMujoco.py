@@ -5,7 +5,7 @@ class ResetUniform:
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
-        self.numAgent = numAgent
+        self.numAgent = self.simulation.model.nsite
         self.qPosInitNoise = qPosInitNoise
         self.qVelInitNoise = qVelInitNoise
         self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
@@ -27,7 +27,7 @@ class ResetUniform:
         agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
         agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
-        startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
+        startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)] + otherEnvQPos)
 
         return startState
 
@@ -76,7 +76,7 @@ class ResetUniformWithoutXPos:
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
-        self.numAgent = numAgent
+        self.numAgent = self.simulation.model.nsite
         self.qPosInitNoise = qPosInitNoise
         self.qVelInitNoise = qVelInitNoise
         self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
@@ -105,7 +105,7 @@ class TransitionFunctionWithoutXPos:
         self.simulation = simulation
         self.isTerminal = isTerminal
         self.numSimulationFrames = numSimulationFrames
-        self.numJointEachSite = self.simulation.model.njnt/self.simulation.model.nsite
+        self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
         
     def __call__(self, state, actions):
         state = np.asarray(state)

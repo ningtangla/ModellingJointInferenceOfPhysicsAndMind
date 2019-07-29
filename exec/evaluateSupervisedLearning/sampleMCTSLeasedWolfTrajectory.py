@@ -7,11 +7,11 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
     backup, RollOut
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos, ResetUniformWithoutXPos
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
@@ -61,9 +61,10 @@ def main():
         isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
 
         numSimulationFrames = 20
-        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+        transit = TransitionFunctionWithoutXPos(physicsSimulation, isTerminal, numSimulationFrames)
+        randomPolicy = RandomPolicy(actionSpace)
         transitInWolfMCTSSimulation = \
-            lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(randomPolicy(state)), wolfSelfAction, chooseGreedyAction(randomPolicy(state)])
+            lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(randomPolicy(state)), wolfSelfAction, chooseGreedyAction(randomPolicy(state))])
 
         # WolfActionInSheepSimulation = lambda state: (0, 0)
         # transitInSheepMCTSSimulation = \
@@ -87,7 +88,7 @@ def main():
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = 0.1
         maxRolloutSteps = 10
-        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
+        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
 
@@ -98,8 +99,8 @@ def main():
         qVelInit = (0, ) * 24
         qPosInitNoise = 9.7
         qVelInitNoise = 8
-        numAgent = 2
-        reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
+        numAgent = 3
+        reset = ResetUniformWithoutXPos(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
 
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
