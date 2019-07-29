@@ -35,7 +35,6 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
         grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
 
-
 def main():
     # important parameters
     sheepId = 0
@@ -121,11 +120,12 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            # axForDraw.set_ylim(1.4, 2.5)
+            axForDraw.set_ylim(-1, 1)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
             drawPerformanceLine(group, axForDraw, depth)
             trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
             axForDraw.plot(trainStepLevels, [0.9708]*len(trainStepLevels), label='mctsTrainData')
+
             plotCounter += 1
 
     plt.legend(loc='best')

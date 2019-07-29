@@ -68,11 +68,22 @@ class ProcessTrajectoryForPolicyValueNet:
 
     def __call__(self, trajectory):
         processTuple = lambda state, actions, actionDist, value: \
-            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), np.array([value[self.agentId]]))
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
         processedTrajectory = [processTuple(*triple) for triple in trajectory]
 
         return processedTrajectory
 
+class ProcessTrajectoryForPolicyValueNetMultiAgentReward:
+    def __init__(self, actionToOneHot, agentId):
+        self.actionToOneHot = actionToOneHot
+        self.agentId = agentId
+
+    def __call__(self, trajectory):
+        processTuple = lambda state, actions, actionDist, value: \
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), np.array([value[self.agentId]]))
+        processedTrajectory = [processTuple(*triple) for triple in trajectory]
+
+        return processedTrajectory
 
 class PreProcessTrajectories:
     def __init__(self, addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN):

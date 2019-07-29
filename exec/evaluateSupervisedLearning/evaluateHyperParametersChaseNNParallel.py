@@ -34,8 +34,6 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
         grp.index = grp.index.droplevel('learningRate')
         grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
-    xData = dataDf.index.get_level_values('trainSteps').values
-    axForDraw.plot(xData, [0.5409]*len(xData), label='mctsTrainData')
 
 def main():
     # important parameters
@@ -68,17 +66,17 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 
-    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
-    evalNumTrials = 1000
-    numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5*numCpuCores)
-    numCmdList = min(evalNumTrials, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-                                                                evalNumTrials, numCmdList)
+    # generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
+    # evalNumTrials = 1000
+    # numCpuCores = os.cpu_count()
+    # numCpuToUse = int(0.5*numCpuCores)
+    # numCmdList = min(evalNumTrials, numCpuToUse)
+    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+    #                                                             evalNumTrials, numCmdList)
 
-    # run all trials and save trajectories
-    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # # run all trials and save trajectories
+    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -127,7 +125,7 @@ def main():
 
             drawPerformanceLine(group, axForDraw, depth)
             trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepsLevels, [0.5409])*len(trainStepsLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepsLevels, [0.5409]*len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
     plt.legend(loc='best')
