@@ -45,11 +45,6 @@ class TransitionFunction:
         actions = np.asarray(actions)
         numAgent = len(state)
 
-        numQPos = len(self.simulation.data.qpos)
-        numQVel = len(self.simulation.data.qvel)
-        self.numJointEachSite = int(numQPos/numAgent)
-        self.numJointEachSite = int(numQVel/numAgent)
-
         oldQPos = state[:, 0:self.numJointEachSite].flatten()
         oldQVel = state[:, -self.numJointEachSite:].flatten()
 
@@ -89,8 +84,6 @@ class ResetUniformWithoutXPos:
     def __call__(self):
         numQPos = len(self.simulation.data.qpos)
         numQVel = len(self.simulation.data.qvel)
-        self.numJointEachSite = int(numQPos / self.numAgent)
-        self.numJointEachSite = int(numQVel / self.numAgent)
 
         qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
         qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
@@ -119,11 +112,6 @@ class TransitionFunctionWithoutXPos:
         # print("state", state)
         actions = np.asarray(actions)
         numAgent = len(state)
-
-        numQPos = len(self.simulation.data.qpos)
-        numQVel = len(self.simulation.data.qvel)
-        self.numJointEachSite = int(numQPos/numAgent)
-        self.numJointEachSite = int(numQVel/numAgent)
 
         oldQPos = state[:, 0:self.numJointEachSite].flatten()
         oldQVel = state[:, -self.numJointEachSite:].flatten()
@@ -159,11 +147,6 @@ class Transition3Objects:
         # print("state", state)
         actions = np.asarray(actions)
         numAgent = len(state)
-
-        numQPos = len(self.simulation.data.qpos)
-        numQVel = len(self.simulation.data.qvel)
-        self.numJointEachSite = int(numQPos / numAgent)
-        self.numJointEachSite = int(numQVel / numAgent)
 
         oldQPos = state[:, 0:self.numJointEachSite].flatten()
         oldQVel = state[:, -self.numJointEachSite:].flatten()
