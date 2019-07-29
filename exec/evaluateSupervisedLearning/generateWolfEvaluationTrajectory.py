@@ -31,43 +31,19 @@ from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, Heur
 from exec.preProcessing import AccumulateRewards
 
 
-class RestoreNNModel:
-    def __init__(self, getModelSavePath, multiAgentNNModel, restoreVariables):
-        self.getModelSavePath = getModelSavePath
-        self.multiAgentNNModel = multiAgentNNModel
-        self.restoreVariables = restoreVariables
-
-    def __call__(self, agentId, iteration):
-        modelPath = self.getModelSavePath({'agentId': agentId, 'iterationIndex': iteration})
-        restoredNNModel = self.restoreVariables(self.multiAgentNNModel[agentId], modelPath)
-
-        return restoredNNModel
-
-
-class PreparePolicy:
-    def __init__(self, selfApproximatePolicy, otherApproximatePolicy):
-        self.selfApproximatePolicy = selfApproximatePolicy
-        self.otherApproximatePolicy = otherApproximatePolicy
-
-    def __call__(self, agentId, multiAgentNNModel):
-        multiAgentPolicy = [self.otherApproximatePolicy(NNModel) for NNModel in multiAgentNNModel]
-        selfNNModel = multiAgentNNModel[agentId]
-        multiAgentPolicy[agentId] = self.selfApproximatePolicy(selfNNModel)
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
-        return policy
-
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
+                                       'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 20
-    trainNumSimulations = 200
+    trainNumSimulations = 100
     killzoneRadius = 2
-    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    wolfId = 1
+    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
@@ -112,29 +88,23 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-        NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+
+        NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                            'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'NNModel')
+        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
+                                            'trainedModels')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
-        multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
 
-        # functions to get prediction from NN
-        restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
-
-        # function to prepare policy
-        selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
+        depth = int(parametersForTrajectoryPath['depth'])
+        initNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         evalQPosInitNoise = 0
         evalQVelInitNoise = 0
         qVelInit = [0, 0, 0, 0]
 
-        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents,
-                                                                  evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
 
         evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
@@ -148,18 +118,19 @@ def main():
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
-        selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-        otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-        selfId = int(parametersForTrajectoryPath['selfId'])
-        multiAgentIterationIndex = [otherIteration] * numAgents
-        multiAgentIterationIndex[selfId] = selfIteration
+        manipulatedVariables = json.loads(sys.argv[1])
+        modelPath = getNNModelSavePath(manipulatedVariables)
+        restoredModel = restoreVariables(initNNModel, modelPath)
 
-        restoredMultiAgentNNModel = [restoreNNModel(agentId, multiAgentIterationIndex[agentId]) for agentId in range(numAgents)]
-        policy = preparePolicy(selfId, multiAgentNNmodel)
+        wolfPolicy = ApproximatePolicy(restoredModel, actionSpace)
+        sheepPolicy = stationaryAgentPolicy
+        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+
         beginTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
+        restoredModel.close()
 
 if __name__ == '__main__':
     main()
