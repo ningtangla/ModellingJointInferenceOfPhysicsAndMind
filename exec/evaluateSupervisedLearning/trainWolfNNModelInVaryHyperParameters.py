@@ -61,7 +61,6 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex*self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            model = restoreVariables(model, modelSavePath)
             if not os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
@@ -158,10 +157,10 @@ def main():
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1000
-    trainStepsIntervel = 1
+    trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
-    learningRateDecayStep = 10000
+    learningRateDecayStep = 1
     learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,trainReporter)
 

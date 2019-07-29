@@ -60,8 +60,6 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex*self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            model = restoreVariables(model, modelSavePath)
-            print(modelSavePath)
             if not os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
