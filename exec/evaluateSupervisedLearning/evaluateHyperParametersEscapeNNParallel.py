@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
 
@@ -31,7 +32,7 @@ from exec.evaluationFunctions import ComputeStatistics
 def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
-        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean', yerr='std',
+        grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
 
 
@@ -43,8 +44,8 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = [0,1,2,3,4]
-    manipulatedVariables['depth'] =  [2, 4, 6, 8]
+    manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
+    manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -66,13 +67,14 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 
-    generateTrajectoriesCodeName = 'generateEvaluationTrajectory.py'
+# generate trajectory parallel
+    generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-                                                                evalNumTrials,numCmdList)
+                                                                evalNumTrials, numCmdList)
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
@@ -80,7 +82,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -120,10 +122,12 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            # axForDraw.set_ylim(1.4, 2.5)
+            axForDraw.set_ylim(-1, 1)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
-
             drawPerformanceLine(group, axForDraw, depth)
+            trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
+            axForDraw.plot(trainStepLevels, [0.9708] * len(trainStepLevels), label='mctsTrainData')
+
             plotCounter += 1
 
     plt.legend(loc='best')

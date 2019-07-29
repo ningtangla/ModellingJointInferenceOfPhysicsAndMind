@@ -44,8 +44,8 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = [0, 10000, 20000, 30000, 40000]
-    manipulatedVariables['depth'] =  [2, 4, 6, 8]
+    manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
+    manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -66,11 +66,11 @@ def main():
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
-
-    generateTrajectoriesCodeName = 'generateEvaluationTrajectory.py'
+# generate trajectory parallel
+    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5*numCpuCores)
+    numCpuToUse = int(0.5 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
                                                                 evalNumTrials, numCmdList)
@@ -125,6 +125,8 @@ def main():
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)
+            trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
+            axForDraw.plot(trainStepsLevels, [0.5409] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
     plt.legend(loc='best')

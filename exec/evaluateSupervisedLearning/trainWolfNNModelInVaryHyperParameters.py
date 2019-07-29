@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
 
@@ -50,25 +51,23 @@ class TrainModelForConditions:
         miniBatchSize = parameters['miniBatchSize']
         learningRate = parameters['learningRate']
         depth = parameters['depth']
-         
+
         model = self.getNNModel(depth)
         train = self.getTrain(miniBatchSize, learningRate)
         parameters.update({'trainSteps': 0})
-        modelSavePath = self.getModelSavePath(parameters) 
+        modelSavePath = self.getModelSavePath(parameters)
         saveVariables(model, modelSavePath)
-        
+
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex*self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            print(modelSavePath)
             if not os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
             else:
                 trainedModel = restoreVariables(model, modelSavePath)
             model = trainedModel
-        
-        return model        
+
 
 def main():
     # important parameters
@@ -76,16 +75,16 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]  # [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]  # [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2, 4, 6, 8]  # [1,2,3]
-    
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
+    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['depth'] = [2 ,4, 6, 8]
+
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
-    
+
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                     'trajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -132,6 +131,8 @@ def main():
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
+    valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
+
     # neural network init and save path
     numStateSpace = 12
     regularizationFactor = 1e-4
@@ -141,6 +142,9 @@ def main():
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
     getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+    trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
+    print(trainDataMeanAccumulatedReward)
+
     # function to train NN model
     terminalThreshold = 1e-6
     lossHistorySize = 10
@@ -158,13 +162,12 @@ def main():
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,
-                                                                     trainReporter)
+    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,trainReporter)
 
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                         'trainedModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
@@ -172,16 +175,16 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # train models for all conditions
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.25*numCpuCores)
-    trainPool = mp.Pool(numCpuToUse) 
-    #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion] 
-    models = trainPool.map(trainModelForConditions, parametersAllCondtion)
+    numCpuToUse = int(0.8*numCpuCores)
+    trainPool = mp.Pool(numCpuToUse)
+    #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    trainPool.map(trainModelForConditions, parametersAllCondtion)
 
 if __name__ == '__main__':
     main()
