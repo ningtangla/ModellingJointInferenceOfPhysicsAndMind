@@ -32,13 +32,14 @@ from exec.evaluationFunctions import ComputeStatistics
 def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
-        grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
+        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
-
+    xData = dataDf.index.get_level_values('trainSteps').values
+    axForDraw.plot(xData, [0.5409]*len(xData), label='mctsTrainData')
 
 def main():
     # important parameters
-    sheepId = 0
+    wolfId = 1
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
@@ -58,8 +59,8 @@ def main():
     xPosIndex = [2, 3]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
-    playAliveBonus = 0.05
-    playDeathPenalty = -1
+    playAliveBonus = -0.05
+    playDeathPenalty = 1
     playKillzoneRadius = 2
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
@@ -67,17 +68,17 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 
-    # generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
-    # evalNumTrials = 1000
-    # numCpuCores = os.cpu_count()
-    # numCpuToUse = int(0.5 * numCpuCores)
-    # numCmdList = min(evalNumTrials, numCpuToUse)
-    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-    #                                                             evalNumTrials,numCmdList)
+    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
+    evalNumTrials = 1000
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.5*numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials, numCmdList)
 
-    # # run all trials and save trajectories
-    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # run all trials and save trajectories
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -90,7 +91,7 @@ def main():
     trainMaxRunningSteps = 20
     trainNumSimulations = 100
     killzoneRadius = 2
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
@@ -123,9 +124,10 @@ def main():
 
             # axForDraw.set_ylim(1.4, 2.5)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
+
             drawPerformanceLine(group, axForDraw, depth)
-            trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepLevels, [0.9708]*len(trainStepLevels), label='mctsTrainData')
+            trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
+            axForDraw.plot(trainStepsLevels, [0.5409])*len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
     plt.legend(loc='best')

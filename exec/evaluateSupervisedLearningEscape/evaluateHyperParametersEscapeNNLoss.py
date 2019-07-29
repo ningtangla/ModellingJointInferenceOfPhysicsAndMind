@@ -55,9 +55,9 @@ class TrainModelForConditions:
         model = self.getNNModel(depth)
 
         # if not os.path.isfile(modelSavePath + '.index'):
-        train = self.getTrain(trainSteps, miniBatchSize, learningRate)
-        trainedModel = train(model, self.trainData)
-        saveVariables(trainedModel, modelSavePath)
+        # train = self.getTrain(trainSteps, miniBatchSize, learningRate)
+        # trainedModel = train(model, self.trainData)
+        # saveVariables(trainedModel, modelSavePath)
 
         trainedModel = restoreVariables(model, modelSavePath)
         graph = trainedModel.graph
@@ -80,10 +80,10 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [256]  # [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-4]  # [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['trainSteps'] = [4000]
-    manipulatedVariables['depth'] = [10]  # [1,2,3]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
+    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000,]
+    manipulatedVariables['depth'] =  [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -92,7 +92,7 @@ def main():
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                     'trajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -115,7 +115,7 @@ def main():
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
     playAliveBonus = 0.05
     playDeathPenalty = -1
-    playKillzoneRadius = 0.5
+    playKillzoneRadius = 2
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
 
@@ -147,7 +147,7 @@ def main():
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    getNNModel = lambda depth: generateModel(sharedWidths, actionLayerWidths * depth, valueLayerWidths)
+    getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths , valueLayerWidths)
     # function to train NN model
     terminalThreshold = 1e-6
     lossHistorySize = 10
@@ -170,7 +170,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningEscape',
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                         'trainedModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
@@ -202,7 +202,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            axForDraw.set_ylim(1.4, 2.1)
+            axForDraw.set_ylim(0, 2.2)
 
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 

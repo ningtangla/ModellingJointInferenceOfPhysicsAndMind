@@ -1,6 +1,6 @@
 import sys
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -42,8 +42,8 @@ def main():
     trainMaxRunningSteps = 20
     trainNumSimulations = 100
     killzoneRadius = 2
-    sheepId = 0
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    wolfId = 1
+    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
@@ -76,8 +76,8 @@ def main():
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numActionSpace = len(actionSpace)
 
-        alivePenalty = 0.05
-        deathBonus = -1
+        alivePenalty = -0.05
+        deathBonus = 1
         rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
 
         # neural network init and save path
@@ -89,7 +89,7 @@ def main():
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
 
-        NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+        NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
         dirName = os.path.dirname(__file__)
         NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
                                             'trainedModels')
@@ -106,7 +106,7 @@ def main():
 
         getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
 
-        evalNumTrials = 10
+        evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
         evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
@@ -121,15 +121,16 @@ def main():
         manipulatedVariables = json.loads(sys.argv[1])
         modelPath = getNNModelSavePath(manipulatedVariables)
         restoredModel = restoreVariables(initNNModel, modelPath)
-        sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-        wolfPolicy = stationaryAgentPolicy
+
+        wolfPolicy = ApproximatePolicy(restoredModel, actionSpace)
+        sheepPolicy = stationaryAgentPolicy
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
         beginTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
-
+        restoredModel.close()
 
 if __name__ == '__main__':
     main()
