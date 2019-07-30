@@ -2,6 +2,7 @@ import sys
 import os
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import random
 import numpy as np
