@@ -133,6 +133,7 @@ def main():
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
+
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
