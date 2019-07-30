@@ -49,7 +49,6 @@ def main():
     qVelInitNoise = 5           # adds some randomness to the initial velocities
     numAgent = 2
     reset = ResetUniform(physicsSmallMassSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
-    print(reset())
     # sample trajectory
     maxRunningSteps = 10        # max possible length of the trajectory/episode
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)

@@ -8,7 +8,7 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform
-from src.episode import Sample3ObjectsTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
 from src.inferChasing.continuousPolicy import RandomPolicy
 
@@ -57,7 +57,7 @@ def main():
 
     # sample trajectory
     maxRunningSteps = 20        # max possible length of the trajectory/episode
-    sampleTrajectory = Sample3ObjectsTrajectory(maxRunningSteps, transit, reset, chooseGreedyAction)
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # Neural Network
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
@@ -85,7 +85,7 @@ def main():
     policy = lambda state: [sheepPolicy(state[:2]), wolfPolicy(state[:2]), randomPolicy(state)]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 100
+    dataIndex = 101
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 

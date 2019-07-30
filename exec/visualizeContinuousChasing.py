@@ -19,8 +19,9 @@ pd.set_option('display.max_columns', None)
 
 def main():
     dirName = os.path.dirname(__file__)
-    dataIndex = 2
+    dataIndex = 101
     dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedTraj'+ str(dataIndex) + '.pickle')
+
     trajectory = loadFromPickle(dataPath)
 
     stateIndex = 0
@@ -66,6 +67,7 @@ def main():
     currentDir = os.getcwd()
     parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
     imageFolderName = 'leasedObjectsDemo' + str(dataIndex)
+
     saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), imageFolderName)
     if not os.path.exists(saveImageDir):
         os.makedirs(saveImageDir)

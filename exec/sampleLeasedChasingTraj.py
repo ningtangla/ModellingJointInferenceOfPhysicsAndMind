@@ -6,10 +6,10 @@ import numpy as np
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniformWithoutXPos
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
 from src.inferChasing.continuousPolicy import RandomPolicy
@@ -26,16 +26,18 @@ def main():
     physicsSimulation.step()
     physicsSimulation.forward()
 
-    action = np.array([0,0,-1,-1,0,0])
+    # action = np.array([0,0,-1,-1,0,0])
     # physicsSimulation.data.ctrl[:] = action
-    physicsViewer = mujoco.MjViewer(physicsSimulation)
-    numSimulationFrames = 100000
-    initQPos = np.array([9,-9, 4, 4, -4,-4] + [0]*18)
+    # physicsViewer = mujoco.MjViewer(physicsSimulation)
+    numSimulationFrames = 100
+    # initQPos = np.array([9,-9, 4, 4, -4,-4] + [0]*18)
+    initQPos = np.array([1,1, 0, 0, -1,-1] + [0]*18)
+
     physicsSimulation.data.qpos[:] = initQPos
-    for frameIndex in range(numSimulationFrames):
-        physicsSimulation.step()
-        physicsSimulation.forward()
-        physicsViewer.render()
+    # for frameIndex in range(numSimulationFrames):
+    #     physicsSimulation.step()
+    #     physicsSimulation.forward()
+    #     # physicsViewer.render()
 
     sheepId = 0
     wolfId = 1
@@ -45,15 +47,16 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    transit = TransitionFunctionWithoutXPos(physicsSimulation, isTerminal, numSimulationFrames)
+    transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
     numAgent = 3
     initQVel = (0,) * 24
-    reset = ResetUniformWithoutXPos(physicsSimulation, initQPos, initQVel, numAgent)
+    reset = ResetUniform(physicsSimulation, initQPos, initQVel, numAgent)
 
     # sample trajectory
     maxRunningSteps = 20        # max possible length of the trajectory/episode
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+
 
     # Neural Network
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
@@ -82,9 +85,10 @@ def main():
     policy = lambda state: [sheepPolicy(getWolfSheepState(state)), wolfPolicy(getWolfSheepState(state)), randomPolicy(state)]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 2
+    dataIndex = 5
     dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedTraj'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
+
 
 if __name__ == '__main__':
     main()

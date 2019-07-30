@@ -89,7 +89,7 @@ def main():
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 11
+    dataIndex = 8
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0
@@ -142,7 +142,7 @@ def main():
     FPS = 60
     adjustFPS = AdjustStateFPS(oldFPS, FPS)
 
-    imageFolderName = 'continuousDemo' + str(dataIndex)
+    imageFolderName = '2ObjectsInfDemo' + str(dataIndex)
     saveImage = SaveImage(imageFolderName)
     drawInferenceResult = DrawContinuousInferenceResultNoPull(inferenceIndex,
                 drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
