@@ -98,7 +98,7 @@ class TestGenerateData(unittest.TestCase):
         generateSymmetricDistribution = GenerateSymmetricDistribution(
             self.sheepActionSpace, createSymmetricVector)
         generateSymmetricData = GenerateSymmetricData(
-            self.symmetries, createSymmetricVector, generateSymmetricState,
+            self.symmetries, self.sheepActionSpace, generateSymmetricState,
             generateSymmetricDistribution)
 
         symmetricDataSet = generateSymmetricData(originalData)

@@ -19,6 +19,7 @@ class TestEnvMujoco(unittest.TestCase):
         self.modelPath = os.path.join(DIRNAME, '..', 'env', 'xmls', 'twoAgents.xml')
         self.model = load_model_from_path(self.modelPath)
         self.simulation = MjSim(self.model)
+        self.numJointEachAgent = 2
         self.numAgent = 2
         self.killzoneRadius = 0.5
         self.numSimulationFrames = 20
@@ -87,6 +88,7 @@ class TestEnvMujoco(unittest.TestCase):
         isWithinBounds = self.withinBounds(qPos)
         self.assertEqual(isWithinBounds, groundTruthWithinBounds)
 
+    @unittest.skip
     @data(((-5, -5, 5, 5), (0, 0, 0, 0), (0.1, 0.2, 0.3, 0.4), (0, 0, 0, 0)),
           ((7, 8, 3, 4), (0, 0, 0, 0), (0.3, 0.2, 0.6, 0.5), (0, 0, 0, 0)))
     @unpack

@@ -11,7 +11,7 @@ class SaveToBuffer:
             updatedBuffer = bufferWithNewTraj[-self.windowSize:]
         else:
             updatedBuffer = bufferWithNewTraj
-
+        print("BUFFER SIZE: ", len(updatedBuffer))
         return updatedBuffer
 
 

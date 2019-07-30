@@ -177,6 +177,7 @@ class Train:
         self.reporter = trainReporter
 
     def __call__(self, model, trainingData):
+        print("ENTER TRAIN")
         graph = model.graph
         state_ = graph.get_collection_ref("inputs")[0]
         groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")
@@ -301,28 +302,6 @@ def restoreVariables(model, path):
 
 
 class ApproximatePolicy:
-    def __init__(self, model, actionSpace):
-        self.actionSpace = actionSpace
-        self.model = model
-
-    def __call__(self, stateBatch):
-        if np.array(stateBatch).ndim == 3:
-            stateBatch = [np.concatenate(state) for state in stateBatch]
-        if np.array(stateBatch).ndim == 2:
-            stateBatch = np.concatenate(stateBatch)
-        if np.array(stateBatch).ndim == 1:
-            stateBatch = np.array([stateBatch])
-        graph = self.model.graph
-        state_ = graph.get_collection_ref("inputs")[0]
-        actionIndices_ = graph.get_collection_ref("actionIndices")[0]
-        actionIndices = self.model.run(actionIndices_, feed_dict={state_: stateBatch})
-        actionBatch = [self.actionSpace[i] for i in actionIndices]
-        if len(actionBatch) == 1:
-            actionBatch = actionBatch[0]
-        return actionBatch
-
-
-class ApproximateActionPrior:
     def __init__ (self, policyValueNet, actionSpace):
         self.policyValueNet = policyValueNet
         self.actionSpace = actionSpace
@@ -337,12 +316,12 @@ class ApproximateActionPrior:
         graph = self.policyValueNet.graph
         state_ = graph.get_collection_ref("inputs")[0]
         actionDist_ = graph.get_collection_ref("actionDistributions")[0]
-        actionDist = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
-        actionPrior = {action: prob for action, prob in zip(self.actionSpace, actionDist)}
-        return actionPrior
+        actionProbs = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
+        actionDist = {action: prob for action, prob in zip(self.actionSpace, actionProbs)}
+        return actionDist
 
 
-class ApproximateValueFunction:
+class ApproximateValue:
     def __init__(self, policyValueNet):
         self.policyValueNet = policyValueNet
 
