@@ -8,23 +8,7 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 import numpy as np
 from collections import OrderedDict
 import pandas as pd
-import mujoco_py as mujoco
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
-    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
-    ApproximatePolicy, restoreVariables
-from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
-from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
-from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
-    ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
-from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, sampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -48,6 +32,7 @@ class TrainMultiMCTSAgentParallel:
 
 def main():
     # Mujoco environment
+    print('start')
     manipulatedHyperVariables = OrderedDict()
     manipulatedHyperVariables['miniBatchSize'] = [64, 256]  # [64, 128, 256]
     manipulatedHyperVariables['learningRate'] = [1e-3, 1e-4, 1e-5]  # [1e-2, 1e-3, 1e-4]
@@ -73,6 +58,7 @@ def main():
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
 
+    print('StratParallelGenerate')
     for numSimulations in  manipulatedHyperVariables['numSimulations']:
         trajectoryBeforeTrainPathParamters = {'iterationIndex': 0,'numSimulations':numSimulations}
         preTrainCmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)

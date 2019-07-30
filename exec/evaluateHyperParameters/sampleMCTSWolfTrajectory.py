@@ -2,6 +2,7 @@ import sys
 import os
 import json
 DIRNAME = os.path.dirname(__file__)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
