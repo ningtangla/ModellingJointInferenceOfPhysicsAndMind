@@ -93,17 +93,17 @@ def main():
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
-    numSimulations = parametersForPath['numSimulations']
+    numSimulations = parametersForTrajectoryPath['numSimulations']
 
 
     maxRunningSteps = 20
-    #numSimulations = 100    
+    #numSimulations = 100
     killzoneRadius = 2
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-   
+
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 

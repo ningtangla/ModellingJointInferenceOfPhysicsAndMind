@@ -38,14 +38,14 @@ class TrainMultiMCTSAgentParallel:
         self.numSample = numSample
         self.numCmdList = numCmdList
     def __call__(self, hyperParameterConditionslist):
-        
-        cmdList = [['python3', self.codeFileName, json.dumps(condition)] 
+
+        cmdList = [['python3', self.codeFileName, json.dumps(condition)]
                 for condition in hyperParameterConditionslist]
         print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.wait()
-        return cmdList  
+        return cmdList
 
 def main():
     # Mujoco environment
@@ -53,19 +53,19 @@ def main():
     manipulatedHyperVariables['miniBatchSize'] = [64, 256]  # [64, 128, 256]
     manipulatedHyperVariables['learningRate'] = [1e-3, 1e-4, 1e-5]  # [1e-2, 1e-3, 1e-4]
     manipulatedHyperVariables['numSimulations'] = [50] #[50, 100, 200]
-    
-    #numSimulations = manipulatedHyperVariables['numSimulations'] 
-    levelNames = list(manipulatedVariables.keys())
-    levelValues = list(manipulatedVariables.values())
+
+    #numSimulations = manipulatedHyperVariables['numSimulations']
+    levelNames = list(manipulatedHyperVariables.keys())
+    levelValues = list(manipulatedHyperVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
-    
+
     hyperVariablesConditionlist=[]
 
     for modelIndexNumber in range(len(modelIndex)):
         oneCondition={levelName:modelIndex.get_level_values(levelName)[modelIndexNumber] for levelName in levelNames}
         hyperVariablesConditionlist.append(oneCondition)
-    
-    numTrajectoriesToStartTrain = 4 * miniBatchSize
+
+    numTrajectoriesToStartTrain = 4 * 256
 
     #generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
@@ -78,11 +78,11 @@ def main():
         trajectoryBeforeTrainPathParamters = {'iterationIndex': 0,'numSimulations':numSimulations}
         preTrainCmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     print(preTrainCmdList)
-    
 
-    trainOneConditionFileName='TrainMultiMCTSforOneCondition.py'
+
+    trainOneConditionFileName='trainMultiMCTSforOneCondition.py'
     trainMultiMCTSAgentParallel=TrainMultiMCTSAgentParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
-    
+
     trainCmdList=trainMultiMCTSAgentParallel(hyperVariablesConditionlist)
     print(trainCmdList)
 
