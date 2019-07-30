@@ -27,7 +27,7 @@ class ResetUniform:
         agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
         agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
-        startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)] + otherEnvQPos)
+        startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
 
         return startState
 
