@@ -34,10 +34,11 @@ class TrainMultiMCTSAgentParallel:
         for proc in processList:
             proc.wait()
         return cmdList
-def drawPerformanceLine(dataDf, axForDraw, numSimulations, trainSteps):
-    for key, grp in dataDf.groupby('modelLearnRate'):
-        grp.index = grp.index.droplevel('modelLearnRate')
-        grp.plot(ax=axForDraw, title='numSimulations={}, trainSteps={}'.format(numSimulations, trainSteps), y='mean', yerr='std', marker='o', label='learnRate={}'.format(key))
+def drawPerformanceLine(dataDf, axForDraw):
+    for learningRate, grp in dataDf.groupby('learningRate'):
+        grp.index = grp.index.droplevel('learningRate')
+        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean', yerr='std',
+                 marker='o', logx=False)
 
 def main():
     # Mujoco environment
@@ -142,11 +143,17 @@ def main():
         for numSimulation,subgrp in grp.groupby('numSimulations'):
             subgrp.index = subgrp.index.droplevel('numSimulations')
             axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-            for lr,ssubgrp in subgrp.groupby('learningRate'):
-                ssubgrp.plot(y='mean', marker='o', label=lr, ax=axForDraw)
+
+            if plotCounter % numRows == 1:
+                axForDraw.set_ylabel('miniBatchSize: {}'.format(miniBatchSize))
+            if plotCounter <= numColumns:
+                axForDraw.set_title('numSimulations: {}'.format(numSimulation))
+            drawPerformanceLine(subgrp, axForDraw)
+            # for lr,ssubgrp in subgrp.groupby('learningRate'):
+            #     ssubgrp.plot(y='mean', marker='o', label=lr, ax=axForDraw)
             plotCounter += 1
-    plt.ylabel('Accumulated rewards')
-    plt.title('iterative training in chasing task with killzone radius = 2 \nStart with random model')
+
+
     plt.legend(loc='best')
     plt.show()
 
