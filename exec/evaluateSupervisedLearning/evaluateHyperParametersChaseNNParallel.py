@@ -66,17 +66,17 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 
-    # generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
-    # evalNumTrials = 1000
-    # numCpuCores = os.cpu_count()
-    # numCpuToUse = int(0.5*numCpuCores)
-    # numCmdList = min(evalNumTrials, numCpuToUse)
-    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-    #                                                             evalNumTrials, numCmdList)
+    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
+    evalNumTrials = 400
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.8*numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials, numCmdList)
 
-    # # run all trials and save trajectories
-    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # run all trials and save trajectories
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -120,7 +120,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            # axForDraw.set_ylim(1.4, 2.5)
+            axForDraw.set_ylim(-1, 0.6)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)
