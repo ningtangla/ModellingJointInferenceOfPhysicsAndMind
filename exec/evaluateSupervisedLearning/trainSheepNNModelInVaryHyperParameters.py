@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
 
@@ -91,7 +92,7 @@ def main():
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 20
+    dataSetMaxRunningSteps = 25
     dataSetNumSimulations = 100
     killzoneRadius = 2
 
@@ -157,7 +158,7 @@ def main():
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1000
-    trainStepsIntervel = 10000
+    trainStepsIntervel = 20000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
@@ -184,7 +185,7 @@ def main():
     # # train models for all conditions
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.7*numCpuCores)
     trainPool = mp.Pool(numCpuToUse)
     #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     models = trainPool.map(trainModelForConditions, parametersAllCondtion)

@@ -39,7 +39,7 @@ def main():
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
-    trainMaxRunningSteps = 20
+    trainMaxRunningSteps = 25
     trainNumSimulations = 100
     killzoneRadius = 2
     sheepId = 0
@@ -97,7 +97,8 @@ def main():
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
         depth = int(parametersForTrajectoryPath['depth'])
-        initNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        sheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         evalQPosInitNoise = 0
@@ -106,7 +107,7 @@ def main():
 
         getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
 
-        evalNumTrials = 1000
+        evalNumTrials = 300
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
         evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
@@ -119,17 +120,21 @@ def main():
 
         # save evaluation trajectories
         manipulatedVariables = json.loads(sys.argv[1])
-        modelPath = getNNModelSavePath(manipulatedVariables)
-        restoredModel = restoreVariables(initNNModel, modelPath)
-        sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-        wolfPolicy = stationaryAgentPolicy
+        sheepModelPath = getNNModelSavePath(manipulatedVariables)
+        wolfModelPath = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'wolfModel',
+                                            'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+        restoredSheepModel = restoreVariables(sheepNNModel, sheepModelPath)
+        restoredWolfModel = restoreVariables(wolfNNModel, wolfModelPath)
+        sheepPolicy = ApproximatePolicy(restoredSheepModel, actionSpace)
+        wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
         beginTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
-        restoredModel.close()
+        restoredSheepModel.close()
+        restoredWolfModel.close()
 
 if __name__ == '__main__':
     main()

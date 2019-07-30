@@ -66,17 +66,17 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 
-    # generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
-    # evalNumTrials = 1000
-    # numCpuCores = os.cpu_count()
-    # numCpuToUse = int(0.5 * numCpuCores)
-    # numCmdList = min(evalNumTrials, numCpuToUse)
-    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-    #                                                             evalNumTrials,numCmdList)
+    generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
+    evalNumTrials = 300
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.5 * numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials,numCmdList)
 
-    # # run all trials and save trajectories
-    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # run all trials and save trajectories
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -86,7 +86,7 @@ def main():
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
-    trainMaxRunningSteps = 20
+    trainMaxRunningSteps = 25
     trainNumSimulations = 100
     killzoneRadius = 2
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
@@ -120,14 +120,15 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            axForDraw.set_ylim(-1, 1)
+            axForDraw.set_ylim(-1, 1.3)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
             drawPerformanceLine(group, axForDraw, depth)
             trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepLevels, [0.9708]*len(trainStepLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepLevels, [1.18]*len(trainStepLevels), label='mctsTrainData')
 
             plotCounter += 1
 
+    # plt.supertitle('Sheep')
     plt.legend(loc='best')
     plt.show()
 
