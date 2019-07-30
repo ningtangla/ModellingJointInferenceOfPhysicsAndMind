@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
@@ -25,7 +26,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, sampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
+import time
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
@@ -114,10 +115,10 @@ class TrainOneAgent:
 def main():
 
 	#readHyperParameters
-    parametersForPath = json.loads(sys.argv[1])    
-    miniBatchSize = parametersForPath['miniBatchSize']
+    parametersForPath = json.loads(sys.argv[1])
+    miniBatchSize = int(parametersForPath['miniBatchSize'])
     learningRate = parametersForPath['learningRate']
-    numSimulations = parametersForPath['numSimulations']
+    numSimulations =int( parametersForPath['numSimulations'])
 
     # Mujoco environment
     dirName = os.path.dirname(__file__)
@@ -226,16 +227,16 @@ def main():
 
     # load save dir
     #numSimulations = 200
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'miniBatchSize':miniBatchSize,'learningRate':learningRate}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'multiAgentTrain', 'multiMCTSAgent', 'trajectories')
+                                             'evaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                        'evaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
@@ -243,7 +244,7 @@ def main():
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
     startTime = time.time()
-    trainableAgentIds = [sheepId, wolfId]
+    trainableAgentIds = [wolfId]
 
     # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
     otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
@@ -259,11 +260,11 @@ def main():
         saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
 
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
-    numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8 * numCpuCores)
-    numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
+    # sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
+    # numCpuCores = os.cpu_count()
+    # numCpuToUse = int(0.8 * numCpuCores)
+    # numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
+    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
@@ -311,9 +312,9 @@ def main():
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
-            
-            if np.mod(iterationIndex,100)==0:
-            	NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)           
+
+            if np.mod(iterationIndex,20)==0:
+            	NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
             	saveVariables(updatedAgentNNModel, NNModelSavePath)
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
