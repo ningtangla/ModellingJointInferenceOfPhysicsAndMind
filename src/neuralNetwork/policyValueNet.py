@@ -110,7 +110,7 @@ class GenerateModel:
                     actionAccuracySummary = tf.summary.scalar("actionAccuracy", actionAccuracy_)
 
                 with tf.name_scope("value"):
-                    valueLoss_ = tf.sqrt(tf.losses.mean_squared_error(groundTruthValue_, values_), name="loss")
+                    valueLoss_ = tf.losses.mean_squared_error(groundTruthValue_, values_)
                     tf.add_to_collection("valueLoss", valueLoss_)
                     valueLossSummary = tf.summary.scalar("valueLoss", valueLoss_)
 
