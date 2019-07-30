@@ -67,10 +67,9 @@ class LoadTrajectories:
         else:
             filesNames = []
         mergedTrajectories = []
-        #for fileName in filesNames:
-        #    oneFileTrajectories = self.loadFromPickle(fileName)
-        #    mergedTrajectories.extend(oneFileTrajectories)
-        mergedTrajectories = np.array([loadFromPickle(fileName) for fileName in filesNames]).flatten()
+        for fileName in filesNames:
+            oneFileTrajectories = self.loadFromPickle(fileName)
+            mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
 
 class GenerateAllSampleIndexSavePaths:
