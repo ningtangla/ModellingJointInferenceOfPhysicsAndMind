@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..'))
 
@@ -60,7 +61,6 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex*self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            print(modelSavePath)
             if not os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
@@ -77,7 +77,7 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [512]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
     manipulatedVariables['depth'] = [2 ,4, 6, 8]
 
@@ -177,7 +177,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(4,11))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
 

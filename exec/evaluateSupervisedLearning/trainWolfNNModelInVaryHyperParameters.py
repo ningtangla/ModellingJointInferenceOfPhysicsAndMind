@@ -61,7 +61,6 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex*self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            print(modelSavePath)
             if not os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
@@ -76,9 +75,9 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [512]  # [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]  # [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2, 4, 6, 8]  # [1,2,3]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
+    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['depth'] = [2 ,4, 6, 8]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -158,10 +157,10 @@ def main():
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1000
-    trainStepsIntervel = 1
+    trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
-    learningRateDecayStep = 10000
+    learningRateDecayStep = 1
     learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,trainReporter)
 
@@ -176,7 +175,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6,11))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # train models for all conditions

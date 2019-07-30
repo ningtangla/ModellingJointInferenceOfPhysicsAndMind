@@ -24,7 +24,7 @@ def main():
     action = np.array([0,0,-1,-1,0,0])
     #physicsSimulation.data.ctrl[:] = action
     physicsViewer = mujoco.MjViewer(physicsSimulation)
-    numSimulationFrames = 100000
+    numSimulationFrames = 1000
     initQPos = np.array([9,-9, 4, 4, -4,-4] + [0]*18)
     physicsSimulation.data.qpos[:] = initQPos
     for frameIndex in range(numSimulationFrames):

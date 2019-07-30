@@ -1,8 +1,8 @@
 import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..'))
+dirName = os.path.dirname(__file__)
+sys.path.append(os.path.join(dirName, '..', '..'))
 
 import json
 from collections import OrderedDict
@@ -33,7 +33,7 @@ from exec.preProcessing import AccumulateRewards
 
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
                                        'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -88,10 +88,9 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-
         NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
                                             'trainedModels')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
@@ -130,6 +129,7 @@ def main():
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
         restoredModel.close()
+
 
 if __name__ == '__main__':
     main()

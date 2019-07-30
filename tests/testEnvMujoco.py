@@ -19,6 +19,7 @@ class TestEnvMujoco(unittest.TestCase):
         self.modelPath = os.path.join(DIRNAME, '..', 'env', 'xmls', 'twoAgents.xml')
         self.model = load_model_from_path(self.modelPath)
         self.simulation = MjSim(self.model)
+        self.numJointEachAgent = 2
         self.numAgent = 2
         self.killzoneRadius = 0.5
         self.numSimulationFrames = 20

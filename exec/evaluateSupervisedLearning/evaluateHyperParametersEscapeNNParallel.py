@@ -45,7 +45,7 @@ def main():
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
     manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
-    manipulatedVariables['depth'] =  [2, 4, 6, 8]
+    manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -67,17 +67,18 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 
-    # generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
-    # evalNumTrials = 1000
-    # numCpuCores = os.cpu_count()
-    # numCpuToUse = int(0.5 * numCpuCores)
-    # numCmdList = min(evalNumTrials, numCpuToUse)
-    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-    #                                                             evalNumTrials,numCmdList)
+# generate trajectory parallel
+    generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
+    evalNumTrials = 1000
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.5 * numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials, numCmdList)
 
-    # # run all trials and save trajectories
-    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # run all trials and save trajectories
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -121,13 +122,15 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            # axForDraw.set_ylim(1.4, 2.5)
+            axForDraw.set_ylim(-1, 1)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
             drawPerformanceLine(group, axForDraw, depth)
             trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepLevels, [0.9708]*len(trainStepLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepLevels, [0.9708] * len(trainStepLevels), label='mctsTrainData')
+
             plotCounter += 1
 
+    plt.suptitle('EscapeNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 
