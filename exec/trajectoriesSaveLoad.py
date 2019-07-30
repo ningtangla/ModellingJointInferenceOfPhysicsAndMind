@@ -43,6 +43,7 @@ def readParametersFromDf(oneConditionDf):
     parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
     return parameters
 
+
 def conditionDfFromParametersDict(parametersDict):
     levelNames = list(parametersDict.keys())
     levelValues = list(parametersDict.values())
