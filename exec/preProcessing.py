@@ -27,7 +27,6 @@ class AccumulateMultiAgentRewards:
         accumulatedRewards = np.array(list(zip(*multiAgentRewardsAccumulatedRewards)))
         return accumulatedRewards
 
-
 class AddValuesToTrajectory:
     def __init__(self, trajectoryValueFunction):
         self.trajectoryValueFunction = trajectoryValueFunction
