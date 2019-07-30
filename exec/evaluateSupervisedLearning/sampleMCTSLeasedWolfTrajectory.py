@@ -3,11 +3,12 @@ import os
 import json
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
     backup, RollOut
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos, ResetUniformWithoutXPos
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos, ResetUniformWithoutXPosForLeashed
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
@@ -97,10 +98,14 @@ def main():
         # sample trajectory
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
-        qPosInitNoise = 9.7
-        qVelInitNoise = 8
+        qPosInitNoise = 7
+        qVelInitNoise = 5
         numAgent = 3
-        reset = ResetUniformWithoutXPos(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
+        tiedAgentId = [1, 2]
+        ropeParaIndex = list(range(3, 12))
+        maxRopePartLength = 0.25
+        reset = ResetUniformWithoutXPosForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
+                ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
