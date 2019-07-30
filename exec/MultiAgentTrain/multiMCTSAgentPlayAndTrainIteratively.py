@@ -183,7 +183,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256
+    miniBatchSize = 128
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
