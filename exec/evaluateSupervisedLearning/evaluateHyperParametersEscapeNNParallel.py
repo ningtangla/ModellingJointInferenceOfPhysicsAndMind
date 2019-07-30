@@ -35,6 +35,7 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
         grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
 
+
 def main():
     # important parameters
     sheepId = 0
@@ -44,7 +45,7 @@ def main():
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
     manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
-    manipulatedVariables['depth'] =  [2, 4, 6, 8]
+    manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -68,11 +69,13 @@ def main():
 
     generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
     evalNumTrials = 300
+
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
                                                                 evalNumTrials,numCmdList)
+
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))

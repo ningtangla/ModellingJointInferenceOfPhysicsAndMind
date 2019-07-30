@@ -32,8 +32,9 @@ from exec.evaluationFunctions import ComputeStatistics
 def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
-        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean', yerr='std',
+        grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
+
 
 def main():
     # important parameters
@@ -44,7 +45,7 @@ def main():
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
     manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
-    manipulatedVariables['depth'] =  [2, 4, 6, 8]
+    manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -65,18 +66,18 @@ def main():
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
+# generate trajectory parallel
+    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
+    evalNumTrials = 1000
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.5 * numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials, numCmdList)
 
-    # generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
-    # evalNumTrials = 1000
-    # numCpuCores = os.cpu_count()
-    # numCpuToUse = int(0.5*numCpuCores)
-    # numCmdList = min(evalNumTrials, numCpuToUse)
-    # generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-    #                                                             evalNumTrials, numCmdList)
-
-    # # run all trials and save trajectories
-    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # run all trials and save trajectories
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -125,9 +126,10 @@ def main():
 
             drawPerformanceLine(group, axForDraw, depth)
             trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepsLevels, [0.5409]*len(trainStepsLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepsLevels, [0.5409] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
+    plt.suptitle('ChaseNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 
