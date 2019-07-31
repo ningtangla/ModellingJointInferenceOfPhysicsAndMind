@@ -19,9 +19,11 @@ def main():
     init = [[0, 0], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
     physicsSimulation = mujoco.MjSim(physicsModel)
     #physicsSimulation.model.body_pos[-12: , :2] = init
+    __import__('ipdb').set_trace()
+    physicsSimulation.model.body_mass[8] = 10000
     #physicsSimulation.data.body_xpos[-12: , :2] = init
-    physicsSimulation.data.qpos[:] = np.array(init).flatten()
-    #physicsSimulation.set_constants()
+    #physicsSimulation.data.qpos[:] = np.array(init).flatten()
+    physicsSimulation.set_constants()
     print(physicsSimulation.model.body_pos)
     print(physicsSimulation.data.body_xpos)
     print(physicsSimulation.data.qpos)
@@ -53,7 +55,7 @@ def main():
     numSimulationFrames = 10000
     for frameIndex in range(numSimulationFrames):
         if frameIndex > 500:
-            action = np.array([0, 0, 1, 1, 0, 0])
+            action = np.array([1, 1, 1, 1, 0, 0])
             physicsSimulation.data.ctrl[:] = action
         physicsSimulation.step()
         physicsSimulation.forward()
