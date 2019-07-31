@@ -126,10 +126,9 @@ def main():
         policy = lambda state: [randomPolicy(state), mcts(state), randomPolicy(state)]
 
         # generate trajectories
-        numTrajectories = 1
+        numTrajectories = 10
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(numTrajectories)]
         saveToPickle(trajectories, trajectorySavePath)
-        __import__('ipdb').set_trace()
 
 if __name__ == '__main__':
     main()
