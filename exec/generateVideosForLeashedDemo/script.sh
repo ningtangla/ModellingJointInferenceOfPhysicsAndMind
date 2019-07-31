@@ -8,17 +8,17 @@
 cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/
 mkdir demo
 
-for draggerMass in 10 13
+for draggerMass in 8 10 12
 do
-    for maxTendonLength in  0.3 0.6
+    for maxTendonLength in  0.4 0.6 0.8
     do
-        for predatorMass in 10 13
+        for predatorMass in 10 12
         do
-            for tendonDamping in 0.3 0.6
+            for tendonDamping in 0.3 0.5 0.7
             do
-                for tendonStiffness in 5 10
+                for tendonStiffness in 5 10 15
                 do
-                    for index in 0
+                    for index in 0 1 2
                     do
                         mkdir ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/draggerMass=${draggerMass}_maxTendonLength=${maxTendonLength}_predatorMass=${predatorMass}_tendonDamping=${tendonDamping}_tendonStiffness=${tendonStiffness}/demo
 

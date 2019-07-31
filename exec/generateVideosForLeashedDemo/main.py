@@ -24,11 +24,11 @@ def getFileName(parameters,fixedParameters):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['draggerMass'] = [10,13]
-    manipulatedVariables['maxTendonLength'] = [0.3, 0.6]
-    manipulatedVariables['predatorMass'] = [10,13]
-    manipulatedVariables['tendonDamping'] =[0.3, 0.6]
-    manipulatedVariables['tendonStiffness'] = [5, 10]
+    manipulatedVariables['draggerMass'] = [8, 10, 12]
+    manipulatedVariables['maxTendonLength'] = [0.4,  0.6, 0.8]
+    manipulatedVariables['predatorMass'] = [10, 12]
+    manipulatedVariables['tendonDamping'] =[0.3, 0.5, 0.7]
+    manipulatedVariables['tendonStiffness'] = [5, 10, 15]
 
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -60,9 +60,7 @@ def main():
 ####
 
     for conditionParameters in conditionParametersAll:
-        print(conditionParameters)
         trajectories = loadTrajectories(conditionParameters)
-        print(trajectories)
         numTrajectories = len(trajectories)
 
         numTrajectoryChoose = min(numTrajectories,10)
