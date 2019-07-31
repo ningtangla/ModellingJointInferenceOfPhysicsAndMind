@@ -28,12 +28,12 @@ class TrainMultiMCTSAgentParallel:
 
     def __call__(self, hyperParameterConditionslist):
         cmdList = [['python3', self.codeFileName, json.dumps(condition)]
-                for condition in hyperParameterConditionslist]        
+                for condition in hyperParameterConditionslist]
         numTrain=len(hyperParameterConditionslist)
         splitTrainIndexes = np.arange(0,numTrain, self.numCmdList)
         if not(numTrain-1) in splitTrainIndexes:
             splitTrainIndexes=np.append(splitTrainIndexes,numTrain)
-        for cmdIndex in range(len(splitTrainIndexes)-1):            
+        for cmdIndex in range(len(splitTrainIndexes)-1):
             processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList[splitTrainIndexes[cmdIndex]:splitTrainIndexes[cmdIndex+1]]]
             for proc in processList:
                 proc.wait()
@@ -81,10 +81,10 @@ def main():
     #     preTrainCmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     #     print(preTrainCmdList)
 
-    [generateTrajectoriesParallel({'iterationIndex': 0,'numSimulations':numSimulations}) 
+    [generateTrajectoriesParallel({'iterationIndex': 0,'numSimulations':numSimulations})
                     for numSimulations in  manipulatedHyperVariables['numSimulations']]
     print('Finish ParallelTrajectoriesGenerate')
-    
+
     print('Strat TrainingMultiMCTSVaryHyperParameters')
     trainOneConditionFileName='trainMultiMCTSforOneCondition.py'
     trainMultiMCTSAgentParallel=TrainMultiMCTSAgentParallel(trainOneConditionFileName,numCpuToUse)
@@ -95,7 +95,7 @@ def main():
 
     print('Strat EvaluateMultiMCTSVaryHyperParameters')
     # Evaluate Session
-    
+
     evluateVariables['iterationIndex']=[0,5,10]
     evluateLevelNames = list(evluateVariables.keys())
     evluatelevelValues = list(evluateVariables.values())

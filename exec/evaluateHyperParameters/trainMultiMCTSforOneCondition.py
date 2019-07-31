@@ -20,7 +20,7 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
-    ActionToOneHot, ProcessTrajectoryForPolicyValueNet
+    ActionToOneHot, ProcessTrajectoryForPolicyValueNet,ProcessTrajectoryForPolicyValueNetMultiAgentReward
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
@@ -117,7 +117,7 @@ def main():
 	#readHyperParameters
     parametersForPath = json.loads(sys.argv[1])
     miniBatchSize = int(parametersForPath['miniBatchSize'])
-    learningRate = parametersForPath['learningRate']
+    learningRate = float(parametersForPath['learningRate'])
     numSimulations =int( parametersForPath['numSimulations'])
 
     # Mujoco environment
@@ -201,7 +201,7 @@ def main():
 
     # pre-process the trajectory for NNTraining
     actionToOneHot = ActionToOneHot(actionSpace)
-    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNet(actionToOneHot, agentId) for agentId in agentIds]
+    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHot, agentId) for agentId in agentIds]
 
     # function to train NN model
     terminalThreshold = 1e-6
@@ -239,7 +239,8 @@ def main():
                                         'evaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
-
+    fixedParametersforParallex={'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    generateParallelTrajectorySavePath= GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParametersforParallex)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
@@ -267,7 +268,8 @@ def main():
     # generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
     fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+
+    loadTrajectoriesForParallel = LoadTrajectories(generateParallelTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     # load trajectory function for trainBreak
     loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
@@ -277,11 +279,11 @@ def main():
 
     restoredIteration = 0
     modelSaveFrequence=5
-    numIterations = 11
+    numIterations = 21
     for restoreIndex in range(restoredIteration + 1, numIterations):
         restoreTrajectoryPathParameters = {'iterationIndex': restoreIndex}
-        trajectorySavePath = generateTrajectorySavePath(restoreTrajectoryPathParameters)
-        if not os.path.exists(trajectorySavePath):
+        trajectoryRestorePath = generateTrajectorySavePath(restoreTrajectoryPathParameters)
+        if not os.path.exists(trajectoryRestorePath):
             break
         elif np.mod(restoreIndex,modelSaveFrequence)==0:
             restoredIteration=restoredIteration+modelSaveFrequence
@@ -291,6 +293,7 @@ def main():
     #     cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     #     print(cmdList)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
+
     preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
@@ -307,7 +310,7 @@ def main():
 
     numTrajectoriesPerIteration = 1
 
-    
+
     for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
@@ -326,8 +329,8 @@ def main():
 
             if np.mod(iterationIndex,modelSaveFrequence)==0:
                 NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
-            	NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
-            	saveVariables(updatedAgentNNModel, NNModelSavePath)
+                NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
+                saveVariables(updatedAgentNNModel, NNModelSavePath)
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
             replayBuffer = updatedReplayBuffer
