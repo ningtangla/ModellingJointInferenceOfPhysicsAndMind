@@ -22,16 +22,21 @@ from exec.preProcessing import AccumulateRewards
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 
 class TrainMultiMCTSAgentParallel:
-    def __init__(self, codeFileName):
+    def __init__(self, codeFileName,numCmdList):
         self.codeFileName = codeFileName
+        self.numCmdList = numCmdList
 
     def __call__(self, hyperParameterConditionslist):
         cmdList = [['python3', self.codeFileName, json.dumps(condition)]
-                for condition in hyperParameterConditionslist]
-
-        processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
-        for proc in processList:
-            proc.wait()
+                for condition in hyperParameterConditionslist]        
+        numTrain=len(hyperParameterConditionslist)
+        splitTrainIndexes = np.arange(0,numTrain, self.numCmdList)
+        if not(numTrain-1) in splitTrainIndexes:
+            splitTrainIndexes=np.append(splitTrainIndexes,numTrain)
+        for cmdIndex in range(len(splitTrainIndexes)-1):            
+            processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList[splitTrainIndexes[cmdIndex]:splitTrainIndexes[cmdIndex+1]]]
+            for proc in processList:
+                proc.wait()
         return cmdList
 def drawPerformanceLine(dataDf, axForDraw):
     for learningRate, grp in dataDf.groupby('learningRate'):
@@ -46,7 +51,7 @@ def main():
     manipulatedHyperVariables['miniBatchSize'] = [64, 32]  # [64, 128, 256]
     manipulatedHyperVariables['learningRate'] = [1e-3, 1e-5]  # [1e-2, 1e-3, 1e-4]
     manipulatedHyperVariables['numSimulations'] = [5,10] #[50, 100, 200]
-
+    evluateVariables=manipulatedHyperVariables.copy()
     #numSimulations = manipulatedHyperVariables['numSimulations']
     levelNames = list(manipulatedHyperVariables.keys())
     levelValues = list(manipulatedHyperVariables.values())
@@ -55,8 +60,8 @@ def main():
     hyperVariablesConditionlist=[]
     hyperVariablesConditionlist=[{levelName:str(modelIndex.get_level_values(levelName)[modelIndexNumber]) for levelName in levelNames} for modelIndexNumber in range(len(modelIndex))]
     #add restore iterationIndex
-    modelRestoreList=[0,0,0,0,0,0,0,0]#
-    [oneCondition.update({'iterationIndex':str(modelRestoreList[i])}) for (i,oneCondition) in enumerate(hyperVariablesConditionlist) ]
+    # modelRestoreList=[0,0,0,0,0,0,0,0]#
+    # [oneCondition.update({'iterationIndex':str(modelRestoreList[i])}) for (i,oneCondition) in enumerate(hyperVariablesConditionlist) ]
     # for modelIndexNumber in range(len(modelIndex)):
     #     oneCondition={levelName:str(modelIndex.get_level_values(levelName)[modelIndexNumber]) for levelName in levelNames}
     #     hyperVariablesConditionlist.append(oneCondition)
@@ -82,7 +87,7 @@ def main():
     
     print('Strat TrainingMultiMCTSVaryHyperParameters')
     trainOneConditionFileName='trainMultiMCTSforOneCondition.py'
-    trainMultiMCTSAgentParallel=TrainMultiMCTSAgentParallel(trainOneConditionFileName)
+    trainMultiMCTSAgentParallel=TrainMultiMCTSAgentParallel(trainOneConditionFileName,numCpuToUse)
     trainCmdList=trainMultiMCTSAgentParallel(hyperVariablesConditionlist)
     print(trainCmdList)
     print('Finish TrainingMultiMCTSVaryHyperParameters')
@@ -90,7 +95,7 @@ def main():
 
     print('Strat EvaluateMultiMCTSVaryHyperParameters')
     # Evaluate Session
-    evluateVariables=manipulatedHyperVariables.copy()
+    
     evluateVariables['iterationIndex']=[0,5,10]
     evluateLevelNames = list(evluateVariables.keys())
     evluatelevelValues = list(evluateVariables.values())
@@ -102,8 +107,6 @@ def main():
     #genarate trajectories
     evalNumTrials = 10#1000
     generateTrajectoriesCodeName = 'generateTrajByNNWolfAndStationarySheepMujoco.py'
-    numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5*numCpuCores)
     numToUseCores = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numToUseCores)
