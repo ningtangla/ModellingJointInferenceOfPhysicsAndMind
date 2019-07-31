@@ -25,10 +25,10 @@ def getFileName(parameters,fixedParameters):
 def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['draggerMass'] = [8, 10, 12]
-    manipulatedVariables['maxTendonLength'] = [0.4,  0.6, 0.8]
-    manipulatedVariables['predatorMass'] = [10, 12]
-    manipulatedVariables['tendonDamping'] =[0.3, 0.5, 0.7]
-    manipulatedVariables['tendonStiffness'] = [5, 10, 15]
+    manipulatedVariables['maxTendonLength'] = [0.6]
+    manipulatedVariables['predatorMass'] = [10]
+    manipulatedVariables['tendonDamping'] =[0.7]
+    manipulatedVariables['tendonStiffness'] = [10]
 
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
