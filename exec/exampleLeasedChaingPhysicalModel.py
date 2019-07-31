@@ -18,9 +18,9 @@ def main():
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     init = [[0, 0], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
     physicsSimulation = mujoco.MjSim(physicsModel)
-    #physicsSimulation.model.body_pos[-12: , :2] = init
-    __import__('ipdb').set_trace()
+    physicsSimulation.model.body_pos[-12: , :2] = init
     physicsSimulation.model.body_mass[8] = 10000
+    physicsSimulation.model.tendon_range[:] = [[0, 0.7]]*10
     #physicsSimulation.data.body_xpos[-12: , :2] = init
     #physicsSimulation.data.qpos[:] = np.array(init).flatten()
     physicsSimulation.set_constants()

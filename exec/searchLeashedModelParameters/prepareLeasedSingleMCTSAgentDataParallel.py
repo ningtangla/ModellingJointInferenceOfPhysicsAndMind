@@ -44,7 +44,7 @@ def main():
     
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['tendonStiffness'] = [5, 10, 20]
+    manipulatedVariables['tendonStiffness'] = [5, 10, 15]
     manipulatedVariables['tendonDamping'] =  [0.3, 0.5, 0.7]
     manipulatedVariables['maxTendonLength'] = [0.3, 0.5, 0.7]
     manipulatedVariables['predatorMass'] = [8, 10, 12]

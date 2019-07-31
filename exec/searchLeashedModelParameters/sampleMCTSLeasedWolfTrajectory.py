@@ -70,7 +70,7 @@ def main():
         getWolfQPos = GetAgentPosFromState(wolfId, qPosIndex)
         killzoneRadius = 2
         isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
-
+        
         numSimulationFrames = 20
         transit = TransitionFunctionWithoutXPos(physicsSimulation, isTerminal, numSimulationFrames)
         randomPolicy = RandomPolicy(actionSpace)
