@@ -92,6 +92,22 @@ class GenerateAllSampleIndexSavePaths:
         return allSavePaths
 
 
+class LoadTrajectoriesFromIndividualFiles:
+    def __init__(self, getSavePath, loadFromPickle):
+        self.getSavePath = getSavePath
+        self.loadFromPickle = loadFromPickle
+
+    def __call__(self, parameters):
+        parametersWithSampleIndex = dict(list(parameters.items()) + [('sampleIndex', '*')])
+        genericSavePath = self.getSavePath(parametersWithSampleIndex)
+        print("GENERIC SAVE PATH: ", genericSavePath)
+        filesNames = glob.glob(genericSavePath)
+        trajectories = [self.loadFromPickle(fileName) for fileName in filesNames]
+        print("LOADED {} TRAJECTORIES".format(len(trajectories)))
+
+        return trajectories
+
+
 class SaveAllTrajectories:
     def __init__(self, saveData, generateAllSampleIndexSavePaths):
         self.saveData = saveData

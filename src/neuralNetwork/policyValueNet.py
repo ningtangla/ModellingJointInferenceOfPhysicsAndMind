@@ -110,7 +110,7 @@ class GenerateModel:
                     actionAccuracySummary = tf.summary.scalar("actionAccuracy", actionAccuracy_)
 
                 with tf.name_scope("value"):
-                    valueLoss_ = tf.sqrt(tf.losses.mean_squared_error(groundTruthValue_, values_), name="loss")
+                    valueLoss_ = tf.losses.mean_squared_error(groundTruthValue_, values_)
                     tf.add_to_collection("valueLoss", valueLoss_)
                     valueLossSummary = tf.summary.scalar("valueLoss", valueLoss_)
 
@@ -177,6 +177,7 @@ class Train:
         self.reporter = trainReporter
 
     def __call__(self, model, trainingData):
+        print("ENTER TRAIN")
         graph = model.graph
         state_ = graph.get_collection_ref("inputs")[0]
         groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")
@@ -306,6 +307,7 @@ class ApproximatePolicy:
         self.actionSpace = actionSpace
 
     def __call__(self, stateBatch):
+        print("STATEBATCH: ", stateBatch)
         if np.array(stateBatch).ndim == 3:
             stateBatch = [np.concatenate(state) for state in stateBatch]
         if np.array(stateBatch).ndim == 2:

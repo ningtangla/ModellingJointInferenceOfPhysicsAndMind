@@ -22,13 +22,19 @@ class ResetUniform:
         self.simulation.data.qvel[:] = qVel
         self.simulation.forward()
 
+        print("XPOS: ", self.simulation.data.site_xpos)
         xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :numQPosEachAgent])
 
         agentQPos = lambda agentIndex: qPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)]
         agentXPos = lambda agentIndex: xPos[numQPosEachAgent * agentIndex : numQPosEachAgent * (agentIndex + 1)]
         agentQVel = lambda agentIndex: qVel[numQVelEachAgent * agentIndex : numQVelEachAgent * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
+        print("1 QPOS: ", agentQPos(1))
+        print("1 QVEL: ", agentQVel(1))
+        print("1 XPOS: ", agentXPos(1))
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
+
+        print("STARTSTATE: ", startState)
 
         return startState
 

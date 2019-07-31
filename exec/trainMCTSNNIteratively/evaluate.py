@@ -11,16 +11,15 @@ import mujoco_py as mujoco
 from matplotlib import pyplot as plt
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.envMujoco import Reset, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
     establishPlainActionDist, RollOut
 from src.episode import SampleTrajectory, chooseGreedyAction
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy, \
     HeatSeekingContinuesDeterministicPolicy
-from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
+from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectoriesFromIndividualFiles, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from exec.evaluationFunctions import ComputeStatistics, GenerateInitQPosUniform
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximateActionPrior, \
-    ApproximateValueFunction, ApproximatePolicy
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximateValue, ApproximatePolicy
 from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos, GetAgentPosFromTrajectory, GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -95,10 +94,10 @@ class GenerateTrajectories:
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     evalNumSimulations = 200
-    evalNumTrials = 600
+    evalNumTrials = 500
     evalMaxRunningSteps = 20
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = list(range(0, 20000, 2000)) + [20000-1]
+    manipulatedVariables['iteration'] = list(range(0, 8000, 500)) + [8000]
     manipulatedVariables['policyName'] = ['NNPolicy']#['NNPolicy', 'mctsHeuristic']
 
     levelNames = list(manipulatedVariables.keys())
@@ -168,19 +167,19 @@ def main():
     trainBufferSize = 2000
     trainMiniBatchSize = 256
     trainNumTrajectoriesPerIteration = 1
+    numTrainStepsPerIteration = 10
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations,
                          'bufferSize': trainBufferSize, 'learningRate': trainLearningRate,
                          'miniBatchSize': trainMiniBatchSize,
-                         'numTrajectoriesPerIteration': trainNumTrajectoriesPerIteration}
+                         'numTrajectoriesPerIteration': trainNumTrajectoriesPerIteration, 'numTrainStepsPerIteration': numTrainStepsPerIteration}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithRandomModel', 'oldNNModel', 'trainedNNModels')
+                                        'replayBufferStartWithRandomModel10StepsPerIteration', 'trainedNNModels')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
     # functions to get prediction from NN
-    approximatePolicy = ApproximatePolicy(initializedNNModel, actionSpace)
-    NNPolicy = lambda state: {approximatePolicy(state): 1}
+    NNPolicy = ApproximatePolicy(initializedNNModel, actionSpace)
 
     # # wolf policy
     # wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
@@ -198,12 +197,12 @@ def main():
     # generate a set of starting conditions to maintain consistency across all the conditions
     evalQPosInitNoise = 0
     evalQVelInitNoise = 0
-    getResetFromQPosInitDummy = lambda qPosInit: Reset(physicsSimulation, qPosInit, (0, 0, 0, 0), numAgents,
+    getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, (0, 0, 0, 0), numAgents,
                                                        evalQPosInitNoise, 0)
     generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
     evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
     evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
-    getResetFromTrial = lambda trial: Reset(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
+    getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
                                             numAgents, evalQPosInitNoise, evalQVelInitNoise)
     getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
                                                          getResetFromTrial(trial), chooseGreedyAction)
@@ -211,8 +210,8 @@ def main():
 
     # save evaluation trajectories
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                       'replayBufferStartWithRandomModel', 'oldNNModel',
-                                       'evaluationTrajectories20kTrainSteps')
+                                       'replayBufferStartWithRandomModel10StepsPerIteration',
+                                       'evaluationTrajectories8kTrainSteps')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -231,10 +230,10 @@ def main():
                                                 preparePolicy)
 
     # run all trials and save trajectories
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectories)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectories)
 
     # compute statistics on the trajectories
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
+    loadTrajectories = LoadTrajectoriesFromIndividualFiles(getTrajectorySavePath, loadFromPickle)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
     decay = 1
     accumulateRewards = AccumulateRewards(decay, rewardFunction)
@@ -251,7 +250,7 @@ def main():
         grp.plot(y='mean', marker='o', label=policyName, ax=axis)
 
     plt.ylabel('Accumulated rewards')
-    plt.title('iterative training in chase task with 1 train steps per iteration\nStart with random model')
+    plt.title('iterative training in chase task with {} train steps per iteration\nStart with random model'.format(numTrainStepsPerIteration))
     plt.legend(loc='best')
     plt.show()
 

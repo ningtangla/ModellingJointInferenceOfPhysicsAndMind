@@ -13,6 +13,7 @@ class ComputeStatistics:
         measurementStd = np.std(allMeasurements, axis = 0)
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
 
+
 class GenerateInitQPosUniform:
     def __init__(self, minQPos, maxQPos, isTerminal, getResetFromInitQPos):
         self.minQPos = minQPos

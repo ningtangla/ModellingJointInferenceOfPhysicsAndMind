@@ -37,6 +37,7 @@ class SampleTrajectory:
 
     def __call__(self, policy):
         state = self.reset()
+        print("STATE: ", state)
 
         while self.isTerminal(state):
             state = self.reset()
