@@ -212,6 +212,7 @@ class Train:
             self.reporter(evalDict, stepNum, trainWriter, summary)
 
             if self.terminalController(evalDict, stepNum):
+                print(stepNum)
                 break
 
         return model
