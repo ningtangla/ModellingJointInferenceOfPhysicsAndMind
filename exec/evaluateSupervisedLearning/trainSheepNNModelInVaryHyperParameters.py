@@ -77,9 +77,9 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
-    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = [2 ,4, 6, 8]
+    manipulatedVariables['miniBatchSize'] = [64] #[64, 128, 256, 512]
+    manipulatedVariables['learningRate'] =  [1e-4] #[1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['depth'] = [8]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -157,7 +157,7 @@ def main():
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 1000
+    reportInterval = 5000
     trainStepsIntervel = 20000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
