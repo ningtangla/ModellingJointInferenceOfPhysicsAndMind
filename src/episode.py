@@ -47,7 +47,7 @@ class SampleTrajectory:
                 trajectory.append((state, None, None))
                 break
             actionDists = policy(state)
-            action = [self.chooseAction(actionDist) for actionDist in actionDists]
+            action = [chooseActionFunction(actionDist) for chooseActionFunction, actionDist in zip(self.chooseAction, actionDists)]
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
             state = nextState
