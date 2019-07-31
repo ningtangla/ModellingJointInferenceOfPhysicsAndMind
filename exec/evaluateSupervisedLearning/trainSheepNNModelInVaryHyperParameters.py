@@ -79,7 +79,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64] #[64, 128, 256, 512]
     manipulatedVariables['learningRate'] =  [1e-4] #[1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = [8]
+    manipulatedVariables['depth'] = [2, 4, 8]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -147,7 +147,7 @@ def main():
 
     getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
     # function to train NN model
-    terminalThreshold = 1e-6
+    terminalThreshold = 1e-10
     lossHistorySize = 10
     initActionCoeff = 1
     initValueCoeff = 1
@@ -155,9 +155,10 @@ def main():
     afterActionCoeff = 1
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
+    terminalController = lambda evalDict, numStep: False
+    #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 5000
+    reportInterval = 10000
     trainStepsIntervel = 20000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
@@ -177,7 +178,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(6))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
 
