@@ -276,6 +276,17 @@ def main():
     replayBuffer = []
 
     restoredIteration = 0
+    modelSaveFrequence=5
+    numIterations = 11
+    for restoreIndex in range(restoredIteration + 1, numIterations):
+        restoreTrajectoryPathParameters = {'iterationIndex': restoreIndex}
+        trajectorySavePath = generateTrajectorySavePath(restoreTrajectoryPathParameters)
+        if not os.path.exists(trajectorySavePath):
+            break
+        elif np.mod(restoreIndex,modelSaveFrequence)==0:
+            restoredIteration=restoredIteration+modelSaveFrequence
+
+
     # if restoredIteration == 0:
     #     cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     #     print(cmdList)
@@ -295,8 +306,8 @@ def main():
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
     numTrajectoriesPerIteration = 1
-    numIterations = 11
-    modelSaveFrequence=5
+
+    
     for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
@@ -312,9 +323,9 @@ def main():
         for agentId in trainableAgentIds:
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
-            NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
 
             if np.mod(iterationIndex,modelSaveFrequence)==0:
+                NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
             	NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
             	saveVariables(updatedAgentNNModel, NNModelSavePath)
 

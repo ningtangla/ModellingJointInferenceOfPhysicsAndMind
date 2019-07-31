@@ -26,7 +26,6 @@ class TrainMultiMCTSAgentParallel:
         self.codeFileName = codeFileName
 
     def __call__(self, hyperParameterConditionslist):
-        [print(condition) for condition in hyperParameterConditionslist]
         cmdList = [['python3', self.codeFileName, json.dumps(condition)]
                 for condition in hyperParameterConditionslist]
 
@@ -55,6 +54,9 @@ def main():
 
     hyperVariablesConditionlist=[]
     hyperVariablesConditionlist=[{levelName:str(modelIndex.get_level_values(levelName)[modelIndexNumber]) for levelName in levelNames} for modelIndexNumber in range(len(modelIndex))]
+    #add restore iterationIndex
+    modelRestoreList=[0,0,0,0,0,0,0,0]#
+    [oneCondition.update({'iterationIndex':str(modelRestoreList[i])}) for (i,oneCondition) in enumerate(hyperVariablesConditionlist) ]
     # for modelIndexNumber in range(len(modelIndex)):
     #     oneCondition={levelName:str(modelIndex.get_level_values(levelName)[modelIndexNumber]) for levelName in levelNames}
     #     hyperVariablesConditionlist.append(oneCondition)
@@ -68,19 +70,25 @@ def main():
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
 
-    print('StratParallelGenerate')
-    for numSimulations in  manipulatedHyperVariables['numSimulations']:
-        trajectoryBeforeTrainPathParamters = {'iterationIndex': 0,'numSimulations':numSimulations}
-        preTrainCmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
-        print(preTrainCmdList)
+    print('Start ParallelTrajectoriesGenerate')
+    # for numSimulations in  manipulatedHyperVariables['numSimulations']:
+    #     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0,'numSimulations':numSimulations}
+    #     preTrainCmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
+    #     print(preTrainCmdList)
 
+    [generateTrajectoriesParallel({'iterationIndex': 0,'numSimulations':numSimulations}) 
+                    for numSimulations in  manipulatedHyperVariables['numSimulations']]
+    print('Finish ParallelTrajectoriesGenerate')
+    
+    print('Strat TrainingMultiMCTSVaryHyperParameters')
     trainOneConditionFileName='trainMultiMCTSforOneCondition.py'
     trainMultiMCTSAgentParallel=TrainMultiMCTSAgentParallel(trainOneConditionFileName)
     trainCmdList=trainMultiMCTSAgentParallel(hyperVariablesConditionlist)
     print(trainCmdList)
+    print('Finish TrainingMultiMCTSVaryHyperParameters')
 
 
-
+    print('Strat EvaluateMultiMCTSVaryHyperParameters')
     # Evaluate Session
     evluateVariables=manipulatedHyperVariables.copy()
     evluateVariables['iterationIndex']=[0,5,10]
@@ -92,7 +100,7 @@ def main():
 
 
     #genarate trajectories
-    evalNumTrials = 10
+    evalNumTrials = 10#1000
     generateTrajectoriesCodeName = 'generateTrajByNNWolfAndStationarySheepMujoco.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5*numCpuCores)
@@ -100,9 +108,10 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numToUseCores)
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    print('Strat GenerateEvaluateTrajectories')
     toSplitFrame.groupby(evaluatelevelNames).apply(generateTrajectoriesParallelFromDf)
 
-
+    print('Finish GenerateEvaluateTrajectories')
     #Measurements
     sheepId = 0
     wolfId = 1
@@ -111,7 +120,7 @@ def main():
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-    alivePenalty = -0.05
+    alivePenalty = -0.05# -1/maxRunnintStep
     deathBonus = 1
     rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
     decay = 1
