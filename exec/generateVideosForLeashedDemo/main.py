@@ -23,11 +23,12 @@ def getFileName(parameters,fixedParameters):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['draggerMass'] = [10,13]
-    manipulatedVariables['maxTendonLength'] = [0.3, 0.6]
-    manipulatedVariables['predatorMass'] = [10,13]
-    manipulatedVariables['tendonDamping'] =[0.3, 0.6]
-    manipulatedVariables['tendonStiffness'] = [5, 10]
+    manipulatedVariables['draggerMass'] = [10]
+    manipulatedVariables['maxTendonLength'] = [0.6]
+    manipulatedVariables['predatorMass'] = [10]
+    manipulatedVariables['predatorPower'] = [1.6]
+    manipulatedVariables['tendonDamping'] =[0.7]
+    manipulatedVariables['tendonStiffness'] = [10]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
@@ -46,8 +47,8 @@ def main():
 
     getAgentPosXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 0)
     getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
-    getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 2)
-    getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 3)
+    getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 4)
+    getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 5)
     extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord,
                            'yVel': getAgentVelYCoord}
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
