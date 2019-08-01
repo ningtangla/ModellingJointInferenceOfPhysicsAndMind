@@ -200,15 +200,16 @@ def main():
         # multiAgentNNmodel = [sheepBaseLineModel, wolfBaseLineModel]
 
         startTime = time.time()
-        trainableAgentIds = [sheepId, wolfId]
+        trainableAgentIds = [wolfId]
 
-        # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
-        otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+        # otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
 
         # load NN
-        multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+        depth = 4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
         iterationIndex = parametersForTrajectoryPath['iterationIndex']
         for agentId in trainableAgentIds:
             modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId})
