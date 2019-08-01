@@ -25,7 +25,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, sampleAction
+from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
@@ -157,7 +157,7 @@ def main():
         getStateFromNode = lambda node: list(node.id.values())[0]
 
         # sample trajectory
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, sampleAction)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # neural network init
         numStateSpace = 12
@@ -208,7 +208,8 @@ def main():
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
 
         # load NN
-        multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+        depth = 4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
         iterationIndex = parametersForTrajectoryPath['iterationIndex']
         for agentId in trainableAgentIds:
             modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId})
