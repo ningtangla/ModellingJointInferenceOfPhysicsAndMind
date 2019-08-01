@@ -17,7 +17,6 @@ def getFileName(parameters,fixedParameters):
     allParameters = dict(list(parameters.items()) + list(fixedParameters.items()))
     sortedParameters = sorted(allParameters.items())
     nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
-
     fileName = '_'.join(nameValueStringPairs)
 
     return fileName
