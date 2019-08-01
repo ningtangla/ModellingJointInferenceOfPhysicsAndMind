@@ -45,7 +45,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 5000
+    numTrajectories = 1000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
@@ -59,7 +59,7 @@ def main():
     killzoneRadius = 2
     maxRunningSteps = 20
     numSimulations = 200
-    fixedParameters = {'agentId':wolfId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    fixedParameters = {'agentId':sheepId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
    
     print("start")
@@ -111,7 +111,6 @@ def main():
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
-
     # neural network init and save path
     numStateSpace = 12
     regularizationFactor = 1e-4
@@ -128,7 +127,7 @@ def main():
     # function to train NN model
     batchSize = 256
     learningRate = 0.001
-    terminalThreshold = 1e-6
+    terminalThreshold = 1e-10
     lossHistorySize = 10
     initActionCoeff = 1
     initValueCoeff = 1
@@ -136,7 +135,8 @@ def main():
     afterActionCoeff = 1
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
+    terminalController = lambda evalDict, numStep: False
+    # terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1000#1000
     trainStepsIntervel = 100000 #100000

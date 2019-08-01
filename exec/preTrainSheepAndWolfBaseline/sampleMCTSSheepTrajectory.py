@@ -15,6 +15,8 @@ from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 
 import mujoco_py as mujoco
 import numpy as np
