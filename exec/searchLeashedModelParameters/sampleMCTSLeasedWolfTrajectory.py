@@ -126,6 +126,31 @@ def main():
         numSimulations = 200
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
+        # MCTS
+        cInit = 1
+        cBase = 100
+        calculateScore = ScoreChild(cInit, cBase)
+        selectChild = SelectChild(calculateScore)
+
+        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in wolfActionSpace}
+        initializeChildrenUniformPrior = InitializeChildren(wolfActionSpace, transitInWolfMCTSSimulation,
+                                                            getUniformActionPrior)
+        expand = Expand(isTerminal, initializeChildrenUniformPrior)
+
+        aliveBonus = -0.05
+        deathPenalty = 1
+        rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+
+        rolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
+        rolloutHeuristicWeight = 0.1
+        maxRolloutSteps = 5
+        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
+        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
+                          rolloutHeuristic)
+
+        numSimulations = 200
+        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
+
         # sample trajectory
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
