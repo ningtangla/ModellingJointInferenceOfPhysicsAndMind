@@ -200,10 +200,10 @@ def main():
         # multiAgentNNmodel = [sheepBaseLineModel, wolfBaseLineModel]
 
         startTime = time.time()
-        trainableAgentIds = [sheepId, wolfId]
+        trainableAgentIds = [wolfId]
 
-        # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
-        otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+        # otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
 

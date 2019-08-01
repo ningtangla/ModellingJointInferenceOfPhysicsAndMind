@@ -44,9 +44,9 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [-1, 400]
-    manipulatedVariables['otherIteration'] = [-1, 400]
-    manipulatedVariables['selfId'] = [0, 1]
+    manipulatedVariables['selfIteration'] = [-1, 2000, 4000, 6000, 8000,10000,12000 ]
+    manipulatedVariables['otherIteration'] = [-1]
+    manipulatedVariables['selfId'] = [1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -87,11 +87,12 @@ def main():
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'NNModel')
+                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
-    multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
+    depth = 4
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
     for agentId  in range(numAgents):
         modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPath)
@@ -99,10 +100,10 @@ def main():
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5*numCpuCores)
+    numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
-            numCmdList, readParametersFromDf)
+            numCmdList)
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
@@ -111,7 +112,7 @@ def main():
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -130,7 +131,7 @@ def main():
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
-
+    print(statisticsDf)
   # plot the results
     fig = plt.figure()
     numColumns = len(manipulatedVariables['selfId'])
