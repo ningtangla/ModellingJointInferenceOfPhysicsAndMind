@@ -45,7 +45,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 1000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
@@ -68,7 +68,7 @@ def main():
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
 
-        cmdList = generateTrajectoriesParallel(pathParameters)
+        # cmdList = generateTrajectoriesParallel(pathParameters)
         # print(cmdList)
         # import ipdb; ipdb.set_trace()
     
@@ -119,7 +119,7 @@ def main():
     valueLayerWidths = [128]
     depth = 4
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    NNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+    model = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
 
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
@@ -139,12 +139,13 @@ def main():
     # terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1000#1000
-    trainStepsIntervel = 100000 #100000
+    trainStepsIntervel = 20000#100000
+    trainIntervelIndexes = range(1,6)
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier, terminalController, coefficientController,trainReporter)
+    train = Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier, terminalController, coefficientController,trainReporter)
 
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -155,10 +156,22 @@ def main():
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
-    trainingParameters = {'learningRate':learningRate, 'miniBatchSize': batchSize, 'depth':depth, 'trainSteps':trainStepsIntervel}
+    trainingParameters = {'learningRate':learningRate, 'miniBatchSize': batchSize, 'depth':depth}
+    trainingParameters.update({'trainSteps': 0})
+    modelSavePath = getNNModelSavePath(trainingParameters)
+    saveVariables(model, modelSavePath)
+    for trainIntervelIndex in trainIntervelIndexes:
+        trainingParameters.update({'trainSteps': trainIntervelIndex*trainStepsIntervel})
+        modelSavePath = getNNModelSavePath(trainingParameters)
+        if not os.path.isfile(modelSavePath + '.index'):
+            trainedModel = train(model, trainData)
+            saveVariables(trainedModel, modelSavePath)
+        else:
+            trainedModel = restoreVariables(model, modelSavePath)
+        model = trainedModel
 
-    trainedNN = getTrainNN(NNModel, trainData)
-    saveVariables(trainedNN, getNNModelSavePath(trainingParameters))
+    trainedModel.close()
+    model.close()
 
 if __name__ == '__main__':
     main()
