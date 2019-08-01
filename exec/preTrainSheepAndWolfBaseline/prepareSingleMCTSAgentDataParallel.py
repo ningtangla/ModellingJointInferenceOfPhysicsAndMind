@@ -45,7 +45,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 42
+    numTrajectories = 5000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSWolfTrajectory.py'
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
