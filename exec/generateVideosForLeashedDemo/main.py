@@ -23,10 +23,10 @@ def getFileName(parameters,fixedParameters):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['draggerMass'] = [10]
+    manipulatedVariables['draggerMass'] = [8, 10, 12]
     manipulatedVariables['maxTendonLength'] = [0.6]
     manipulatedVariables['predatorMass'] = [10]
-    manipulatedVariables['predatorPower'] = [1.6]
+    manipulatedVariables['predatorPower'] = [1, 1.3, 1.6]
     manipulatedVariables['tendonDamping'] =[0.7]
     manipulatedVariables['tendonStiffness'] = [10]
 
@@ -103,7 +103,7 @@ def main():
             scaledYRange = [200, 600]
             scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-            oldFPS = 5
+            oldFPS = 7
             adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
             getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))

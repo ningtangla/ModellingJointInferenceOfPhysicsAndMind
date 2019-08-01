@@ -8,13 +8,13 @@
 cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/
 mkdir demo
 
-for draggerMass in 10
+for draggerMass in 8 10 12
 do
     for maxTendonLength in  0.6
     do
         for predatorMass in 10
         do
-            for predatorPower in 1.6
+            for predatorPower in 1 1.3 1.6
             do
                 for tendonDamping in 0.7
                 do
