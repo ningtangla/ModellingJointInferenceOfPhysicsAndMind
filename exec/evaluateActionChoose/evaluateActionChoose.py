@@ -111,7 +111,7 @@ def main():
 
 
 
-    # axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+    axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
     # if plotCounter % numRows == 1:
     axForDraw.set_xlabel('chooseActionInMCTS: {}'.format(manipulatedVariables['chooseActionInMCTS']))
     # if plotCounter <= numColumns:
