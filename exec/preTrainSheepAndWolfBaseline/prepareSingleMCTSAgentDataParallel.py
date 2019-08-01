@@ -82,8 +82,6 @@ def main():
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
-    sheepId = 0
-    wolfId = 1
     xPosIndex = [2, 3]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
