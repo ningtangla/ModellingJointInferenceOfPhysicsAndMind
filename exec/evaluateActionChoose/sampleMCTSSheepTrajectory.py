@@ -44,7 +44,7 @@ def main():
     endSampleIndex = int(sys.argv[3])
 
     actionChooseInMCTS = parametersForTrajectoryPath['chooseActionInMCTS']
-    actionChooseInSimulation = parametersForTrajectoryPath['chooseActionInPlay']
+    actionChooseInPlay = parametersForTrajectoryPath['chooseActionInPlay']
     agentId = 0
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
@@ -124,7 +124,7 @@ def main():
         qVelInitNoise = 8
         numAgent = 2
         reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
-        if actionChooseInSimulation == 'greedy':
+        if actionChooseInPlay == 'greedy':
             chooseActionMethods = [chooseGreedyAction, chooseGreedyAction]
         else:
             chooseActionMethods = [chooseGreedyAction, sampleAction]

@@ -31,7 +31,7 @@ def main():
     killzoneRadius = 2
     numSimulations = 100
     maxRunningSteps = 20
-    fixedParameters = {'agentId':sheepId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    fixedParameters = {'agentId':wolfId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
@@ -47,7 +47,6 @@ def main():
 
     actionChooseInMCTS = parametersForTrajectoryPath['chooseActionInMCTS']
     actionChooseInPlay = parametersForTrajectoryPath['chooseActionInPlay']
-    agentId = 0
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -105,12 +104,12 @@ def main():
                                                             getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
-        aliveBonus = 1/maxRunningSteps
-        deathPenalty = -1
+        aliveBonus = -1/maxRunningSteps
+        deathPenalty = 1
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-        rolloutHeuristicWeight = -0.1
+        rolloutHeuristicWeight = 0.1
         maxRolloutSteps = 5
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,

@@ -38,7 +38,6 @@ def drawPerformanceLine(dataDf, axForDraw):
 
 def main():
     # important parameters
-    sheepId = 0
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
@@ -56,8 +55,8 @@ def main():
     xPosIndex = [2, 3]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
-    playAliveBonus = 0.05
-    playDeathPenalty = -1
+    playAliveBonus = -0.05
+    playDeathPenalty = 1
     playKillzoneRadius = 2
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
@@ -89,7 +88,7 @@ def main():
     trainMaxRunningSteps = 20
     trainNumSimulations = 100
     killzoneRadius = 2
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 
+    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 
                                 'numSimulations': trainNumSimulations,'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
