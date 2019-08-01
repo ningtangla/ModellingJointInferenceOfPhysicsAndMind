@@ -162,7 +162,7 @@ def main():
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    numSimulations = 100  # 200
+    numSimulations = 200  # 200
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     getApproximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
     getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
@@ -176,17 +176,15 @@ def main():
     numStateSpace = 12
     numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
-    sharedWidths = [128]
-    actionLayerWidths = [128]
-    valueLayerWidths = [128]
+
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     initNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
 
     # replay buffer
-    bufferSize = 2000
+    bufferSize = 5000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 25  # 256
+    miniBatchSize = 256  # 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -215,8 +213,8 @@ def main():
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRate = 0.0001
-    numTrajectoriesToTrain = miniBatchSize * 4
+    learningRate = 1e-3
+    numTrajectoriesToTrain = 5000
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
                     learningRateModifier, terminalController, coefficientController,
@@ -243,7 +241,7 @@ def main():
 
 
     startTime = time.time()
-    trainableAgentIds = [sheepId]
+    trainableAgentIds = [wolfId]
 
     otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
     # otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
@@ -252,7 +250,11 @@ def main():
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
     trainOneAgent = TrainOneAgent(numTrajectoriesToTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-    multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+    sharedWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
+    depth = 4
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
     
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleSingleMCTSAgentTrajectory.py'
@@ -276,16 +278,16 @@ def main():
         cmdList = generateTrajectoriesParallel(pathParameters)
         print(cmdList)
 
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
-        # preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
-        # updatedReplayBuffer = saveToBuffer(replayBuffer[agentId], preProcessedTrajectories)
+        trajectories = loadTrajectoriesForParallel(pathParameters)
+        preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
+        updatedReplayBuffer = saveToBuffer(replayBuffer[agentId], preProcessedTrajectories)
 
-        # updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, replayBuffer[agentId])
-        # NNModelSavePath = generateNNModelSavePath(pathParameters)
-        # saveVariables(updatedAgentNNModel, NNModelSavePath)
+        updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, replayBuffer[agentId])
+        NNModelSavePath = generateNNModelSavePath(pathParameters)
+        saveVariables(updatedAgentNNModel, NNModelSavePath)
 
-        # multiAgentNNmodel[agentId] = updatedAgentNNModel
-        # replayBuffer[agentId] = updatedReplayBuffer
+        multiAgentNNmodel[agentId] = updatedAgentNNModel
+        replayBuffer[agentId] = updatedReplayBuffer
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
