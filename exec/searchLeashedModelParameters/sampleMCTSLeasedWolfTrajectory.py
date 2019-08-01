@@ -68,7 +68,7 @@ def main():
         qPosIndex = [0, 1]
         getSheepQPos = GetAgentPosFromState(sheepId, qPosIndex)
         getWolfQPos = GetAgentPosFromState(wolfId, qPosIndex)
-        killzoneRadius = 2
+        killzoneRadius = 0.2
         isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
         
         numSimulationFrames = 20
@@ -109,8 +109,8 @@ def main():
         # sample trajectory
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
-        qPosInitNoise = 7
-        qVelInitNoise = 5
+        qPosInitNoise = 5
+        qVelInitNoise = 3
         numAgent = 3
         tiedAgentId = [1, 2]
         ropePartIndex = list(range(3, 12))
@@ -123,10 +123,11 @@ def main():
 
         # saving trajectories
         # policy
+        sheepNNModel
         policy = lambda state: [randomPolicy(state), mcts(state), randomPolicy(state)]
 
         # generate trajectories
-        numTrajectories = 10
+        numTrajectories = 4
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(numTrajectories)]
         saveToPickle(trajectories, trajectorySavePath)
 

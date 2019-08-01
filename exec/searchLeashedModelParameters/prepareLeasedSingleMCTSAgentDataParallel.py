@@ -32,30 +32,22 @@ from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnCon
 
 
 def main():
-    dirName = os.path.dirname(__file__)
-    # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
-
-    if not os.path.exists(trajectoriesSaveDirectory):
-        os.makedirs(trajectoriesSaveDirectory)
-
     startTime = time.time()
     
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['tendonStiffness'] = [5, 10, 15]
-    manipulatedVariables['tendonDamping'] =  [0.3, 0.5, 0.7]
-    manipulatedVariables['maxTendonLength'] = [0.3, 0.5, 0.7]
-    manipulatedVariables['predatorMass'] = [8, 10, 12]
+    manipulatedVariables['tendonStiffness'] = [10]
+    manipulatedVariables['tendonDamping'] =  [0.7]
+    manipulatedVariables['maxTendonLength'] = [0.6]
+    manipulatedVariables['predatorMass'] = [10]
     manipulatedVariables['draggerMass'] = [8, 10, 12]
+    manipulatedVariables['predatorPower'] = [1 1.2 1.4]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
     
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
 
     generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName)
 
