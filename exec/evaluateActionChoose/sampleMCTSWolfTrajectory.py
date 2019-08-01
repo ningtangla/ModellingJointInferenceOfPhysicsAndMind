@@ -26,14 +26,16 @@ import numpy as np
 
 def main():
     # manipulated variables and other important parameters
+    sheepId = 0
+    wolfId = 1
     killzoneRadius = 2
     numSimulations = 100
     maxRunningSteps = 20
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    fixedParameters = {'agentId':sheepId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateActionChoose', 'trajectories')
+                                             'evaluateActionChoose', 'evaluateTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -44,7 +46,7 @@ def main():
     endSampleIndex = int(sys.argv[3])
 
     actionChooseInMCTS = parametersForTrajectoryPath['chooseActionInMCTS']
-    actionChooseInSimulation = parametersForTrajectoryPath['chooseActionInPlay']
+    actionChooseInPlay = parametersForTrajectoryPath['chooseActionInPlay']
     agentId = 0
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
@@ -58,8 +60,7 @@ def main():
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
-        sheepId = 0
-        wolfId = 1
+        
         xPosIndex = [2, 3]
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
@@ -79,8 +80,8 @@ def main():
         sheepModel = generateModel(sharedWidths, actionLayerWidths , valueLayerWidths)
 
         sheepModelSavePath = os.path.join(dirName, '..', '..', 'data',
-                                        'evaluateActionChoose', 'wolfNNModels',
-                                        'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+                                        'evaluateActionChoose', 'sheepModels',
+                                        'agentId=0_depth=4_learningRate=0.001_maxRunningSteps=25_miniBatchSize=512_numSimulations=100_trainSteps=40000')
 
         restoredSheepModel = restoreVariables(sheepModel, sheepModelSavePath)
         sheepPolicy = ApproximatePolicy(restoredSheepModel, actionSpace)
@@ -124,7 +125,7 @@ def main():
         qVelInitNoise = 8
         numAgent = 2
         reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
-        if actionChooseInSimulation == 'greedy':
+        if actionChooseInPlay == 'greedy':
             chooseActionMethods = [chooseGreedyAction, chooseGreedyAction]
         else:
             chooseActionMethods = [sampleAction, chooseGreedyAction]
@@ -133,12 +134,12 @@ def main():
         # saving trajectories
         # policy
 
-        policy = lambda state: [mcts(state), wolfPolicy(state)]
+        policy = lambda state: [sheepPolicy(state), mcts(state)]
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
-        restoredWolfModel.close()
+        restoredSheepModel.close()
 
 
 if __name__ == '__main__':
