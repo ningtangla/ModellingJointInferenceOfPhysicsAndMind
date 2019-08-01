@@ -63,7 +63,7 @@ def main():
     trajectorySaveExtension = '.pickle'
    
     print("start")
-    trainableAgentIds = [wolfId]
+    trainableAgentIds = [sheepId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
@@ -104,7 +104,7 @@ def main():
     actionToOneHot = ActionToOneHot(actionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolfId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
 
@@ -149,7 +149,7 @@ def main():
     getTrainNN = Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier, terminalController, coefficientController,trainReporter)
 
     # get path to save trained models
-    NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
+    NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'preTrainBaseline',
                                         'trainedModels')
