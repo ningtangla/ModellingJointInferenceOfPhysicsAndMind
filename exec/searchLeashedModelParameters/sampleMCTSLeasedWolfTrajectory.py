@@ -65,7 +65,6 @@ def main():
         physicsSimulation.forward()
 
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        print(wolfActionSpace)
 
         sheepId = 0
         wolfId = 1
@@ -90,12 +89,13 @@ def main():
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
         initModel = generateModel(sharedWidths*depth, actionLayerWidths, valueLayerWidths)
 
-        sheepNNModelPath = os.path.join('..','..','data','searchLeashedModelParameters', 'NNModel', \
-                'agentId=0_depth=4_learningRate=0.001_maxRunningSteps=25_miniBatchSize=64_numSimulations=100_trainSteps=40000')
-        sheepNNModel = restoreVariables(initModel, sheepNNModelPath)
-        sheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace)
-        transitInWolfMCTSSimulation = \
-                lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[0:2])), wolfSelfAction, chooseGreedyAction(randomPolicy(state))])
+        wolfNNModelPath = os.path.join('..','..','data','searchLeashedModelParameters', 'NNModel', \
+                'agentId=1_depth=4_learningRate=0.001_maxRunningSteps=25_miniBatchSize=64_numSimulations=100_trainSteps=40000')
+        wolfNNModel = restoreVariables(initModel, wolfNNModelPath)
+        wolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)
+        transitInSheepMCTSSimulation = \
+                lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[0:2])), \
+                chooseGreedyAction(stationaryAgentPolicy(state))])
 
         # WolfActionInSheepSimulation = lambda state: (0, 0)
         # transitInSheepMCTSSimulation = \
@@ -107,45 +107,20 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in wolfActionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(wolfActionSpace, transitInWolfMCTSSimulation,
+        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
+        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
                                                             getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
-        aliveBonus = -0.05
-        deathPenalty = 1
+        aliveBonus = 0.05
+        deathPenalty = -1
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
-        rolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
-        rolloutHeuristicWeight = 0.1
-        maxRolloutSteps = 5
+        rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+        rolloutHeuristicWeight = -0.1
+        maxRolloutSteps = 7
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
-                          rolloutHeuristic)
-
-        numSimulations = 200
-        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
-
-        # MCTS
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
-
-        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in wolfActionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(wolfActionSpace, transitInWolfMCTSSimulation,
-                                                            getUniformActionPrior)
-        expand = Expand(isTerminal, initializeChildrenUniformPrior)
-
-        aliveBonus = -0.05
-        deathPenalty = 1
-        rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
-
-        rolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
-        rolloutHeuristicWeight = 0.1
-        maxRolloutSteps = 5
-        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
+        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
 
         numSimulations = 200
@@ -154,8 +129,8 @@ def main():
         # sample trajectory
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
-        qPosInitNoise = 5
-        qVelInitNoise = 3
+        qPosInitNoise = 6
+        qVelInitNoise = 4
         numAgent = 3
         tiedAgentId = [1, 2]
         ropePartIndex = list(range(3, 12))
@@ -168,12 +143,12 @@ def main():
 
         # saving trajectories
         # policy
-        policy = lambda state: [sheepPolicy(state[0:2]), mcts(state), randomPolicy(state)]
+        policy = lambda state: [mcts(state), wolfPolicy(state[0:2]), stationaryAgentPolicy(state)]
 
         # generate trajectories
         numTrajectories = 3
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(numTrajectories)]
         saveToPickle(trajectories, trajectorySavePath)
-        print(trajectories[0][0][0])
+
 if __name__ == '__main__':
     main()
