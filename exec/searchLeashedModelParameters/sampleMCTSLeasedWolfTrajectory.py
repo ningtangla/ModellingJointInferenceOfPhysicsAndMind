@@ -55,6 +55,7 @@ def main():
         maxTendonLength = float(parametersForCondition['maxTendonLength'])
         predatorMass = int(parametersForCondition['predatorMass'])
         draggerMass = int(parametersForCondition['draggerMass'])
+        predatorPowerRatio = int(parametersForCondition['predatorPower']
 
         physicsSimulation.model.tendon_stiffness[:] = [tendonStiffness] * numTendon
         physicsSimulation.model.tendon_damping[:] = [tendonDamping] * numTendon
@@ -62,6 +63,8 @@ def main():
         physicsSimulation.model.body_mass[[predatorBodyIndex, draggerBodyIndex]] = [predatorMass, draggerMass]
         physicsSimulation.set_constants()
         physicsSimulation.forward()
+        
+        wolfActionSpace = np.array(actionSpace) * predatorPowerRatio
 
         sheepId = 0
         wolfId = 1
@@ -74,8 +77,24 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunctionWithoutXPos(physicsSimulation, isTerminal, numSimulationFrames)
         randomPolicy = RandomPolicy(actionSpace)
+        
+        # neural network init
+        numStateSpace = 12
+        numActionSpace = len(actionSpace)
+        regularizationFactor = 1e-4
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
+        depth = 4
+        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor) 
+        initModel = generateModel(sharedWidths*depth, actionLayerWidths, valueLayerWidths)
+        
+        sheepNNModelPath = os.path.join('..','..','data','searchLeashedModelParameters', 'NNModel', \
+                'agentId=0_depth=4_learningRate=0.001_maxRunningSteps=25_miniBatchSize=64_numSimulations=100_trainSteps=40000')
+        sheepNNModel = restoreVariables(initModel, sheepNNModelPath)
+        sheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace)
         transitInWolfMCTSSimulation = \
-            lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(randomPolicy(state)), wolfSelfAction, chooseGreedyAction(randomPolicy(state))])
+                lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[0:2])), wolfSelfAction, chooseGreedyAction(randomPolicy(state))])
 
         # WolfActionInSheepSimulation = lambda state: (0, 0)
         # transitInSheepMCTSSimulation = \
@@ -87,8 +106,8 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInWolfMCTSSimulation,
+        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in wolfActionSpace}
+        initializeChildrenUniformPrior = InitializeChildren(wolfActionSpace, transitInWolfMCTSSimulation,
                                                             getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
@@ -96,7 +115,7 @@ def main():
         deathPenalty = 1
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
-        rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+        rolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = 0.1
         maxRolloutSteps = 10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
@@ -118,13 +137,12 @@ def main():
         reset = ResetUniformWithoutXPosForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropePartIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
         
-        maxRunningSteps = 25
+        maxRunningSteps = 125
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # saving trajectories
         # policy
-        sheepNNModel
-        policy = lambda state: [randomPolicy(state), mcts(state), randomPolicy(state)]
+        policy = lambda state: [sheepPolicy(state[0:2]), mcts(state), randomPolicy(state)]
 
         # generate trajectories
         numTrajectories = 4
