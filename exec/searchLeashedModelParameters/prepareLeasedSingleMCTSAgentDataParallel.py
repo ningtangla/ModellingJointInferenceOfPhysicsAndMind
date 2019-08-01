@@ -27,13 +27,13 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import  SampleTrajectory, chooseGreedyAction
-from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel 
+from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
 
 
 
 def main():
     startTime = time.time()
-    
+
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['tendonStiffness'] = [10]
@@ -41,11 +41,11 @@ def main():
     manipulatedVariables['maxTendonLength'] = [0.6]
     manipulatedVariables['predatorMass'] = [10]
     manipulatedVariables['draggerMass'] = [8, 10, 12]
-    manipulatedVariables['predatorPower'] = [1 1.3 1.6]
+    manipulatedVariables['predatorPower'] = [1, 1.3, 1.6]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
-    
+
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
 
@@ -54,7 +54,7 @@ def main():
     print("start")
     cmdList = generateTrajectoriesParallel(parametersAllCondtion)
     # import ipdb; ipdb.set_trace()
-    
+
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 

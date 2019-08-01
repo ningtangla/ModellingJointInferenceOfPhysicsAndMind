@@ -8,14 +8,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
     backup, RollOut
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos, ResetUniformWithoutXPosForLeashed
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos, ResetUniformWithoutXPosForLeashed, TransitionFunction, ResetUniformForLeashed
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
+from src.neuralNetwork.policyValueNet import GenerateModel, ApproximatePolicy,restoreVariables
 import mujoco_py as mujoco
 import numpy as np
 
@@ -36,7 +36,7 @@ def main():
     parametersForCondition = json.loads(sys.argv[1])
 
     trajectorySavePath = generateTrajectorySavePath(parametersForCondition)
-    
+
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
@@ -55,7 +55,7 @@ def main():
         maxTendonLength = float(parametersForCondition['maxTendonLength'])
         predatorMass = int(parametersForCondition['predatorMass'])
         draggerMass = int(parametersForCondition['draggerMass'])
-        predatorPowerRatio = int(parametersForCondition['predatorPower']
+        predatorPowerRatio = float(parametersForCondition['predatorPower'])
 
         physicsSimulation.model.tendon_stiffness[:] = [tendonStiffness] * numTendon
         physicsSimulation.model.tendon_damping[:] = [tendonDamping] * numTendon
@@ -63,21 +63,22 @@ def main():
         physicsSimulation.model.body_mass[[predatorBodyIndex, draggerBodyIndex]] = [predatorMass, draggerMass]
         physicsSimulation.set_constants()
         physicsSimulation.forward()
-        
-        wolfActionSpace = np.array(actionSpace) * predatorPowerRatio
+
+        wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+        print(wolfActionSpace)
 
         sheepId = 0
         wolfId = 1
         qPosIndex = [0, 1]
         getSheepQPos = GetAgentPosFromState(sheepId, qPosIndex)
         getWolfQPos = GetAgentPosFromState(wolfId, qPosIndex)
-        killzoneRadius = 0.2
+        killzoneRadius = 0.3
         isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
-        
+
         numSimulationFrames = 20
-        transit = TransitionFunctionWithoutXPos(physicsSimulation, isTerminal, numSimulationFrames)
+        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
         randomPolicy = RandomPolicy(actionSpace)
-        
+
         # neural network init
         numStateSpace = 12
         numActionSpace = len(actionSpace)
@@ -86,9 +87,9 @@ def main():
         actionLayerWidths = [128]
         valueLayerWidths = [128]
         depth = 4
-        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor) 
+        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
         initModel = generateModel(sharedWidths*depth, actionLayerWidths, valueLayerWidths)
-        
+
         sheepNNModelPath = os.path.join('..','..','data','searchLeashedModelParameters', 'NNModel', \
                 'agentId=0_depth=4_learningRate=0.001_maxRunningSteps=25_miniBatchSize=64_numSimulations=100_trainSteps=40000')
         sheepNNModel = restoreVariables(initModel, sheepNNModelPath)
@@ -117,11 +118,11 @@ def main():
 
         rolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = 0.1
-        maxRolloutSteps = 10
+        maxRolloutSteps = 5
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInWolfMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
-        
+
         numSimulations = 200
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
@@ -134,10 +135,10 @@ def main():
         tiedAgentId = [1, 2]
         ropePartIndex = list(range(3, 12))
         maxRopePartLength = maxTendonLength
-        reset = ResetUniformWithoutXPosForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
+        reset = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropePartIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
-        
-        maxRunningSteps = 125
+
+        maxRunningSteps = 100
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # saving trajectories
@@ -145,9 +146,9 @@ def main():
         policy = lambda state: [sheepPolicy(state[0:2]), mcts(state), randomPolicy(state)]
 
         # generate trajectories
-        numTrajectories = 4
+        numTrajectories = 3
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(numTrajectories)]
         saveToPickle(trajectories, trajectorySavePath)
-
+        print(trajectories[0][0][0])
 if __name__ == '__main__':
     main()
