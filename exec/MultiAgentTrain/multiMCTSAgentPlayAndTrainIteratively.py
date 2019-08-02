@@ -208,7 +208,7 @@ def main():
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1
-    numTrainStepsPerIteration = 10
+    numTrainStepsPerIteration = 1
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
@@ -237,18 +237,41 @@ def main():
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
     startTime = time.time()
-    trainableAgentIds = [wolfId]
+    trainableAgentIds = [sheepId]
 
-    otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
-    # otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+# load baseline
+    depth = 4
+    initializedNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+
+    wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','preTrainBaseline', 'wolfModels')
+    wolfBaselineSaveParameters = {'numSimulations': 100,'agentId': 1, 'depth': 4,'miniBatchSize':256,
+                              'learningRate': 0.001, 'maxRunningSteps': 20}
+    getWolfBaselineModelSavePath = GetSavePath(wolfBaselineNNModelSaveDirectory, NNModelSaveExtension, wolfBaselineSaveParameters)
+    baselineModelTrainSteps = 40000
+    wolfBaselineNNModelSavePath = getWolfBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
+    wolfBaseLineModel = restoreVariables(initializedNNModel, wolfBaselineNNModelSavePath)
+    
+    sheepBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','preTrainBaseline', 'trainedModels')
+    sheepBaselineSaveParameters = {'numSimulations': 200,'agentId': 0, 'depth': 4,'miniBatchSize':256,
+                              'learningRate': 0.001, 'maxRunningSteps': 20, 'killzoneRadius':2}
+
+    getSheepBaselineModelSavePath = GetSavePath(sheepBaselineNNModelSaveDirectory, NNModelSaveExtension, sheepBaselineSaveParameters)
+    baselineModelTrainSteps = 20000
+    sheepBaselineNNModelSavePath = getSheepBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
+    sheepBaseLineModel = restoreVariables(initializedNNModel, sheepBaselineNNModelSavePath)
+
+    # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+    otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(wolfBaseLineModel, actionSpace)
+
     composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
     prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     trainOneAgent = TrainOneAgent(numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-    depth = 4
-    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+    multiAgentNNmodel = [sheepBaseLineModel, wolfBaseLineModel]
+    # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+
     for agentId in trainableAgentIds:
         modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
@@ -269,7 +292,7 @@ def main():
 # initRreplayBuffer
     replayBuffer = []
 
-    restoredIteration = 0
+    restoredIteration = 700
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
