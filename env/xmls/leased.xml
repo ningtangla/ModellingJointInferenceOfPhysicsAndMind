@@ -105,61 +105,61 @@
 
 <!--tendon part-->
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="predator"/>
             <site site="middle1"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle1"/>
             <site site="middle2"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle2"/>
             <site site="middle3"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle3"/>
             <site site="middle4"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle4"/>
             <site site="middle5"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle5"/>
             <site site="middle6"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle6"/>
             <site site="middle7"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle7"/>
             <site site="middle8"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle8"/>
             <site site="middle9"/>
         </spatial>
     </tendon>
     <tendon>
-        <spatial limited="true" range="0 .6" stiffness="10" damping=".6" width="0.01">
+        <spatial limited="true" range="0 .6" stiffness="10" damping=".65" width="0.01">
             <site site="middle9"/>
             <site site="dragger"/>
         </spatial>
@@ -193,6 +193,24 @@
         <exclude body1="prey" body2="middle7"/>
     	<exclude body1="prey" body2="middle8"/>
         <exclude body1="prey" body2="middle9"/>
+        <exclude body1="predator" body2="middle1"/>
+    	<exclude body1="predator" body2="middle2"/>
+        <exclude body1="predator" body2="middle3"/>
+    	<exclude body1="predator" body2="middle4"/>
+        <exclude body1="predator" body2="middle5"/>
+    	<exclude body1="predator" body2="middle6"/>
+        <exclude body1="predator" body2="middle7"/>
+    	<exclude body1="predator" body2="middle8"/>
+        <exclude body1="predator" body2="middle9"/>
+        <exclude body1="dragger" body2="middle1"/>
+    	<exclude body1="dragger" body2="middle2"/>
+        <exclude body1="dragger" body2="middle3"/>
+    	<exclude body1="dragger" body2="middle4"/>
+        <exclude body1="dragger" body2="middle5"/>
+    	<exclude body1="dragger" body2="middle6"/>
+        <exclude body1="dragger" body2="middle7"/>
+    	<exclude body1="dragger" body2="middle8"/>
+        <exclude body1="dragger" body2="middle9"/>
 
     </contact>
 

@@ -55,7 +55,7 @@ def main():
     numSimulationFrames = 10000
     for frameIndex in range(numSimulationFrames):
         if frameIndex > 500:
-            action = np.array([-1, 1, 1, 1, 0, 0])
+            action = np.random.uniform(-10, 10, 6)
             physicsSimulation.data.ctrl[:] = action
         physicsSimulation.step()
         physicsSimulation.forward()
