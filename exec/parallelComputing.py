@@ -22,3 +22,16 @@ class GenerateTrajectoriesParallel:
         for proc in processList:
             proc.wait()
         return cmdList
+
+class ExcuteCodeOnConditionsParallel:
+    def __init__(self, codeFileName):
+        self.codeFileName = codeFileName
+
+    def __call__(self, conditions):
+        cmdList = [['python3', self.codeFileName, json.dumps(condition)]
+                for condition in conditions]
+        print(cmdList)
+        processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
+        for proc in processList:
+            proc.wait()
+        return cmdList
