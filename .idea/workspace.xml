@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/env/xmls/leased.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/xmls/leased.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/infer2ObjectsContinChasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/infer2ObjectsContinChasing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/sampleLeasedChasingTraj.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/sampleLeasedChasingTraj.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/visualizeContinuousChasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/visualizeContinuousChasing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/episode.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/episode.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousTransition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/inferChasing/inference.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/inference.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/visualize/continuousVisualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualize/continuousVisualization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/visualize/inferenceVisualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualize/inferenceVisualization.py" afterDir="false" />
-    </list>
+    <list default="true" id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,16 +54,16 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousTransition.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="460">
-                  <caret line="26" column="46" lean-forward="true" selection-start-line="26" selection-start-column="46" selection-end-line="26" selection-end-column="46" />
+                <state relative-caret-position="320">
+                  <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
                 </state>
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="true">
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/exec/inferMCTSLeasedChasing.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1320">
+                <state relative-caret-position="591">
                   <caret line="60" column="92" lean-forward="true" selection-start-line="60" selection-start-column="92" selection-end-line="60" selection-end-column="92" />
                   <folding>
                     <element signature="e#0#10#0" expanded="true" />
@@ -121,10 +108,10 @@
               </provider>
             </entry>
           </file>
-          <file pinned="false" current-in-tab="false">
+          <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="345">
+                <state relative-caret-position="333">
                   <caret line="98" column="31" lean-forward="true" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
                   <folding>
                     <element signature="e#1401#2571#0" />
@@ -624,7 +611,7 @@
       <workItem from="1562975142081" duration="34495000" />
       <workItem from="1563297484652" duration="204000" />
       <workItem from="1563297717574" duration="415000" />
-      <workItem from="1563298153221" duration="105379000" />
+      <workItem from="1563298153221" duration="105690000" />
     </task>
     <servers />
   </component>
@@ -661,7 +648,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="329545000" />
+    <option name="totallyTimeSpent" value="329856000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -674,14 +661,13 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17363112" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2204611" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.24167694" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4963977" visible="true" weight="0.1430333" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.4963977" visible="true" weight="0.27496916" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.21701603" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -1328,16 +1314,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="98" column="31" lean-forward="true" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
-          <folding>
-            <element signature="e#1401#2571#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/infer3ObjectsContinChasing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="313">
@@ -1378,19 +1354,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousTransition.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="460">
-          <caret line="26" column="46" lean-forward="true" selection-start-line="26" selection-start-column="46" selection-end-line="26" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/inferMCTSLeasedChasing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1320">
+        <state relative-caret-position="591">
           <caret line="60" column="92" lean-forward="true" selection-start-line="60" selection-start-column="92" selection-end-line="60" selection-end-column="92" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousTransition.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="320">
+          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="333">
+          <caret line="98" column="31" lean-forward="true" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
+          <folding>
+            <element signature="e#1401#2571#0" />
           </folding>
         </state>
       </provider>
