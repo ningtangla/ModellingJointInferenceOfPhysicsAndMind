@@ -121,7 +121,7 @@ def main():
     trainMaxRunningSteps = 20
 
 
-    evalNumTrials = 20  # 1000
+    evalNumTrials = 1000  # 1000
     evalMaxRunningSteps = 20
 
 

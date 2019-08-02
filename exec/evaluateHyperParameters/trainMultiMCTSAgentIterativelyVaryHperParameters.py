@@ -35,6 +35,7 @@ class TrainMultiMCTSAgentParallel:
             splitTrainIndexes=np.append(splitTrainIndexes,numTrain)
         for cmdIndex in range(len(splitTrainIndexes)-1):
             processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList[splitTrainIndexes[cmdIndex]:splitTrainIndexes[cmdIndex+1]]]
+            print(cmdList)
             for proc in processList:
                 proc.wait()
         return cmdList
@@ -48,9 +49,9 @@ def main():
     # Mujoco environment
     print('start')
     manipulatedHyperVariables = OrderedDict()
-    manipulatedHyperVariables['miniBatchSize'] = [64, 32]  # [64, 128, 256]
-    manipulatedHyperVariables['learningRate'] = [1e-3, 1e-5]  # [1e-2, 1e-3, 1e-4]
-    manipulatedHyperVariables['numSimulations'] = [5,10] #[50, 100, 200]
+    manipulatedHyperVariables['miniBatchSize'] =  [64, 128, 256]
+    manipulatedHyperVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedHyperVariables['numSimulations'] = [50, 100, 200]
     evluateVariables=manipulatedHyperVariables.copy()
     #numSimulations = manipulatedHyperVariables['numSimulations']
     levelNames = list(manipulatedHyperVariables.keys())
@@ -81,22 +82,22 @@ def main():
     #     preTrainCmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     #     print(preTrainCmdList)
 
-    [generateTrajectoriesParallel({'iterationIndex': 0,'numSimulations':numSimulations})
-                    for numSimulations in  manipulatedHyperVariables['numSimulations']]
+    # [generateTrajectoriesParallel({'iterationIndex': 0,'numSimulations':numSimulations})
+    #                 for numSimulations in  manipulatedHyperVariables['numSimulations']]
     print('Finish ParallelTrajectoriesGenerate')
 
     print('Strat TrainingMultiMCTSVaryHyperParameters')
     trainOneConditionFileName='trainMultiMCTSforOneCondition.py'
     trainMultiMCTSAgentParallel=TrainMultiMCTSAgentParallel(trainOneConditionFileName,numCpuToUse)
-    trainCmdList=trainMultiMCTSAgentParallel(hyperVariablesConditionlist)
-    print(trainCmdList)
+    # trainCmdList=trainMultiMCTSAgentParallel(hyperVariablesConditionlist)
+    #print(trainCmdList)
     print('Finish TrainingMultiMCTSVaryHyperParameters')
 
 
     print('Strat EvaluateMultiMCTSVaryHyperParameters')
     # Evaluate Session
 
-    evluateVariables['iterationIndex']=[0,5,10]
+    evluateVariables['iterationIndex']=[0,200,400,600,800]
     evluateLevelNames = list(evluateVariables.keys())
     evluatelevelValues = list(evluateVariables.values())
     evaluateModelIndex = pd.MultiIndex.from_product(evluatelevelValues, names=evluateLevelNames)
@@ -105,7 +106,7 @@ def main():
 
 
     #genarate trajectories
-    evalNumTrials = 10#1000
+    evalNumTrials = 1000#1000
     generateTrajectoriesCodeName = 'generateTrajByNNWolfAndStationarySheepMujoco.py'
     numToUseCores = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,

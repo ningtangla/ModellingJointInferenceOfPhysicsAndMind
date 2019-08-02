@@ -278,8 +278,8 @@ def main():
     replayBuffer = []
 
     restoredIteration = 0
-    modelSaveFrequence=5
-    numIterations = 21
+    modelSaveFrequence=100
+    numIterations = 2001
     for restoreIndex in range(restoredIteration + 1, numIterations):
         restoreTrajectoryPathParameters = {'iterationIndex': restoreIndex}
         trajectoryRestorePath = generateTrajectorySavePath(restoreTrajectoryPathParameters)
