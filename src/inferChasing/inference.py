@@ -13,6 +13,7 @@ class ObserveStateOnly:
         currentState = self.trajectory[timeStep]
         return currentState
 
+
 class Observe:
     def __init__(self, stateIndex, trajectory):
         self.stateIndex = stateIndex
@@ -22,6 +23,19 @@ class Observe:
         if timeStep >= len(self.trajectory):
             return None
         currentState = self.trajectory[timeStep][self.stateIndex]
+        return currentState
+
+
+class ObserveWithRope:
+    def __init__(self, stateIndex, trajectory, sheepWolfMasterIndex = 3):
+        self.stateIndex = stateIndex
+        self.trajectory = trajectory
+        self.sheepWolfMasterIndex = sheepWolfMasterIndex
+
+    def __call__(self, timeStep):
+        if timeStep >= len(self.trajectory):
+            return None
+        currentState = self.trajectory[timeStep][0][self.stateIndex][:self.sheepWolfMasterIndex]
         return currentState
 
 
@@ -57,6 +71,7 @@ class InferOneStep:
 
         actionsIntegratedOut = list(mindsPhysicsActionsDf.groupby([self.mindName, self.physicsName])[
             'jointLikelihood'].transform('sum'))
+        # print(mindsPhysicsActionsDf.groupby([self.mindName, self.physicsName])['jointLikelihood'].transform('sum'))
 
         priorLikelihoodPair = zip(mindsPhysicsPrior, actionsIntegratedOut)
         posteriorUnnormalized = [prior * likelihood for prior, likelihood in priorLikelihoodPair]
@@ -118,7 +133,7 @@ class InferContinuousChasingAndDrawDemo:
         self.inferOneStep = inferOneStep
         self.visualize = visualize
 
-    def __call__(self, mindsPhysicsPrior):
+    def __call__(self, numOfAgents, mindsPhysicsPrior):
         currentState = self.observe(0)
         nextTimeStep = 1
         mindsPhysicsActionsDf = pd.DataFrame(index = self.inferenceIndex)
@@ -132,7 +147,9 @@ class InferContinuousChasingAndDrawDemo:
 
             if self.visualize:
                 fpsClock.tick(self.fps)
-                self.visualize(currentState, nextState, mindsPhysicsPrior)
+                agentsCurrentState = currentState[:numOfAgents]
+                agentsNextState = nextState[:numOfAgents]
+                self.visualize(agentsCurrentState, agentsNextState, mindsPhysicsPrior)
 
             mindsPhysicsPosterior = self.inferOneStep(currentState, nextState, mindsPhysicsPrior)
 

@@ -6,10 +6,9 @@ import numpy as np
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
 from src.inferChasing.continuousPolicy import RandomPolicy
@@ -21,19 +20,18 @@ def main():
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
-    initQPos = np.array([1,1,2,2,-4,-4] + [0]*18)
-    physicsSimulation.data.qpos[:] = initQPos
-    physicsSimulation.step()
-    physicsSimulation.forward()
+    # initQPos = np.array([1,1,2,2,-4,-4] + [0]*18)
+    # physicsSimulation.data.qpos[:] = initQPos
+    # physicsSimulation.step()
+    # physicsSimulation.forward()
 
     # action = np.array([0,0,-1,-1,0,0])
     # physicsSimulation.data.ctrl[:] = action
     # physicsViewer = mujoco.MjViewer(physicsSimulation)
-    numSimulationFrames = 100
+    numSimulationFrames = 20
     # initQPos = np.array([9,-9, 4, 4, -4,-4] + [0]*18)
-    initQPos = np.array([1,1, 0, 0, -1,-1] + [0]*18)
 
-    physicsSimulation.data.qpos[:] = initQPos
+    # physicsSimulation.data.qpos[:] = initQPos
     # for frameIndex in range(numSimulationFrames):
     #     physicsSimulation.step()
     #     physicsSimulation.forward()
@@ -49,10 +47,17 @@ def main():
 
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-    numAgent = 3
     initQVel = (0,) * 24
-    reset = ResetUniform(physicsSimulation, initQPos, initQVel, numAgent)
+    initQPos = np.array([1,1, 0, 0, -1,-1] + [0]*18)
 
+    qPosInitNoise = 7
+    qVelInitNoise = 5
+    numAgent = 3
+    tiedAgentId = [1, 2]
+    ropeParaIndex = list(range(3, 12))
+    maxRopePartLength = 0.25
+    reset = ResetUniform(physicsSimulation, initQPos, initQVel, numAgent)
+    print('reset', reset())
     # sample trajectory
     maxRunningSteps = 20        # max possible length of the trajectory/episode
     sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
@@ -86,7 +91,7 @@ def main():
 
     trajectory = sampleTrajectory(policy)
     dataIndex = 5
-    dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedTraj'+ str(dataIndex) + '.pickle')
+    dataPath = os.path.join(dirName, '..', 'trainedData', 'NNleasedTraj'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 
 

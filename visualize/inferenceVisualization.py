@@ -108,8 +108,9 @@ class DrawInferenceResultWithPull:
 
 
 class DrawContinuousInferenceResultNoPull:
-    def __init__(self, inferenceIndex, drawState, scaleState,
+    def __init__(self, numOfAgents, inferenceIndex, drawState, scaleState,
                  colorChasingPoints, adjustFPS, saveImage):
+        self.numOfAgents = numOfAgents
         self.inferenceIndex = inferenceIndex
         self.drawState = drawState
         self.scaleState = scaleState
@@ -131,7 +132,7 @@ class DrawContinuousInferenceResultNoPull:
         positionsList = self.adjustFPS(currentPosition, nextPosition)
 
         for positionIndex in range(len(positionsList)):
-            screen = self.drawState(positionsList[positionIndex], circleColorList)
+            screen = self.drawState(self.numOfAgents, positionsList[positionIndex], circleColorList)
             if self.saveImage is not None:
                 self.saveImage(screen)
 

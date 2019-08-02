@@ -5,7 +5,7 @@ DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-from src.inferChasing.continuousPolicy import ThreeAgentsPolicy, RandomPolicy
+from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForNN, RandomPolicy
 from src.inferChasing.continuousTransition import TransitTwoMassPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
     InferContinuousChasingAndDrawDemo
@@ -83,7 +83,7 @@ def main():
 
     randomPolicy = RandomPolicy(actionSpace)
 
-    policy = ThreeAgentsPolicy(wolfPolicy, sheepPolicy, randomPolicy)
+    policy = ThreeAgentsPolicyForNN(wolfPolicy, sheepPolicy, randomPolicy)
 
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
@@ -149,7 +149,7 @@ def main():
 
     imageFolderName = '3ObjectsInfDemo' + str(dataIndex)
     saveImage = SaveImage(imageFolderName)
-    drawInferenceResult = DrawContinuousInferenceResultNoPull(inferenceIndex,
+    drawInferenceResult = DrawContinuousInferenceResultNoPull(numOfAgents, inferenceIndex,
                 drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
 
     thresholdPosterior = 1.5
@@ -164,7 +164,7 @@ def main():
                                                                           drawInferenceResult)
 
     mindsPhysicsPrior = [1 / len(inferenceIndex)] * len(inferenceIndex)
-    posteriorDf = inferContinuousChasingAndDrawDemo(mindsPhysicsPrior)
+    posteriorDf = inferContinuousChasingAndDrawDemo(numOfAgents, mindsPhysicsPrior)
 
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')

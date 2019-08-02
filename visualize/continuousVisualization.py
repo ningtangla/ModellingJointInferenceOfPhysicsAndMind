@@ -116,9 +116,8 @@ class DrawState:
         self.xIndex, self.yIndex = positionIndex
         self.drawBackGround = drawBackGround
 
-    def __call__(self, state, circleColorList):
+    def __call__(self, numOfAgent, state, circleColorList):
         self.drawBackGround()
-        numOfAgent = len(state)
         for agentIndex in range(numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
             agentColor = circleColorList[agentIndex]
@@ -134,13 +133,13 @@ class ChaseTrialWithTraj:
         self.drawState = drawState
         self.saveImage = saveImage
 
-    def __call__(self, trajectoryData, imagePath):
+    def __call__(self, numOfAgents, trajectoryData, imagePath):
         fpsClock = pg.time.Clock()
 
         for timeStep in range(len(trajectoryData)):
             state = trajectoryData[timeStep]
             fpsClock.tick(self.fps)
-            screen = self.drawState(state, self.colorSpace)
+            screen = self.drawState(numOfAgents, state, self.colorSpace)
 
             if self.saveImage == True:
                 pg.image.save(screen, imagePath + '/' + format(timeStep, '04') + ".png")

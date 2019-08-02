@@ -6,7 +6,7 @@ sys.path.append(os.path.join(DIRNAME, '..'))
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
-from src.inferChasing.inference import Observe
+from src.inferChasing.inference import ObserveWithRope, Observe
 from exec.trajectoriesSaveLoad import loadFromPickle
 from visualize.continuousVisualization import ScaleTrajectory, AdjustDfFPStoTraj,\
     DrawBackground, DrawState, ChaseTrialWithTraj
@@ -19,13 +19,17 @@ pd.set_option('display.max_columns', None)
 
 def main():
     dirName = os.path.dirname(__file__)
-    dataIndex = 101
-    dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedTraj'+ str(dataIndex) + '.pickle')
+    dataIndex = 3
+    dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedMCTSTraj'+ str(dataIndex) + '.pickle')
+    # dataIndex = 13
+    # dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
 
     trajectory = loadFromPickle(dataPath)
 
     stateIndex = 0
+    # observe = ObserveWithRope(stateIndex, trajectory)
     observe = Observe(stateIndex, trajectory)
+    print(observe(1))
 
     fullScreen = False
     screenWidth = 800
@@ -67,12 +71,13 @@ def main():
     currentDir = os.getcwd()
     parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
     imageFolderName = 'leasedObjectsDemo' + str(dataIndex)
+    # print(positionListToDraw)
 
     saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), imageFolderName)
     if not os.path.exists(saveImageDir):
         os.makedirs(saveImageDir)
 
-    chaseTrial(positionListToDraw, saveImageDir)
+    chaseTrial(numberOfAgents, positionListToDraw, saveImageDir)
 
 
 if __name__ == '__main__':

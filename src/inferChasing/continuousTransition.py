@@ -23,4 +23,8 @@ class TransitConstantPhysics:
     def __call__(self, physics, state, allAgentsActions, nextState):
         agentsNextIntendedState = self.transitAgents(state, allAgentsActions)
         transitionLikelihood = 1 if np.all(agentsNextIntendedState == nextState) else 0
+        if transitionLikelihood == 1:
+            print('transition-----------------------------------------------------')
+        else:
+            print('transition = 0')
         return transitionLikelihood
