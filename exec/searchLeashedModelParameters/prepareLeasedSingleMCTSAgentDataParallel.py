@@ -10,6 +10,7 @@ import numpy as np
 from collections import OrderedDict, deque
 import pandas as pd
 import mujoco_py as mujoco
+import itertools as it
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
@@ -26,54 +27,33 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import  SampleTrajectory, chooseGreedyAction
-from exec.parallelComputing import GenerateTrajectoriesParallel
+from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
 
 
 
 def main():
-    dirName = os.path.dirname(__file__)
-    # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
-
-    if not os.path.exists(trajectoriesSaveDirectory):
-        os.makedirs(trajectoriesSaveDirectory)
-
-    sheepId = 0
-    wolfId = 1
-
     startTime = time.time()
 
-    numTrajectories = 4000
+    # manipulated variables
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['tendonStiffness'] = [10]
+    manipulatedVariables['tendonDamping'] =  [0.7]
+    manipulatedVariables['maxTendonLength'] = [0.6]
+    manipulatedVariables['predatorMass'] = [10]
+    manipulatedVariables['draggerMass'] = [8, 10, 12]
+    manipulatedVariables['predatorPower'] = [1, 1.3, 1.6]
+
+    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
-    numCpuCores = os.cpu_count()
-    print(numCpuCores)
-    numCpuToUse = int(0.5*numCpuCores)
-    numCmdList = min(numTrajectories, numCpuToUse)
 
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
-
-    killzoneRadius = 2
-    maxRunningSteps = 25
-    numSimulations = 100
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-    trajectorySaveExtension = '.pickle'
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+    generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName)
 
     print("start")
-    trainableAgentIds = [wolfId]
-    for agentId in trainableAgentIds:
-        print("agent {}".format(agentId))
-        pathParameters = {'agentId': agentId}
-
-        cmdList = generateTrajectoriesParallel(pathParameters)
-        # print(cmdList)
-        trajectories = loadTrajectoriesForParallel(pathParameters)
-        # import ipdb; ipdb.set_trace()
+    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
+    # import ipdb; ipdb.set_trace()
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
