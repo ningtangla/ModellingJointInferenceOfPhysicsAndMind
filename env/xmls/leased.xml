@@ -172,26 +172,26 @@
         <motor gear="10" joint="prey0"/>
         <motor gear="10" joint="prey1"/>
 
-   	<motor gear="10" joint="predator0"/>
+        <motor gear="10" joint="predator0"/>
         <motor gear="10" joint="predator1"/>
 
         <motor gear="10" joint="dragger0"/>
         <motor gear="10" joint="dragger1"/>
-	
+
     </actuator>
- 
+
 
     <contact>
 
 
         <exclude body1="prey" body2="middle1"/>
-	<exclude body1="prey" body2="middle2"/>
+    	<exclude body1="prey" body2="middle2"/>
         <exclude body1="prey" body2="middle3"/>
-	<exclude body1="prey" body2="middle4"/>
+    	<exclude body1="prey" body2="middle4"/>
         <exclude body1="prey" body2="middle5"/>
-	<exclude body1="prey" body2="middle6"/>
+    	<exclude body1="prey" body2="middle6"/>
         <exclude body1="prey" body2="middle7"/>
-	<exclude body1="prey" body2="middle8"/>
+    	<exclude body1="prey" body2="middle8"/>
         <exclude body1="prey" body2="middle9"/>
 
     </contact>
