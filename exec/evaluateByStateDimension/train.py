@@ -27,12 +27,14 @@ def dictToFileName(parameters):
 class GenerateTrainedModel:
 
     def __init__(self, getSavePathForModel, getSavePathForDataSet,
-                 getGenerateModel, generateTrain, generateLRModifier):
+                 getGenerateModel, generateTrain, generateLRModifier,
+                 generateReporter):
         self.getSavePathForModel = getSavePathForModel
         self.generateTrain = generateTrain
         self.getGenerateModel = getGenerateModel
         self.getSavePathForDataSet = getSavePathForDataSet
         self.generateLRModifier = generateLRModifier
+        self.generateReporter = generateReporter
 
     def __call__(self, df):
         batchSize = df.index.get_level_values('batchSize')[0]
@@ -67,7 +69,8 @@ class GenerateTrainedModel:
                               [neuronsPerLayer] * valueLayers)
         if not os.path.exists(saveModelDir):
             lrModifier = self.generateLRModifier(learningRate)
-            train = self.generateTrain(trainingStep, batchSize, lrModifier)
+            reporter = self.generateReporter(trainingStep)
+            train = self.generateTrain(trainingStep, batchSize, lrModifier, reporter)
             trainedModel = train(model, trainData)
             net.saveVariables(trainedModel, modelPath)
         return pd.Series({"train": 'done'})
@@ -93,12 +96,12 @@ def main():
     coefficientController = trainTools.CoefficientCotroller(
         initActionCoefficient, initValueCoefficient)
     reportInterval = 1000
-    reporter = trainTools.TrainReporter(reportInterval)
+    generateReporter = lambda maxStep: trainTools.TrainReporter(maxStep, reportInterval)
     decayRate = 1
     decayStep = 1
     generateLRModifier = lambda initLearningRate: trainTools.LearningRateModifier(
         initLearningRate, decayRate, decayStep)
-    generateTrain = lambda trainingStep, batchSize, lrModifier: net.Train(
+    generateTrain = lambda trainingStep, batchSize, lrModifier, reporter: net.Train(
         trainingStep, batchSize, net.sampleData, lrModifier,
         trainTerminalController, coefficientController, reporter)
 
@@ -137,7 +140,8 @@ def main():
                                                   getDataSavePath,
                                                   getGenerateModel,
                                                   generateTrain,
-                                                  generateLRModifier)
+                                                  generateLRModifier,
+                                                  generateReporter)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput)
 
 
