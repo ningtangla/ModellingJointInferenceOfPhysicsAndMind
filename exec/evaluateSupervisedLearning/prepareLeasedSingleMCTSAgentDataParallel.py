@@ -50,7 +50,7 @@ def main():
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.75*numCpuCores)
+    numCpuToUse = int(0.5*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
@@ -60,7 +60,7 @@ def main():
     numSimulations = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)    
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
@@ -74,7 +74,7 @@ def main():
         # print(cmdList)
         trajectories = loadTrajectoriesForParallel(pathParameters)
         # import ipdb; ipdb.set_trace()
-    
+
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
