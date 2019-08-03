@@ -17,32 +17,38 @@ def getFileName(parameters,fixedParameters):
     allParameters = dict(list(parameters.items()) + list(fixedParameters.items()))
     sortedParameters = sorted(allParameters.items())
     nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
-
     fileName = '_'.join(nameValueStringPairs)
 
     return fileName
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['draggerMass'] = [8, 10, 12]
-    manipulatedVariables['maxTendonLength'] = [0.6]
-    manipulatedVariables['predatorMass'] = [10]
-    manipulatedVariables['tendonDamping'] =[0.7]
-    manipulatedVariables['tendonStiffness'] = [10]
+
+    # manipulatedVariables['draggerMass'] = [8, 10, 12]
+    # manipulatedVariables['maxTendonLength'] = [0.6]
+    # manipulatedVariables['predatorMass'] = [10]
+    # manipulatedVariables['predatorPower'] = [1, 1.3, 1.6]
+    # manipulatedVariables['tendonDamping'] =[0.7]
+    # manipulatedVariables['tendonStiffness'] = [10]
+
+    manipulatedVariables['agentId'] = [1]
+    manipulatedVariables['killzoneRadius'] = [2]
+    manipulatedVariables['maxRunningSteps'] = [25]
+    manipulatedVariables['numSimulations'] = [100]
 
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
-    agentId = 1
-
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchLeashedModelParameters','leasedTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','leasedTrajectories')
+
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
-
+    agentId = 1
     stateIndex = 0
     getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0][stateIndex])[0]))
     getRangeTrajectoryLength = lambda trajectory: list(range(len(trajectory)))
@@ -50,38 +56,30 @@ def main():
 
     getAgentPosXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 0)
     getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
-    getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 2)
-    getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 3)
+    getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 4)
+    getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 5)
     extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord,
                            'yVel': getAgentVelYCoord}
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
 
 
-####
-
+#### convert traj pickle to df
     for conditionParameters in conditionParametersAll:
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
 
-        numTrajectoryChoose = min(numTrajectories,10)
+        numTrajectoryChoose = min(numTrajectories, 10)
         selectedTrajectories = trajectories[0:numTrajectoryChoose]
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
-
-
 
         dataFileName = getFileName(conditionParameters,trajectoryFixedParameters)
         imageSavePath = os.path.join(trajectoryDirectory, dataFileName)
         if not os.path.exists(imageSavePath):
             os.makedirs(imageSavePath)
 
-        [saveToPickle(df, os.path.join(imageSavePath,
-                                        'sampleIndex={}.pickle'.format(sampleIndex)))
-
-         for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
-
+        [saveToPickle(df, os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(sampleIndex))) for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
 
 ### generate demo image
-
         screenWidth = 800
         screenHeight = 800
         fullScreen = False
@@ -102,7 +100,6 @@ def main():
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
 
         for index in range(numTrajectoryChoose):
-
             imageFolderName = "{}".format(index)
             saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
 
@@ -115,15 +112,13 @@ def main():
             scaledYRange = [200, 600]
             scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-            oldFPS = 5
+            oldFPS = 7
             adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
             getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
-
             trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
             trajectory = getTrajectory(trajectoryDf)
             chaseTrial(trajectory)
-
 
 if __name__ == '__main__':
     main()

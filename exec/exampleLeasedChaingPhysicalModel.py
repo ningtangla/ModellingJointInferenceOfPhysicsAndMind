@@ -16,12 +16,14 @@ def main():
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'leased.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    init = [[0, 0], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
+    init = [[-3, -5], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
     physicsSimulation = mujoco.MjSim(physicsModel)
-    #physicsSimulation.model.body_pos[-12: , :2] = init
+    physicsSimulation.model.body_pos[-12: , :2] = init
+    #physicsSimulation.model.body_mass[8] = 10000
+    #physicsSimulation.model.tendon_range[:] = [[0, 0.7]]*10
     #physicsSimulation.data.body_xpos[-12: , :2] = init
-    physicsSimulation.data.qpos[:] = np.array(init).flatten()
-    #physicsSimulation.set_constants()
+    #physicsSimulation.data.qpos[:] = np.array(init).flatten()
+    physicsSimulation.set_constants()
     print(physicsSimulation.model.body_pos)
     print(physicsSimulation.data.body_xpos)
     print(physicsSimulation.data.qpos)
@@ -53,7 +55,7 @@ def main():
     numSimulationFrames = 10000
     for frameIndex in range(numSimulationFrames):
         if frameIndex > 500:
-            action = np.array([0, 0, 1, 1, 0, 0])
+            action = np.random.uniform(-10, 10, 6)
             physicsSimulation.data.ctrl[:] = action
         physicsSimulation.step()
         physicsSimulation.forward()
