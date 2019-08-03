@@ -34,13 +34,13 @@ from exec.preProcessing import AccumulateRewards
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateTrajectories')
+                                       'evaluateLeashedTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
-    trainMaxRunningSteps = 20
-    trainNumSimulations = 100
+    trainMaxRunningSteps = 25
+    trainNumSimulations = 200
     killzoneRadius = 2
     wolfId = 1
     trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
@@ -56,7 +56,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
         numAgents = 2
@@ -85,11 +85,13 @@ def main():
 
         # neural network init and save path
         numStateSpace = 72
+        numSheepStateSpace = 12
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+        generateSheepModel = GenerateModel(numSheepStateSpace, numActionSpace, regularizationFactor)
 
 
         NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
@@ -101,20 +103,22 @@ def main():
 
         depth = int(parametersForTrajectoryPath['depth'])
         initNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        initSheepNNModel = generateSheepModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
-        evalQPosInitNoise = 0
-        evalQVelInitNoise = 0
-        qVelInit = [0, 0, 0, 0]
-
-        getResetFromQPosInitDummy = lambda qPosInit: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
+        # sample trajectory
+        qPosInit = (0, ) * 24
+        qVelInit = (0, ) * 24
+        qPosInitNoise = 7
+        qVelInitNoise = 5
+        numAgent = 3
+        tiedAgentId = [1, 2]
+        ropeParaIndex = list(range(3, 12))
+        maxRopePartLength = 0.25
 
         evalNumTrials = 1000
-        generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
-        evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
-        evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
-        getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
-                                                       numAgents, evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
+                ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
         evalMaxRunningSteps = 20
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
@@ -122,7 +126,7 @@ def main():
         # sheep model
         sheepPreTrainModelPath = os.path.join(dirName, '..', '..', 'data',
                                         'preTrainNNModel', 'sheepModel', 'agentId=1_iterationIndex=-2_killzoneRadius=2_maxRunningSteps=20_numSimulations=200')
-        sheepPreTrainModel = restoreVariables(initNNModel, sheepPreTrainModelPath)
+        sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
         sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
         # save evaluation trajectories

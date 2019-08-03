@@ -45,6 +45,8 @@ def main():
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
     manipulatedVariables['depth'] = [2 ,4, 6, 8]
+    manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
+
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -66,7 +68,7 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 # generate trajectory parallel
-    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
+    generateTrajectoriesCodeName = 'generateLeashedWolfEvaluationTrajectory.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5 * numCpuCores)
@@ -79,14 +81,14 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
-    trainMaxRunningSteps = 20
-    trainNumSimulations = 100
+    trainMaxRunningSteps = 25
+    trainNumSimulations = 200
     killzoneRadius = 2
     trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 

@@ -34,7 +34,7 @@ from exec.preProcessing import AccumulateRewards
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateTrajectories')
+                                       'evaluateLeashedTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 

@@ -180,7 +180,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # train models for all conditions
