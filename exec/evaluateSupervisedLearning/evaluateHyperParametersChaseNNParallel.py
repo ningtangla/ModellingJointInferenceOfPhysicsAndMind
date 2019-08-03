@@ -32,7 +32,7 @@ from exec.evaluationFunctions import ComputeStatistics
 def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
-        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='mean', yerr='std',
+        grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
 
 
@@ -129,6 +129,7 @@ def main():
             axForDraw.plot(trainStepsLevels, [0.5409] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
+    plt.suptitle('ChaseNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 

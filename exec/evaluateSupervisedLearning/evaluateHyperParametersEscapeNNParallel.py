@@ -130,6 +130,7 @@ def main():
 
             plotCounter += 1
 
+    plt.suptitle('EscapeNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 
