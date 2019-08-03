@@ -85,7 +85,7 @@ def main():
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
     dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                    'trajectories')
+                                    'leasedTrajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
@@ -161,7 +161,7 @@ def main():
     terminalController = lambda evalDict, numSteps: False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 10000
-    trainStepsIntervel = 20000
+    trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
@@ -179,7 +179,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(6))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # train models for all conditions

@@ -26,7 +26,7 @@ import numpy as np
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 2
-    numSimulations = 100
+    numSimulations = 200
     maxRunningSteps = 25
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
