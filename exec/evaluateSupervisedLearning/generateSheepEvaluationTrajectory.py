@@ -121,7 +121,12 @@ def main():
         modelPath = getNNModelSavePath(manipulatedVariables)
         restoredModel = restoreVariables(initNNModel, modelPath)
         sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-        wolfPolicy = stationaryAgentPolicy
+        
+        initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'preTrainBaseline',
+                                            'wolfModels','agentId=1_depth=4_learningRate=0.001_maxRunningSteps=20_miniBatchSize=256_numSimulations=100_trainSteps=40000')
+        restoredWolfModel = restoreVariables(initWolfNNModel, wolfNNModelPath)
+        wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
         beginTime = time.time()
