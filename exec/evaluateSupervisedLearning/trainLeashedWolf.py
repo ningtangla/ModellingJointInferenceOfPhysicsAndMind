@@ -139,7 +139,7 @@ def main():
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
     # neural network init and save path
-    numStateSpace = 72
+    numStateSpace = 18
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
