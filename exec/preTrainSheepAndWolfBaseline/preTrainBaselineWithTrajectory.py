@@ -122,7 +122,9 @@ def main():
     model = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
 
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
-    print(trainDataMeanAccumulatedReward)
+    std = np.std([tra[0][3] for tra in valuedTrajectories])
+
+    print(trainDataMeanAccumulatedReward, std)
 
     # function to train NN model
     batchSize = 256

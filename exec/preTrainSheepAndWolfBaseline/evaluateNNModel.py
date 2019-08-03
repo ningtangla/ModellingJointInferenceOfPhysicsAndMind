@@ -42,7 +42,7 @@ def main():
     manipulatedVariables = OrderedDict()
     # manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     # manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] =[0, 20000, 40000, 60000, 80000, 100000]
+    manipulatedVariables['trainSteps'] =[20000]
     # manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
@@ -74,9 +74,9 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
                                                                 evalNumTrials, numCmdList)
 
-    # run all trials and save trajectories
-    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # # run all trials and save trajectories
+    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
