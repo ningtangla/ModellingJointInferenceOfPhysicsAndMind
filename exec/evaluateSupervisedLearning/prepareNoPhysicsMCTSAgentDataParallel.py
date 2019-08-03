@@ -11,7 +11,6 @@ from collections import OrderedDict, deque
 import pandas as pd
 import mujoco_py as mujoco
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -34,7 +33,7 @@ def main():
     dirName = os.path.dirname(__file__)
     # load save dir
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
+                                             'evaluateSupervisedLearningNoPhyscis', 'trajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
@@ -44,9 +43,9 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 10000
+    numTrajectories = 100000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSWolfTrajectory.py'
+    sampleTrajectoryFileName = 'sampleNoPhysicsMCTSSheepHeatseakingWolfTraj.py'
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
@@ -55,9 +54,9 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    killzoneRadius = 2
+    killzoneRadius = 25
     maxRunningSteps = 20
-    numSimulations = 100
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -65,7 +64,7 @@ def main():
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
-    trainableAgentIds = [wolfId]
+    trainableAgentIds = [sheepId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
