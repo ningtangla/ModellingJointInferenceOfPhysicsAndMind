@@ -91,7 +91,7 @@ def main():
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 25
-    dataSetNumSimulations = 100
+    dataSetNumSimulations = 200
     killzoneRadius = 2
 
     dataSetFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -179,7 +179,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # train models for all conditions
