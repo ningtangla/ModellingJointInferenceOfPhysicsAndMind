@@ -9,6 +9,21 @@ cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/
 # mkdir demo
 
+<<<<<<< HEAD
+for draggerMass in 8 10 12
+do
+    for maxTendonLength in  0.6
+    do
+        for predatorMass in 10
+        do
+            for tendonDamping in 0.7
+            do
+                for tendonStiffness in 10
+                do
+                    for index in 0 1 2
+                    do
+                        mkdir ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/draggerMass=${draggerMass}_maxTendonLength=${maxTendonLength}_predatorMass=${predatorMass}_tendonDamping=${tendonDamping}_tendonStiffness=${tendonStiffness}/demo
+=======
 # for draggerMass in 8 10 12
 # do
 #     for maxTendonLength in  0.6
@@ -24,6 +39,7 @@ cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
 #                         for index in 0 1 2
 #                         do
 #                             mkdir ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/draggerMass=${draggerMass}_maxTendonLength=${maxTendonLength}_predatorMass=${predatorMass}_predatorPower=${predatorPower}_tendonDamping=${tendonDamping}_tendonStiffness=${tendonStiffness}/demo
+>>>>>>> 40cbbbb77c98840ffb2e02ae812be2faa977d5cc
 
 #                             cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/draggerMass=${draggerMass}_maxTendonLength=${maxTendonLength}_predatorMass=${predatorMass}_predatorPower=${predatorPower}_tendonDamping=${tendonDamping}_tendonStiffness=${tendonStiffness}/${index}
 

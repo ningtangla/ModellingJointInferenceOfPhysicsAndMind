@@ -130,14 +130,16 @@ def main():
 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
-    trajectories = loadTrajectories(parameters={})
+    loadedTrajectories = loadTrajectories(parameters={})
+    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])
+    trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
     # neural network init and save path
-    numStateSpace = 72
+    numStateSpace = 18
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
@@ -171,8 +173,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                        'trainedModels')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

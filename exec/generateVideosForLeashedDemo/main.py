@@ -23,6 +23,7 @@ def getFileName(parameters,fixedParameters):
 
 def main():
     manipulatedVariables = OrderedDict()
+
     # manipulatedVariables['draggerMass'] = [8, 10, 12]
     # manipulatedVariables['maxTendonLength'] = [0.6]
     # manipulatedVariables['predatorMass'] = [10]
@@ -64,7 +65,6 @@ def main():
 
 #### convert traj pickle to df
     for conditionParameters in conditionParametersAll:
-        print(conditionParameters)
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
 
