@@ -66,12 +66,11 @@ def main():
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
-
 # generate trajectory parallel
     generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5 * numCpuCores)
+    numCpuToUse = int(0.8 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
                                                                 evalNumTrials, numCmdList)
@@ -122,7 +121,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            axForDraw.set_ylim(-1, 1)
+            axForDraw.set_ylim(0.2, 1.1)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
             drawPerformanceLine(group, axForDraw, depth)
             trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
@@ -130,7 +129,6 @@ def main():
 
             plotCounter += 1
 
-    plt.suptitle('EscapeNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 
