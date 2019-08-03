@@ -119,7 +119,7 @@ def main():
     miniBatchSize = int(parametersForPath['miniBatchSize'])
     learningRate = float(parametersForPath['learningRate'])
     numSimulations =int( parametersForPath['numSimulations'])
-
+    depth=4
     # Mujoco environment
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
@@ -231,12 +231,12 @@ def main():
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'RetestEvaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
+                                             'evaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'RetestEvaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
+                                        'evaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     fixedParametersforParallex={'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -255,7 +255,7 @@ def main():
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     trainOneAgent = TrainOneAgent(numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-    multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+    multiAgentNNmodel = [generateModel(sharedWidths*depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
     for agentId in trainableAgentIds:
         modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)

@@ -76,8 +76,8 @@ def main():
     iteration = parametersForPath['iterationIndex']
     miniBatchSize = int(parametersForPath['miniBatchSize'])
     learningRate = parametersForPath['learningRate']
-    numSimulations =int( parametersForPath['numSimulations'])
-
+    numSimulations = int( parametersForPath['numSimulations'])
+    depth = 4
 
     policyName = 'NNPolicy'
     NNModelPathParameter=parametersForPath.copy()
@@ -116,7 +116,7 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    initializedNNModel = generateModel(sharedWidths*depth, actionLayerWidths, valueLayerWidths)
 
     trainMaxRunningSteps = 20
 
@@ -128,7 +128,7 @@ def main():
     NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'RetestEvaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
+                                        'evaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
 
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
@@ -163,7 +163,7 @@ def main():
     allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
     # save evaluation trajectories
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'RetestEvaluateHyperParameters','evaluateNNPolicy', 'evaluationTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateHyperParameters','evaluateNNPolicy', 'evaluationTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
