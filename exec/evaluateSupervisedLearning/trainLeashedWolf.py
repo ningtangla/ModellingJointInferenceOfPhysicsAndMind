@@ -91,7 +91,7 @@ def main():
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 25
-    dataSetNumSimulations = 100
+    dataSetNumSimulations = 200
     killzoneRadius = 2
 
     dataSetFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -130,7 +130,9 @@ def main():
 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
-    trajectories = loadTrajectories(parameters={})
+    loadedTrajectories = loadTrajectories(parameters={})
+    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])
+    trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
