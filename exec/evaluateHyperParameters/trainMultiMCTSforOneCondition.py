@@ -231,12 +231,12 @@ def main():
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
+                                             'RetestEvaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'evaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
+                                        'RetestEvaluateHyperParameters', 'multiMCTSAgent', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     fixedParametersforParallex={'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}

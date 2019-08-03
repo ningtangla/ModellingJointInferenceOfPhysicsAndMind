@@ -38,7 +38,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
+                                             'RetestEvaluateHyperParameters', 'multiMCTSAgent', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
