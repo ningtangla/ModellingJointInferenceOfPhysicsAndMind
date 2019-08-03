@@ -40,7 +40,7 @@ def main():
 
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 20
-    trainNumSimulations = 100
+    trainNumSimulations = 200
     killzoneRadius = 2
     sheepId = 0
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
@@ -96,7 +96,7 @@ def main():
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
         depth = int(parametersForTrajectoryPath['depth'])
-        initNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        initNNModel = generateModel(sharedWidths * 2, actionLayerWidths * depth, valueLayerWidths)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         evalQPosInitNoise = 0

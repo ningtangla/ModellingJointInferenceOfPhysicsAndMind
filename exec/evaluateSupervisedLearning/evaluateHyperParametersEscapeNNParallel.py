@@ -44,7 +44,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
+    manipulatedVariables['trainSteps'] = [0, 40000, 80000, 120000]
     manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
@@ -88,7 +88,7 @@ def main():
     trajectoryExtension = '.pickle'
 
     trainMaxRunningSteps = 20
-    trainNumSimulations = 100
+    trainNumSimulations = 200
     killzoneRadius = 2
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
@@ -121,11 +121,11 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            axForDraw.set_ylim(0.2, 1.1)
+            axForDraw.set_ylim(0.2, 0.9)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
             drawPerformanceLine(group, axForDraw, depth)
             trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepLevels, [0.9708] * len(trainStepLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepLevels, [0.81] * len(trainStepLevels), label='mctsTrainData')
 
             plotCounter += 1
 
