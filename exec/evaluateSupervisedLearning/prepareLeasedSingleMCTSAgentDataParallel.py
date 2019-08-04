@@ -44,10 +44,10 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 4000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
+    # sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
+    sampleTrajectoryFileName = 'sampleMCTSSheepInLeashedWolfTraj.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
     numCpuToUse = int(0.5*numCpuCores)
@@ -65,7 +65,7 @@ def main():
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
-    trainableAgentIds = [wolfId]
+    trainableAgentIds = [sheepId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
