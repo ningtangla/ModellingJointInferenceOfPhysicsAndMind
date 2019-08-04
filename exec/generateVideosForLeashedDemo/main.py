@@ -31,24 +31,28 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [1]
-    manipulatedVariables['maxRunningSteps'] = [25]
-    manipulatedVariables['numSimulations'] = [200]
-    manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
-    manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
-    manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
+    # manipulatedVariables['agentId'] = [1]
+    # manipulatedVariables['maxRunningSteps'] = [25]
+    # manipulatedVariables['numSimulations'] = [200]
+    # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
+    # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
+    # manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
+    # manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
+
+    manipulatedVariables['heuristicWeightWallDis'] = [1]
+    manipulatedVariables['preyPowerRatio'] = [0.8]
 
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','evaluateLeashedTrajectories', 'mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchToWallHerustic', 'mctsSheep')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
+    # fuzzySearchParameterNames = ['sampleIndex']
+    fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     agentId = 1

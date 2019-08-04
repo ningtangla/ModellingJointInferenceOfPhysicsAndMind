@@ -44,5 +44,5 @@ class HeuristicDistanceToOtherAgentAndWall:
 
         toOtherAgentDistance = np.linalg.norm(predatorPos - preyPos, ord = 2)
         minDisToWall = np.min(np.array([np.abs(preyPos - self.wallDisToCenter), np.abs(preyPos + self.wallDisToCenter)]).flatten())
-        reward = - self.weightOtherAgentDis * toOtherAgentDistance - self.weightWallDis * 1/np.power(minDisToWall, 2)
+        reward = - self.weightOtherAgentDis * toOtherAgentDistance  - min(self.weightWallDis * 1/np.power(minDisToWall, 2), 1)
         return reward

@@ -37,7 +37,7 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['heuristicWeightWallDis'] = [0.5, 1, 2]
-    manipulatedVariables['preyPowerRatio'] = [0.4, 0.6, 0.8]
+    manipulatedVariables['preyPowerRatio'] =[0.4, 0.6, 0.8]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]

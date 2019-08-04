@@ -76,10 +76,6 @@ def main():
 
         numActionSpace = len(actionSpace)
 
-        alivePenalty = -0.05
-        deathBonus = 1
-        rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
-
         # neural network init and save path
         numStateSpace = 18
         numSheepStateSpace = 12
@@ -98,7 +94,7 @@ def main():
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
         qPosInitNoise = 7
-        qVelInitNoise = 5
+        qVelInitNoise = 0
         numAgent = 3
         tiedAgentId = [1, 2]
         ropeParaIndex = list(range(3, 12))
@@ -139,13 +135,13 @@ def main():
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeightToOtherAgent = -0.1
         rolloutHeuristicWeightToWall = float(parametersForTrajectoryPath['heuristicWeightWallDis'])
-        maxRolloutSteps = 7
+        maxRolloutSteps = 5
         wallDisToCenter = 10
         rolloutHeuristic = HeuristicDistanceToOtherAgentAndWall(rolloutHeuristicWeightToOtherAgent, rolloutHeuristicWeightToWall, wallDisToCenter, getWolfXPos, getSheepXPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
 
-        numSimulations = 200
+        numSimulations = 100
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
 
