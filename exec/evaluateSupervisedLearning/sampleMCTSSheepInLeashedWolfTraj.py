@@ -99,8 +99,8 @@ def main():
                                                             getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
-        aliveBonus = -0.05
-        deathPenalty = 1
+        aliveBonus = 0.05
+        deathPenalty = -1
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
