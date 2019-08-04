@@ -34,7 +34,7 @@ def main():
     dirName = os.path.dirname(__file__)
     # load save dir
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
+                                             'evaluateSupervisedLearning' ,'leashedSheepTrajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
