@@ -33,8 +33,8 @@ from exec.preProcessing import AccumulateRewards
 
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateLeashedTrajectories','mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchToWallHerustic',
+                                       'mctsSheep')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -42,14 +42,11 @@ def main():
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
     wolfId = 1
-    trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    trajectoryFixedParameters = {}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
@@ -58,8 +55,6 @@ def main():
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
-        numAgents = 2
-        agentIds = list(range(numAgents))
 
         sheepId = 0
         wolfId = 1
@@ -74,7 +69,7 @@ def main():
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         originActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        preyPowerRatio = float(parametersForTrajectoryPath['prayPowerRatio']
+        preyPowerRatio = float(parametersForTrajectoryPath['preyPowerRatio'])
         sheepActionSpace = list(map(tuple, np.array(originActionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         actionSpace = list(map(tuple, np.array(originActionSpace) * predatorPowerRatio))
@@ -95,14 +90,6 @@ def main():
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
         generateSheepModel = GenerateModel(numSheepStateSpace, numActionSpace, regularizationFactor)
 
-
-        NNFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
-
-        dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
-        NNModelSaveExtension = ''
-        getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
-
         initNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
         initSheepNNModel = generateSheepModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
@@ -120,12 +107,13 @@ def main():
         evalNumTrials = 3
         getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
-        evalMaxRunningSteps = 25
+        evalMaxRunningSteps = 50
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
-        modelPath = os.path.join('..', '..', 'data', 'evaluate')
+        modelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+
         restoredModel = restoreVariables(initNNModel, modelPath)
         wolfPolicy = ApproximatePolicy(restoredModel, actionSpace)
 
@@ -149,7 +137,7 @@ def main():
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-        rolloutHeuristicWeightToOtherAgent = 0.1
+        rolloutHeuristicWeightToOtherAgent = -0.1
         rolloutHeuristicWeightToWall = float(parametersForTrajectoryPath['heuristicWeightWallDis'])
         maxRolloutSteps = 7
         wallDisToCenter = 10
@@ -165,7 +153,7 @@ def main():
         policy = lambda state: [mcts(state), wolfPolicy(state[:3]), stationaryAgentPolicy(state)]
 
         beginTime = time.time()
-        trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
+        trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
         restoredModel.close()

@@ -33,7 +33,7 @@ class HeuristicDistanceToTarget:
 class HeuristicDistanceToOtherAgentAndWall:
     def __init__(self, weightOtherAgentDis, weightWallDis, wallDisToCenter, getPredatorPosition, getPreyPosition):
         self.weightOtherAgentDis = weightOtherAgentDis
-        self.weighiWallDis = weightWallDis
+        self.weightWallDis = weightWallDis
         self.wallDisToCenter = wallDisToCenter
         self.getPredatorPosition = getPredatorPosition
         self.getPreyPosition = getPreyPosition
@@ -43,7 +43,6 @@ class HeuristicDistanceToOtherAgentAndWall:
         preyPos = self.getPreyPosition(state)
 
         toOtherAgentDistance = np.linalg.norm(predatorPos - preyPos, ord = 2)
-        minDisToWall = np.min(np.array([np.abs(preyPos - self.wallDisToCenter), np.abs(preyPos + self.wallDisToCenter)]).flatten()) 
-        reward = - (self.weightOtherAgentDis * distance + self.weightWallDis * 1/np.power(minDisToWall, 2))
-
+        minDisToWall = np.min(np.array([np.abs(preyPos - self.wallDisToCenter), np.abs(preyPos + self.wallDisToCenter)]).flatten())
+        reward = - self.weightOtherAgentDis * toOtherAgentDistance - self.weightWallDis * 1/np.power(minDisToWall, 2)
         return reward
