@@ -26,7 +26,7 @@ def main():
     # manipulated variables and other important parameters
     killzoneRadius = 25
     numSimulations = 200
-    maxRunningSteps = 20
+    maxRunningSteps = 25
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -44,9 +44,8 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     # debug
-
     # startSampleIndex = 1
-    # endSampleIndex = 3
+    # endSampleIndex = 10
     # trajectorySavePath = generateTrajectorySavePath({'sampleIndex':(startSampleIndex, endSampleIndex)})
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
@@ -107,7 +106,7 @@ def main():
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
-        print(len(trajectories))
+        # print([len(tra) for tra in trajectories], np.mean([len(tra) for tra in trajectories]))
         saveToPickle(trajectories, trajectorySavePath)
 
 

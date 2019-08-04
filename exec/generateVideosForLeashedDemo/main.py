@@ -32,16 +32,19 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     manipulatedVariables['agentId'] = [1]
-    manipulatedVariables['killzoneRadius'] = [2]
     manipulatedVariables['maxRunningSteps'] = [25]
-    manipulatedVariables['numSimulations'] = [100]
+    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
+    manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
+    manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
 
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','leasedTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','evaluateLeashedTrajectories', 'mctsSheep')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
@@ -112,7 +115,7 @@ def main():
             scaledYRange = [200, 600]
             scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-            oldFPS = 7
+            oldFPS = 5
             adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
             getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
