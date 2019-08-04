@@ -85,7 +85,7 @@ def main():
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
     dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                    'leasedTrajectories')
+                                    'leashedSheepTrajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
@@ -171,7 +171,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
