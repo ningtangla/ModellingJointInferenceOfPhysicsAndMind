@@ -123,8 +123,8 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
+        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in sheepActionSpace}
+        initializeChildrenUniformPrior = InitializeChildren(sheepActionSpace, transitInSheepMCTSSimulation,
                                                             getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
@@ -132,10 +132,10 @@ def main():
         deathPenalty = -1
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
-        rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
+        rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeightToOtherAgent = -0.1
         rolloutHeuristicWeightToWall = float(parametersForTrajectoryPath['heuristicWeightWallDis'])
-        maxRolloutSteps = 5
+        maxRolloutSteps = 7
         wallDisToCenter = 10
         rolloutHeuristic = HeuristicDistanceToOtherAgentAndWall(rolloutHeuristicWeightToOtherAgent, rolloutHeuristicWeightToWall, wallDisToCenter, getWolfXPos, getSheepXPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
