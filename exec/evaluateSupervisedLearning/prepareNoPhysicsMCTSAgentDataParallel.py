@@ -43,7 +43,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 20000
+    numTrajectories = 3
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleNoPhysicsMCTSSheepHeatseakingWolfTraj.py'
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
@@ -54,9 +54,9 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    killzoneRadius = 25
-    maxRunningSteps = 25
+    killzoneRadius = 35
     numSimulations = 200
+    maxRunningSteps = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
