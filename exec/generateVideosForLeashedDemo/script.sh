@@ -1,13 +1,20 @@
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/evaluateLeashedTrajectories/mctsSheep/agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000
+cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchToWallHerustic/mctsSheep/
 mkdir demo
 
-for index in 1
+for heuristicWeightWallDis in 0.5 1 2
 do
-    cd ${index}
-    ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p Demo${index}.mp4
-    mv Demo${index}.mp4 ../demo
-    cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
+    for preyPowerRatio in 0.4 0.6 0.8
+    do
+        for index in 1 2
+        do
+        cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchToWallHerustic/mctsSheep/heuristicWeightWallDis=${heuristicWeightWallDis}_preyPowerRatio=${preyPowerRatio}
+        cd ${index}
+        ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/searchToWallHerustic/mctsSheep/demo/heuristicWeightWallDis=${heuristicWeightWallDis}_preyPowerRatio=${preyPowerRatio}_Demo${index}.mp4
+        # mv *.Demo${index}.mp4 ../../demo
+        done
+    done
 done
+cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
 
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/
 # mkdir demo

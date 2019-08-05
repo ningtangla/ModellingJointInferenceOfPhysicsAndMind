@@ -24,9 +24,9 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy,Hea
 
 def main():
     # manipulated variables and other important parameters
-    killzoneRadius = 25
+    killzoneRadius = 35
     numSimulations = 200
-    maxRunningSteps = 25
+    maxRunningSteps = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -49,10 +49,13 @@ def main():
     # trajectorySavePath = generateTrajectorySavePath({'sampleIndex':(startSampleIndex, endSampleIndex)})
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        originalActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+
+        preySpeedRatio = 3
+        actionSpace = list(map(tuple, np.array(originalActionSpace) * preySpeedRatio))
         numActionSpace = len(actionSpace)
-        predatorSpeedRatio = 0.8
-        wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorSpeedRatio))
+        predatorSpeedRatio = 2.4
+        wolfActionSpace = list(map(tuple, np.array(originalActionSpace) * predatorSpeedRatio))
 
         xBoundary = [0, 320]
         yBoundary = [0, 240]
@@ -92,7 +95,7 @@ def main():
 
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = -0.1
-        maxRolloutSteps = 5
+        maxRolloutSteps = 10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfPos, getSheepPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal, rolloutHeuristic)
 
