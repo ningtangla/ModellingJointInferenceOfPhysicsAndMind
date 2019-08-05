@@ -123,7 +123,7 @@ def main():
     actionToOneHot = ActionToOneHot(actionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolfId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
     fuzzySearchParameterNames = ['sampleIndex']
