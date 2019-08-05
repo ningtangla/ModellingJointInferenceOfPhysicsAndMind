@@ -8,11 +8,11 @@ import numpy as np
 
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
-from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete, RewardFunctionWithWall
 
 
 @ddt
-class TestMeasurementFunctions(unittest.TestCase):
+class TestRewardFunctions(unittest.TestCase):
     def setUp(self):
         self.actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         self.sheepId = 0
@@ -42,6 +42,16 @@ class TestMeasurementFunctions(unittest.TestCase):
 
         self.assertEqual(reward, groundTruthReward)
 
+    @data((-0.05, 1, 1, 10,  np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05),
+          (-0.05, 1, 1, 10, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05),
+          (-0.05, 1, 9.2, 10, np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05-(0.2**2)/(9.2**2)),
+          (-0.05, 1, 9.2, 10, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05))
+    @unpack
+    def testRewardFunctionWithWall(self, aliveBonus, deathPenalty, safeBound, wallDistanceToCenter, state, action, groundTruthReward):
+        rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDistanceToCenter, self.isTerminal, self.getWolfXPos)
+        reward = rewardFunction(state, action)
+
+        self.assertEqual(reward, groundTruthReward)
 
 if __name__ == "__main__":
     unittest.main()
