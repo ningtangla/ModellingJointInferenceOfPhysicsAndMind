@@ -27,4 +27,7 @@ class TransitConstantPhysics:
             print('transition-----------------------------------------------------')
         else:
             print('transition = 0')
+            # print('state', agentsNextIntendedState[0])
+            # print('intend', nextState[0])
+
         return transitionLikelihood

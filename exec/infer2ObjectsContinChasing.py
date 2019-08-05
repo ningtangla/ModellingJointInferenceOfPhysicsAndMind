@@ -162,8 +162,9 @@ def main():
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotMindInferenceProb(posteriorDf, dataIndex)
-    plotPhysicsInferenceProb(posteriorDf, dataIndex)
+    plotName = '2Objects2PhyicsInference'
+    plotMindInferenceProb(posteriorDf, dataIndex, plotName)
+    plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
 
 if __name__ == '__main__':
     main()

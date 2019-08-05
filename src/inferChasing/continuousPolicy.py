@@ -1,13 +1,5 @@
 import numpy as np
 
-class RandomPolicy:
-    def __init__(self, actionSpace):
-        self.actionSpace = actionSpace
-
-    def __call__(self, state):
-        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
-        return likelihood
-
 
 class TwoAgentsPolicy:
     def __init__(self, wolfPolicy, sheepPolicy, randomPolicy):
@@ -45,15 +37,16 @@ class ThreeAgentsPolicyForNN:
         self.randomPolicy = randomPolicy
 
     def __call__(self, mind, state, allAgentsActions):
+        print('mind', mind)
+
         wolfID = mind.index('wolf')
         sheepID = mind.index('sheep')
 
-        sheepWolfState = [state[sheepID], state[wolfID]]
+        sheepWolfState = [state[sheepID][:6], state[wolfID][:6]]
 
         wolfAction = allAgentsActions[wolfID]
         wolfAllActionsLikelihood = self.wolfPolicy(sheepWolfState)
         wolfActionLikelihood = wolfAllActionsLikelihood.get(wolfAction, 0)
-
 
         sheepAction = allAgentsActions[sheepID]
         sheepAllActionsLikelihood = self.sheepPolicy(sheepWolfState)

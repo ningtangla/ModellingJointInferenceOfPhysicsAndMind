@@ -27,6 +27,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import SampleTrajectory, sampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
+
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
     multiAgentActions.insert(agentId, selfAction)
@@ -182,7 +183,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 2
+    miniBatchSize = 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -251,17 +252,17 @@ def main():
         modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
 
-    #generate and load trajectories before train parallelly
+    # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectory.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.8 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    #load trajectory function for trainBreak
+    # load trajectory function for trainBreak
     loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
 
 # initRreplayBuffer

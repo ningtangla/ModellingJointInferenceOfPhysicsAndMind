@@ -13,6 +13,7 @@ class AccumulateRewards:
         accumulatedRewards = np.array([reduce(accumulateReward, reversed(rewards[TimeT:])) for TimeT in range(len(rewards))])
         return accumulatedRewards
 
+
 class AccumulateMultiAgentRewards:
     def __init__(self, decay, rewardFunctions):
         self.decay = decay
@@ -48,6 +49,7 @@ class RemoveTerminalTupleFromTrajectory:
         else:
             return trajectory
 
+
 class ActionToOneHot:
     def __init__(self, actionSpace):
         self.actionSpace = actionSpace
@@ -59,6 +61,18 @@ class ActionToOneHot:
 
 
 class ProcessTrajectoryForPolicyValueNet:
+    def __init__(self, actionToOneHot, agentId):
+        self.actionToOneHot = actionToOneHot
+        self.agentId = agentId
+
+    def __call__(self, trajectory):
+        processTuple = lambda state, actions, actionDist, value: \
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+        processedTrajectory = [processTuple(*triple) for triple in trajectory]
+
+        return processedTrajectory
+
+class ProcessTrajectoryForPolicyValueNetMultiAgentReward:
     def __init__(self, actionToOneHot, agentId):
         self.actionToOneHot = actionToOneHot
         self.agentId = agentId

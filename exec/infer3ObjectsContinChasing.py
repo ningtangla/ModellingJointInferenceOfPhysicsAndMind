@@ -5,7 +5,8 @@ DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForNN, RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy
+from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForNN
 from src.inferChasing.continuousTransition import TransitTwoMassPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
     InferContinuousChasingAndDrawDemo
@@ -169,9 +170,10 @@ def main():
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotMindInferenceProb(posteriorDf, dataIndex)
-    plotPhysicsInferenceProb(posteriorDf, dataIndex)
-#
+    plotName = '3Objects2PhysicsNNInference'
+    plotMindInferenceProb(posteriorDf, dataIndex, plotName)
+    plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
+
 
 if __name__ == '__main__':
     main()

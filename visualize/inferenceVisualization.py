@@ -143,7 +143,7 @@ class PlotInferenceProb:
         self.yVaraibleName = yVaraibleName
         self.groupIndex = groupIndex
 
-    def __call__(self, inferenceDf, graphIndex):
+    def __call__(self, inferenceDf, graphIndex, plotname):
         resultDf = inferenceDf.groupby(self.groupIndex).sum()
         print(resultDf)
         graph = resultDf.T.plot()
@@ -152,6 +152,6 @@ class PlotInferenceProb:
         plt.ylim([0, 1])
         dirName = os.path.dirname(__file__)
         plotPath = os.path.join(dirName, '..', 'demo')
-        plt.savefig(os.path.join(plotPath, self.groupIndex + 'InferencePlot'+ str(graphIndex)))
+        plt.savefig(os.path.join(plotPath, self.groupIndex + plotname + str(graphIndex)))
         plt.show()
 

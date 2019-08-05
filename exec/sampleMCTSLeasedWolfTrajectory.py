@@ -1,6 +1,5 @@
 import sys
 import os
-import json
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -9,21 +8,17 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
     backup, RollOut
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunctionWithoutXPos, ResetUniformWithoutXPosForLeashed
-from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
-from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
+from src.episode import SampleTrajectory, chooseGreedyAction
+from exec.trajectoriesSaveLoad import saveToPickle
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, UniformPolicy
-from exec.trajectoriesSaveLoad import readParametersFromDf
-from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
+
 
 import mujoco_py as mujoco
 import numpy as np
 
 
-
-
 def main():
-    # manipulated variables and other important parameters
     numSimulations = 100
     maxRunningSteps = 25
     dirName = os.path.dirname(__file__)
@@ -32,7 +27,7 @@ def main():
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    dataIndex = 3
+    dataIndex = 1
     dataPath = os.path.join(dirName, '..', 'trainedData', 'leasedMCTSTraj' + str(dataIndex) + '.pickle')
 
     if not os.path.isfile(dataPath):
@@ -55,7 +50,7 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunctionWithoutXPos(physicsSimulation, isTerminal, numSimulationFrames)
 
-        randomPolicy = UniformPolicy(actionSpace)
+        randomPolicy = RandomPolicy(actionSpace)
         transitInWolfMCTSSimulation = \
             lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(randomPolicy(state)), wolfSelfAction, chooseGreedyAction(randomPolicy(state))])
 
@@ -92,17 +87,13 @@ def main():
         tiedAgentId = [1, 2]
         ropeParaIndex = list(range(3, 12))
         maxRopePartLength = 0.25
-        reset = ResetUniformWithoutXPosForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
+        reset = ResetUniformWithoutXPosForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId,
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
-        # saving trajectories
-        # policy
-        policy = lambda state: [randomPolicy(state), mcts(state), randomPolicy(state)]
 
-        # generate trajectories
-        # trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
+        policy = lambda state: [randomPolicy(state), mcts(state), randomPolicy(state)]
         trajectory = sampleTrajectory(policy)
 
         saveToPickle(trajectory, dataPath)

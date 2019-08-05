@@ -8,7 +8,7 @@ import numpy as np
 from pygame.color import THECOLORS
 
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.constrainedChasingEscapingEnv.policies import UniformPolicy
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 from src.inferChasing.discreteGridPolicy import ActHeatSeeking, \
@@ -42,7 +42,7 @@ def main():
     wolfPolicy = WolfPolicy(getAgentPosition, heatSeekingPolicy)
     sheepPolicy = SheepPolicy(getAgentPosition, heatSeekingPolicy)
 
-    uniformPolicy = UniformPolicy(actionSpace)
+    uniformPolicy = RandomPolicy(actionSpace)
     masterPolicy = MasterPolicy(uniformPolicy)
     
     policyList = [wolfPolicy, sheepPolicy, masterPolicy]
