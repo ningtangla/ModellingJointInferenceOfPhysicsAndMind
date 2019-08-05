@@ -42,16 +42,17 @@ class TestRewardFunctions(unittest.TestCase):
 
         self.assertEqual(reward, groundTruthReward)
 
-    @data((-0.05, 1, 1, 10,  np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05),
-          (-0.05, 1, 1, 10, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05),
-          (-0.05, 1, 9.2, 10, np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05-(0.2**2)/(9.2**2)),
-          (-0.05, 1, 9.2, 10, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05))
+    @data((-0.05, 1, 1, 10, 1, np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05),
+          (-0.05, 1, 1, 10, 1, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05),
+          (-0.05, 1, 9.2, 10, 1, np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05-(0.2**2)/(9.2**2)*0.05),
+          (-0.05, 1, 9.2, 10, 0.74, np.asarray([[0, 0, 0, 0, 0, 0, ], [1, 0, 1, 0, 0, 0]]), None, -0.05-(0.2**2)/(9.2**2)*0.74*0.05),
+          (-0.05, 1, 9.2, 10, 1, np.asarray([[0, 0, 0, 0, 0, 0, ], [0.3, 0, 0.3, 0, 0, 0]]), None, 1-0.05))
     @unpack
-    def testRewardFunctionWithWall(self, aliveBonus, deathPenalty, safeBound, wallDistanceToCenter, state, action, groundTruthReward):
-        rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDistanceToCenter, self.isTerminal, self.getWolfXPos)
+    def testRewardFunctionWithWall(self, aliveBonus, deathPenalty, safeBound, wallDistanceToCenter, wallPunishRatio, state, action, groundTruthReward):
+        rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDistanceToCenter, wallPunishRatio, self.isTerminal, self.getWolfXPos)
         reward = rewardFunction(state, action)
 
-        self.assertEqual(reward, groundTruthReward)
+        self.assertAlmostEqual(reward, groundTruthReward)
 
 if __name__ == "__main__":
     unittest.main()

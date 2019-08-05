@@ -27,7 +27,7 @@ from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOp
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget, HeuristicDistanceToOtherAgentAndWall
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionWithWall, HeuristicDistanceToTarget
 from exec.preProcessing import AccumulateRewards
 
 
@@ -39,8 +39,11 @@ def main():
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
-    trainMaxRunningSteps = 25
-    trainNumSimulations = 200
+
+    numSimulations = 200
+    evalMaxRunningSteps = 100
+    evalNumTrials = 2
+
     wolfId = 1
     trajectoryFixedParameters = {}
 
@@ -72,9 +75,9 @@ def main():
         preyPowerRatio = float(parametersForTrajectoryPath['preyPowerRatio'])
         sheepActionSpace = list(map(tuple, np.array(originActionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
-        actionSpace = list(map(tuple, np.array(originActionSpace) * predatorPowerRatio))
+        wolfActionSpace = list(map(tuple, np.array(originActionSpace) * predatorPowerRatio))
 
-        numActionSpace = len(actionSpace)
+        numActionSpace = len(originActionSpace)
 
         # neural network init and save path
         numStateSpace = 18
@@ -100,10 +103,8 @@ def main():
         ropeParaIndex = list(range(3, 12))
         maxRopePartLength = 0.25
 
-        evalNumTrials = 3
         getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
-        evalMaxRunningSteps = 50
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
@@ -111,8 +112,7 @@ def main():
         modelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
 
         restoredModel = restoreVariables(initNNModel, modelPath)
-        wolfPolicy = ApproximatePolicy(restoredModel, actionSpace)
-
+        wolfPolicy = ApproximatePolicy(restoredModel, wolfActionSpace)
 
         transitInSheepMCTSSimulation = \
                 lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[0:3])), \
@@ -130,18 +130,18 @@ def main():
 
         aliveBonus = 0.05
         deathPenalty = -1
-        rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+        safeBound = int(parametersForTrajectoryPath['safeBound'])
+        wallDisToCenter = 10
+        wallPunishRatio = float(parametersForTrajectoryPath['wallPunishRatio'])
+        rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty,safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getSheepXPos)
 
         rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeightToOtherAgent = -0.1
-        rolloutHeuristicWeightToWall = float(parametersForTrajectoryPath['heuristicWeightWallDis'])
         maxRolloutSteps = 7
-        wallDisToCenter = 10
-        rolloutHeuristic = HeuristicDistanceToOtherAgentAndWall(rolloutHeuristicWeightToOtherAgent, rolloutHeuristicWeightToWall, wallDisToCenter, getWolfXPos, getSheepXPos)
+        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeightToOtherAgent,  getWolfXPos, getSheepXPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
 
-        numSimulations = 100
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
 

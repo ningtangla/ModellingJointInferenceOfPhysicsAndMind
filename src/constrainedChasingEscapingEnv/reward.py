@@ -16,11 +16,12 @@ class RewardFunctionCompete():
 
 
 class RewardFunctionWithWall():
-    def __init__(self, aliveBonus, deathPenalty,safeBound, wallDisToCenter, isTerminal, getPosition):
+    def __init__(self, aliveBonus, deathPenalty,safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getPosition):
         self.aliveBonus = aliveBonus
         self.deathPenalty = deathPenalty
         self.safeBound = safeBound
         self.wallDisToCenter = wallDisToCenter
+        self.wallPunishRatio = wallPunishRatio
         self.isTerminal = isTerminal
         self.getPosition = getPosition
 
@@ -31,7 +32,7 @@ class RewardFunctionWithWall():
 
         agentPos = self.getPosition(state)
         minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
-        wallPunish =  - np.abs(self.deathPenalty) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
+        wallPunish =  - self.wallPunishRatio * np.abs(self.aliveBonus) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
 
         return reward + wallPunish
 
