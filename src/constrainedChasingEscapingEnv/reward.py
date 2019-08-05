@@ -32,7 +32,7 @@ class RewardFunctionWithWall():
         agentPos = self.getPosition(state)
         minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
 
-        wallPunish =  - np.abs(self.deathPenalty) * np.power(np.max(0, minDisToWall - self.safeBound), 2) / np.power(self.safeBound, 2)
+        wallPunish =  - np.abs(self.deathPenalty) * np.power(np.max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
 
         return reward + wallPunish
 
