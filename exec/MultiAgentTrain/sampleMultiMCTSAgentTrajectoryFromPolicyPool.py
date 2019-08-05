@@ -183,12 +183,7 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-
-        depth = 4
-        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-        for agentId in trainableAgentIds:
-            baseLineModelPath = generateNNModelSavePath({'iterationIndex': -2, 'agentId': agentId})
-            multiAgentNNmodel[agentId] = restoreVariables(multiAgentNNmodel[agentId], baseLineModelPath)
+        trainableAgentIds = [sheepId, wolfId]
 
 
         # load save dir
@@ -200,8 +195,13 @@ def main():
 
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-        startTime = time.time()
-        trainableAgentIds = [sheepId, wolfId]
+
+        depth = 4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+        for agentId in trainableAgentIds:
+            baseLineModelPath = generateNNModelSavePath({'iterationIndex': -2, 'agentId': agentId})
+            multiAgentNNmodel[agentId] = restoreVariables(multiAgentNNmodel[agentId], baseLineModelPath)
+
 
         policyPoolSize = 200
         sampleMultiAgentNNModel = SampleMultiAgentNNModel(policyPoolSize, trainableAgentIds, generateNNModelSavePath, multiAgentNNmodel)
@@ -209,6 +209,7 @@ def main():
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
+        
 
         # load NN
         iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
