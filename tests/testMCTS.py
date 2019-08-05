@@ -122,7 +122,7 @@ class TestMCTS(unittest.TestCase):
 
     @data((4, 3, 0.125), (3, 4, 0.25))
     @unpack 
-    def testRollout(self, max_rollout_step, init_state, gt_sumValue):
+    def testRolloutWithoutHeuristic(self, max_rollout_step, init_state, gt_sumValue):
         max_iteration = 1000
 
         target_state = 6
@@ -144,6 +144,30 @@ class TestMCTS(unittest.TestCase):
 
         self.assertAlmostEqual(gt_sumValue, calc_sumValue, places=1)
 
+    @data((4, 3, 1.875), (3, 4, 1.75))
+    @unpack 
+    def testRolloutWithHeuristic(self, max_rollout_step, init_state, gt_sumValue):
+        max_iteration = 1000
+
+        target_state = 6
+        isTerminal = Terminal(target_state)
+
+        catch_reward = 1
+        step_penalty = 0
+        reward_func = RewardFunction(step_penalty, catch_reward, isTerminal)
+        rolloutHeuristic = lambda state: 2
+
+        rollout_policy = lambda state: np.random.choice(self.action_space)
+        leaf_node = Node(id={1: init_state}, numVisited=1, sumValue=0, actionPrior=self.default_actionPrior, isExpanded=True)
+        rollout = RollOut(rollout_policy, max_rollout_step, self.transition, reward_func, isTerminal, rolloutHeuristic)
+        stored_reward = []
+        for curr_iter in range(max_iteration):
+            stored_reward.append(rollout(leaf_node))
+        
+        calc_sumValue = np.mean(stored_reward)
+
+        self.assertAlmostEqual(gt_sumValue, calc_sumValue, places=1)
+    
     @data((5, [3, 4], [2, 1], [8, 9], [3, 2]))
     @unpack
     def testBackup(self, value, prev_sumValues, prev_visit_nums, new_sumValues, new_visit_nums):
