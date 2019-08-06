@@ -42,7 +42,7 @@ class ThreeAgentsPolicyForNN:
         wolfID = mind.index('wolf')
         sheepID = mind.index('sheep')
 
-        sheepWolfState = [state[sheepID][:6], state[wolfID][:6]]
+        sheepWolfState = [state[sheepID][:6], state[wolfID][:6]] # outside
 
         wolfAction = allAgentsActions[wolfID]
         wolfAllActionsLikelihood = self.wolfPolicy(sheepWolfState)
