@@ -200,7 +200,7 @@ def main():
     # split & apply
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionLabel']
-    independentVariables['numOfFrame'] = [4]
+    independentVariables['numOfFrame'] = [1, 3]
     independentVariables['numOfStateSpace'] = [8]
 
     levelNames = list(independentVariables.keys())
