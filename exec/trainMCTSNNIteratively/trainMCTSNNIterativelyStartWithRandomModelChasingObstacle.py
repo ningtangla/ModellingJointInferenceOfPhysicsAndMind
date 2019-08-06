@@ -161,7 +161,7 @@ def main():
     # neural network init and save path
     numStateSpace = 12
     regularizationFactor = 1e-4
-    sharedWidths = [128]
+    sharedWidths = [128, 128, 128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
@@ -171,7 +171,7 @@ def main():
     NNFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'numTrainStepsPerIteration': numTrainStepsPerIteration}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithRandomModelChasingObstacle', '2HiddenLayers', 'trainedNNModels')
+                                        'replayBufferStartWithRandomModelChasingObstacle', '4HiddenLayers', 'trainedNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -181,7 +181,7 @@ def main():
     # trajectory path to load
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'numTrainStepsPerIteration': numTrainStepsPerIteration}
     trajectorySaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                           'replayBufferStartWithRandomModelChasingObstacle', '2HiddenLayers', 'trajectories')
+                                           'replayBufferStartWithRandomModelChasingObstacle', '4HiddenLayers', 'trajectories')
     if not os.path.exists(trajectorySaveDirectory):
         os.makedirs(trajectorySaveDirectory)
     trajectoryExtension = '.pickle'

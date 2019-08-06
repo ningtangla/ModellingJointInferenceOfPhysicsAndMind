@@ -307,7 +307,6 @@ class ApproximatePolicy:
         self.actionSpace = actionSpace
 
     def __call__(self, stateBatch):
-        print("STATEBATCH: ", stateBatch)
         if np.array(stateBatch).ndim == 3:
             stateBatch = [np.concatenate(state) for state in stateBatch]
         if np.array(stateBatch).ndim == 2:

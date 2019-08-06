@@ -37,14 +37,16 @@ def drawPerformanceLine(dataDf, axForDraw, numSimulations, trainSteps):
 
 
 class RestoreNNModel:
-    def __init__(self, getModelSavePath, NNModel, restoreVariables):
-        self.getModelSavePath = getModelSavePath
-        self.NNmodel = NNModel
+    def __init__(self, allGetModelSavePaths, allNNModels, restoreVariables):
+        self.allGetModelSavePaths = allGetModelSavePaths
+        self.allNNModels = allNNModels
         self.restoreVariables = restoreVariables
 
-    def __call__(self, iteration):
-        modelPath = self.getModelSavePath({'iteration': iteration})
-        restoredNNModel = self.restoreVariables(self.NNmodel, modelPath)
+    def __call__(self, iteration, policyName):
+        NNModel = self.allNNModels[policyName]
+        getModelSavePath = self.allGetModelSavePaths[policyName]
+        modelPath = getModelSavePath({'iteration': iteration})
+        restoredNNModel = self.restoreVariables(NNModel, modelPath)
 
         return restoredNNModel
 
@@ -74,7 +76,7 @@ class GenerateTrajectories:
         startTime = time.time()
         iteration = oneConditionDf.index.get_level_values('iteration')[0]
         policyName = oneConditionDf.index.get_level_values('policyName')[0]
-        self.restoreNNModel(iteration)
+        self.restoreNNModel(iteration, policyName)
         policy = self.preparePolicy(policyName)
         if policyName == 'mctsHeuristic' and self.mctsFlag == False:
             trajectories = [sampleTrajectory(policy) for sampleTrajectory in self.allSampleTrajectories]
@@ -95,10 +97,10 @@ def main():
     # manipulated variables (and some other parameters that are commonly varied)
     evalNumSimulations = 200
     evalNumTrials = 500
-    evalMaxRunningSteps = 20
+    evalMaxRunningSteps = 35
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['iteration'] = list(range(0, 8000, 500)) + [8000]
-    manipulatedVariables['policyName'] = ['NNPolicy']#['NNPolicy', 'mctsHeuristic']
+    manipulatedVariables['iteration'] = list(range(0, 10000, 500))
+    manipulatedVariables['policyName'] = ['NNPolicy4HiddenLayers', 'NNPolicy2HiddenLayers']#['NNPolicy', 'mctsHeuristic']
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -107,7 +109,7 @@ def main():
 
     # Mujoco environment
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
     numAgents = 2
@@ -155,31 +157,35 @@ def main():
     # neural network init and save path
     numStateSpace = 12
     regularizationFactor = 1e-4
-    sharedWidths = [128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    initializedNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+    initializedNNModel4Layers = generateModel([128, 128, 128], actionLayerWidths, valueLayerWidths)
+    initializedNNModel2Layers = generateModel([128], actionLayerWidths, valueLayerWidths)
 
-    trainMaxRunningSteps = 20
+    trainMaxRunningSteps = 30
     trainNumSimulations = 200
-    trainLearningRate = 0.0001
+    trainLearningRate = 0.001
     trainBufferSize = 2000
     trainMiniBatchSize = 256
     trainNumTrajectoriesPerIteration = 1
-    numTrainStepsPerIteration = 10
+    numTrainStepsPerIteration = 1
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations,
                          'bufferSize': trainBufferSize, 'learningRate': trainLearningRate,
                          'miniBatchSize': trainMiniBatchSize,
                          'numTrajectoriesPerIteration': trainNumTrajectoriesPerIteration, 'numTrainStepsPerIteration': numTrainStepsPerIteration}
     dirName = os.path.dirname(__file__)
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                        'replayBufferStartWithRandomModel10StepsPerIteration', 'trainedNNModels')
+    NNModelSaveDirectory4Layers = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
+                                        'replayBufferStartWithRandomModelChasingObstacle', '4HiddenLayers', 'trainedNNModels')
+    NNModelSaveDirectory2Layers = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
+                                        'replayBufferStartWithRandomModelChasingObstacle', '2HiddenLayers', 'trainedNNModels')
     NNModelSaveExtension = ''
-    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+    getNNModelSavePath4Layers = GetSavePath(NNModelSaveDirectory4Layers, NNModelSaveExtension, NNFixedParameters)
+    getNNModelSavePath2Layers = GetSavePath(NNModelSaveDirectory2Layers, NNModelSaveExtension, NNFixedParameters)
 
     # functions to get prediction from NN
-    NNPolicy = ApproximatePolicy(initializedNNModel, actionSpace)
+    NNPolicy4Layers = ApproximatePolicy(initializedNNModel4Layers, actionSpace)
+    NNPolicy2Layers = ApproximatePolicy(initializedNNModel2Layers, actionSpace)
 
     # # wolf policy
     # wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
@@ -189,7 +195,7 @@ def main():
     # wolfPolicy = lambda state: {wolfActionForState(state): 1}
 
     # policy
-    allGetWolfPolicies = {'NNPolicy': NNPolicy}#, 'mctsHeuristic': mcts}
+    allGetWolfPolicies = {'NNPolicy4HiddenLayers': NNPolicy4Layers, 'NNPolicy2HiddenLayers': NNPolicy2Layers}#, 'mctsHeuristic': mcts}
     getWolfPolicy = lambda policyName: allGetWolfPolicies[policyName]
     getSheepPolicy = lambda policyName: stationaryAgentPolicy
     preparePolicy = PreparePolicy(getSheepPolicy, getWolfPolicy)
@@ -210,8 +216,8 @@ def main():
 
     # save evaluation trajectories
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                       'replayBufferStartWithRandomModel10StepsPerIteration',
-                                       'evaluationTrajectories8kTrainSteps')
+                                       'replayBufferStartWithRandomModelChasingObstacle',
+                                       'evaluationTrajectories9500TrainSteps')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -224,8 +230,10 @@ def main():
     saveAllTrajectories = SaveAllTrajectories(saveToPickle, generateAllSampleIndexSavePaths)
     saveAllTrajectoriesFromDf = lambda trajectories, df: saveAllTrajectories(trajectories, readParametersFromDf(df))
 
-    # function to generate trajectories
-    restoreNNModelFromIteration = RestoreNNModel(getNNModelSavePath, initializedNNModel, restoreVariables)
+    # function to restore NN Model
+    allNNModels = {'NNPolicy4HiddenLayers': initializedNNModel4Layers, 'NNPolicy2HiddenLayers': initializedNNModel2Layers}
+    allGetModelSavePaths = {'NNPolicy4HiddenLayers': getNNModelSavePath4Layers, 'NNPolicy2HiddenLayers': getNNModelSavePath2Layers}
+    restoreNNModelFromIteration = RestoreNNModel(allGetModelSavePaths, allNNModels, restoreVariables)
     generateTrajectories = GenerateTrajectories(allSampleTrajectories, saveAllTrajectoriesFromDf, restoreNNModelFromIteration,
                                                 preparePolicy)
 
@@ -250,7 +258,7 @@ def main():
         grp.plot(y='mean', marker='o', label=policyName, ax=axis)
 
     plt.ylabel('Accumulated rewards')
-    plt.title('iterative training in chase task with {} train steps per iteration\nStart with random model'.format(numTrainStepsPerIteration))
+    plt.title('iterative training in chase task with obstacle. {} train steps per iteration\nStart with random model'.format(numTrainStepsPerIteration))
     plt.legend(loc='best')
     plt.show()
 

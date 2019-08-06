@@ -7,8 +7,9 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 from exec.trajectoriesSaveLoad import loadFromPickle
-from exec.generateVideos.chasingVisualization import DrawBackground, DrawState, ChaseTrialWithTraj, Observe
-from exec.generateVideos.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
+from src.inferChasing.inference import Observe
+from visualize.continuousVisualization import DrawBackgroundWithObstacles, DrawState, ChaseTrialWithTraj, \
+    ScaleTrajectory, AdjustDfFPStoTraj
 from visualize.initialization import initializeScreen
 
 import pandas as pd
@@ -19,7 +20,7 @@ pd.set_option('display.max_columns', None)
 def main():
     dirName = os.path.dirname(__file__)
     dataIndex = 5
-    dataPath = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBufferStartWithTrainedModel', 'evaluationTrajectories20kTrainSteps', 'iteration=19999_maxRunningSteps=20_numTrials=500_policyName=NNPolicy_sampleIndex=493_trainBufferSize=2000_trainLearningRate=0.0001_trainMiniBatchSize=256_trainNumSimulations=200_trainNumTrajectoriesPerIteration=1.pickle')
+    dataPath = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBufferStartWithRandomModelChasingObstacle', 'evaluationTrajectories3500TrainSteps', 'iteration=3500_maxRunningSteps=30_numTrials=500_policyName=NNPolicy2HiddenLayers_sampleIndex=250_trainBufferSize=2000_trainLearningRate=0.001_trainMiniBatchSize=256_trainNumSimulations=200_trainNumTrajectoriesPerIteration=1.pickle')
     trajectory = loadFromPickle(dataPath)
 
     stateIndex = 0
@@ -40,7 +41,7 @@ def main():
     screenColor = THECOLORS['black']
     lineColor = THECOLORS['white']
 
-    drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
+    drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
     circleSize = 10
     positionIndex = [0, 1]
     drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
@@ -48,7 +49,7 @@ def main():
     colorSpace = [THECOLORS['green'], THECOLORS['red']]
 
     FPS = 60
-    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='2ObjectsDemo' + str(dataIndex))
+    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='2ObjectsObstacles/7' + str(dataIndex))
 
     rawXRange = [-10, 10]
     rawYRange = [-10, 10]

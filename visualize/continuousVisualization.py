@@ -172,7 +172,8 @@ class ChaseTrialWithTraj:
             if self.saveImage == True:
                 currentDir = os.getcwd()
                 parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
-                saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), self.imageFolderName)
+                # saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), self.imageFolderName)
+                saveImageDir = os.path.join(os.path.join(currentDir, 'demo'), self.imageFolderName)
                 if not os.path.exists(saveImageDir):
                     os.makedirs(saveImageDir)
                 pg.image.save(screen, saveImageDir + '/' + format(timeStep, '04') + ".png")
