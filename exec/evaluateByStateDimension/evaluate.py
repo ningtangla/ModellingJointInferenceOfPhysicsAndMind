@@ -270,7 +270,7 @@ def main():
             numOfPlot += 1
     plt.legend(loc='best')
     plt.subplots_adjust(hspace=0.4, wspace=0.6)
-    plt.suptitle("batchSize:64, trajectory:4500")
+    plt.suptitle("batchSize:64, trajectory:6000")
     figureName = "effect_inputFrame_on_NNPerformance.png"
     figurePath = os.path.join(dataDir, figureName)
     plt.savefig(figurePath)

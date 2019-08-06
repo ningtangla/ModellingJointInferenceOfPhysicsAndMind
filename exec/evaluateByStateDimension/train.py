@@ -108,19 +108,19 @@ def main():
     # split
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionLabel']
-    independentVariables['trajectory'] = [4500]
+    independentVariables['trajectory'] = [6000]
     independentVariables['batchSize'] = [64]
     independentVariables['augment'] = [False]
     independentVariables['trainingStep'] = [
         num for num in range(0, 500001, 50000)
     ]
     independentVariables['neuronsPerLayer'] = [128]
-    independentVariables['sharedLayers'] = [1, 2, 4, 8]
+    independentVariables['sharedLayers'] = [8]
     independentVariables['actionLayers'] = [1]
     independentVariables['valueLayers'] = [1]
     independentVariables['numOfFrame'] = [1, 3]
     independentVariables['numOfStateSpace'] = [8]
-    independentVariables['lr'] = [1e-3, 1e-4, 1e-5]
+    independentVariables['lr'] = [1e-4]
 
     levelNames = list(independentVariables.keys())
     levelValues = list(independentVariables.values())

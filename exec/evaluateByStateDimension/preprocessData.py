@@ -145,12 +145,13 @@ def main():
     trajectoryParameter['killzoneRadius'] = 2
     trajectoryParameter['maxRunningSteps'] = 25
     trajectoryParameter['numSimulations'] = 100
+    trajectoryParameter['numTrajectories'] = 6000
     trajectoryParameter['qPosInitNoise'] = 9.7
     trajectoryParameter['qVelInitNoise'] = 8
     trajectoryParameter['rolloutHeuristicWeight'] = -0.1
     getTrajectorySavePath = GetSavePath(trajectoryDir, ".pickle",
                                         trajectoryParameter)
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, ['sampleIndex'])
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
     trajectories = loadTrajectories({})
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7),
                    (0, -10), (7, -7)]
