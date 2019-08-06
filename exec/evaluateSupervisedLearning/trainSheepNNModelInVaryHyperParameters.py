@@ -93,7 +93,7 @@ def main():
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 20
-    dataSetNumSimulations = 100
+    dataSetNumSimulations = 200
     killzoneRadius = 2
 
     dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -133,6 +133,7 @@ def main():
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
+
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
@@ -145,7 +146,7 @@ def main():
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+    getNNModel = lambda depth: generateModel(sharedWidths*2 , actionLayerWidths * depth, valueLayerWidths)
     # function to train NN model
     terminalThreshold = 1e-6
     lossHistorySize = 10
@@ -158,7 +159,7 @@ def main():
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1000
-    trainStepsIntervel = 10000
+    trainStepsIntervel = 40000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
@@ -177,7 +178,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(6))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
 
