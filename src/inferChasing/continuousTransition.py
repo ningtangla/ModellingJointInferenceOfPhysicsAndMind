@@ -10,8 +10,6 @@ class TransitTwoMassPhysics:
             nextIntendedState = self.transitSmallMass(state, allAgentsActions)
         else:
             nextIntendedState = self.transitLargeMass(state, allAgentsActions)
-        # print('intended', nextIntendedState[0][0])
-        # print('actual', nextState[0][0])
         transitionLikelihood = 1 if np.all(nextIntendedState == nextState) else 0
         return transitionLikelihood
 
@@ -26,8 +24,10 @@ class TransitConstantPhysics:
         if transitionLikelihood == 1:
             print('transition-----------------------------------------------------')
         else:
-            print('transition = 0')
-            # print('state', agentsNextIntendedState[0])
-            # print('intend', nextState[0])
+            # print('transition = 0')
+            # print('calculatedState', agentsNextIntendedState)
+            # print('actualNextState', nextState)
+            # print('transition = 0')
+            print(agentsNextIntendedState,',',nextState)
 
         return transitionLikelihood

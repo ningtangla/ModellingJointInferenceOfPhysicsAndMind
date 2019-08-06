@@ -37,7 +37,7 @@ class ThreeAgentsPolicyForNN:
         self.randomPolicy = randomPolicy
 
     def __call__(self, mind, state, allAgentsActions):
-        print('mind', mind)
+        # print('mind', mind)
 
         wolfID = mind.index('wolf')
         sheepID = mind.index('sheep')

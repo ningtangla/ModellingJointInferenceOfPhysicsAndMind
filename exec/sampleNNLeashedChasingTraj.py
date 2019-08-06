@@ -75,7 +75,7 @@ def main():
     policy = lambda state: [sheepPolicy(getWolfSheepState(state)), wolfPolicy(getWolfSheepState(state)), randomPolicy(state)]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 1
+    dataIndex = 3
     dataPath = os.path.join(dirName, '..', 'trainedData', 'NNleasedTraj'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 
