@@ -21,7 +21,7 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
-    ActionToOneHot, ProcessTrajectoryForPolicyValueNet
+    ActionToOneHot, ProcessTrajectoryForPolicyValueNetMultiAgentReward
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
@@ -88,7 +88,7 @@ class SampleMultiAgentNNModel:
         self.initMultiAgentNNModel = initMultiAgentNNModel
 
     def __call__(self, iterationIndex):
-        multiAgentSampledOldIterationIndex = np.random.choice(list(range(0, int(iterationIndex/self.policyPoolSize) + 1)), \
+        multiAgentSampledOldIterationIndex = np.random.choice(list(range(0, int((iterationIndex - 1)/self.policyPoolSize) + 1)), \
                 len(self.trainableAgentIds)) * self.policyPoolSize
         sampledIterationAgentIdPair = zip(multiAgentSampledOldIterationIndex, self.trainableAgentIds)
         modelPathes = [self.generateNNModelSavePath({'iterationIndex': sampledIteration, 'agentId': agentId}) \
@@ -212,7 +212,7 @@ def main():
 
     # pre-process the trajectory for NNTraining
     actionToOneHot = ActionToOneHot(actionSpace)
-    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNet(actionToOneHot, agentId) for agentId in agentIds]
+    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHot, agentId) for agentId in agentIds]
 
     # function to train NN model
     terminalThreshold = 1e-6
@@ -294,7 +294,7 @@ def main():
 # initRreplayBuffer
     replayBuffer = []
 
-    restoredIteration = 0
+    restoredIteration = 199
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
         print(cmdList)
