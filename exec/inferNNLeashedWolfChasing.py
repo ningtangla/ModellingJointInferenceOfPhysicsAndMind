@@ -79,10 +79,10 @@ def main():
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 3
+    dataIndex = 1
     dataPath = os.path.join(dirName, '..', 'trainedData', 'NNLeasedTraj'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
-    trajectory = [trajectory[4], trajectory[5]]
+    # trajectory = [trajectory[4], trajectory[5]]
     stateIndex = 0
 
     chasingAgents = ['sheep', 'wolf', 'random']

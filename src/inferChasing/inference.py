@@ -1,5 +1,3 @@
-# random policy: inference should not be able to infer anything
-# noise to the transition -> make it deterministic first!
 import pandas as pd
 import pygame as pg
 
