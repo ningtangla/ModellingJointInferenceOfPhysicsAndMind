@@ -136,7 +136,6 @@ def main():
         restoredModel = restoreVariables(initNNModel, modelPath)
         sheepPolicy = ApproximatePolicy(restoredModel, sheepActionSpace)
 
-        initState = np.array([(0, ) * 6] * 12 )
 #policy
         policy = lambda state: [sheepPolicy(state[:3]), wolfPolicy(state[:3]), stationaryAgentPolicy(state)]
 
