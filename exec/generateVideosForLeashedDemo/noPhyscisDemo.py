@@ -33,7 +33,7 @@ def main():
 
     manipulatedVariables['agentId'] = [0]
     manipulatedVariables['maxRunningSteps'] = [100]
-    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['numSimulations'] = [500]
     manipulatedVariables['killzoneRadius'] = [35]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
