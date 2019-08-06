@@ -38,6 +38,7 @@ def main():
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
+
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
@@ -66,7 +67,7 @@ def main():
         wolfId = 1
         xPosIndex = [2, 3]
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-        getWolfXPos = GetAgentPosFromState(sheepId, xPosIndex)
+        getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
@@ -95,7 +96,7 @@ def main():
         NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
+        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -116,7 +117,8 @@ def main():
         evalNumTrials = 3
         getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
-        evalMaxRunningSteps = 60
+
+        evalMaxRunningSteps = 25
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
@@ -134,13 +136,12 @@ def main():
         restoredModel = restoreVariables(initNNModel, modelPath)
         sheepPolicy = ApproximatePolicy(restoredModel, sheepActionSpace)
 
-
+        initState = np.array([(0, ) * 6] * 12 )
 #policy
         policy = lambda state: [sheepPolicy(state[:3]), wolfPolicy(state[:3]), stationaryAgentPolicy(state)]
 
-        beginTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
-        processTime = time.time() - beginTime
+
         saveToPickle(trajectories, trajectorySavePath)
         restoredModel.close()
 

@@ -41,6 +41,7 @@ def main():
     sheepId = 0
 
     # manipulated variables
+    manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
     manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
     manipulatedVariables['depth'] = [2 ,4, 6]
@@ -120,7 +121,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            axForDraw.set_ylim(-1, 0.6)
+            # axForDraw.set_ylim(-1, 0.6)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)
