@@ -44,13 +44,13 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 5000
+    numTrajectories = 30000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSSheepTrajectoryWithNNWolf.py'
+    sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.5*numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
@@ -72,7 +72,7 @@ def main():
 
         cmdList = generateTrajectoriesParallel(pathParameters)
         # print(cmdList)
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
+        trajectories = loadTrajectoriesForParallel(pathParameters)
         # import ipdb; ipdb.set_trace()
 
     endTime = time.time()
