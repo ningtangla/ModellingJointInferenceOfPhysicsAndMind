@@ -69,7 +69,7 @@ def main():
 
 # neural network init
         numStateSpace = 18
-        numActionSpace = len(actionSpace)
+        numActionSpace = len(masterActionSpace)
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
@@ -88,9 +88,8 @@ def main():
         sheepPreTrainModel = restoreVariables(initNNModel, sheepPreTrainModelPath)
         sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
-
-        transitInSheepMCTSSimulation = \
-            lambda state, masterSelfAction: transit(chooseGreedyAction(sheepPolicy(state[:3])), [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[:3])),  masterSelfAction])
+        transitInMasterMCTSSimulation = \
+            lambda state, masterSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[:3])),chooseGreedyAction(wolfPolicy(state[:3])), masterSelfAction])
 
 # MCTS master
         cInit = 1
@@ -99,8 +98,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in masterActionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(masterActionSpace, transitInSheepMCTSSimulation,
-                                                            getUniformActionPrior)
+        initializeChildrenUniformPrior = InitializeChildren(masterActionSpace, transitInMasterMCTSSimulation, getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
         aliveBonus = 0.05
@@ -111,7 +109,7 @@ def main():
         rolloutHeuristicWeight = 0.1
         maxRolloutSteps = 10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal, rolloutHeuristic)
+        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInMasterMCTSSimulation, rewardFunction, isTerminal, rolloutHeuristic)
 
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
