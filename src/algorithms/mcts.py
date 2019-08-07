@@ -119,7 +119,6 @@ def establishSoftmaxActionDist(root):
     actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
-
 class MCTS:
     def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
         self.numSimulation = numSimulation
@@ -147,6 +146,54 @@ class MCTS:
             self.backup(value, nodePath)
 
         actionDistribution = self.outputDistribution(root)
+        return actionDistribution
+
+def establishPlainActionDistFromMultipleTrees(roots):
+    visits = np.sum([[child.numVisited for child in root.children] for root in roots], axis=0)
+    actionProbs = visits / np.sum(visits)
+    actions = [list(child.id.keys())[0] for child in root.children]
+    actionDist = dict(zip(actions, actionProbs))
+    return actionDist
+
+
+def establishSoftmaxActionDistFromMultipleTrees(roots):
+    visits = np.sum([[child.numVisited for child in root.children] for root in roots], axis=0)
+    expVisits = np.exp(visits)
+    actionProbs = expVisits / np.sum(expVisits)
+    actions = [list(child.id.keys())[0] for child in root.children]
+    actionDist = dict(zip(actions, actionProbs))
+    return actionDist
+
+class StochasticMCTS:
+    def __init__(self, numTree, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
+	self.numTree = numTree 
+	self.numSimulation = numSimulation
+        self.selectChild = selectChild
+        self.expand = expand
+        self.estimateValue = estimateValue
+        self.backup = backup
+        self.outputDistribution = outputDistribution
+
+    def __call__(self, currentState):
+	roots = []
+	for treeIndex in range(self.numTree):
+            root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
+            root = self.expand(root)
+
+            for exploreStep in range(self.numSimulation):
+                currentNode = root
+                nodePath = [currentNode]
+
+                while currentNode.isExpanded:
+                    nextNode = self.selectChild(currentNode)
+                    nodePath.append(nextNode)
+                    currentNode = nextNode
+
+                leafNode = self.expand(currentNode)
+                value = self.estimateValue(leafNode)
+                self.backup(value, nodePath)
+            roots.append(root)
+        actionDistribution = self.outputDistribution(roots)
         return actionDistribution
 
 
