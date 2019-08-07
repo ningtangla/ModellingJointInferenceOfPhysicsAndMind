@@ -15,6 +15,8 @@ from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 
 import mujoco_py as mujoco
 import numpy as np
@@ -26,7 +28,7 @@ def main():
     # manipulated variables and other important parameters
     killzoneRadius = 2
     numSimulations = 100
-    maxRunningSteps = 20
+    maxRunningSteps = 25
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -67,10 +69,24 @@ def main():
         # transitInWolfMCTSSimulation = \
         #     lambda state, wolfSelfAction: transit(state, [sheepActionInWolfSimulation(state), wolfSelfAction])
 
-        WolfActionInSheepSimulation = lambda state: (0, 0)
-        transitInSheepMCTSSimulation = \
-            lambda state, sheepSelfAction: transit(state, [sheepSelfAction, WolfActionInSheepSimulation(state)])
+        numStateSpace = 12
+        numActionSpace = len(actionSpace)
+        regularizationFactor = 1e-4
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
+        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+        depth = 1
+        initModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        wolfModelPath = os.path.join(dirName, '..', '..', 'data',
+                                        'evaluateSupervisedLearning', 'wolfModel', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
 
+        wolfModel = restoreVariables(initModel, wolfModelPath)
+        wolfPolicy = ApproximatePolicy(wolfModel, actionSpace)
+
+
+        transitInSheepMCTSSimulation = \
+            lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state))])
         # MCTS
         cInit = 1
         cBase = 100
@@ -82,13 +98,13 @@ def main():
                                                             getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
-        aliveBonus = 1/maxRunningSteps
+        aliveBonus = 0.05
         deathPenalty = -1
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = -0.1
-        maxRolloutSteps = 5
+        maxRolloutSteps = 10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
@@ -107,7 +123,8 @@ def main():
 
         # saving trajectories
         # policy
-        policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
+        policy = lambda state: [mcts(state), wolfPolicy(state)]
+
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
