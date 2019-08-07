@@ -44,7 +44,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
     manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2 ,4, 6]
+    manipulatedVariables['depth'] = [2, 4, 6]
     manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
 
 

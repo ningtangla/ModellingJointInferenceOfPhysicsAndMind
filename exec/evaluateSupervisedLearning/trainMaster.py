@@ -117,7 +117,7 @@ def main():
 
     # pre-process the trajectories
     sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    masterPowerRatio = 0.5
+    masterPowerRatio = 0.4
     masterActionSpace = list(map(tuple, np.array(sheepActionSpace) * masterPowerRatio))
 
     numActionSpace = len(masterActionSpace)

@@ -50,7 +50,7 @@ def main():
         sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(sheepActionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.5
+        masterPowerRatio = 0.4
         masterActionSpace = list(map(tuple, np.array(sheepActionSpace) * masterPowerRatio))
 
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
