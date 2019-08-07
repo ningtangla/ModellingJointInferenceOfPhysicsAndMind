@@ -147,6 +147,7 @@ def main():
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
     getNNModel = lambda depth: generateModel(sharedWidths * 2, actionLayerWidths* depth, valueLayerWidths)
+
     # function to train NN model
     terminalThreshold = 1e-6
     lossHistorySize = 10

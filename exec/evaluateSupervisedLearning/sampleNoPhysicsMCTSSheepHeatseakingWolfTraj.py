@@ -1,73 +1,83 @@
 import sys
 import os
 import json
+import numpy as np
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+
+from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset,StayInBoundaryByReflectVelocity
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, backup, RollOut
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
+
+
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
-from exec.trajectoriesSaveLoad import readParametersFromDf
-from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy,HeatSeekingDiscreteDeterministicPolicy
 
-import numpy as np
 
 
 
 
 def main():
     # manipulated variables and other important parameters
-    killzoneRadius = 2
-    numSimulations = 100
-    maxRunningSteps = 20
+    killzoneRadius = 35
+    numSimulations = 500
+    maxRunningSteps = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
+                                             'evaluateSupervisedLearningNoPhyscis', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
-
     agentId = int(parametersForTrajectoryPath['agentId'])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
+
+    # debug
+    # startSampleIndex = 1
+    # endSampleIndex = 10
+    # trajectorySavePath = generateTrajectorySavePath({'sampleIndex':(startSampleIndex, endSampleIndex)})
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        originalActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+
+        preySpeedRatio = 3
+        actionSpace = list(map(tuple, np.array(originalActionSpace) * preySpeedRatio))
         numActionSpace = len(actionSpace)
+        predatorSpeedRatio = 2.4
+        wolfActionSpace = list(map(tuple, np.array(originalActionSpace) * predatorSpeedRatio))
 
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
-        physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-        physicsSimulation = mujoco.MjSim(physicsModel)
-
+        xBoundary = [0, 320]
+        yBoundary = [0, 240]
+        numOfAgent = 2
         sheepId = 0
         wolfId = 1
-        xPosIndex = [2, 3]
-        getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-        getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-        isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+        positionIndex = [0, 1]
+        getSheepPos = GetAgentPosFromState(sheepId, positionIndex)
+        getWolfPos = GetAgentPosFromState(wolfId, positionIndex)
+        isTerminal = IsTerminal(killzoneRadius, getWolfPos, getSheepPos)
 
-        numSimulationFrames = 20
-        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-        # sheepActionInWolfSimulation = lambda state: (0, 0)
-        # transitInWolfMCTSSimulation = \
-        #     lambda state, wolfSelfAction: transit(state, [sheepActionInWolfSimulation(state), wolfSelfAction])
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
+        isTerminal = IsTerminal(getWolfPos, getSheepPos, killzoneRadius)
+        transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+        reset = Reset(xBoundary, yBoundary, numOfAgent)
 
-        WolfActionInSheepSimulation = lambda state: (0, 0)
+        woldPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfPos, getSheepPos, computeAngleBetweenVectors)
+
+        WolfActionInSheepSimulation = lambda state: chooseGreedyAction(woldPolicy(state))
         transitInSheepMCTSSimulation = \
             lambda state, sheepSelfAction: transit(state, [sheepSelfAction, WolfActionInSheepSimulation(state)])
+
 
         # MCTS
         cInit = 1
@@ -76,8 +86,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
-                                                            getUniformActionPrior)
+        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation, getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
         aliveBonus = 1/maxRunningSteps
@@ -86,29 +95,21 @@ def main():
 
         rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = -0.1
-        maxRolloutSteps = 5
-        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
-                          rolloutHeuristic)
+        maxRolloutSteps = 10
+        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfPos, getSheepPos)
+        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal, rolloutHeuristic)
 
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
         # sample trajectory
-        qPosInit = (0, 0, 0, 0)
-        qVelInit = (0, 0, 0, 0)
-        qPosInitNoise = 9.7
-        qVelInitNoise = 8
-        numAgent = 2
-        reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
-
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
-        # saving trajectories
         # policy
-        policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
+        policy = lambda state: [mcts(state), woldPolicy(state)]
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
+        # print([len(tra) for tra in trajectories], np.mean([len(tra) for tra in trajectories]))
         saveToPickle(trajectories, trajectorySavePath)
 
 

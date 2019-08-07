@@ -59,7 +59,7 @@ class PreparePolicy:
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -115,17 +115,19 @@ def main():
         NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
         dirName = os.path.dirname(__file__)
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                            'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'NNModel')
+                                            'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
-        multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
+        depth = 4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
 
         # functions to get prediction from NN
         restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
 
         # function to prepare policy
         selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        # otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
         preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions

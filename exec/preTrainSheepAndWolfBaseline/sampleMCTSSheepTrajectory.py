@@ -6,7 +6,8 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, backup, RollOut
+from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
+    backup, RollOut
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
@@ -14,7 +15,10 @@ from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 
+import mujoco_py as mujoco
 import numpy as np
 
 
@@ -23,13 +27,13 @@ import numpy as np
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 2
-    numSimulations = 100
+    numSimulations = 200
     maxRunningSteps = 20
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
+                                             'preTrainBaseline', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -61,13 +65,29 @@ def main():
 
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-        # sheepActionInWolfSimulation = lambda state: (0, 0)
-        # transitInWolfMCTSSimulation = \
-        #     lambda state, wolfSelfAction: transit(state, [sheepActionInWolfSimulation(state), wolfSelfAction])
 
-        WolfActionInSheepSimulation = lambda state: (0, 0)
+        numStateSpace = 12
+        regularizationFactor = 1e-4
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
+        depth = 4
+        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+        wolfModel = generateModel(sharedWidths * depth, actionLayerWidths , valueLayerWidths)
+
+        wolfModelSavePath = os.path.join(dirName, '..', '..', 'data',
+                                        'preTrainBaseline', 'wolfModels',
+                                        'agentId=1_depth=4_learningRate=0.001_maxRunningSteps=20_miniBatchSize=256_numSimulations=100_trainSteps=40000')
+
+        restoredWolfModel = restoreVariables(wolfModel, wolfModelSavePath)
+        wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
+
         transitInSheepMCTSSimulation = \
-            lambda state, sheepSelfAction: transit(state, [sheepSelfAction, WolfActionInSheepSimulation(state)])
+            lambda state, sheepSelfAction: transit(state, [sheepSelfAction,chooseGreedyAction(wolfPolicy(state))])
+
+        # WolfActionInSheepSimulation = lambda state: (0, 0)
+        # transitInSheepMCTSSimulation = \
+        #     lambda state, sheepSelfAction: transit(state, [sheepSelfAction, WolfActionInSheepSimulation(state)])
 
         # MCTS
         cInit = 1
@@ -100,16 +120,17 @@ def main():
         qVelInitNoise = 8
         numAgent = 2
         reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise)
-
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+        chooseActionMethods = [chooseGreedyAction, chooseGreedyAction]
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionMethods)
 
         # saving trajectories
         # policy
-        policy = lambda state: [mcts(state), stationaryAgentPolicy(state)]
+        policy = lambda state: [mcts(state), wolfPolicy(state)]
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
+        restoredWolfModel.close()
 
 
 if __name__ == '__main__':

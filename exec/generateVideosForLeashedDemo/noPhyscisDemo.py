@@ -31,28 +31,28 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    # manipulatedVariables['agentId'] = [1]
-    # manipulatedVariables['maxRunningSteps'] = [25]
-    # manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['agentId'] = [0]
+    manipulatedVariables['maxRunningSteps'] = [100]
+    manipulatedVariables['numSimulations'] = [500]
+    manipulatedVariables['killzoneRadius'] = [35]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
     # manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
     # manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
 
-    manipulatedVariables['safeBound'] = [1.5]
-    manipulatedVariables['preyPowerRatio'] =[0.7]
-    manipulatedVariables['wallPunishRatio'] = [0.6]
+    # manipulatedVariables['heuristicWeightWallDis'] = [1]
+    # manipulatedVariables['preyPowerRatio'] = [0.8]
+
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchToWallHerustic', 'mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearningNoPhyscis', 'trajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    # fuzzySearchParameterNames = ['sampleIndex']
-    fuzzySearchParameterNames = []
+    fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     agentId = 1
@@ -65,6 +65,10 @@ def main():
     getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
     getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 4)
     getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 5)
+
+    getAgentVelXCoord = lambda trajectory, df: 0
+    getAgentVelYCoord = lambda trajectory, df: 0
+
     extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord,
                            'yVel': getAgentVelYCoord}
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
@@ -102,9 +106,9 @@ def main():
         circleSize = 10
         positionIndex = [0, 1]
 
-        numOfAgent = 3
+        numOfAgent = 2
         drawState = DrawState(screen, circleSize, positionIndex, drawBackground,numOfAgent)
-        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+        colorSpace = [THECOLORS['green'], THECOLORS['red']]
 
         for index in range(numTrajectoryChoose):
             imageFolderName = "{}".format(index)
@@ -113,8 +117,8 @@ def main():
             FPS = 60
             chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
 
-            rawXRange = [-10, 10]
-            rawYRange = [-10, 10]
+            rawXRange = [0, 320]
+            rawYRange = [0, 240]
             scaledXRange = [200, 600]
             scaledYRange = [200, 600]
             scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)

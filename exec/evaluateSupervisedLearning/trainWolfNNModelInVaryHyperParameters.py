@@ -146,7 +146,7 @@ def main():
     print(trainDataMeanAccumulatedReward)
 
     # function to train NN model
-    terminalThreshold = 1e-6
+    terminalThreshold = 1e-10
     lossHistorySize = 10
     initActionCoeff = 1
     initValueCoeff = 1
@@ -154,10 +154,11 @@ def main():
     afterActionCoeff = 1
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
+    terminalController = lambda evalDict, numStep: False
+    #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 1000
-    trainStepsIntervel = 10000
+    reportInterval = 20000
+    trainStepsIntervel = 40000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
@@ -175,7 +176,7 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(6))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # train models for all conditions

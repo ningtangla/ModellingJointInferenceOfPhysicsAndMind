@@ -33,9 +33,7 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
-
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leashedSheepTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -44,15 +42,13 @@ def main():
 
     startTime = time.time()
 
-
-    numTrajectories = 4000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSSheepTrajectoryWithNNWolf.py'
+    sampleTrajectoryFileName = 'sampleMCTSSheepInLeashedWolfTraj.py'
 
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.5*numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)

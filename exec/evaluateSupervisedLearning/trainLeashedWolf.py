@@ -75,12 +75,12 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
-    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = [2 ,4, 6, 8]
+    manipulatedVariables['miniBatchSize'] = 256 #[64, 128, 256, 512]
+    manipulatedVariables['learningRate'] =  1e-4#[1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['depth'] = 6 #[2 ,4, 6, 8]
 
-    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+    # productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+    # parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
@@ -173,24 +173,24 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                        'trainedModels')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
+    trainModelForConditions(manipulatedVariables)
     # train models for all conditions
-    numCpuCores = os.cpu_count()
-    print(numCpuCores)
-    numCpuToUse = int(0.8*numCpuCores)
-    trainPool = mp.Pool(numCpuToUse)
-    #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
-    trainPool.map(trainModelForConditions, parametersAllCondtion)
+    # numCpuCores = os.cpu_count()
+    # print(numCpuCores)
+    # numCpuToUse = int(0.8*numCpuCores)
+    # trainPool = mp.Pool(numCpuToUse)
+    # #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    # trainPool.map(trainModelForConditions, parametersAllCondtion)
 
 if __name__ == '__main__':
     main()
