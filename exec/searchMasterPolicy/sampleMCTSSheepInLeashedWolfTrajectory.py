@@ -33,15 +33,14 @@ from exec.preProcessing import AccumulateRewards
 
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchToWallHerustic',
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchMasterPolicy',
                                        'mctsSheep')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
 
-    numSimulations = 200
-    evalMaxRunningSteps = 100
+    evalMaxRunningSteps = 7
     evalNumTrials = 2
 
     wolfId = 1
@@ -77,7 +76,7 @@ def main():
         predatorPowerRatio = float(parametersForTrajectoryPath['predatorPowerRatio'])
         wolfActionSpace = list(map(tuple, np.array(originActionSpace) * predatorPowerRatio))
         masterPowerRatio = float(parametersForTrajectoryPath['masterPowerRatio'])
-        wolfActionSpace = list(map(tuple, np.array(originActionSpace) * masterPowerRatio))
+        masterActionSpace = list(map(tuple, np.array(originActionSpace) * masterPowerRatio))
         numActionSpace = len(originActionSpace)
 
         # neural network init and save path
@@ -113,7 +112,7 @@ def main():
         wolfModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         restoredWolfModel = restoreVariables(initWolfNNModel, wolfModelPath)
         wolfPolicy = ApproximatePolicy(restoredWolfModel, wolfActionSpace)
-        
+
         masterPolicy = RandomPolicy(masterActionSpace)
 
         transitInSheepMCTSSimulation = \
@@ -143,7 +142,7 @@ def main():
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeightToOtherAgent,  getWolfXPos, getSheepXPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
-        
+
         numTrees = 4
         numSimulationsPerTree = int(parametersForTrajectoryPath['numSimulationsPerTree'])
         mcts = StochasticMCTS(numTrees, numSimulationsPerTree, selectChild, expand, rollout, backup, establishPlainActionDistFromMultipleTrees)
@@ -156,7 +155,7 @@ def main():
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
-        restoredModel.close()
+        restoredWolfModel.close()
 
 if __name__ == '__main__':
     main()
