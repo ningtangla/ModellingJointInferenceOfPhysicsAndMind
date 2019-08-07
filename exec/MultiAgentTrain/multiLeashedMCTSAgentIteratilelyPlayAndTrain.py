@@ -19,7 +19,7 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
-    ActionToOneHot, ProcessTrajectoryForPolicyValueNet,ProcessTrajectoryForPolicyValueNetMultiAgentReward
+    ActionToOneHot
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
@@ -58,6 +58,18 @@ class ApproximateValue:
         valuePrediction = self.policyValueNet.run(valuePrediction_, feed_dict={state_: stateBatch})[0][0]
         return valuePrediction
 
+class ProcessTrajectoryForPolicyValueNetMultiAgentReward:
+    def __init__(self, actionToOneHot, agentId,agentIdForNNState):
+        self.actionToOneHot = actionToOneHot
+        self.agentId = agentId
+        self.agentIdForNNState = agentIdForNNState
+
+    def __call__(self, trajectory):
+        processTuple = lambda state, actions, actionDist, value: \
+            (np.asarray(state[self.agentIdForNNState]).flatten(), self.actionToOneHot(actions[self.agentId]), np.array([value[self.agentId]]))
+        processedTrajectory = [processTuple(*triple) for triple in trajectory]
+
+        return processedTrajectory
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
@@ -228,7 +240,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 2
+    miniBatchSize = 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -239,7 +251,7 @@ def main():
 
     # pre-process the trajectory for NNTraining
     actionToOneHotList = [ActionToOneHot(actionSpace) for actionSpace in actionSpaceList]
-    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHotList[agentId], agentId) for agentId in agentIds]
+    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHotList[agentId], agentId, agentIdForNNState) for agentId in agentIds]
 
     # function to train NN model
     terminalThreshold = 1e-6
@@ -257,7 +269,7 @@ def main():
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRate = 0.001
+    learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
                     learningRateModifier, terminalController, coefficientController,
