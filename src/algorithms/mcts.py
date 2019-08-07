@@ -166,8 +166,8 @@ def establishSoftmaxActionDistFromMultipleTrees(roots):
 
 class StochasticMCTS:
     def __init__(self, numTree, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
-	self.numTree = numTree 
-	self.numSimulation = numSimulation
+        self.numTree = numTree
+        self.numSimulation = numSimulation
         self.selectChild = selectChild
         self.expand = expand
         self.estimateValue = estimateValue
@@ -175,8 +175,8 @@ class StochasticMCTS:
         self.outputDistribution = outputDistribution
 
     def __call__(self, currentState):
-	roots = []
-	for treeIndex in range(self.numTree):
+        roots = []
+        for treeIndex in range(self.numTree):
             root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
             root = self.expand(root)
 
