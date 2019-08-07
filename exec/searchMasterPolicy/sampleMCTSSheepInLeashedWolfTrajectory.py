@@ -40,7 +40,7 @@ def main():
 
     trajectoryExtension = '.pickle'
 
-    evalMaxRunningSteps = 7
+    evalMaxRunningSteps = 70
     evalNumTrials = 2
 
     wolfId = 1

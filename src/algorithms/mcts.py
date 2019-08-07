@@ -151,7 +151,7 @@ class MCTS:
 def establishPlainActionDistFromMultipleTrees(roots):
     visits = np.sum([[child.numVisited for child in root.children] for root in roots], axis=0)
     actionProbs = visits / np.sum(visits)
-    actions = [list(child.id.keys())[0] for child in root.children]
+    actions = [list(child.id.keys())[0] for child in roots[0].children]
     actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
@@ -160,7 +160,7 @@ def establishSoftmaxActionDistFromMultipleTrees(roots):
     visits = np.sum([[child.numVisited for child in root.children] for root in roots], axis=0)
     expVisits = np.exp(visits)
     actionProbs = expVisits / np.sum(expVisits)
-    actions = [list(child.id.keys())[0] for child in root.children]
+    actions = [list(child.id.keys())[0] for child in roots[0].children]
     actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
