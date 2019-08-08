@@ -183,6 +183,7 @@ def main():
     trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
+<<<<<<< HEAD
     # train models for all conditions
     numCpuCores = os.cpu_count()
     print(numCpuCores)
@@ -190,6 +191,16 @@ def main():
     trainPool = mp.Pool(numCpuToUse)
     #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     trainPool.map(trainModelForConditions, parametersAllCondtion)
+=======
+    trainModelForConditions(manipulatedVariables)
+    # train models for all conditions
+    # numCpuCores = os.cpu_count()
+    # print(numCpuCores)
+    # numCpuToUse = int(0.8*numCpuCores)
+    # trainPool = mp.Pool(numCpuToUse)
+    # #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    # trainPool.map(trainModelForConditions, parametersAllCondtion)
+>>>>>>> d99a65a4fec828ef40eb95b2dec94e99a812f707
 
 if __name__ == '__main__':
     main()

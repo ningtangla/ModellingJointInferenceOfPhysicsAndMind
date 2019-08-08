@@ -70,6 +70,7 @@ def main():
 # generate trajectory parallel
     generateTrajectoriesCodeName = 'generateLeashedWolfEvaluationTrajectory.py'
     evalNumTrials = 500
+
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)

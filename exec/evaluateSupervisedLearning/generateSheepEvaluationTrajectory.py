@@ -40,7 +40,7 @@ def main():
 
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 20
-    trainNumSimulations = 100
+    trainNumSimulations = 200
     killzoneRadius = 2
     sheepId = 0
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
@@ -96,7 +96,7 @@ def main():
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
         depth = int(parametersForTrajectoryPath['depth'])
-        initNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        initNNModel = generateModel(sharedWidths * 2, actionLayerWidths * depth, valueLayerWidths)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         evalQPosInitNoise = 0
@@ -107,7 +107,7 @@ def main():
 
         evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
-        evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
+        evalAllQPosInit = [generateInitQPosinitNNModel() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
         getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
                                                        numAgents, evalQPosInitNoise, evalQVelInitNoise)
@@ -121,7 +121,12 @@ def main():
         modelPath = getNNModelSavePath(manipulatedVariables)
         restoredModel = restoreVariables(initNNModel, modelPath)
         sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-        wolfPolicy = stationaryAgentPolicy
+        
+        initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'preTrainBaseline',
+                                            'wolfModels','agentId=1_depth=4_learningRate=0.001_maxRunningSteps=20_miniBatchSize=256_numSimulations=100_trainSteps=40000')
+        restoredWolfModel = restoreVariables(initWolfNNModel, wolfNNModelPath)
+        wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
         beginTime = time.time()

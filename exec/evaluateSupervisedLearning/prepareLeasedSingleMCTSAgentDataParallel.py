@@ -33,9 +33,7 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearning', 'trajectories')
-
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leasedSheepTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -44,10 +42,10 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 10
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
+    # sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
+    sampleTrajectoryFileName = 'sampleMCTSSheepInLeashedWolfTraj.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
     numCpuToUse = int(0.75*numCpuCores)
@@ -57,15 +55,15 @@ def main():
 
     killzoneRadius = 2
     maxRunningSteps = 25
-    numSimulations = 100
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)    
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
-    trainableAgentIds = [wolfId]
+    trainableAgentIds = [sheepId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
@@ -74,7 +72,7 @@ def main():
         # print(cmdList)
         trajectories = loadTrajectoriesForParallel(pathParameters)
         # import ipdb; ipdb.set_trace()
-    
+
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
