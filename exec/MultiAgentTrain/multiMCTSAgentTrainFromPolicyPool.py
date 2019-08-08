@@ -25,7 +25,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, sampleAction
+from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -88,8 +88,8 @@ class SampleMultiAgentNNModel:
         self.initMultiAgentNNModel = initMultiAgentNNModel
 
     def __call__(self, iterationIndex):
-        multiAgentSampledOldIterationIndex = np.random.choice(list(range(max(0, iterationIndex - self.policyPoolSize), max(1, iterationIndex))), \
-                len(self.trainableAgentIds))
+        multiAgentSampledOldIterationIndex = np.random.choice(list(range(0, int(iterationIndex/self.policyPoolSize) + 1)), \
+                len(self.trainableAgentIds)) * self.policyPoolSize
         sampledIterationAgentIdPair = zip(multiAgentSampledOldIterationIndex, self.trainableAgentIds)
         modelPathes = [self.generateNNModelSavePath({'iterationIndex': sampledIteration, 'agentId': agentId}) \
                 for sampledIteration, agentId in sampledIterationAgentIdPair]
@@ -185,7 +185,7 @@ def main():
     getStateFromNode = lambda node: list(node.id.values())[0]
 
     # sample trajectory
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, sampleAction)
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # neural network init
     numStateSpace = 12
@@ -201,7 +201,7 @@ def main():
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256
+    miniBatchSize = 128
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -257,7 +257,7 @@ def main():
     startTime = time.time()
     trainableAgentIds = [wolfId, sheepId]
 
-    policyPoolSize = 1000
+    policyPoolSize = 200
     sampleMultiAgentNNModel = SampleMultiAgentNNModel(policyPoolSize, trainableAgentIds, generateNNModelSavePath, initMultiAgentNNModel)
     # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
     otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
@@ -277,7 +277,7 @@ def main():
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList, readParametersFromDf)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)

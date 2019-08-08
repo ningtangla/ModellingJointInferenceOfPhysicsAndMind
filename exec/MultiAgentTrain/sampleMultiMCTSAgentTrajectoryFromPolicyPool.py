@@ -25,7 +25,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, sampleAction
+from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
@@ -87,8 +87,8 @@ class SampleMultiAgentNNModel:
         self.initMultiAgentNNModel = initMultiAgentNNModel
 
     def __call__(self, iterationIndex):
-        multiAgentSampledOldIterationIndex = np.random.choice(list(range(max(0, iterationIndex - self.policyPoolSize), max(1, iterationIndex))), \
-                len(self.trainableAgentIds))
+        multiAgentSampledOldIterationIndex = np.random.choice(list(range(0, int(iterationIndex/self.policyPoolSize) + 1)), \
+                len(self.trainableAgentIds)) * self.policyPoolSize
         sampledIterationAgentIdPair = zip(multiAgentSampledOldIterationIndex, self.trainableAgentIds)
         modelPathes = [self.generateNNModelSavePath({'iterationIndex': sampledIteration, 'agentId': agentId}) \
                 for sampledIteration, agentId in sampledIterationAgentIdPair]
@@ -172,7 +172,7 @@ def main():
         getStateFromNode = lambda node: list(node.id.values())[0]
 
         # sample trajectory
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, sampleAction)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # neural network init
         numStateSpace = 12
@@ -196,7 +196,7 @@ def main():
         startTime = time.time()
         trainableAgentIds = [sheepId, wolfId]
 
-        policyPoolSize = 1000
+        policyPoolSize = 200
         sampleMultiAgentNNModel = SampleMultiAgentNNModel(policyPoolSize, trainableAgentIds, generateNNModelSavePath, initMultiAgentNNModel)
         # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)

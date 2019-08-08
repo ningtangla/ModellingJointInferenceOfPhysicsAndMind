@@ -4,11 +4,10 @@ import math
 import numpy as np
 
 class GenerateTrajectoriesParallel:
-    def __init__(self, codeFileName, numSample, numCmdList, readParametersFromDf):
+    def __init__(self, codeFileName, numSample, numCmdList):
         self.codeFileName = codeFileName
         self.numSample = numSample
         self.numCmdList = numCmdList
-        self.readParametersFromDf = readParametersFromDf
 
     def __call__(self, parameters):
         startSampleIndexes = np.arange(0, self.numSample, math.ceil(self.numSample/self.numCmdList))
@@ -18,6 +17,19 @@ class GenerateTrajectoriesParallel:
         parametersStringJS = json.dumps(parametersString)
         cmdList = [['python3', self.codeFileName, parametersStringJS, str(startSampleIndex), str(endSampleIndex)] 
                 for startSampleIndex, endSampleIndex in startEndIndexesPair]
+        print(cmdList)
+        processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
+        for proc in processList:
+            proc.wait()
+        return cmdList
+
+class ExcuteCodeOnConditionsParallel:
+    def __init__(self, codeFileName):
+        self.codeFileName = codeFileName
+
+    def __call__(self, conditions):
+        cmdList = [['python3', self.codeFileName, json.dumps(condition)]
+                for condition in conditions]
         print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:

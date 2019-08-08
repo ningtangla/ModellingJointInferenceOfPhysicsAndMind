@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -61,7 +62,7 @@ def main():
                                         'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
-    
+
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 20
     trainNumSimulations = 200
@@ -69,15 +70,15 @@ def main():
     trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    
+
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = getTrajectorySavePath(parametersForTrajectoryPath)
-    
+
     if not os.path.isfile(trajectorySavePath):
-    
+
         # Mujoco environment
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
@@ -102,7 +103,7 @@ def main():
         alivePenalty = -0.05
         deathBonus = 1
         rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
-        
+
         # neural network init and save path
         numStateSpace = 12
         regularizationFactor = 1e-4
@@ -117,14 +118,16 @@ def main():
                                             'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
-        multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
+        depth = 4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
 
         # functions to get prediction from NN
         restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
 
         # function to prepare policy
         selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        # otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
         preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
@@ -159,6 +162,6 @@ def main():
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
-    
+
 if __name__ == '__main__':
     main()

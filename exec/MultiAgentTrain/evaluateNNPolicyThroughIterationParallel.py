@@ -1,5 +1,6 @@
 import sys
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -43,9 +44,9 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [-1, 400, 800, 1200]
-    manipulatedVariables['otherIteration'] = [-1, 400, 800, 1200]
-    manipulatedVariables['selfId'] = [0, 1]
+    manipulatedVariables['selfIteration'] = [-1, 2000, 4000, 6000, 8000,10000,12000 ]
+    manipulatedVariables['otherIteration'] = [-1]
+    manipulatedVariables['selfId'] = [1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -61,13 +62,13 @@ def main():
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-   
+
     maxRunningSteps = 20
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
-    
+
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
@@ -80,7 +81,7 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    
+
     trainMaxRunningSteps = 20
     trainNumSimulations = 200
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -89,8 +90,9 @@ def main():
                                         'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
-    
-    multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
+
+    depth = 4
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
     for agentId  in range(numAgents):
         modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPath)
@@ -98,11 +100,11 @@ def main():
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5*numCpuCores)
-    numCmdList = min(evalNumTrials, numCpuToUse) 
+    numCpuToUse = int(0.8*numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
-            numCmdList, readParametersFromDf)
-    
+            numCmdList)
+
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
     toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
@@ -129,7 +131,7 @@ def main():
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
-
+    print(statisticsDf)
   # plot the results
     fig = plt.figure()
     numColumns = len(manipulatedVariables['selfId'])
@@ -147,7 +149,7 @@ def main():
     # plt.title('iterative training in chasing task with killzone radius = 2 and numSim = 200\nStart with random model')
     plt.legend(loc='best')
     plt.show()
-    
+
 
 
 if __name__ == '__main__':
