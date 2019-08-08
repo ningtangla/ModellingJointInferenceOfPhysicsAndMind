@@ -92,8 +92,13 @@ def main():
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
+<<<<<<< HEAD
     dataSetMaxRunningSteps = 25
     dataSetNumSimulations = 100
+=======
+    dataSetMaxRunningSteps = 20
+    dataSetNumSimulations = 200
+>>>>>>> 62e4cab967c405d049b3c0019205f856295c0445
     killzoneRadius = 2
 
     dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -133,6 +138,7 @@ def main():
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
+
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
@@ -145,7 +151,7 @@ def main():
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+    getNNModel = lambda depth: generateModel(sharedWidths*2 , actionLayerWidths * depth, valueLayerWidths)
     # function to train NN model
     terminalThreshold = 1e-10
     lossHistorySize = 10
@@ -158,8 +164,13 @@ def main():
     terminalController = lambda evalDict, numStep: False
     #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
+<<<<<<< HEAD
     reportInterval = 10000
     trainStepsIntervel = 20000
+=======
+    reportInterval = 1000
+    trainStepsIntervel = 40000
+>>>>>>> 62e4cab967c405d049b3c0019205f856295c0445
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1

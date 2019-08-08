@@ -44,7 +44,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
+    manipulatedVariables['trainSteps'] = [0, 40000, 80000, 120000, 160000, 200000]
     manipulatedVariables['depth'] = [2, 4, 6, 8]
 
     levelNames = list(manipulatedVariables.keys())
@@ -68,9 +68,17 @@ def main():
 
 # generate trajectory parallel
     generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
-    evalNumTrials = 1000
+    evalNumTrials = 300
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.5 * numCpuCores)
+    numCpuToUse = int(0.8 * numCpuCores)
+    numCmdList = min(evalNumTrials, numCpuToUse)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
+                                                                evalNumTrials, numCmdList)
+
+    generateTrajectoriesCodeName = 'generateWolfEvaluationTrajectory.py'
+    evalNumTrials = 400
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
                                                                 evalNumTrials, numCmdList)
@@ -121,7 +129,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-            # axForDraw.set_ylim(1.4, 2.5)
+            axForDraw.set_ylim(-0.8, 0.6)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
 
             drawPerformanceLine(group, axForDraw, depth)

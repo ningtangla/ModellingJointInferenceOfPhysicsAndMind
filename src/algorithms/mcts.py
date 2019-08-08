@@ -87,10 +87,11 @@ class RollOut:
             if self.isTerminal(currentState):
                 break
             nextState = self.transitionFunction(currentState, action)
-
             currentState = nextState
 
-        heuristicReward = self.rolloutHeuristic(currentState)
+        heuristicReward = 0
+        if not self.isTerminal(currentState):
+            heuristicReward = self.rolloutHeuristic(currentState)
         totalRewardForRollout += heuristicReward
 
         return totalRewardForRollout

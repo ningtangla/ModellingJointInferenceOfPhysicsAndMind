@@ -16,21 +16,66 @@ def main():
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'leased.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    init = [[-3, -5], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
     physicsSimulation = mujoco.MjSim(physicsModel)
-    initQPos = np.array([1,1,2,2,-4,-4] + [0]*18)
-    physicsSimulation.data.qpos[:] = initQPos
-    physicsSimulation.step()
+    physicsSimulation.model.body_pos[-12: , :2] = init
+    #physicsSimulation.model.body_mass[8] = 10000
+    #physicsSimulation.model.tendon_range[:] = [[0, 0.7]]*10
+    #physicsSimulation.data.body_xpos[-12: , :2] = init
+    #physicsSimulation.data.qpos[:] = np.array(init).flatten()
+    physicsSimulation.set_constants()
+    print(physicsSimulation.model.body_pos)
+    print(physicsSimulation.data.body_xpos)
+    print(physicsSimulation.data.qpos)
+    print(physicsSimulation.data.qvel)
     physicsSimulation.forward()
-    action = np.array([0,0,-1,-1,0,0])
-    #physicsSimulation.data.ctrl[:] = action
+    print(physicsSimulation.model.body_pos)
+    print(physicsSimulation.data.body_xpos)
+    print(physicsSimulation.data.qpos)
+    print(physicsSimulation.data.qvel)
+    
+    baselinePhysicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'chase10.xml')
+    baselinePhysicsModel = mujoco.load_model_from_path(baselinePhysicsDynamicsPath)
+    #baselinePhysicsModel.body_pos[-12: , :2] = init
+    baselinePhysicsSimulation = mujoco.MjSim(baselinePhysicsModel)
+    #baselinePhysicsSimulation.set_constants()
+    print(baselinePhysicsSimulation.model.body_pos)
+    print(baselinePhysicsSimulation.data.body_xpos)
+    print(baselinePhysicsSimulation.data.qpos)
+    print(baselinePhysicsSimulation.data.qvel)
+    baselinePhysicsSimulation.forward()
+    print(baselinePhysicsSimulation.model.body_pos)
+    print(baselinePhysicsSimulation.data.body_xpos)
+    print(baselinePhysicsSimulation.data.qpos)
+    print(baselinePhysicsSimulation.data.qvel)
+    #__import__('ipdb').set_trace()
+    
+    
     physicsViewer = mujoco.MjViewer(physicsSimulation)
-    numSimulationFrames = 1000
-    initQPos = np.array([9,-9, 4, 4, -4,-4] + [0]*18)
-    physicsSimulation.data.qpos[:] = initQPos
+    numSimulationFrames = 10000
     for frameIndex in range(numSimulationFrames):
+        if frameIndex > 500:
+            action = np.random.uniform(-10, 10, 6)
+            physicsSimulation.data.ctrl[:] = action
         physicsSimulation.step()
         physicsSimulation.forward()
         physicsViewer.render()
-
+    
+    #print(physicsSimulation.model.body_pos)
+    #print(physicsSimulation.data.body_xpos)
+    #print(physicsSimulation.data.qpos)
+    
+    baselinePhysicsViewer = mujoco.MjViewer(baselinePhysicsSimulation)
+    numSimulationFrames = 1000
+    for frameIndex in range(numSimulationFrames):
+        #action = np.array([0] * 24)
+        #baselinePhysicsSimulation.data.ctrl[:] = action
+        baselinePhysicsSimulation.step()
+        baselinePhysicsSimulation.forward()
+        baselinePhysicsViewer.render()
+    #print(baselinePhysicsSimulation.model.body_pos)
+    #print(baselinePhysicsSimulation.data.body_xpos)
+    #print(baselinePhysicsSimulation.data.qpos)
+    
 if __name__ == '__main__':
     main()

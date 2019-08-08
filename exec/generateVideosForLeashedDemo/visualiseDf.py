@@ -2,12 +2,14 @@ from pygame.color import THECOLORS
 import os
 import pandas as pd
 import sys
+DIRNAME = os.path.dirname(__file__)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from exec.generateVideos.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
 from exec.generateVideos.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj
 
 def main():
+
     screenWidth = 800
     screenHeight = 800
     fullScreen = False
@@ -25,11 +27,26 @@ def main():
     circleSize = 10
     positionIndex = [0, 1]
     drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
+    colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
 
-    colorSpace = [THECOLORS['green'], THECOLORS['red']]
+
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','evaluateTrajectories')
+
+    modelSampleIndex = (0,3)
+    agentId = 1
+    killzoneRadius = 2
+    numSimulations = 100
+    maxRunningSteps = 20
+    trajectoryParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps,'numSimulations': numSimulations, , 'sampleIndex':modelSampleIndex}
+
+
+    index = 2
+    imageFolderName = "{}".format(index)
+    saveImageDir = os.path.join(os.path.join(DIRNAME, '..', '..', 'data',
+                                                         'trainedLeashedWolfDemo'), imageFolderName)
 
     FPS = 60
-    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='9')
+    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName="{}".format(index))
 
     rawXRange = [-10, 10]
     rawYRange = [-10, 10]
@@ -45,12 +62,12 @@ def main():
     parentPath = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
     dataPath = os.path.abspath(os.path.join(parentPath, 'trainedData'))
     DIRNAME = os.path.dirname(__file__)
-    trajectoryDf = pd.read_pickle(os.path.join(DIRNAME, '..', '..', 'data', 'trainMCTSNNIteratively',
-                                               'replayBufferStartWithTrainedModel', 'evaluationVideos20kTrainSteps',
-                                               'sampleIndex9.pickle'))
-    #pd.read_pickle(os.path.join(os.path.join(dataPath, 'df.pickle')))
-    trajectory = getTrajectory(trajectoryDf)
-    chaseTrial(trajectory)
+
+    for index in range(10):
+        trajectoryDf = pd.read_pickle(os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','evaluateTrajectories','agentId=1_depth=888_learningRate=0.001_maxRunningSteps=20_miniBatchSize=256_numSimulations=100_sampleIndex={}_trainSteps=40000_DF.pickle'.format(index)))
+        #pd.read_pickle(os.path.join(os.path.join(dataPath, 'df.pickle')))
+        trajectory = getTrajectory(trajectoryDf)
+        chaseTrial(trajectory)
 
 
 if __name__ == '__main__':

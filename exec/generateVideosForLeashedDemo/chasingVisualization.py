@@ -41,16 +41,16 @@ class DrawBackground:
 
 
 class DrawState:
-    def __init__(self, screen, circleSize, positionIndex, drawBackGround):
+    def __init__(self, screen, circleSize, positionIndex, drawBackGround, numOfAgent):
         self.screen = screen
         self.circleSize = circleSize
         self.xIndex, self.yIndex = positionIndex
         self.drawBackGround = drawBackGround
+        self.numOfAgent = numOfAgent
 
     def __call__(self, state, circleColorList):
         self.drawBackGround()
-        numOfAgent = len(state)
-        for agentIndex in range(numOfAgent):
+        for agentIndex in range(self.numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
             agentColor = circleColorList[agentIndex]
             pg.draw.circle(self.screen, agentColor, agentPos, self.circleSize)
@@ -60,14 +60,14 @@ class DrawState:
 
 class ChaseTrialWithTraj:
     def __init__(self, fps, colorSpace,
-                 drawState, saveImage, imageFolderName):
+                 drawState, saveImage, saveImageDir):
 
         self.fps = fps
         self.colorSpace = colorSpace
 
         self.drawState = drawState
         self.saveImage = saveImage
-        self.imageFolderName = imageFolderName
+        self.saveImageDir = saveImageDir
 
     def __call__(self, trajectoryData):
         fpsClock = pg.time.Clock()
@@ -78,13 +78,8 @@ class ChaseTrialWithTraj:
             screen = self.drawState(state, self.colorSpace)
 
             if self.saveImage == True:
-                currentDir = os.getcwd()
-                parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
-                saveImageDir = os.path.join(os.path.join(parentDir, '..', 'data',
-                                                         'trainMCTSNNIteratively', 'replayBufferStartWithTrainedModel',
-                                                         'evaluationVideos20kTrainSteps', 'demo'), self.imageFolderName)
-                if not os.path.exists(saveImageDir):
-                    os.makedirs(saveImageDir)
-                pg.image.save(screen, saveImageDir + '/' + format(timeStep, '04') + ".png")
+                if not os.path.exists(self.saveImageDir):
+                    os.makedirs(self.saveImageDir)
+                pg.image.save(screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
 
         return

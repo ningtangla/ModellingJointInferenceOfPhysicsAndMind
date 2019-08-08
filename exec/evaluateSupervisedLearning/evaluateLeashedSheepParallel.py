@@ -42,10 +42,11 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
-    manipulatedVariables['learningRate'] = [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = [0, 20000, 40000, 60000, 80000, 100000]
-    manipulatedVariables['depth'] = [2, 4, 6, 8]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256]
+    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
+    manipulatedVariables['depth'] = [2 ,4, 6]
+    manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
+
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -66,20 +67,13 @@ def main():
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
-<<<<<<< HEAD
-
-=======
 # generate trajectory parallel
->>>>>>> 62e4cab967c405d049b3c0019205f856295c0445
-    generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
-    evalNumTrials = 300
-
+    generateTrajectoriesCodeName = 'generateLeashedSheepEvaluationTrajectory.py'
+    evalNumTrials = 2
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8 * numCpuCores)
+    numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-                                                                evalNumTrials,numCmdList)
-
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,evalNumTrials, numCmdList)
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
@@ -87,14 +81,14 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedSheepTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
     trainMaxRunningSteps = 25
-    trainNumSimulations = 100
+    trainNumSimulations = 200
     killzoneRadius = 2
     trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
@@ -127,22 +121,15 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('depth: {}'.format(depth))
 
-<<<<<<< HEAD
-            axForDraw.set_ylim(-1, 1.3)
-=======
-            axForDraw.set_ylim(0.2, 1.1)
->>>>>>> 62e4cab967c405d049b3c0019205f856295c0445
+            # axForDraw.set_ylim(-1, 0.6)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
-            drawPerformanceLine(group, axForDraw, depth)
-            trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepLevels, [1.18]*len(trainStepLevels), label='mctsTrainData')
 
+            drawPerformanceLine(group, axForDraw, depth)
+            trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
+            axForDraw.plot(trainStepsLevels, [0.41] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
-<<<<<<< HEAD
-    # plt.supertitle('Sheep')
-=======
->>>>>>> 62e4cab967c405d049b3c0019205f856295c0445
+    plt.suptitle('ChaseNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 
