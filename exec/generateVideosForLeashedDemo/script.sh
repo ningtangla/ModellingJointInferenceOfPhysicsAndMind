@@ -1,16 +1,18 @@
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchToWallHerustic/mctsSheep/
+cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchMasterPolicy/mctsSheep/
 mkdir demo
 
-for heuristicWeightWallDis in 0.5 1 2
+for masterPowerRatio in 0.4 0.8
 do
-    for preyPowerRatio in 0.4 0.6 0.8
+    for numSimulationsPerTree in 50 100
     do
-        for index in 1 2
+        for predatorPowerRatio in 1.5 2
         do
-        cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchToWallHerustic/mctsSheep/heuristicWeightWallDis=${heuristicWeightWallDis}_preyPowerRatio=${preyPowerRatio}
-        cd ${index}
-        ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/searchToWallHerustic/mctsSheep/demo/heuristicWeightWallDis=${heuristicWeightWallDis}_preyPowerRatio=${preyPowerRatio}_Demo${index}.mp4
-        # mv *.Demo${index}.mp4 ../../demo
+            for index in 0 1 2
+            do
+            cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchMasterPolicy/mctsSheep/masterPowerRatio=${masterPowerRatio}_numSimulationsPerTree=${numSimulationsPerTree}_predatorPowerRatio=${predatorPowerRatio}/${index}
+
+            ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/searchMasterPolicy/mctsSheep/demo/masterPowerRatio=${masterPowerRatio}_numSimulationsPerTree=${numSimulationsPerTree}_predatorPowerRatio=${predatorPowerRatio}_Demo${index}.mp4
+            done
         done
     done
 done

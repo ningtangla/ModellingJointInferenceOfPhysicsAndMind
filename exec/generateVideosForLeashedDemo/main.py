@@ -39,15 +39,19 @@ def main():
     # manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
     # manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
 
-    manipulatedVariables['safeBound'] = [1.5]
-    manipulatedVariables['preyPowerRatio'] =[0.7]
-    manipulatedVariables['wallPunishRatio'] = [0.6]
+    # manipulatedVariables['safeBound'] = [1.5]
+    # manipulatedVariables['preyPowerRatio'] =[0.7]
+    # manipulatedVariables['wallPunishRatio'] = [0.6]
+
+    manipulatedVariables['predatorPowerRatio'] = [1.5, 2]
+    manipulatedVariables['masterPowerRatio'] =[0.4, 0.8]
+    manipulatedVariables['numSimulationsPerTree'] = [50, 100]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchToWallHerustic', 'mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchMasterPolicy', 'mctsSheep')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
