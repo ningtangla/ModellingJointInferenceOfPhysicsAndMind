@@ -48,7 +48,7 @@
             <joint axis="1 0 0" damping="0" name="distractor0" pos="0 0 0" type="slide"/>
             <joint axis="0 1 0" damping="0" name="distractor1" pos="0 0 0" type="slide"/>
       <!--      <joint axis="0 0 1" damping="0" name="dragger2" pos="0 0 0" type="slide"/> -->
-            <geom type="sphere" size="0.2" name="distractor" mass="10" rgba="0 0 1 1"/>
+            <geom type="sphere" size="0.2" name="distractor" mass="8" rgba="0 0 1 1"/>
  	    <site name="distractor" pos="0 0 0" type="sphere" size="0.01"/>
         </body>
 

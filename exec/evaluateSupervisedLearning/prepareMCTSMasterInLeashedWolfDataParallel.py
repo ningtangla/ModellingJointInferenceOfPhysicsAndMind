@@ -42,7 +42,7 @@ def main():
 
     startTime = time.time()
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMasterMCTSTraj.py'
+    sampleTrajectoryFileName = 'sampleMCTSMasterInLeashedWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
