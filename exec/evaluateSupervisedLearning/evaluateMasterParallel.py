@@ -43,8 +43,8 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2, 4, 6]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedVariables['depth'] = [2, 4, 8]
     manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
 
 
@@ -69,7 +69,7 @@ def main():
 
 # generate trajectory parallel
     generateTrajectoriesCodeName = 'generateMasterEvaluationTraj.py'
-    evalNumTrials = 2
+    evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
@@ -81,7 +81,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedMasterTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -126,7 +126,7 @@ def main():
 
             drawPerformanceLine(group, axForDraw, depth)
             trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepsLevels, [0.41] * len(trainStepsLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepsLevels, [0.375] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
     plt.suptitle('MasterNN Policy Accumulate Rewards')

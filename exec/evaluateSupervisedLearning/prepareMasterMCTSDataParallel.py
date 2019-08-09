@@ -38,7 +38,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     masterId = 2
-    numTrajectories = 3000
+    numTrajectories = 2500
 
     startTime = time.time()
     # generate and load trajectories before train parallelly

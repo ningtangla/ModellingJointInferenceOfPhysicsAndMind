@@ -12,11 +12,12 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy,HeatSeekingDiscreteDeterministicPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 import mujoco_py as mujoco
 import numpy as np
 
@@ -47,12 +48,13 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
-        sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        preyPowerRatio = 1
+        sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
-        wolfActionSpace = list(map(tuple, np.array(sheepActionSpace) * predatorPowerRatio))
+        wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         masterPowerRatio = 0.4
-        masterActionSpace = list(map(tuple, np.array(sheepActionSpace) * masterPowerRatio))
-
+        masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
@@ -76,20 +78,20 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
         depth = 4
-        initNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-
+        initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initSheepNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 # wolf NN model
         wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        wolfPreTrainModel = restoreVariables(initNNModel, wolfPreTrainModelPath)
+        wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
 
 # sheep NN model
         sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        sheepPreTrainModel = restoreVariables(initNNModel, sheepPreTrainModelPath)
+        sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
         sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
         transitInMasterMCTSSimulation = \
-            lambda state, masterSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[:3])),chooseGreedyAction(wolfPolicy(state[:3])), masterSelfAction])
+            lambda state, masterSelfAction: transit(state, [sampleAction(sheepPolicy(state[:3])),sampleAction(wolfPolicy(state[:3])), masterSelfAction])
 
 # MCTS master
         cInit = 1
@@ -106,8 +108,8 @@ def main():
         rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
         rolloutPolicy = lambda state: masterActionSpace[np.random.choice(range(numActionSpace))]
-        rolloutHeuristicWeight = 0.1
         maxRolloutSteps = 10
+        rolloutHeuristicWeight = deathPenalty/10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInMasterMCTSSimulation, rewardFunction, isTerminal, rolloutHeuristic)
 
@@ -130,6 +132,8 @@ def main():
 
         # saving trajectories
         # policy
+
+        # wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getWolfQPos, getSheepQPos, computeAngleBetweenVectors)
         policy = lambda state: [sheepPolicy(state[:3]), wolfPolicy(state[:3]),  mcts(state)]
 
         # generate trajectories

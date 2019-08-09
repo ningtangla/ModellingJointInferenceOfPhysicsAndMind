@@ -34,7 +34,7 @@ from exec.preProcessing import AccumulateRewards
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateLeashedMasterTrajectories')
+                                       'evaluateLeashedSheepTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -43,10 +43,8 @@ def main():
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
     killzoneRadius = 2
-    masterId = 2
-    evalNumTrials = 1000
-
-    trajectoryFixedParameters = {'agentId': masterId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    sheepId = 0
+    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
@@ -79,8 +77,6 @@ def main():
         sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(sheepActionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.4
-        masterActionSpace = list(map(tuple, np.array(sheepActionSpace) * masterPowerRatio))
 
         numActionSpace = len(wolfActionSpace)
 
@@ -97,10 +93,10 @@ def main():
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
 
-        NNFixedParameters = {'agentId': masterId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+        NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'masterNNModels')
+        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -109,7 +105,6 @@ def main():
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         # sample trajectory
-
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
         qPosInitNoise = 7
@@ -119,6 +114,7 @@ def main():
         ropeParaIndex = list(range(3, 12))
         maxRopePartLength = 0.25
 
+        evalNumTrials = 1000
         getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
@@ -127,25 +123,22 @@ def main():
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
 
+
         initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
         wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
-
-        initSheepNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
-        sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
 
         # save evaluation trajectories
         manipulatedVariables = json.loads(sys.argv[1])
         modelPath = getNNModelSavePath(manipulatedVariables)
         restoredModel = restoreVariables(initNNModel, modelPath)
-        masterPolicy = ApproximatePolicy(restoredModel, masterActionSpace)
+        sheepPolicy = ApproximatePolicy(restoredModel, sheepActionSpace)
 
+        initState = np.array([(0, ) * 6] * 12 )
 #policy
-        policy = lambda state: [sheepPolicy(state[:3]), wolfPolicy(state[:3]), masterPolicy(state[:3])]
+        policy = lambda state: [sheepPolicy(state[:3]), wolfPolicy(state[:3]), stationaryAgentPolicy(state)]
 
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
 

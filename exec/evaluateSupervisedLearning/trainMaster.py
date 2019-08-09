@@ -76,8 +76,8 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2 ,4, 6]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedVariables['depth'] = [2 ,4, 8]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
