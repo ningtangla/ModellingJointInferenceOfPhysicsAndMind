@@ -71,7 +71,7 @@ class DrawStateWithRope():
         tiedAgentPos1 = [np.int(state[tiedAgentId[0]][self.xIndex]), np.int(state[tiedAgentId[0]][self.yIndex])]
         tiedAgentPos2 = [np.int(state[tiedAgentId[1]][self.xIndex]), np.int(state[tiedAgentId[1]][self.yIndex])]
 
-        pg.draw.lines(self.screen, self.ropeColor, False, [tiedAgentPos1, tiedAgentPos2], 5)
+        pg.draw.lines(self.screen, self.ropeColor, False, [tiedAgentPos1, tiedAgentPos2], 2)
 
         for agentIndex in range(self.numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]

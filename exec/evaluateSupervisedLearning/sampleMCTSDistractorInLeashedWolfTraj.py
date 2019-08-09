@@ -26,8 +26,8 @@ import numpy as np
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 2
-    numSimulations = 200
-    maxRunningSteps = 25
+    numSimulations = 100
+    maxRunningSteps = 50
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -49,7 +49,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        preyPowerRatio = 0.7
+        preyPowerRatio = 1
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
@@ -85,15 +85,15 @@ def main():
         actionLayerWidths = [128]
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-        depth = 4
 
+        depth = 4
         initSheepNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
         initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
         initMasterNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
 # sheep NN model
-        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        sheepPreTrainModel = restoreVariables(initMasterNNModel, sheepPreTrainModelPath)
+        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
         sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
 # wolf NN model
@@ -125,9 +125,9 @@ def main():
         deathPenalty = -1
         # rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
 
-        safeBound = 1.5
+        safeBound = 2.5
         wallDisToCenter = 10
-        wallPunishRatio = 1.5
+        wallPunishRatio = 5
 
         getOtherPos = [getSheepQPos, getWolfQPos, getMasterQPos]
         isCollided = IsCollided(killzoneRadius, getDistractorQPos, getOtherPos)

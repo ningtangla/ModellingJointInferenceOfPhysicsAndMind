@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, GetAgentCoordinateFromTrajectoryAndStateDf, \
     loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath,conditionDfFromParametersDict
 from exec.generateVideosForLeashedDemo.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
-from exec.generateVideosForLeashedDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj
+from exec.generateVideosForLeashedDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj,DrawStateWithRope, ChaseTrialWithRopeTraj
 
 def getFileName(parameters,fixedParameters):
     allParameters = dict(list(parameters.items()) + list(fixedParameters.items()))
@@ -31,7 +31,7 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [2]
+    manipulatedVariables['agentId'] = [3]
     manipulatedVariables['maxRunningSteps'] = [50]
     manipulatedVariables['numSimulations'] = [100]
     manipulatedVariables['killzoneRadius'] = [2]
@@ -49,7 +49,7 @@ def main():
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchMasterPolicy', 'mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorTrajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
@@ -103,12 +103,13 @@ def main():
         positionIndex = [0, 1]
         tiedAgentId = [1, 2]
 
-        numOfAgent = 3
+        numOfAgent = 4
+        ropeColor = THECOLORS['white']
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
-        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackGround)
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
 
-        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
-        # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
+        # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
 
         for index in range(numTrajectoryChoose):
             imageFolderName = "{}".format(index)
@@ -116,7 +117,7 @@ def main():
 
             FPS = 60
             chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
-            chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
+            chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, colorSpace, drawStateWithRope, saveImage=True, saveImageDir=saveImageDir)
 
             rawXRange = [-10, 10]
             rawYRange = [-10, 10]
@@ -130,8 +131,8 @@ def main():
             getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
             trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
             trajectory = getTrajectory(trajectoryDf)
-            chaseTrial(trajectory)
-            # chaseTrialWithRope(trajectory,tiedAgentId)
+            # chaseTrial(trajectory)
+            chaseTrialWithRope(trajectory, tiedAgentId)
 
 if __name__ == '__main__':
     main()
