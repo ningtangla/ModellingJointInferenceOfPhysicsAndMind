@@ -43,7 +43,6 @@
             <geom type="sphere" size="0.2" name="dragger" mass="10" rgba="0 0 1 1"/>
  	    <site name="dragger" pos="0 0 0" type="sphere" size="0.01"/>
         </body>
-        </body>
 	<body name="distractor" pos="0 0 0">
             <joint axis="1 0 0" damping="0" name="distractor0" pos="0 0 0" type="slide"/>
             <joint axis="0 1 0" damping="0" name="distractor1" pos="0 0 0" type="slide"/>
@@ -185,7 +184,7 @@
 
         <motor gear="10" joint="dragger0"/>
         <motor gear="10" joint="dragger1"/>
-	
+
 	<motor gear="10" joint="distractor0"/>
         <motor gear="10" joint="distractor1"/>
 
