@@ -138,7 +138,7 @@ def main():
         qVelInit = (0, ) * 26
         qPosInitNoise = 6
         qVelInitNoise = 5
-        numAgent = 3
+        numAgent = 4
         tiedAgentId = [1, 2]
         ropeParaIndex = list(range(4, 13))
         maxRopePartLength = 0.35
