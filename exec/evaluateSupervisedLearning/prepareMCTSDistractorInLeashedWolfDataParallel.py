@@ -40,7 +40,7 @@ def main():
     distractorId = 3
     startTime = time.time()
 
-    numTrajectories = 3000
+    numTrajectories = 10
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
 

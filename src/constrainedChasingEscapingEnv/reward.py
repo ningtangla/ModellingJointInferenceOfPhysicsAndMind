@@ -26,7 +26,7 @@ class IsCollided:
         selfPos = self.getSelfPos(state)
         otherPositions = [getPos(state) for getPos in self.getOtherPos]
 
-        L2Normdistance = [np.linalg.norm((selfPos - otherPosition), ord=2) otherPosition in otherPositions]
+        L2Normdistance = [np.linalg.norm((selfPos - otherPosition), ord=2) for otherPosition in otherPositions]
         terminal = np.any(np.array(L2Normdistance) <= self.minXDis)
 
         return terminal
