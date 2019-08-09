@@ -56,7 +56,7 @@ def main():
         masterPowerRatio = 0.4
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
         distractorPowerRatio = 0.7
-        sheepActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
+        distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
 
         numActionSpace = len(actionSpace)
 
@@ -95,12 +95,12 @@ def main():
         wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
-       
-        distractorPolicy = RadnomPolicy(distractorActionSpace)
+
+        distractorPolicy = RandomPolicy(distractorActionSpace)
 
         transitInSheepMCTSSimulation = \
                 lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[:3])),  chooseGreedyAction(masterPolicy(state[0:3])),
-                chooseGreedyAction(randomPolicy(state)])
+                chooseGreedyAction(distractorPolicy(state))])
 
 
 # MCTS sheep
@@ -134,8 +134,8 @@ def main():
         mcts = StochasticMCTS(numTrees, numSimulationsPerTree, selectChild, expand, rollout, backup, establishPlainActionDistFromMultipleTrees)
 
         # sample trajectory
-        qPosInit = (0, ) * 24
-        qVelInit = (0, ) * 24
+        qPosInit = (0, ) * 26
+        qVelInit = (0, ) * 26
         qPosInitNoise = 6
         qVelInitNoise = 5
         numAgent = 3
@@ -150,7 +150,7 @@ def main():
         # saving trajectories
         # policy
 
-        policy = lambda state: [mcts(state), wolfPolicy(state[:3]),  masterPolicy(state[:3]), masterPolicy(state)]
+        policy = lambda state: [mcts(state), wolfPolicy(state[:3]),  masterPolicy(state[:3]), distractorPolicy(state)]
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
