@@ -44,12 +44,11 @@ def main():
     # manipulatedVariables['safeBound'] = [1.5]
     # manipulatedVariables['preyPowerRatio'] =[0.7]
     # manipulatedVariables['wallPunishRatio'] = [0.6]
-
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchMasterPolicy', 'mctsSheep')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
