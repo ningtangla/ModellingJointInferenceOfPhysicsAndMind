@@ -56,7 +56,7 @@ def main():
 
     killzoneRadius = 2
     maxRunningSteps = 200
-    numSimulations = 200
+    numSimulations = 400
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)

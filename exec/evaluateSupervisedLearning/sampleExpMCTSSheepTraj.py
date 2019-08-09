@@ -60,7 +60,7 @@ def main():
 
         numActionSpace = len(actionSpace)
 
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'expLeashed.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -83,11 +83,11 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
         initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initMasterNNModel = generateModel(sharedWidths * 2, actionLayerWidths, valueLayerWidths)
+        initMasterNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
 
 # master NN model
-        masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=2_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         masterPreTrainModel = restoreVariables(initMasterNNModel, masterPreTrainModelPath)
         masterPolicy = ApproximatePolicy(masterPreTrainModel, masterActionSpace)
 
@@ -97,6 +97,7 @@ def main():
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
        
         distractorPolicy = RadnomPolicy(distractorActionSpace)
+
         transitInSheepMCTSSimulation = \
                 lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[:3])),  chooseGreedyAction(masterPolicy(state[0:3])),
                 chooseGreedyAction(randomPolicy(state)])
@@ -135,12 +136,12 @@ def main():
         # sample trajectory
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
-        qPosInitNoise = 7
+        qPosInitNoise = 6
         qVelInitNoise = 5
         numAgent = 3
         tiedAgentId = [1, 2]
-        ropeParaIndex = list(range(3, 12))
-        maxRopePartLength = 0.25
+        ropeParaIndex = list(range(4, 13))
+        maxRopePartLength = 0.35
         reset = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
