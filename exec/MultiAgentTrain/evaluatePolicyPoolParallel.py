@@ -44,8 +44,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0,5001,400))
-    manipulatedVariables['otherIteration'] = list(range(0,5001,400))
+    manipulatedVariables['selfIteration'] = list(range(0,2401,400))
+    manipulatedVariables['otherIteration'] = list(range(0,2401,400))
     manipulatedVariables['selfId'] = [0,1]
 
     levelNames = list(manipulatedVariables.keys())
@@ -87,7 +87,7 @@ def main():
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -97,7 +97,7 @@ def main():
         modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPath)
 
-    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
+    generateTrajectoriesCodeName = 'generatePolicyPoolEvaluationTraj.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
@@ -112,7 +112,7 @@ def main():
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
