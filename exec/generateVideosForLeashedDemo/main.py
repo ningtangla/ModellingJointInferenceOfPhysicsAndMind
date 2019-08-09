@@ -35,6 +35,7 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [50]
     manipulatedVariables['numSimulations'] = [100]
     manipulatedVariables['killzoneRadius'] = [2]
+
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
@@ -65,8 +66,7 @@ def main():
     getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
     getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 4)
     getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 5)
-    extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord,
-                           'yVel': getAgentVelYCoord}
+    extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord, 'yVel': getAgentVelYCoord}
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
 
 
@@ -74,8 +74,8 @@ def main():
     for conditionParameters in conditionParametersAll:
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
-
-        numTrajectoryChoose = min(numTrajectories, 10)
+        maxNumTrajectories = 10
+        numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
         selectedTrajectories = trajectories[0:numTrajectoryChoose]
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
@@ -101,10 +101,14 @@ def main():
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
         circleSize = 10
         positionIndex = [0, 1]
+        tiedAgentId = [1, 2]
 
         numOfAgent = 3
-        drawState = DrawState(screen, circleSize, positionIndex, drawBackground,numOfAgent)
+        drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackGround)
+
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+        # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
 
         for index in range(numTrajectoryChoose):
             imageFolderName = "{}".format(index)
@@ -112,6 +116,7 @@ def main():
 
             FPS = 60
             chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
+            chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
 
             rawXRange = [-10, 10]
             rawYRange = [-10, 10]
@@ -126,6 +131,7 @@ def main():
             trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
             trajectory = getTrajectory(trajectoryDf)
             chaseTrial(trajectory)
+            # chaseTrialWithRope(trajectory,tiedAgentId)
 
 if __name__ == '__main__':
     main()
