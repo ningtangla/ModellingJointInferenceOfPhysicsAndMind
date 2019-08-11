@@ -76,17 +76,16 @@ def main():
     leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
     masterDelayStep = 4
     offsetMasterStates = OffsetMasterStates(masterId, stateIndex, masterDelayStep)
-    statesForMasterDelayed = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
+    masterDelayedStates = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
     masterDelayedStatesPathParameters = {'offset': masterDelayStep}
-    masterDelayedStatesPath = getTrajectorySavePath(demoStatesPathParameters)
-    saveToPickle(statesForMasterDelayed, masterDelayedStatesPath)
+    masterDelayedStatesPath = getTrajectorySavePath(masterDelayedStatesPathParameters)
+    saveToPickle(masterDelayedStates, masterDelayedStatesPath)
 
-    import ipdb; ipdb.set_trace()
     demoSteps = list(range(masterDelayStep, minLength))
-    demoStates = [list(trajectory)[demoSteps][stateIndex] for trajectory in leagelTrajectories]
+    demoStates = [np.array(trajectory)[demoSteps][stateIndex] for trajectory in leagelTrajectories]
     demoStatesPathParameters = {'offset': 0}
     demoStatesPath = getTrajectorySavePath(demoStatesPathParameters)
-    saveToPickle(leagelTrajectories, demoStatesPath)
+    saveToPickle(demoStates, demoStatesPath)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))

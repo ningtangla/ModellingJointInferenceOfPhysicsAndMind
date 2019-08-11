@@ -41,7 +41,7 @@ class OffsetMasterStates:
 
     def __call__(self, traj):
         traj = np.array(traj)
-        masterStates = [timeStep[self.stateIndex][self.masterId] for timeStep in traj[self.masterDelayStep: ]]
-        allAgentsStates = [timeStep[self.stateIndex] for timeStep in traj[:-self.masterDelayStep]]
+        masterStates = np.array([timeStep[self.stateIndex][self.masterId] for timeStep in traj[ : -self.masterDelayStep]])
+        allAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj[self.masterDelayStep: ]])
         allAgentsStates[:, self.masterId] = masterStates
         return allAgentsStates
