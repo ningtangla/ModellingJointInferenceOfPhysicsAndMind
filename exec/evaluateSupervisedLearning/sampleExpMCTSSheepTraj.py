@@ -49,13 +49,13 @@ def main():
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        preyPowerRatio = 0.8
+        preyPowerRatio = 0.7
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.4
+        masterPowerRatio = 0.2
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
-        distractorPowerRatio = 0.8
+        distractorPowerRatio = 0.7
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
 
         numActionSpace = len(actionSpace)
