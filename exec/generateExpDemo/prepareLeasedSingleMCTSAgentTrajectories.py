@@ -28,28 +28,39 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import  SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
-
+from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingSubtlety, CalculateDistractorMoveDistance
 
 
 def main():
     startTime = time.time()
 
-    # manipulated variables
-    manipulatedVariables = OrderedDict()
-    manipulatedVariables['predatorPowerRatio'] = [1.5, 2]
-    manipulatedVariables['masterPowerRatio'] =[0.4, 0.8]
-    manipulatedVariables['numSimulationsPerTree'] = [50, 100]
+    dirName = os.path.dirname(__file__)
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchMasterPolicy',
+                                       'mctsSheep')
 
-    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+    trajectoryExtension = '.pickle'
 
-    # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSSheepInLeashedWolfTrajectory.py'
+    sheepId = 0
+    wolfId = 1
+    masterId = 2
+    distractorId = 3
+    maxRunningSteps = 120
+    numSimulations = 200
+    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'numSimulations':numSimulations}
 
-    generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName)
+    getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+    pathParameters = {}
+    trajectories = loadTrajectories(pathParameters)
 
-    print("start")
-    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
+    stateIndex = 0
+    qPosIndex = [0, 1]
+    calculateChasingSubtlety = CalculateChasingSubtlety(sheepId, wolfId, stateIndex, qPosIndex)
+    trajectorySubtleties = np.array([np.mean(calculateChasingSubtlety(trajectory) for trajectory in trajectories])
+    trajectoryLengthes = np.array([len(trajectory) for trajectory in trajectories])
+    distractorMoveDistance = np.array([np.mean(calD
+
     # import ipdb; ipdb.set_trace()
 
     endTime = time.time()

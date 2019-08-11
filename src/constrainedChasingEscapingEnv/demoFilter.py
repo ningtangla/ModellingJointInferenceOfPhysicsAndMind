@@ -21,4 +21,3 @@ def calculateIncludedAngle(vector1, vector2):
     return includedAngle
 
 
-
