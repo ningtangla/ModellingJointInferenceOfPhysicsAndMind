@@ -1,6 +1,6 @@
 import numpy as np
 
-class CalculateChasingSubtlety:
+class CalculateChasingDeviation:
     def __init__(self, sheepId, wolfId, stateIndex, positionIndex):
         self.sheepId = sheepId
         self.wolfId = wolfId
@@ -32,3 +32,16 @@ class CalculateChasingSubtlety:
         distractorVectorlist = [traj[i][self.stateIndex][self.distractorId][self.positionIndex] - traj[i - 1][self.stateIndex][self.distractorId][self.positionIndex] for i in range(1, len(traj))]
         distractorMoveDistances = [np.linalg.norm(distractorVector, ord = 2) for distractorVector in distractorVectorlist]
         return distractorMoveDistances
+
+class OffsetMasetrStates:
+    def __init__(self, masterId, stateIndex, masterDelayStep):
+        self.masterId = masterId
+        self.stateIndex = stateIndex
+        self.masterDelayStep = masterDelayStep
+
+    def __call__(self, traj):
+        traj = np.array(traj)
+        masterStates = [timeStep[self.stateIndex][self.masterId] for timeStep in traj[self.masterDelayStep: ]]
+        allAgentsStates = [timeStep[self.stateIndex] for timeStep in traj[:-self.masterDelayStep]]
+        allAgentsStates[:, self.masterId] = masterStates
+        return allAgentsStates 

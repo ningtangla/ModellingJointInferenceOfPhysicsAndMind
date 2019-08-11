@@ -30,15 +30,15 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import  SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
-from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingSubtlety, CalculateDistractorMoveDistance
+from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance, OffsetMasterStates
 
 
 def main():
     startTime = time.time()
 
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'leashedSheepTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo',
+                                       'trajectories')
 
     trajectoryExtension = '.pickle'
 
@@ -58,24 +58,33 @@ def main():
 
     stateIndex = 0
     qPosIndex = [0, 1]
-    calculateChasingSubtlety = CalculateChasingSubtlety(sheepId, wolfId, stateIndex, qPosIndex)
-    trajectorySubtleties = np.array([np.mean(calculateChasingSubtlety(trajectory)) for trajectory in trajectories])
+    calculateChasingDeviation = CalculateChasingDeviation(sheepId, wolfId, stateIndex, qPosIndex)
+    trajectoryDeviationes = np.array([np.mean(calculateChasingDeviation(trajectory)) for trajectory in trajectories])
     trajectoryLengthes = np.array([len(trajectory) for trajectory in trajectories])
     trajectoryDistractorMoveDistances = np.array([np.mean(CalculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     minLength = 90
-    minSubtlety = math.pi/4
+    minDeviation = math.pi/4
     minDistractorMoveDistance = 0.2
-    subtletyLegelTrajIndex = np.nonzero(trajectorySubtleties >= minSubtlety)
+    DeviationLegelTrajIndex = np.nonzero(trajectoryDeviationes >= minDeviation)
     lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
     distractorMoveDistanceLegelTrajIndex = np.nonzero(trajectoryDistractorMoveDistances >= minDistractorMoveDistance)
 
-    leagelTrajIndex = reduce(np.intersect1d, [subtletyLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex])
-    
-    leagelTrajectories = trajectories[leagelTrajIndex]
-    leagelTrajectoriesPathParameters = {'offset': 0}
-    leagelTrajectoriesPath = getTrajectorySavePath(leagelTrajectoriesPathParameters)
-    saveToPickle(leagelTrajectories, leagelTrajectoriesPathParameters)
+    leagelTrajIndex = reduce(np.intersect1d, [DeviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex])
+   
+    leagelTrajectories = [trajectory[:minLength] for trajectory in trajectories[leagelTrajIndex]]
+    masterDelayStep = 4 
+    offsetMasterStates = OffsetMasterStates(masterId, stateIndex, masterDelayStep)
+    statesForMasterDelayed = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
+    masterDelayedStatesPathParameters = {'offset': masterDelayStep}
+    masterDelayedStatesPath = getTrajectorySavePath(demoStatesPathParameters)
+    saveToPickle(statesForMasterDelayed, masterDelayedStatesPath)
 
+    demoSteps = list(range(masterDelayStep, minLength))
+    demoStates = [list(trajectory)[demoSteps][stateIndex] for trajectory in leagelTrajectories]
+    demoStatesPathParameters = {'offset': 0}
+    demoStatesPath = getTrajectorySavePath(demoStatesPathParameters)
+    saveToPickle(leagelTrajectories, demoStatesPath)
+   
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
