@@ -21,7 +21,7 @@ def calculateIncludedAngle(vector1, vector2):
     return includedAngle
 
 
-class CalculateChasingSubtlety:
+class CalculateDistractorMoveDistance:
     def __init__(self, distractorId, stateIndex, positionIndex):
         self.distractorId = distractorId
         self.stateIndex = stateIndex
@@ -33,7 +33,7 @@ class CalculateChasingSubtlety:
         distractorMoveDistances = [np.linalg.norm(distractorVector, ord = 2) for distractorVector in distractorVectorlist]
         return distractorMoveDistances
 
-class OffsetMasetrStates:
+class OffsetMasterStates:
     def __init__(self, masterId, stateIndex, masterDelayStep):
         self.masterId = masterId
         self.stateIndex = stateIndex
@@ -44,4 +44,4 @@ class OffsetMasetrStates:
         masterStates = [timeStep[self.stateIndex][self.masterId] for timeStep in traj[self.masterDelayStep: ]]
         allAgentsStates = [timeStep[self.stateIndex] for timeStep in traj[:-self.masterDelayStep]]
         allAgentsStates[:, self.masterId] = masterStates
-        return allAgentsStates 
+        return allAgentsStates
