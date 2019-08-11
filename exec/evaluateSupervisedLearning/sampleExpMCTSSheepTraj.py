@@ -25,7 +25,7 @@ import numpy as np
 
 def main():
     # manipulated variables and other important parameters
-    killzoneRadius = 2
+    killzoneRadius = 1
     numSimulations = 200
     maxRunningSteps = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -53,10 +53,15 @@ def main():
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.4
+        masterPowerRatio = 0.3
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
         distractorPowerRatio = 0.7
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
+
+        parametersForTrajectoryPath['preyPowerRatio'] = preyPowerRatio
+        parametersForTrajectoryPath['predatorPowerRatio'] = predatorPowerRatio
+        parametersForTrajectoryPath['masterPowerRatio'] = masterPowerRatio
+        parametersForTrajectoryPath['distractorPowerRatio'] = distractorPowerRatio
 
         numActionSpace = len(actionSpace)
 

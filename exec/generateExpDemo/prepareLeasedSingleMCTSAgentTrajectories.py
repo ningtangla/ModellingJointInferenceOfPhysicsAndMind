@@ -48,8 +48,13 @@ def main():
     distractorId = 3
     maxRunningSteps = 100
     numSimulations = 200
-    killzoneRadius = 2
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
+    killzoneRadius = 1
+    preyPowerRatio = 0.7
+    predatorPowerRatio = 1.3
+    masterPowerRatio = 0.3
+    distractorPowerRatio = 0.7
+    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations,\
+            'preyPowerRatio':preyPowerRatio, 'predatorPowerRatio':predatorPowerRatio, 'masterPowerRatio':masterPowerRatio, 'distractorPoweRatio':distractorPowerRatio}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
@@ -62,8 +67,10 @@ def main():
     trajectoryDeviationes = np.array([np.mean(calculateChasingDeviation(trajectory)) for trajectory in trajectories])
     trajectoryLengthes = np.array([len(trajectory) for trajectory in trajectories])
     calculateDistractorMoveDistance = CalculateDistractorMoveDistance(distractorId, stateIndex, qPosIndex)
+    calculateSheepMoveDistance = CalculateDistractorMoveDistance(sheepId, stateIndex, qPosIndex)
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
-    minLength = 90
+    trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
+    minLength = 84
     minDeviation = math.pi/4
     minDistractorMoveDistance = 0.8
     DeviationLegelTrajIndex = np.nonzero(trajectoryDeviationes >= minDeviation)
