@@ -54,15 +54,6 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    killzoneRadius = 2
-    maxRunningSteps = 100
-    numSimulations = 200
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-    trajectorySaveExtension = '.pickle'
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
-
     print("start")
     trainableAgentIds = [sheepId]
     for agentId in trainableAgentIds:
