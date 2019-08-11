@@ -11,6 +11,8 @@ from collections import OrderedDict, deque
 import pandas as pd
 import mujoco_py as mujoco
 import itertools as it
+import functools as ft
+import math
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
@@ -35,8 +37,8 @@ def main():
     startTime = time.time()
 
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchMasterPolicy',
-                                       'mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
+                                       'leashedSheepTrajectories')
 
     trajectoryExtension = '.pickle'
 
@@ -57,11 +59,22 @@ def main():
     stateIndex = 0
     qPosIndex = [0, 1]
     calculateChasingSubtlety = CalculateChasingSubtlety(sheepId, wolfId, stateIndex, qPosIndex)
-    trajectorySubtleties = np.array([np.mean(calculateChasingSubtlety(trajectory) for trajectory in trajectories])
+    trajectorySubtleties = np.array([np.mean(calculateChasingSubtlety(trajectory)) for trajectory in trajectories])
     trajectoryLengthes = np.array([len(trajectory) for trajectory in trajectories])
-    distractorMoveDistance = np.array([np.mean(calD
+    trajectoryDistractorMoveDistances = np.array([np.mean(CalculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
+    minLength = 90
+    minSubtlety = math.pi/4
+    minDistractorMoveDistance = 0.2
+    subtletyLegelTrajIndex = np.nonzero(trajectorySubtleties >= minSubtlety)
+    lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
+    distractorMoveDistanceLegelTrajIndex = np.nonzero(trajectoryDistractorMoveDistances >= minDistractorMoveDistance)
 
-    # import ipdb; ipdb.set_trace()
+    leagelTrajIndex = reduce(np.intersect1d, [subtletyLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex])
+    
+    leagelTrajectories = trajectories[leagelTrajIndex]
+    leagelTrajectoriesPathParameters = {'offset': 0}
+    leagelTrajectoriesPath = getTrajectorySavePath(leagelTrajectoriesPathParameters)
+    saveToPickle(leagelTrajectories, leagelTrajectoriesPathParameters)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
