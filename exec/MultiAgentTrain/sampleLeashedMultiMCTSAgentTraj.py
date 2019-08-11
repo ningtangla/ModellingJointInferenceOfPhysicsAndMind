@@ -12,7 +12,7 @@ import pandas as pd
 import mujoco_py as mujoco
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniformForLeashed
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData , restoreVariables
@@ -156,20 +156,26 @@ def main():
 
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
-        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
+        masterTerminalReward = -1
+        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward,masterTerminalReward]
 
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-        numSimulationFrames = 20
-        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-
-        rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
+        safeBound = 1.5
+        wallDisToCenter = 10
+        wallPunishRatio = 1.5
+        rewardSheep = RewardFunctionWithWall(sheepAliveBonus, sheepTerminalPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getSheepXPos)
         rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-        rewardMultiAgents = [rewardSheep, rewardWolf]
+        rewardMaster = RewardFunctionWithWall(sheepAliveBonus, sheepTerminalPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getSheepXPos)
+
+        rewardMultiAgents = [rewardSheep, rewardWolf, rewardMaster]
 
         decay = 1
         accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
+
+        numSimulationFrames = 20
+        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         qPosInit = (0, ) * 24
         qVelInit = (0, ) * 24
@@ -192,7 +198,8 @@ def main():
         sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(sheepActionSpace) * predatorPowerRatio))
-        masterActionSpace = [(0,0)]*8
+        masterPowerRatio = 0.4
+        masterActionSpace = list(map(tuple, np.array(sheepActionSpace) * masterPowerRatio))
 
         actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace]
 
@@ -224,7 +231,7 @@ def main():
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
 
-        trainableAgentIds = [sheepId, wolfId]
+        trainableAgentIds = [sheepId, wolfId, masterId]
 
         depth = 4
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
