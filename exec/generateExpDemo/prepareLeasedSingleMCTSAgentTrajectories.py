@@ -81,12 +81,12 @@ def main():
     masterDelayedStatesPath = getTrajectorySavePath(masterDelayedStatesPathParameters)
     saveToPickle(masterDelayedStates, masterDelayedStatesPath)
 
-    demoSteps = list(range(masterDelayStep, minLength))
-    demoStates = [np.array(trajectory)[demoSteps][stateIndex] for trajectory in leagelTrajectories]
+    demoStepIndex = list(range(masterDelayStep, minLength)) 
+    demoTajectories = [np.array(trajectory)[demoStepIndex] for trajectory in leagelTrajectories]
+    demoStates = np.array([[timestep[stateIndex] for timestep in trajectory] for trajectory in demoTajectories])
     demoStatesPathParameters = {'offset': 0}
     demoStatesPath = getTrajectorySavePath(demoStatesPathParameters)
     saveToPickle(demoStates, demoStatesPath)
-
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
