@@ -26,12 +26,12 @@ import numpy as np
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 2
-    numSimulations = 400
-    maxRunningSteps = 200
+    numSimulations = 200
+    maxRunningSteps = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leashedSheepTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'expMCTSSheepInLeashedWolfTrajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
@@ -49,13 +49,13 @@ def main():
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        preyPowerRatio = 0.7
+        preyPowerRatio = 0.8
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         masterPowerRatio = 0.4
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
-        distractorPowerRatio = 0.7
+        distractorPowerRatio = 0.8
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
 
         numActionSpace = len(actionSpace)
@@ -124,12 +124,12 @@ def main():
 
         rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = deathPenalty/10
-        maxRolloutSteps = 7
+        maxRolloutSteps = 10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
 
-        numTrees = 4
+        numTrees = 2
         numSimulationsPerTree = 100
         mcts = StochasticMCTS(numTrees, numSimulationsPerTree, selectChild, expand, rollout, backup, establishPlainActionDistFromMultipleTrees)
 
