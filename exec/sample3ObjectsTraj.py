@@ -10,7 +10,7 @@ from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, Ap
 from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
-from src.inferChasing.continuousPolicy import RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy
 
 
 import pandas as pd
@@ -85,7 +85,7 @@ def main():
     policy = lambda state: [sheepPolicy(state[:2]), wolfPolicy(state[:2]), randomPolicy(state)]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 101
+    dataIndex = 1
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
 

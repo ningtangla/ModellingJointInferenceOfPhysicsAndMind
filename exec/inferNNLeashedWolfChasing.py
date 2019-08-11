@@ -82,7 +82,6 @@ def main():
     dataIndex = 1
     dataPath = os.path.join(dirName, '..', 'trainedData', 'NNLeasedTraj'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
-    # trajectory = [trajectory[4], trajectory[5]]
     stateIndex = 0
 
     chasingAgents = ['sheep', 'wolf', 'random']

@@ -8,8 +8,8 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from src.constrainedChasingEscapingEnv.policies import RandomPolicy
 from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForNN
 from src.inferChasing.continuousTransition import TransitTwoMassPhysics
-from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
-    InferContinuousChasingAndDrawDemoNoDecay
+from src.inferChasing.inference import IsInferenceTerminal, Observe, QueryDecayedLikelihood, \
+    InferOneStepLikelihood, InferContinuousChasingAndDrawDemo
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -157,12 +157,13 @@ def main():
     mindPhysicsName = ['mind', 'physics']
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
 
-    mindPhysicsActionName = ['mind', 'physics', 'action']
-    inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
+    decayParameter = 1
+    queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 
-    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemoNoDecay(FPS, inferenceIndex,
-                                                                          isInferenceTerminal, observe, inferOneStep,
-                                                                          drawInferenceResult)
+    inferOneStepLikelihood = InferOneStepLikelihood(inferenceIndex, getMindsPhysicsActionsJointLikelihood)
+    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,
+                                                                          isInferenceTerminal, observe, queryLikelihood,
+                                                                          inferOneStepLikelihood, drawInferenceResult)
 
     mindsPhysicsPrior = [1 / len(inferenceIndex)] * len(inferenceIndex)
     posteriorDf = inferContinuousChasingAndDrawDemo(numOfAgents, mindsPhysicsPrior)
@@ -170,7 +171,7 @@ def main():
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotName = '3Objects2PhysicsNNInference'
+    plotName = '3Objects2PhysicsNNInference_MemoryDecay08'
     plotMindInferenceProb(posteriorDf, dataIndex, plotName)
     plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
 

@@ -150,8 +150,9 @@ class PlotInferenceProb:
         graph.set_xlabel(self.xVariableName)
         graph.set_ylabel(self.yVaraibleName)
         plt.ylim([0, 1])
+        plt.title(self.groupIndex+ ": " + plotname + '_dataIndex'+ str(graphIndex))
         dirName = os.path.dirname(__file__)
         plotPath = os.path.join(dirName, '..', 'demo')
-        plt.savefig(os.path.join(plotPath, self.groupIndex + plotname + str(graphIndex)))
+        plt.savefig(os.path.join(plotPath, self.groupIndex + plotname + 'data'+ str(graphIndex)))
         plt.show()
 

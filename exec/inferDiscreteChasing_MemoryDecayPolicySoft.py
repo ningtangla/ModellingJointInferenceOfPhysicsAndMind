@@ -17,8 +17,8 @@ from src.inferChasing.discreteGridPolicy import ActHeatSeeking, \
     HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
 from src.inferChasing.discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
-from src.inferChasing.inference import IsInferenceTerminal, ObserveStateOnly, InferOneStep, \
-    InferDiscreteChasingAndDrawDemo
+from src.inferChasing.inference import IsInferenceTerminal, ObserveStateOnly, InferOneStepLikelihood, \
+    InferDiscreteChasingWithMemoryDecayAndDrawDemo, QueryDecayedLikelihood, softenPolicy
 
 from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
     GetChasingResultColor, ColorChasingPoints, AdjustPullingLineWidth, \
@@ -37,13 +37,13 @@ def main():
 
     rationalityParam = 0.9
     heatSeekingPolicy = HeatSeekingPolicy(rationalityParam, actHeatSeeking)
-
+    softenedHeatSeeking = softenPolicy(heatSeekingPolicy)
 
     positionIndex = [0, 1]
     getAgentPosition = lambda agentID, state: GetAgentPosFromState(agentID, positionIndex)(state)
 
-    wolfPolicy = WolfPolicy(getAgentPosition, heatSeekingPolicy)
-    sheepPolicy = SheepPolicy(getAgentPosition, heatSeekingPolicy)
+    wolfPolicy = WolfPolicy(getAgentPosition, softenedHeatSeeking)
+    sheepPolicy = SheepPolicy(getAgentPosition, softenedHeatSeeking)
 
     uniformPolicy = RandomPolicy(actionSpace)
     masterPolicy = MasterPolicy(uniformPolicy)
@@ -119,8 +119,7 @@ def main():
     mindPhysicsName = ['mind', 'physics']
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
 
-    mindPhysicsActionName = ['mind', 'physics', 'action']
-    inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
+    inferOneStepLikelihood = InferOneStepLikelihood(inferenceIndex, getMindsPhysicsActionsJointLikelihood)
 
     trajectory = [[(6, 2), (9, 2), (5, 4)], [(7, 3), (10, 2), (6, 3)], [(6, 2), (10, 2), (7, 2)], [(8, 2), (10, 2), (6, 1)], [(8, 2), (10, 2), (7, 1)], [(8, 2), (10, 3), (7, 1)], [(9, 1), (10, 3), (8, 2)], [(8, 2), (10, 3), (8, 2)], [(8, 3), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (8, 1)], [(10, 1), (10, 4), (7, 2)], [(9, 2), (10, 5), (9, 2)], [(9, 3), (9, 5), (9, 3)], [(9, 4), (9, 6), (10, 3)], [(10, 5), (9, 7), (10, 3)], [(9, 4), (10, 7), (10, 4)], [(10, 5), (10, 7), (10, 4)], [(10, 5), (10, 8), (9, 5)], [(9, 6), (10, 9), (10, 4)], [(10, 7), (10, 9), (8, 4)], [(9, 8), (10, 10), (9, 3)], [(10, 7), (10, 10), (10, 4)], [(10, 7), (10, 10), (9, 5)], [(10, 7), (10, 10), (8, 6)], [(9, 8), (10, 10), (10, 6)], [(9, 8), (10, 10), (10, 6)], [(10, 9), (10, 9), (9, 7)]]
     observe = ObserveStateOnly(trajectory)
@@ -129,8 +128,12 @@ def main():
     imageFolderName = 'demo' + str(dataIndex)
     saveImage = SaveImage(imageFolderName)
     FPS = 60
-    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(FPS, inferenceIndex,
-                isInferenceTerminal, observe, inferOneStep,
+
+    decayParameter = 0.8
+    queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
+
+    inferDiscreteChasingAndDrawDemo = InferDiscreteChasingWithMemoryDecayAndDrawDemo(FPS,
+                 inferenceIndex, isInferenceTerminal, observe, inferOneStepLikelihood, queryLikelihood,
                  drawInferenceResult, saveImage)
 
     mindsPhysicsPrior = [1/ len(inferenceIndex)] * len(inferenceIndex)
@@ -140,7 +143,7 @@ def main():
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotName = 'Discrete3AgentsPullInference'
+    plotName = 'Discrete3AgentsPullInference_MemoryDecay08_SoftenPolicy'
     plotMindInferenceProb(posteriorDf, dataIndex, plotName)
     plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
 
