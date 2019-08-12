@@ -15,18 +15,49 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
-    ApproximatePolicy, restoreVariables
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData , restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
-    ActionToOneHot, ProcessTrajectoryForPolicyValueNet
+    ActionToOneHot
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+
+
+class ApproximatePolicy:
+    def __init__ (self, policyValueNet, actionSpace, agentIdForNNState):
+        self.policyValueNet = policyValueNet
+        self.actionSpace = actionSpace
+        self.agentIdForNNState = agentIdForNNState
+
+    def __call__(self, state):
+        stateNN = state[self.agentIdForNNState]
+        stateBatch = [np.concatenate(stateNN)]
+        graph = self.policyValueNet.graph
+        state_ = graph.get_collection_ref("inputs")[0]
+        actionDist_ = graph.get_collection_ref("actionDistributions")[0]
+        actionProbs = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
+        actionDist = {action: prob for action, prob in zip(self.actionSpace, actionProbs)}
+        return actionDist
+
+
+class ApproximateValue:
+    def __init__(self, policyValueNet,agentIdForNNState):
+        self.policyValueNet = policyValueNet
+        self.agentIdForNNState = agentIdForNNState
+
+    def __call__(self, state):
+        stateNN = state[self.agentIdForNNState]
+        stateBatch = [np.concatenate(stateNN)]
+        graph = self.policyValueNet.graph
+        state_ = graph.get_collection_ref("inputs")[0]
+        valuePrediction_ = graph.get_collection_ref("values")[0]
+        valuePrediction = self.policyValueNet.run(valuePrediction_, feed_dict={state_: stateBatch})[0][0]
+        return valuePrediction
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
@@ -92,7 +123,6 @@ def main():
     maxRunningSteps = 25
     numSimulations = 200
     killzoneRadius = 2
-    numTrials = 3
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -153,8 +183,6 @@ def main():
         reset  = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
-
-
         # NNGuidedMCTS init
         cInit = 1
         cBase = 100
@@ -167,9 +195,11 @@ def main():
         masterActionSpace = [(0,0)]*8
 
         actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace]
-        getApproximatePolicy = [lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace) for actionSpace in actionSpaceList]
-        getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
 
+        agentIdForNNState = range(numAgent)
+        getApproximatePolicy = [lambda NNmodel: ApproximatePolicy(NNmodel, sheepActionSpace, agentIdForNNState), lambda NNmodel: ApproximatePolicy(NNmodel, wolfActionSpace, agentIdForNNState),lambda NNmodel: ApproximatePolicy(NNmodel, masterActionSpace, agentIdForNNState)]
+
+        getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel,agentIdForNNState)
         getStateFromNode = lambda node: list(node.id.values())[0]
 
         # sample trajectory
@@ -204,13 +234,12 @@ def main():
 
         startTime = time.time()
 
-        otherAgentApproximatePolicies = [lambda NNModel: ApproximatePolicy(NNModel, actionSpace) for actionSpace in  actionSpaceList]
+        otherAgentApproximatePolicies = [lambda NNmodel: ApproximatePolicy(NNmodel, sheepActionSpace,agentIdForNNState), lambda NNmodel: ApproximatePolicy(NNmodel, wolfActionSpace,agentIdForNNState),lambda NNmodel: ApproximatePolicy(NNmodel, masterActionSpace,agentIdForNNState)]
 
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicies, trainableAgentIds)
 
         # load NN
-        # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
         iterationIndex = parametersForTrajectoryPath['iterationIndex']
 
         for agentId in trainableAgentIds:
