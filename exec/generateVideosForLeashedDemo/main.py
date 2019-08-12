@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, GetAgentCoordinateFromTrajectoryAndStateDf, \
     loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath,conditionDfFromParametersDict
 from exec.generateVideosForLeashedDemo.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
-from exec.generateVideosForLeashedDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj
+from exec.generateVideosForLeashedDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj,DrawStateWithRope, ChaseTrialWithRopeTraj
 
 def getFileName(parameters,fixedParameters):
     allParameters = dict(list(parameters.items()) + list(fixedParameters.items()))
@@ -31,31 +31,32 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    # manipulatedVariables['agentId'] = [1]
-    # manipulatedVariables['maxRunningSteps'] = [25]
-    # manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['agentId'] = [3]
+    manipulatedVariables['maxRunningSteps'] = [50]
+    manipulatedVariables['numSimulations'] = [100]
+    manipulatedVariables['killzoneRadius'] = [2]
+
+    # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
     # manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
     # manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
 
-    manipulatedVariables['safeBound'] = [1.5]
-    manipulatedVariables['preyPowerRatio'] =[0.7]
-    manipulatedVariables['wallPunishRatio'] = [0.6]
-
+    # manipulatedVariables['safeBound'] = [1.5]
+    # manipulatedVariables['preyPowerRatio'] =[0.7]
+    # manipulatedVariables['wallPunishRatio'] = [0.6]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'searchToWallHerustic', 'mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorTrajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    # fuzzySearchParameterNames = ['sampleIndex']
-    fuzzySearchParameterNames = []
+    fuzzySearchParameterNames = ['sampleIndex']
+    # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
-    agentId = 1
     stateIndex = 0
     getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0][stateIndex])[0]))
     getRangeTrajectoryLength = lambda trajectory: list(range(len(trajectory)))
@@ -65,8 +66,7 @@ def main():
     getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
     getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 4)
     getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 5)
-    extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord,
-                           'yVel': getAgentVelYCoord}
+    extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord, 'yVel': getAgentVelYCoord}
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
 
 
@@ -74,8 +74,8 @@ def main():
     for conditionParameters in conditionParametersAll:
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
-
-        numTrajectoryChoose = min(numTrajectories, 10)
+        maxNumTrajectories = 10
+        numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
         selectedTrajectories = trajectories[0:numTrajectoryChoose]
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
@@ -101,10 +101,15 @@ def main():
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
         circleSize = 10
         positionIndex = [0, 1]
+        tiedAgentId = [1, 2]
 
-        numOfAgent = 3
-        drawState = DrawState(screen, circleSize, positionIndex, drawBackground,numOfAgent)
-        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+        numOfAgent = 4
+        ropeColor = THECOLORS['white']
+        drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
+
+        # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
+        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
 
         for index in range(numTrajectoryChoose):
             imageFolderName = "{}".format(index)
@@ -112,6 +117,7 @@ def main():
 
             FPS = 60
             chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
+            chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, colorSpace, drawStateWithRope, saveImage=True, saveImageDir=saveImageDir)
 
             rawXRange = [-10, 10]
             rawYRange = [-10, 10]
@@ -125,7 +131,8 @@ def main():
             getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
             trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
             trajectory = getTrajectory(trajectoryDf)
-            chaseTrial(trajectory)
+            # chaseTrial(trajectory)
+            chaseTrialWithRope(trajectory, tiedAgentId)
 
 if __name__ == '__main__':
     main()

@@ -128,8 +128,7 @@ def main():
         tiedAgentId = [1, 2]
         ropeParaIndex = list(range(3, 12))
         maxRopePartLength = 0.25
-        reset = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
-                ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
+        reset = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
