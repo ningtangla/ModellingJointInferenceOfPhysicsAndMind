@@ -15,7 +15,7 @@ import itertools as it
 import pathos.multiprocessing as mp
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, IsCollided
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, IsCollided, RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -92,7 +92,7 @@ def main():
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 25
     dataSetNumSimulations = 200
-    killzoneRadius = 2
+    killzoneRadius = 1
 
     dataSetFixedParameters = {'agentId': distractorId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -144,7 +144,7 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
     loadedTrajectories = loadTrajectories(parameters={})
-    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])
+    filterState = lambda timeStep: (timeStep[0][0:4], timeStep[1], timeStep[2])
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
@@ -186,7 +186,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': distractorId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorTrajectories')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
