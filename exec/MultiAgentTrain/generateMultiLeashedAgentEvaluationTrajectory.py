@@ -13,15 +13,15 @@ import mujoco_py as mujoco
 from matplotlib import pyplot as plt
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniformForLeashed, IsTerminal, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
     establishPlainActionDist, RollOut
 from src.episode import SampleTrajectory, chooseGreedyAction
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy, \
     HeatSeekingContinuesDeterministicPolicy
 from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
-from exec.evaluationFunctions import ComputeStatistics, GenerateInitQPosUniform
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
+from exec.evaluationFunctions import ComputeStatistics
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables
 from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos, GetAgentPosFromTrajectory, GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -30,7 +30,39 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from exec.preProcessing import AccumulateRewards
 
+class ApproximatePolicy:
+    def __init__ (self, policyValueNet, actionSpace, agentIdForNNState):
+        self.policyValueNet = policyValueNet
+        self.actionSpace = actionSpace
+        self.agentIdForNNState = agentIdForNNState
 
+    def __call__(self, state):
+        stateNN = state[self.agentIdForNNState]
+        stateBatch = [np.concatenate(stateNN)]
+        graph = self.policyValueNet.graph
+        state_ = graph.get_collection_ref("inputs")[0]
+        actionDist_ = graph.get_collection_ref("actionDistributions")[0]
+        actionProbs = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
+        actionDist = {action: prob for action, prob in zip(self.actionSpace, actionProbs)}
+        return actionDist
+
+
+class GenerateInitQPosUniform:
+    def __init__(self, minQPos, maxQPos, isTerminal, getResetFromInitQPos):
+        self.minQPos = minQPos
+        self.maxQPos = maxQPos
+        self.isTerminal = isTerminal
+        self.getResetFromInitQPos = getResetFromInitQPos
+
+    def __call__(self):
+        while True:
+            qPosInit = np.random.uniform(self.minQPos, self.maxQPos, 24)
+            reset = self.getResetFromInitQPos(qPosInit)
+            initState = reset()
+            if not self.isTerminal(initState):
+                break
+
+        return qPosInit
 class RestoreNNModel:
     def __init__(self, getModelSavePath, multiAgentNNModel, restoreVariables):
         self.getModelSavePath = getModelSavePath
@@ -121,8 +153,12 @@ def main():
         restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
 
         # function to prepare policy
-        selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        numAgent = 3
+
+        agentIdForNNState = range(numAgent)
+
+        selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace, agentIdForNNState)
+        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace, agentIdForNNState)
         preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
@@ -131,30 +167,26 @@ def main():
         qVelInit = (0, ) * 24
         qPosInitNoise = 7
         qVelInitNoise = 5
-        numAgent = 3
         tiedAgentId = [1, 2]
         ropeParaIndex = list(range(3, 12))
         maxRopePartLength = 0.25
 
         evalQPosInitNoise = 0
         evalQVelInitNoise = 0
-        # qVelInit = [0, 0, 0, 0]
         qVelInit = (0, ) * 24
 
-        getResetFromQPosInitDummy = lambda qPosInit:  = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
-                ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
+        getResetFromQPosInitDummy = lambda qPosInit: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
-        # getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
 
         evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
         evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 24))
-        getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
-                                                       numAgents, evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],numAgent, tiedAgentId, ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
         evalMaxRunningSteps = 25
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
                                                              getResetFromTrial(trial), chooseGreedyAction)
+
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories

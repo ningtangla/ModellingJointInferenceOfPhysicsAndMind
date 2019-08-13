@@ -44,8 +44,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0,2801,400))
-    manipulatedVariables['otherIteration'] = list(range(0,2801,400))
+    manipulatedVariables['selfIteration'] = list(range(0,301,150))
+    manipulatedVariables['otherIteration'] = list(range(0,301,150))
     manipulatedVariables['selfId'] = [0,1]
 
     levelNames = list(manipulatedVariables.keys())
@@ -63,7 +63,7 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    maxRunningSteps = 20
+    maxRunningSteps = 25
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
@@ -82,12 +82,12 @@ def main():
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    trainMaxRunningSteps = 20
+    trainMaxRunningSteps = 25
     trainNumSimulations = 200
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                        'multiAgentTrain', 'leashedMultiMCTSAgent', 'NNModel')
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -97,7 +97,7 @@ def main():
         modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPath)
 
-    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
+    generateTrajectoriesCodeName = 'generateMultiLeashedAgentEvaluationTrajectory.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
@@ -112,7 +112,7 @@ def main():
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'leashedMultiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
