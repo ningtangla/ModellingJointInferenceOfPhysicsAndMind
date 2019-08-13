@@ -52,11 +52,11 @@ def main():
     # manipulated variables and other important parameters
     killzoneRadius = 1
     numSimulations = 200
-    maxRunningSteps = 25
+    maxRunningSteps = 125
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leashedDistractorTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
@@ -112,13 +112,15 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-        depth = 4
-        initSheepNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initMasterNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        generateSheepModel = GenerateModel(24, numActionSpace, regularizationFactor)
+        generateWolfModel = GenerateModel(18, numActionSpace, regularizationFactor)
+        generateMasterModel = GenerateModel(18, numActionSpace, regularizationFactor)
 
+        initSheepNNModel = generateSheepModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initWolfNNModel = generateWolfModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initMasterNNModel = generateMasterModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 # sheep NN model
-        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'sheepAvoidRopeModel','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
         sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
@@ -135,7 +137,7 @@ def main():
 
 
         transitInDistractorMCTSSimulation = \
-            lambda state, distractorSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[:3])), chooseGreedyAction(wolfPolicy(state[:3])), chooseGreedyAction(masterPolicy(state[:3])), distractorSelfAction])
+            lambda state, distractorSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[:4])), chooseGreedyAction(wolfPolicy(state[:3])), chooseGreedyAction(masterPolicy(state[:3])), distractorSelfAction])
 # MCTS distractor
         cInit = 1
         cBase = 100
@@ -192,7 +194,7 @@ def main():
         # saving trajectories
         # policy
 
-        policy = lambda state: [sheepPolicy(state[:3]), wolfPolicy(state[:3]),  masterPolicy(state[:3]), mcts(state)]
+        policy = lambda state: [sheepPolicy(state[:4]), wolfPolicy(state[:3]),  masterPolicy(state[:3]), mcts(state)]
 
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]

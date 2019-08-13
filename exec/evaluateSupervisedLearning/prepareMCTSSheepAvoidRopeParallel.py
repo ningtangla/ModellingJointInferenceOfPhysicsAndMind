@@ -43,8 +43,10 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 48
+    numTrajectories = 16
+
     # generate and load trajectories before train parallelly
+    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajAvoidRope.py'
     sampleTrajectoryFileName = 'sampleExpMCTSSheepTraj.py'
 
     numCpuCores = os.cpu_count()
