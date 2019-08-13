@@ -157,7 +157,7 @@ def main():
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         masterTerminalReward = -1
-        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward,masterTerminalReward]
+        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, masterTerminalReward]
 
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
