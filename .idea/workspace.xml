@@ -2,17 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2523f3c4-5aba-4da7-a5d5-f31aa7069ee2" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env/xmls/twoAgentsTwoObstacles.xml" beforeDir="false" afterPath="$PROJECT_DIR$/env/xmls/twoAgentsTwoObstacles.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/generateVideos/script.command" beforeDir="false" afterPath="$PROJECT_DIR$/exec/generateVideos/script.command" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/generateVideos/visualize2ObjectsObstacles.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/generateVideos/visualize2ObjectsObstacles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIterativelyStartWithRandomModelChasingObstacle.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIterativelyStartWithRandomModelChasingObstacle.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIterativelyStartWithRandomModelEscape.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIterativelyStartWithRandomModelEscape.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envMujoco.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/episode.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/episode.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/neuralNetwork/policyValueNet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/visualize/continuousVisualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualize/continuousVisualization.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIteration.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIteration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIterationParallel.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIterationParallel.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -23,11 +14,50 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="evaluate.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py">
+      <file leaf-file-name="evaluateNNPolicyThroughIterationParallel.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIterationParallel.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="92">
-              <caret line="98" column="20" selection-start-line="98" selection-start-column="20" selection-end-line="98" selection-end-column="20" />
+            <state relative-caret-position="196">
+              <caret line="98" column="21" selection-start-line="98" selection-start-column="21" selection-end-line="98" selection-end-column="21" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="generateMultiAgentEvaluationTrajectoryObstacle.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/generateMultiAgentEvaluationTrajectoryObstacle.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="219">
+              <caret line="106" column="20" selection-start-line="106" selection-start-column="8" selection-end-line="106" selection-end-column="20" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="multiMCTSAgentPlayAndTrainIterativelyObstacle.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/multiMCTSAgentPlayAndTrainIterativelyObstacle.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="266">
+              <caret line="187" column="23" selection-start-line="187" selection-start-column="23" selection-end-line="187" selection-end-column="23" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="generateMultiAgentEvaluationTrajectory.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/generateMultiAgentEvaluationTrajectory.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="167">
+              <caret line="107" column="32" selection-start-line="107" selection-start-column="32" selection-end-line="107" selection-end-column="32" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -105,6 +135,9 @@
         <option value="$PROJECT_DIR$/exec/generateVideos/visualize2ObjectsObstacles.py" />
         <option value="$PROJECT_DIR$/exec/generateVideos/script.command" />
         <option value="$PROJECT_DIR$/exec/trainMCTSNNIteratively/evaluate.py" />
+        <option value="$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIteration.py" />
+        <option value="$PROJECT_DIR$/exec/MultiAgentTrain/generateMultiAgentEvaluationTrajectoryObstacle.py" />
+        <option value="$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIterationParallel.py" />
       </list>
     </option>
   </component>
@@ -161,12 +194,7 @@
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
               <item name="exec" type="462c0819:PsiDirectoryNode" />
-              <item name="trainMCTSNNIteratively" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
-              <item name="ModellingJointInferenceOfPhysicsAndMind" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="MultiAgentTrain" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="b2602c69:ProjectViewProjectNode" />
@@ -217,7 +245,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.20114122" />
       <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.2811344" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.32668328" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.3341646" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.20114122" />
@@ -245,58 +273,35 @@
       <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.2811344" />
     </layout>
     <layout-to-restore>
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.20114122" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49927953" weight="0.36868066" />
-      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.20436928" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3292232" />
       <window_info anchor="right" id="R Graphics" order="4" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49927953" weight="0.36868066" />
       <window_info anchor="right" id="R Packages" order="5" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.2811344" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32917705" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.43017456" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50072044" side_tool="true" weight="0.2811344" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.20114122" />
       <window_info anchor="right" id="SciView" order="3" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="right" id="Database" order="6" />
-      <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49927953" weight="0.2811344" />
+      <window_info id="Favorites" order="2" side_tool="true" />
     </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/evaluateAccumulatedRewardsVsNumTrainingSteps.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="119" column="65" selection-start-line="119" selection-start-column="65" selection-end-line="119" selection-end-column="65" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/env/xmls/twoAgentsSameMass.xml.py" />
-    <entry file="file://$PROJECT_DIR$/env/xmls/twoAgentsEqualMass.xml" />
-    <entry file="file://$PROJECT_DIR$/exec/trainWolfWithSheepNNPolicyMujoco/trainNNModel.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="915">
-          <caret line="61" column="39" selection-start-line="61" selection-start-column="39" selection-end-line="61" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/generateVideos/mujocoRender/fixedActionStartFromRest.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="147">
-          <caret line="35" column="15" selection-start-line="35" selection-start-column="15" selection-end-line="35" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/trainNNEscapePolicyMujoco/generateTrajectoriesNNWolfChaseMCTSRolloutSheepMujoco.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="298">
@@ -507,13 +512,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/temp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="52" selection-start-line="6" selection-start-column="52" selection-end-line="6" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/temp.py" />
     <entry file="file://$PROJECT_DIR$/exec/trainMCTSNNIteratively/trainMCTSNNIterativelyStartWithRandomModelChasingObstacle.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1382">
@@ -574,6 +573,56 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="92">
           <caret line="98" column="20" selection-start-line="98" selection-start-column="20" selection-end-line="98" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIteration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1823">
+          <caret line="92" column="37" selection-start-line="92" selection-start-column="37" selection-end-line="92" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/generateMultiAgentEvaluationTrajectory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="167">
+          <caret line="107" column="32" selection-start-line="107" selection-start-column="32" selection-end-line="107" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/multiMCTSAgentPlayAndTrainIterativelyObstacle.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="187" column="23" selection-start-line="187" selection-start-column="23" selection-end-line="187" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/generateMultiAgentEvaluationTrajectoryObstacle.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="219">
+          <caret line="106" column="20" selection-start-line="106" selection-start-column="8" selection-end-line="106" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/MultiAgentTrain/evaluateNNPolicyThroughIterationParallel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="196">
+          <caret line="98" column="21" selection-start-line="98" selection-start-column="21" selection-end-line="98" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
