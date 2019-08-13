@@ -46,7 +46,7 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [100]
     manipulatedVariables['numSimulations'] = [200]
     manipulatedVariables['killzoneRadius'] = [2]
-    manipulatedVariables['offset'] = [0]
+    manipulatedVariables['offset'] = [0, 4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -87,7 +87,8 @@ def main():
     for conditionParameters in conditionParametersAll:
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
-        maxNumTrajectories = 10
+        print(numTrajectories)
+        maxNumTrajectories = 1000
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
         selectedTrajectories = trajectories[0:numTrajectoryChoose]
 
@@ -117,16 +118,14 @@ def main():
         circleSize = 10
         positionIndex = [0, 1]
 
-
-
         numOfAgent = 4
         sheepId = 0
         wolfId = 1
         masterId = 2
         distractorId = 3
 
-        conditionList = [[wolfId, masterId]]
-        # conditionList = [[wolfId, masterId],[wolfId, distractorId], None]
+        conditionList = [0]
+        conditionValues = [[wolfId, masterId],[wolfId, distractorId], None]
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
@@ -136,7 +135,7 @@ def main():
 
         for index in range(numTrajectoryChoose):
             for condition in conditionList:
-                imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format(condition))
+                imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
 
                 FPS = 60
@@ -155,8 +154,8 @@ def main():
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
                 trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
                 trajectory = getTrajectory(trajectoryDf)
-                # chaseTrial(trajectory)
-                chaseTrialWithRope(trajectory, condition)
+                chaseTrial(trajectory)
+                # chaseTrialWithRope(trajectory, conditionValues[condition])
 
 if __name__ == '__main__':
     main()
