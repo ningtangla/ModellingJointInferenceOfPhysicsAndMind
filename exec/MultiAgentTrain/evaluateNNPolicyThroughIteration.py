@@ -88,7 +88,7 @@ def main():
     # manipulated variables (and some other parameters that are commonly varied)
     evalNumSimulations = 200  # 200
     evalNumTrials = 1000  # 1000
-    evalMaxRunningSteps = 20
+    evalMaxRunningSteps = 30#20
     manipulatedVariables = OrderedDict()
     manipulatedVariables['iteration'] = [0, 50, 100]
     manipulatedVariables['policyName'] = ['NNPolicy']  # ['NNPolicy', 'mctsHeuristic']

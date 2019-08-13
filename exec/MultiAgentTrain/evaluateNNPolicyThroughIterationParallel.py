@@ -43,8 +43,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [-1, 400, 800, 1200]
-    manipulatedVariables['otherIteration'] = [-1, 400, 800, 1200]
+    manipulatedVariables['selfIteration'] = [0, 500, 1000, 1500]
+    manipulatedVariables['otherIteration'] = [0, 500, 1000, 1500]
     manipulatedVariables['selfId'] = [0, 1]
 
     levelNames = list(manipulatedVariables.keys())
@@ -61,8 +61,8 @@ def main():
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-   
-    maxRunningSteps = 20
+
+    maxRunningSteps = 30
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
@@ -76,12 +76,12 @@ def main():
     numActionSpace = len(actionSpace)
     numStateSpace = 12
     regularizationFactor = 1e-4
-    sharedWidths = [128]
+    sharedWidths = [128, 128, 128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
     
-    trainMaxRunningSteps = 20
+    trainMaxRunningSteps = 30
     trainNumSimulations = 200
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
@@ -91,11 +91,11 @@ def main():
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
     
     multiAgentNNmodel = [generateModel(sharedWidths, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
-    for agentId  in range(numAgents):
+    for agentId in range(numAgents):
         modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
         saveVariables(multiAgentNNmodel[agentId], modelPath)
 
-    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
+    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryObstacle.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.5*numCpuCores)
@@ -118,7 +118,7 @@ def main():
     trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    getTrajectorySavePathFromDf = lambda  df: getTrajectorySavePath(readParametersFromDf(df))
+    getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
 
     # compute statistics on the trajectories
     fuzzySearchParameterNames = ['sampleIndex']
