@@ -32,7 +32,7 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     manipulatedVariables['agentId'] = [0]
-    manipulatedVariables['maxRunningSteps'] = [50]
+    manipulatedVariables['maxRunningSteps'] = [125]
     manipulatedVariables['numSimulations'] = [200]
     manipulatedVariables['killzoneRadius'] = [1]
 

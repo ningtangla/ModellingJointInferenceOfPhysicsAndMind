@@ -84,7 +84,7 @@ class ComposeSingleAgentGuidedMCTS():
         expand = Expand(self.isTerminal, initializeChildren)
 
         terminalReward = self.terminalRewardList[agentId]
-        approximateValue = self.getApproximateValue(selfNNModel)
+        approximateValue = self.getApproximateValue[agentId](selfNNModel)
         estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
         guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
                                 estimateValue, backup, establishPlainActionDist)
@@ -192,11 +192,14 @@ def main():
         distractorActionSpace = sheepActionSpace
 
 
-        actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace]
-        agentIdForNNState = range(numAgent)
-        getApproximatePolicy = [lambda NNmodel: ApproximatePolicy(NNmodel, sheepActionSpace, agentIdForNNState), lambda NNmodel: ApproximatePolicy(NNmodel, wolfActionSpace, agentIdForNNState),lambda NNmodel: ApproximatePolicy(NNmodel, masterActionSpace, agentIdForNNState)]
+        actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace, distractorActionSpace]
+        agentIdForNNState = range(3)
 
-        getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel,agentIdForNNState)
+        agentIdForSheepAndDistractorNNState = range(4)
+        getApproximatePolicy = [lambda NNmodel: ApproximatePolicy(NNmodel, sheepActionSpace,agentIdForSheepAndDistractorNNState), lambda NNmodel: ApproximatePolicy(NNmodel, wolfActionSpace,agentIdForNNState),lambda NNmodel: ApproximatePolicy(NNmodel, masterActionSpace,agentIdForNNState), lambda NNmodel: ApproximatePolicy(NNmodel, distractorActionSpace, agentIdForSheepAndDistractorNNState)]
+
+        getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel,agentIdForSheepAndDistractorNNState), lambda NNmodel: ApproximateValue(NNmodel,agentIdForNNState),lambda NNmodel: ApproximateValue(NNmodel,agentIdForNNState), lambda NNmodel: ApproximateValue(NNmodel, agentIdForSheepAndDistractorNNState)]
+
         getStateFromNode = lambda node: list(node.id.values())[0]
 
         # sample trajectory
@@ -226,24 +229,20 @@ def main():
 
 
 # sheep NN model
-        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'sheepAvoidRopeModel','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
-        sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace)
 
 # master NN model
         masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         masterPreTrainModel = restoreVariables(initMasterNNModel, masterPreTrainModelPath)
-        masterPolicy = ApproximatePolicy(masterPreTrainModel, masterActionSpace)
 
 # wolf NN model
         wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
-        wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
 
 # distractor NN model
         distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
         distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
-        distractorPolicy = ApproximatePolicy(distractorPreTrainModel, distractorActionSpace)
         depth = 4
 
         multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel,masterPreTrainModel, distractorPreTrainModel]

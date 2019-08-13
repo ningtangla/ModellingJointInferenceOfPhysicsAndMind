@@ -43,9 +43,9 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     manipulatedVariables['agentId'] = [0]
-    manipulatedVariables['maxRunningSteps'] = [100]
+    manipulatedVariables['maxRunningSteps'] = [125]
     manipulatedVariables['numSimulations'] = [200]
-    manipulatedVariables['killzoneRadius'] = [2]
+    manipulatedVariables['killzoneRadius'] = [1]
     manipulatedVariables['offset'] = [0, 4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
