@@ -70,6 +70,7 @@ def main():
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         masterPowerRatio = 0.3
+
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
         distractorPowerRatio = 1
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
@@ -125,6 +126,7 @@ def main():
         distractorPolicy = ApproximatePolicy(distractorPreTrainModel, distractorActionSpace)
 
 
+
         transitInSheepMCTSSimulation = \
                 lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[:3])),  chooseGreedyAction(masterPolicy(state[0:3])),
                 chooseGreedyAction(distractorPolicy(state[:4]))])
@@ -151,7 +153,7 @@ def main():
 
         rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = deathPenalty/10
-        maxRolloutSteps = 7
+        maxRolloutSteps = 10
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
