@@ -25,9 +25,9 @@ import numpy as np
 
 def main():
     # manipulated variables and other important parameters
-    killzoneRadius = 2
-    numSimulations = 100
-    maxRunningSteps = 50
+    killzoneRadius = 1
+    numSimulations = 200
+    maxRunningSteps = 25
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)

@@ -18,12 +18,16 @@
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/agentId=0_depth=8_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=128_numSimulations=100_trainSteps=350000/
 # mkdir demo
 
+
+# mv *.Demo${index}.mp4 ../../demo
+cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/
+mkdir demo
+
 for index in 0 1 2 3 4 5 6 7 8 9
 do
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/agentId=0_depth=8_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=128_numSimulations=100_trainSteps=350000/${index}
-
-ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/agentId=0_depth=8_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=128_numSimulations=100_trainSteps=350000/demo/agentId=0_depth=8_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=128_numSimulations=100_trainSteps=350000_Demo${index}.mp4
+cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/${index}
 # mv *.Demo${index}.mp4 ../../demo
+ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/demo/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100_Demo${index}.mp4
 done
 
 cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo

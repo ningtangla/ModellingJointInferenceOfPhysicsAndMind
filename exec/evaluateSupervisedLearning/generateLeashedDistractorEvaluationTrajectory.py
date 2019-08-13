@@ -34,7 +34,7 @@ from exec.preProcessing import AccumulateRewards
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateLeashedSheepTrajectories')
+                                       'evaluateLeashedDistractorTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -43,8 +43,8 @@ def main():
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
     killzoneRadius = 2
-    sheepId = 0
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    distractorId = 3
+    trajectoryFixedParameters = {'agentId': distractorId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
@@ -57,7 +57,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'expLeashed.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
         numAgents = 2
@@ -74,29 +74,29 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        preyPowerRatio = 1
+        sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
-        wolfActionSpace = list(map(tuple, np.array(sheepActionSpace) * predatorPowerRatio))
+        wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+        masterPowerRatio = 0.4
+        masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
+        distractorActionSpace = sheepActionSpace
 
         numActionSpace = len(wolfActionSpace)
 
-        alivePenalty = 0.05
-        deathBonus = -1
-        rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
-
         # neural network init and save path
-        numStateSpace = 18
+        numStateSpace = 24
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-
-        NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+        NNFixedParameters = {'agentId': distractorId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels')
+        NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
@@ -122,13 +122,11 @@ def main():
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
-
-
-        depth = 4
-        initNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initSheepNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initMasterNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        numStateSpaceForPreTrainAgent = 18
+        generateModelForPreTrainAgent = GenerateModel(numStateSpaceForPreTrainAgent, numActionSpace, regularizationFactor)
+        initSheepNNModel = generateModelForPreTrainAgent(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initWolfNNModel = generateModelForPreTrainAgent(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initMasterNNModel = generateModelForPreTrainAgent(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
 # sheep NN model
         sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedSheepNNModels','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
