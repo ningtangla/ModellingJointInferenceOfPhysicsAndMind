@@ -46,15 +46,16 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    maxRunningSteps = 100
+    maxRunningSteps = 125
     numSimulations = 200
     killzoneRadius = 1
     preyPowerRatio = 0.7
     predatorPowerRatio = 1.3
     masterPowerRatio = 0.3
     distractorPowerRatio = 0.7
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations,\
-            'preyPowerRatio':preyPowerRatio, 'predatorPowerRatio':predatorPowerRatio, 'masterPowerRatio':masterPowerRatio, 'distractorPoweRatio':distractorPowerRatio}
+    # trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations,\
+    #         'preyPowerRatio':preyPowerRatio, 'predatorPowerRatio':predatorPowerRatio, 'masterPowerRatio':masterPowerRatio, 'distractorPoweRatio':distractorPowerRatio}
+    trajectoryFixedParameters = {'agentId': distractorId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
@@ -70,15 +71,16 @@ def main():
     calculateSheepMoveDistance = CalculateDistractorMoveDistance(sheepId, stateIndex, qPosIndex)
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
-    minLength = 84
-    minDeviation = math.pi/4
-    minDistractorMoveDistance = 0.8
+    minLength = 30
+    minDeviation = 0#math.pi/40000
+    minDistractorMoveDistance = 0
     DeviationLegelTrajIndex = np.nonzero(trajectoryDeviationes >= minDeviation)
     lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
     distractorMoveDistanceLegelTrajIndex = np.nonzero(trajectoryDistractorMoveDistances >= minDistractorMoveDistance)
 
     leagelTrajIndex = ft.reduce(np.intersect1d, [DeviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex])
 
+    print(leagelTrajIndex)
 
     leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
     masterDelayStep = 4
@@ -88,7 +90,7 @@ def main():
     masterDelayedStatesPath = getTrajectorySavePath(masterDelayedStatesPathParameters)
     saveToPickle(masterDelayedStates, masterDelayedStatesPath)
 
-    demoStepIndex = list(range(masterDelayStep, minLength)) 
+    demoStepIndex = list(range(masterDelayStep, minLength))
     demoTajectories = [np.array(trajectory)[demoStepIndex] for trajectory in leagelTrajectories]
     demoStates = np.array([[timestep[stateIndex] for timestep in trajectory] for trajectory in demoTajectories])
     demoStatesPathParameters = {'offset': 0}
@@ -96,7 +98,6 @@ def main():
     saveToPickle(demoStates, demoStatesPath)
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
-
 if __name__ == '__main__':
     main()
 
