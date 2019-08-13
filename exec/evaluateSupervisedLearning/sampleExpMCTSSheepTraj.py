@@ -96,6 +96,11 @@ def main():
         wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
 
+# distractor NN model
+        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
+        distractorPolicy = ApproximatePolicy(distractorPreTrainModel, distractorActionSpace)
+
         distractorPolicy = RandomPolicy(distractorActionSpace)
 
         transitInSheepMCTSSimulation = \

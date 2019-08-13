@@ -12,7 +12,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,IsCollided
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -35,6 +35,31 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
         grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
 
+class RewardFunctionForDistractor():
+    def __init__(self, aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isTerminal, getPosition, getVelocity):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.safeBound = safeBound
+        self.wallDisToCenter = wallDisToCenter
+        self.wallPunishRatio = wallPunishRatio
+        self.velocityBound = velocityBound
+        self.isTerminal = isTerminal
+        self.getPosition = getPosition
+        self.getVelocity = getVelocity
+
+    def __call__(self, state, action):
+        reward = self.aliveBonus
+        if self.isTerminal(state):
+            reward += self.deathPenalty
+
+        agentPos = self.getPosition(state)
+        minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
+        wallPunish =  - self.wallPunishRatio * np.abs(self.aliveBonus) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
+
+        agentVel = self.getVelocity(state)
+        velPunish = -np.abs(self.aliveBonus) if np.linalg.norm(agentVel) <= self.velocityBound else 0
+
+        return reward + wallPunish + velPunish
 
 def main():
     # important parameters
@@ -42,9 +67,9 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2, 4, 6]
+    manipulatedVariables['miniBatchSize'] = [128, 256]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedVariables['depth'] = [4]
     manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
 
 
@@ -63,22 +88,30 @@ def main():
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
     getMasterPos = GetAgentPosFromState(masterId, xPosIndex)
     getDistractorPos = GetAgentPosFromState(distractorId, xPosIndex)
+    killzoneRadius = 1
 
     aliveBonus = 0.05
     deathPenalty = -1
     safeBound = 2.5
     wallDisToCenter = 10
-    wallPunishRatio = 5
-    getOtherPos = [getSheepPos, getWolfPos, getMasterPos]
-    isCollided = IsCollided(killzoneRadius, getDistractorPos, getOtherPos)
-    playReward = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isCollided, getSheepPos)
+    wallPunishRatio = 4
+    velIndex = [4, 5]
+    getDistractorVel =  GetAgentPosFromState(distractorId, velIndex)
+    velocityBound = 5
+
+    otherIds = list(range(13))
+    otherIds.remove(distractorId)
+    getOthersPos = [GetAgentPosFromState(otherId, xPosIndex) for otherId in otherIds]
+
+    isCollided = IsCollided(killzoneRadius, getDistractorPos, getOthersPos)
+    playReward = RewardFunctionForDistractor(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getDistractorPos, getDistractorVel)
 
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 # generate trajectory parallel
     generateTrajectoriesCodeName = 'generateLeashedDistractorEvaluationTrajectory.py'
-    evalNumTrials = 1000
+    evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
@@ -90,7 +123,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedSheepTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedDistractorTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -135,10 +168,10 @@ def main():
 
             drawPerformanceLine(group, axForDraw, depth)
             trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepsLevels, [0.2688] * len(trainStepsLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepsLevels, [0.193] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
-    plt.suptitle('ChaseNN Policy Accumulate Rewards')
+    plt.suptitle('Distractor NN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 

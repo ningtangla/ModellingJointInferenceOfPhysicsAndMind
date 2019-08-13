@@ -21,13 +21,38 @@ import mujoco_py as mujoco
 import numpy as np
 
 
+class RewardFunctionForDistractor():
+    def __init__(self, aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isTerminal, getPosition, getVelocity):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.safeBound = safeBound
+        self.wallDisToCenter = wallDisToCenter
+        self.wallPunishRatio = wallPunishRatio
+        self.velocityBound = velocityBound
+        self.isTerminal = isTerminal
+        self.getPosition = getPosition
+        self.getVelocity = getVelocity
+
+    def __call__(self, state, action):
+        reward = self.aliveBonus
+        if self.isTerminal(state):
+            reward += self.deathPenalty
+
+        agentPos = self.getPosition(state)
+        minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
+        wallPunish =  - self.wallPunishRatio * np.abs(self.aliveBonus) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
+
+        agentVel = self.getVelocity(state)
+        velPunish = -np.abs(self.aliveBonus) if np.linalg.norm(agentVel) <= self.velocityBound else 0
+
+        return reward + wallPunish + velPunish
 
 
 def main():
     # manipulated variables and other important parameters
-    killzoneRadius = 2
-    numSimulations = 100
-    maxRunningSteps = 50
+    killzoneRadius = 1
+    numSimulations = 200
+    maxRunningSteps = 25
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -72,6 +97,7 @@ def main():
         getWolfQPos = GetAgentPosFromState(wolfId, qPosIndex)
         getMasterQPos = GetAgentPosFromState(masterId, qPosIndex)
         getDistractorQPos = GetAgentPosFromState(distractorId, qPosIndex)
+
         isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
 
         numSimulationFrames = 20
@@ -127,12 +153,18 @@ def main():
 
         safeBound = 2.5
         wallDisToCenter = 10
-        wallPunishRatio = 5
+        wallPunishRatio = 4
 
-        getOtherPos = [getSheepQPos, getWolfQPos, getMasterQPos]
-        isCollided = IsCollided(killzoneRadius, getDistractorQPos, getOtherPos)
+        velIndex = [4, 5]
+        getDistractorVel =  GetAgentPosFromState(distractorId, velIndex)
+        velocityBound = 5
 
-        rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isCollided, getSheepQPos)
+        otherIds = list(range(13))
+        otherIds.remove(distractorId)
+        getOthersPos = [GetAgentPosFromState(otherId, qPosIndex) for otherId in otherIds]
+
+        isCollided = IsCollided(killzoneRadius, getDistractorQPos, getOthersPos)
+        rewardFunction = RewardFunctionForDistractor(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getDistractorQPos, getDistractorVel)
 
         rolloutPolicy = lambda state: distractorActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = 0
