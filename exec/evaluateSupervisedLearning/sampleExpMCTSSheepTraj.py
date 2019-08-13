@@ -42,7 +42,7 @@ class IsTerminal:
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 1
-    numSimulations = 200
+    numSimulations = 199
     maxRunningSteps = 125
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
@@ -65,14 +65,14 @@ def main():
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        preyPowerRatio = 1
+        preyPowerRatio = 0.7
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.3
+        masterPowerRatio = 0.2
 
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
-        distractorPowerRatio = 1
+        distractorPowerRatio = 0.7
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
 
         trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
