@@ -237,7 +237,7 @@ def main():
         wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace,agentIdForWolfAndMasterNNState)
 # distractor NN model
-        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
+        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorAvoidRopeNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
         distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
         distractorPolicy = ApproximatePolicy(distractorPreTrainModel, distractorActionSpace,agentIdForSheepAndDistractorNNState)
 

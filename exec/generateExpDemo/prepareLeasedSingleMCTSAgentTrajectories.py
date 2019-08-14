@@ -47,7 +47,7 @@ def main():
     masterId = 2
     distractorId = 3
     maxRunningSteps = 125
-    numSimulations = 200
+    numSimulations = 199
     killzoneRadius = 1
     preyPowerRatio = 0.7
     predatorPowerRatio = 1.3
@@ -73,7 +73,7 @@ def main():
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
     minLength = 125
     minDeviation = math.pi/8
-    minDistractorMoveDistance = 1
+    minDistractorMoveDistance = 0.8
     DeviationLegelTrajIndex = np.nonzero(trajectoryDeviationes >= minDeviation)
     lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
     distractorMoveDistanceLegelTrajIndex = np.nonzero(trajectoryDistractorMoveDistances >= minDistractorMoveDistance)

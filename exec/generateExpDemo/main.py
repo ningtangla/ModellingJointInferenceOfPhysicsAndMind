@@ -31,9 +31,9 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [3]
+    manipulatedVariables['agentId'] = [30]
     manipulatedVariables['maxRunningSteps'] = [125]
-    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['numSimulations'] = [199]
     manipulatedVariables['killzoneRadius'] = [1]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
@@ -49,7 +49,7 @@ def main():
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo','trajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)

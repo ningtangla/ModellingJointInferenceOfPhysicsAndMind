@@ -44,9 +44,9 @@ def main():
 
     manipulatedVariables['agentId'] = [30]
     manipulatedVariables['maxRunningSteps'] = [125]
-    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['numSimulations'] = [199]
     manipulatedVariables['killzoneRadius'] = [1]
-    manipulatedVariables['offset'] = [0,4]
+    manipulatedVariables['offset'] = [0]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]

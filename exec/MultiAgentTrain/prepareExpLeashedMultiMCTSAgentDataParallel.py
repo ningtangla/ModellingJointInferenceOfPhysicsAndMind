@@ -32,7 +32,7 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def main():
 
-    numTrajectories = 420
+    numTrajectories = 42
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleExpLeashedMultiMCTSAgentTraj.py'
     
