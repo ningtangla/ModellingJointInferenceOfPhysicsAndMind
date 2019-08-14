@@ -31,11 +31,19 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def main():
+    dirName = os.path.dirname(__file__)
+    # load save dir
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
+    if not os.path.exists(trajectoriesSaveDirectory):
+        os.makedirs(trajectoriesSaveDirectory)
 
-    numTrajectories = 420
+    distractorId = 3
+    startTime = time.time()
+
+    numTrajectories = 16
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleExpLeashedMultiMCTSAgentTraj.py'
-    
+    # sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
+    sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
@@ -44,11 +52,25 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    startTime = time.time()
-    print("start")
+    killzoneRadius = 1
+    maxRunningSteps = 125
+    numSimulations = 200
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    trajectorySaveExtension = '.pickle'
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    pathParameters = {'agentId': 30}
-    cmdList = generateTrajectoriesParallel(pathParameters)
+    print("start")
+    trainableAgentIds = [distractorId]
+    for agentId in trainableAgentIds:
+        print("agent {}".format(agentId))
+        pathParameters = {'agentId': agentId}
+
+        cmdList = generateTrajectoriesParallel(pathParameters)
+        # print(cmdList)
+        # trajectories = loadTrajectoriesForParallel(pathParameters)
+        # import ipdb; ipdb.set_trace()
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))

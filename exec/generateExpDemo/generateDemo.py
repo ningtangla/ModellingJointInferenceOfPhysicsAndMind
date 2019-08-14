@@ -42,11 +42,11 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [0]
+    manipulatedVariables['agentId'] = [30]
     manipulatedVariables['maxRunningSteps'] = [125]
     manipulatedVariables['numSimulations'] = [200]
     manipulatedVariables['killzoneRadius'] = [1]
-    manipulatedVariables['offset'] = [0, 4]
+    manipulatedVariables['offset'] = [0,4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]

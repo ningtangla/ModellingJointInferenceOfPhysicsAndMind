@@ -66,12 +66,12 @@ def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, others
 
 
 class ComposeSingleAgentGuidedMCTS():
-    def __init__(self, numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue):
+    def __init__(self, numSimulations, actionSpace, terminalRewardList, selectChild, isTerminalWithRope, transit, getStateFromNode, getApproximatePolicy, getApproximateValue):
         self.numSimulations = numSimulations
         self.actionSpace = actionSpace
         self.terminalRewardList = terminalRewardList
         self.selectChild = selectChild
-        self.isTerminal = isTerminal
+        self.isTerminalWithRope = isTerminalWithRope
         self.transit = transit
         self.getStateFromNode = getStateFromNode
         self.getApproximatePolicy = getApproximatePolicy
@@ -81,11 +81,11 @@ class ComposeSingleAgentGuidedMCTS():
         approximateActionPrior = self.getApproximatePolicy[agentId](selfNNModel)
         transitInMCTS = lambda state, selfAction: composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
         initializeChildren = InitializeChildren(self.actionSpace[agentId], transitInMCTS, approximateActionPrior)
-        expand = Expand(self.isTerminal, initializeChildren)
+        expand = Expand(self.isTerminalWithRope, initializeChildren)
 
         terminalReward = self.terminalRewardList[agentId]
         approximateValue = self.getApproximateValue[agentId](selfNNModel)
-        estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
+        estimateValue = EstimateValueFromNode(terminalReward, self.isTerminalWithRope, self.getStateFromNode, approximateValue)
         guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
                                 estimateValue, backup, establishPlainActionDist)
 
@@ -108,6 +108,50 @@ class PrepareMultiAgentPolicy:
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
         policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
         return policy
+
+class isTerminalWithRope:
+    def __init__(self, minXDis, getSheepPos, getWolfPos, getRopeQPos):
+        self.minXDis = minXDis
+        self.getSheepPos = getSheepPos
+        self.getWolfPos = getWolfPos
+        self.getRopeQPos = getRopeQPos
+
+    def __call__(self, state):
+        state = np.asarray(state)
+        posSheep = self.getSheepPos(state)
+        posWolf = self.getWolfPos(state)
+        posRope = [getPos(state) for getPos in self.getRopeQPos]
+        L2NormDistanceForWolf = np.linalg.norm((posSheep - posWolf), ord=2)
+        L2NormDistancesForRope = np.array([np.linalg.norm((posSheep - pos), ord=2) for pos in posRope])
+        terminal = (L2NormDistanceForWolf <= self.minXDis) or np.any(L2NormDistancesForRope <= self.minXDis)
+
+        return terminal
+
+class RewardFunctionForDistractor():
+    def __init__(self, aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getPosition, getVelocity):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.safeBound = safeBound
+        self.wallDisToCenter = wallDisToCenter
+        self.wallPunishRatio = wallPunishRatio
+        self.velocityBound = velocityBound
+        self.isCollided = isCollided
+        self.getPosition = getPosition
+        self.getVelocity = getVelocity
+
+    def __call__(self, state, action):
+        reward = self.aliveBonus
+        if self.isCollided(state):
+            reward += self.deathPenalty
+
+        agentPos = self.getPosition(state)
+        minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
+        wallPunish =  - self.wallPunishRatio * np.abs(self.aliveBonus) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
+
+        agentVel = self.getVelocity(state)
+        velPunish = -np.abs(self.aliveBonus) if np.linalg.norm(agentVel) <= self.velocityBound else 0
+
+        return reward + wallPunish + velPunish
 
 
 def main():
@@ -157,10 +201,10 @@ def main():
         distractorTerminalPenalty = 0
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, masterTerminalPenalty, distractorTerminalPenalty]
 
-        isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+        isTerminalWithRope = IsTerminalWithRope(killzoneRadius, getSheepXPos, getWolfXPos)
 
         numSimulationFrames = 20
-        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+        transit = TransitionFunction(physicsSimulation, isTerminalWithRope, numSimulationFrames)
 
         qPosInit = (0, ) * 26
         qVelInit = (0, ) * 26
@@ -173,6 +217,29 @@ def main():
 
         reset  = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
+
+        agentIdForSheepAndDistractorNNState = range(4)
+        agentIdForWolfAndMasterNNState = range(3)
+
+
+# sheep NN model
+        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'sheepAvoidRopeModel','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
+        sheepPolicy = ApproximatePolicy(sheepPreTrainModel, sheepActionSpace,agentIdForSheepAndDistractorNNState)
+
+# master NN model
+        masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        masterPreTrainModel = restoreVariables(initMasterNNModel, masterPreTrainModelPath)
+        masterPolicy = ApproximatePolicy(masterPreTrainModel, masterActionSpace,agentIdForWolfAndMasterNNState)
+
+# wolf NN model
+        wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
+        wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace,agentIdForWolfAndMasterNNState)
+# distractor NN model
+        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
+        distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
+        distractorPolicy = ApproximatePolicy(distractorPreTrainModel, distractorActionSpace,agentIdForSheepAndDistractorNNState)
 
         # NNGuidedMCTS init
         cInit = 1
@@ -196,23 +263,79 @@ def main():
         agentIdForSheepAndDistractorNNState = range(4)
         getApproximatePolicy = [lambda NNmodel: ApproximatePolicy(NNmodel, sheepActionSpace,agentIdForSheepAndDistractorNNState), lambda NNmodel: ApproximatePolicy(NNmodel, wolfActionSpace,agentIdForNNState),lambda NNmodel: ApproximatePolicy(NNmodel, masterActionSpace,agentIdForNNState), lambda NNmodel: ApproximatePolicy(NNmodel, distractorActionSpace, agentIdForSheepAndDistractorNNState)]
 
-        getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel,agentIdForSheepAndDistractorNNState), lambda NNmodel: ApproximateValue(NNmodel,agentIdForNNState),lambda NNmodel: ApproximateValue(NNmodel,agentIdForNNState), lambda NNmodel: ApproximateValue(NNmodel, agentIdForSheepAndDistractorNNState)]
+        safeBound = 2.5
+        wallDisToCenter = 10
+        wallPunishRatio = 4
+
+### distractor rollout 
+        transitInDistractorMCTSSimulation = \
+            lambda state, distractorSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state)), chooseGreedyAction(wolfPolicy(state)), chooseGreedyAction(masterPolicy(state)), distractorSelfAction])
+        distractorAliveBonus = 0.05
+        distractorDeathPenalty = -1
+        velIndex = [4, 5]
+        getDistractorVel =  GetAgentPosFromState(distractorId, velIndex)
+        velocityBound = 5
+
+        otherIds = list(range(13))
+        otherIds.remove(distractorId)
+        getOthersPosForDistractor = [GetAgentPosFromState(otherId, qPosIndex) for otherId in otherIds]
+
+        isCollided = IsCollided(killzoneRadius, getDistractorQPos, getOthersPosForDistractor)
+        distractorRewardFunction = RewardFunctionForDistractor(distractorAliveBonus, distractorDeathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getDistractorQPos, getDistractorVel)
+
+        distractorRolloutPolicy = lambda state: distractorActionSpace[np.random.choice(range(numActionSpace))]
+        distractorRolloutHeuristicWeight = 0
+        distractorMaxRolloutSteps = 7
+        distractorRolloutHeuristic = HeuristicDistanceToTarget(distractorRolloutHeuristicWeight, getWolfQPos, getSheepQPos)
+        distractorRollout = RollOut(distractorRolloutPolicy, distractorMaxRolloutSteps, transitInDistractorMCTSSimulation, distractorRewardFunction, isTerminalWithRope, distractorRolloutHeuristic)
+
+#### sheep rollout 
+        transitInSheepMCTSSimulation = \
+            lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state)), chooseGreedyAction(masterPolicy(state)),chooseGreedyAction(distractorPolicy(state))])
+
+        sheepAliveBonus = 0.05
+        sheepDeathPenalty = -1
+        sheepRewardFunction = RewardFunctionCompete(sheepAliveBonus, sheepDeathPenalty, isTerminalWithRope)
+
+        sheepRolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
+        sheepRolloutHeuristicWeight = sheepDeathPenalty/10
+        sheepMaxRolloutSteps = 7
+        sheepRolloutHeuristic = HeuristicDistanceToTarget(sheepRolloutHeuristicWeight, getWolfQPos, getSheepQPos)
+        sheepRollout = RollOut(sheepRolloutPolicy, sheepMaxRolloutSteps, transitInSheepMCTSSimulation, sheepRewardFunction, isTerminalWithRope,
+                          sheepRolloutHeuristic)
+
+#### wolf rollout 
+        transitInWolfMCTSSimulation = \
+            lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state)), wolfSelfAction, chooseGreedyAction(masterPolicy(state)),chooseGreedyAction(distractorPolicy(state))])
+
+        wolfAliveBonus = -0.05
+        wolfDeathPenalty = 1
+        wolfRewardFunction = RewardFunctionCompete(wolfAliveBonus, wolfDeathPenalty, isTerminalWithRope)
+
+        wolfRolloutPolicy = lambda state: wolfActionSpace[np.random.choice(range(numActionSpace))]
+        wolfRolloutHeuristicWeight = wolfDeathPenalty/10
+        wolfMaxRolloutSteps = 7
+        wolfRolloutHeuristic = HeuristicDistanceToTarget(wolfRolloutHeuristicWeight, getWolfQPos, getSheepQPos)
+        wolfRollout = RollOut(wolfRolloutPolicy, wolfMaxRolloutSteps, transitInWolfMCTSSimulation, wolfRewardFunction, isTerminalWithRope, wolfRolloutHeuristic)
+
+        masterRollout = lambda node: 0
+        getApproximateValue = [sheepRollout, wolfRollout,masterRollout, distractorRollout]
+
 
         getStateFromNode = lambda node: list(node.id.values())[0]
-
         # sample trajectory
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminalWithRope, reset, chooseGreedyAction)
 
 
 
 # neural network init
-        numStateSpace = 18
+        wolfAndMasterNumStateSpace = 18
         numActionSpace = len(actionSpace)
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+        generateModel = GenerateModel(wolfAndMasterNumStateSpace, numActionSpace, regularizationFactor)
 
         initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
         initMasterNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
@@ -226,22 +349,11 @@ def main():
         initSheepNNModel = generateSheepModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
 
-# sheep NN model
-        sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'sheepAvoidRopeModel','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        sheepPreTrainModel = restoreVariables(initSheepNNModel, sheepPreTrainModelPath)
 
-# master NN model
-        masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        masterPreTrainModel = restoreVariables(initMasterNNModel, masterPreTrainModelPath)
 
-# wolf NN model
-        wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
-
-# distractor NN model
-        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
-        distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
         depth = 4
+
+
 
         multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel,masterPreTrainModel, distractorPreTrainModel]
 
@@ -252,7 +364,7 @@ def main():
         agentIdForSheepAndDistractorNNState = range(4)
         otherAgentApproximatePolicies = [lambda NNmodel: ApproximatePolicy(NNmodel, sheepActionSpace,agentIdForSheepAndDistractorNNState), lambda NNmodel: ApproximatePolicy(NNmodel, wolfActionSpace,agentIdForNNState),lambda NNmodel: ApproximatePolicy(NNmodel, masterActionSpace,agentIdForNNState), lambda NNmodel: ApproximatePolicy(NNmodel, distractorActionSpace, agentIdForSheepAndDistractorNNState)]
 
-        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
+        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminalWithRope, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicies, trainableAgentIds)
 
 
