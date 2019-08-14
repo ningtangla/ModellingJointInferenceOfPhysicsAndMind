@@ -66,9 +66,9 @@ class IsInferenceTerminal:
 
 
 class InferOneStep:
-    def __init__(self, inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood):
+    def __init__(self, inferenceIndex, mindPhysicsName, getMindsPhysicsActionsJointLikelihood):
         self.inferenceIndex = inferenceIndex
-        self.mindName, self.physicsName, self.actionName = mindPhysicsActionName
+        self.mindName, self.physicsName = mindPhysicsName
         self.getMindsPhysicsActionsJointLikelihood = getMindsPhysicsActionsJointLikelihood
 
     def __call__(self, state, nextState, mindsPhysicsPrior):
@@ -77,13 +77,14 @@ class InferOneStep:
 
         mindsPhysicsActionsDf['jointLikelihood'] = [getLikelihood(index[0], index[1], index[2])
                                                     for index, value in mindsPhysicsActionsDf.iterrows()]
-
         actionsIntegratedOut = list(mindsPhysicsActionsDf.groupby([self.mindName, self.physicsName])[
             'jointLikelihood'].transform('sum'))
 
         priorLikelihoodPair = zip(mindsPhysicsPrior, actionsIntegratedOut)
+
         posteriorUnnormalized = [prior * likelihood for prior, likelihood in priorLikelihoodPair]
         unnormalizedSum = sum(posteriorUnnormalized)
+
         mindsPhysicsPosterior = [posterior / unnormalizedSum for posterior in posteriorUnnormalized]
 
         return mindsPhysicsPosterior
@@ -219,6 +220,7 @@ class InferDiscreteChasingAndDrawDemo:
         while True:
             mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
             print('round', nextTimeStep)
+
             if self.visualize:
                 fpsClock.tick(self.fps)
                 game = self.visualize(currentState, mindsPhysicsPrior)

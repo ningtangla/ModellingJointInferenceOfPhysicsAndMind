@@ -18,12 +18,12 @@ class TwoAgentsPolicy:
             sheepID = mind.index('sheep')
 
             wolfAction = allAgentsActions[wolfID]
-            wolfAllActionsLikelihood = self.wolfPolicy(state)
-            wolfActionLikelihood = wolfAllActionsLikelihood.get(wolfAction, 0)
+            wolfActionDist = self.wolfPolicy(state)
+            wolfActionLikelihood = wolfActionDist.get(wolfAction, 0)
 
             sheepAction = allAgentsActions[sheepID]
-            sheepAllActionsLikelihood = self.sheepPolicy(state)
-            sheepActionLikelihood = sheepAllActionsLikelihood.get(sheepAction, 0)
+            sheepActionDist = self.sheepPolicy(state)
+            sheepActionLikelihood = sheepActionDist.get(sheepAction, 0)
 
             policyLikelihood = wolfActionLikelihood* sheepActionLikelihood
 
@@ -45,12 +45,12 @@ class ThreeAgentsPolicyForNN:
         sheepWolfState = [state[sheepID][:6], state[wolfID][:6]] # outside
 
         wolfAction = allAgentsActions[wolfID]
-        wolfAllActionsLikelihood = self.wolfPolicy(sheepWolfState)
-        wolfActionLikelihood = wolfAllActionsLikelihood.get(wolfAction, 0)
+        wolfActionDist = self.wolfPolicy(sheepWolfState)
+        wolfActionLikelihood = wolfActionDist.get(wolfAction, 0)
 
         sheepAction = allAgentsActions[sheepID]
-        sheepAllActionsLikelihood = self.sheepPolicy(sheepWolfState)
-        sheepActionLikelihood = sheepAllActionsLikelihood.get(sheepAction, 0)
+        sheepActionDist = self.sheepPolicy(sheepWolfState)
+        sheepActionLikelihood = sheepActionDist.get(sheepAction, 0)
 
         randomID = mind.index('random')
         randomAction = allAgentsActions[randomID]
@@ -73,13 +73,13 @@ class ThreeAgentsPolicyForMCTS:
 
         wolfID = mind.index('wolf')
         wolfAction = allAgentsActions[wolfID]
-        wolfAllActionsLikelihood = self.mctsPolicy(state)
-        wolfActionLikelihood = wolfAllActionsLikelihood.get(wolfAction, 0)
+        wolfActionDist = self.mctsPolicy(state)
+        wolfActionLikelihood = wolfActionDist.get(wolfAction, 0)
 
         sheepID = mind.index('sheep')
         sheepAction = allAgentsActions[sheepID]
-        sheepAllActionsLikelihood = self.randomPolicy(state)
-        sheepActionLikelihood = sheepAllActionsLikelihood.get(sheepAction, 0)
+        sheepActionDist = self.randomPolicy(state)
+        sheepActionLikelihood = sheepActionDist.get(sheepAction, 0)
 
         randomID = mind.index('random')
         randomAction = allAgentsActions[randomID]
