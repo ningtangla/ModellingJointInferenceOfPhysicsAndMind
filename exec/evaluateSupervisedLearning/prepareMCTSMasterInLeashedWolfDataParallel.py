@@ -33,19 +33,17 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leashedSheepTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leashedMasterTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    sheepId = 0
-    wolfId = 1
+    masterId = 2
+    numTrajectories = 2500
 
     startTime = time.time()
-
-    numTrajectories = 3000
     # generate and load trajectories before train parallelly
-    # sampleTrajectoryFileName = 'sampleMCTSLeasedWolfTrajectory.py'
-    sampleTrajectoryFileName = 'sampleMCTSSheepInLeashedWolfTraj.py'
+    sampleTrajectoryFileName = 'sampleMCTSMasterInLeashedWolfTraj.py'
+
     numCpuCores = os.cpu_count()
     print(numCpuCores)
     numCpuToUse = int(0.75*numCpuCores)
@@ -63,14 +61,13 @@ def main():
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
-    trainableAgentIds = [sheepId]
+    trainableAgentIds = [masterId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
-
         cmdList = generateTrajectoriesParallel(pathParameters)
         # print(cmdList)
-        trajectories = loadTrajectoriesForParallel(pathParameters)
+        # trajectories = loadTrajectoriesForParallel(pathParameters)
         # import ipdb; ipdb.set_trace()
 
     endTime = time.time()

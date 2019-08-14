@@ -147,7 +147,7 @@ def main():
     getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
-
+    import ipdb;ipdb.set_trace()
     # function to train NN model
     terminalThreshold = 1e-10
     lossHistorySize = 10

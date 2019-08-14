@@ -29,7 +29,7 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 from exec.evaluationFunctions import ComputeStatistics
 
 
-def drawPerformanceLine(dataDf, axForDraw):
+def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
         grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
@@ -38,15 +38,15 @@ def drawPerformanceLine(dataDf, axForDraw):
 
 def main():
     # important parameters
-    sheepId = 0
+    masterId = 2
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = list(range(0,500001,50000))
-    # manipulatedVariables['depth'] = [2, 4, 6, 8]
-    manipulatedVariables['width'] = [32, 64, 128, 256]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedVariables['depth'] = [2, 4, 8]
+    manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
+
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -67,32 +67,30 @@ def main():
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
-    generateTrajectoriesCodeName = 'generateSheepEvaluationTrajectory.py'
-    evalNumTrials = 300
-
+# generate trajectory parallel
+    generateTrajectoriesCodeName = 'generateMasterEvaluationTraj.py'
+    evalNumTrials = 1000
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8 * numCpuCores)
+    numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,
-                                                                evalNumTrials,numCmdList)
-
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,evalNumTrials, numCmdList)
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedMasterTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
     trainMaxRunningSteps = 25
-    trainNumSimulations = 100
+    trainNumSimulations = 200
     killzoneRadius = 2
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    trajectoryFixedParameters = {'agentId': masterId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
@@ -107,32 +105,34 @@ def main():
 
     # plot the results
     fig = plt.figure()
-    numRows = len(manipulatedVariables['miniBatchSize'])
-    numColumns = len(manipulatedVariables['width'])
+    numColumns = len(manipulatedVariables['miniBatchSize'])
+    numRows = len(manipulatedVariables['depth'])
     plotCounter = 1
 
     for miniBatchSize, grp in statisticsDf.groupby('miniBatchSize'):
         grp.index = grp.index.droplevel('miniBatchSize')
 
-        for width, group in grp.groupby('width'):
-            group.index = group.index.droplevel('width')
+        for depth, group in grp.groupby('depth'):
+            group.index = group.index.droplevel('depth')
 
-            axForDraw = fig.add_subplot(numRows,numColumns,plotCounter)
-            if plotCounter % numColumns == 1:
+            axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+            if plotCounter % numRows == 1:
                 axForDraw.set_ylabel('miniBatchSize: {}'.format(miniBatchSize))
             if plotCounter <= numColumns:
-                axForDraw.set_title('width: {}'.format(width))
-            axForDraw.set_ylim(-1, 1.3)
+                axForDraw.set_title('depth: {}'.format(depth))
 
+            # axForDraw.set_ylim(-1, 0.6)
             # plt.ylabel('Distance between optimal and actual next position of sheep')
-            drawPerformanceLine(group, axForDraw)
-            trainStepLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepLevels, [1.18]*len(trainStepLevels), label='mctsTrainData')
-            plotCounter += 1
-    # plt.supertitle('Sheep')
 
+            drawPerformanceLine(group, axForDraw, depth)
+            trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
+            axForDraw.plot(trainStepsLevels, [0.375] * len(trainStepsLevels), label='mctsTrainData')
+            plotCounter += 1
+
+    plt.suptitle('MasterNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
+
 
 if __name__ == '__main__':
     main()
