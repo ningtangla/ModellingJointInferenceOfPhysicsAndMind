@@ -49,6 +49,9 @@ class GenerateModel:
                 fcLayer = tf.layers.Dense(units=sharedWidths[0], activation=tf.nn.relu, kernel_initializer=initWeight,
                                           bias_initializer=initBias, name="fc1")
                 activation_ = fcLayer(states_)
+                tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
+                tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
+                tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
                 if resBlockSize > 0:
                     blockHeads = set([i for i in range(2, len(sharedWidths) + 1) if (i - 2) % resBlockSize == 0])
                     blockTails = set([i + resBlockSize - 1 for i in blockHeads])
