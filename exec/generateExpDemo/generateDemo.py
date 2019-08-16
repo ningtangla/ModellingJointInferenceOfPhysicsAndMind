@@ -44,8 +44,8 @@ def main():
 
     manipulatedVariables['agentId'] = [310]
     manipulatedVariables['maxRunningSteps'] = [250]
-    manipulatedVariables['numSimulations'] = [160]
-    manipulatedVariables['killzoneRadius'] = [1]
+    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['killzoneRadius'] = [0.7]
     manipulatedVariables['offset'] = [0, 4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]

@@ -152,8 +152,8 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 250
-    numSimulations = 201
-    killzoneRadius = 0.7
+    numSimulations = 211
+    killzoneRadius = 0.3
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -251,9 +251,9 @@ def main():
 # multAgent ApproximatePolicyAndActionPrior
         preyPowerRatio = 0.85
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.3
+        predatorPowerRatio = 1.4
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.06
+        masterPowerRatio = 0.05
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
         distractorPowerRatio = 0.95
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
@@ -287,7 +287,8 @@ def main():
         velIndex = [4, 5]
         getSelfVels =  [GetAgentPosFromState(Id, velIndex) for Id in agentIds]
         
-        isCollidedFunctions = [IsCollided(killzoneRadius, getSelfQPos, getOthersPos) for getSelfQPos, getOthersPos in zip(getSelfQPoses, getOthersPoses)]
+        collisionRadius = 1
+        isCollidedFunctions = [IsCollided(collisionRadius, getSelfQPos, getOthersPos) for getSelfQPos, getOthersPos in zip(getSelfQPoses, getOthersPoses)]
         safeBoundes = [2.5, 0.1, 0.1]#, 2]
         wallDisToCenter = 10
         wallPunishRatios = [3, 0, 0]#, 4]
@@ -300,17 +301,18 @@ def main():
         rolloutHeuristics = [HeuristicDistanceToTarget(weight, getWolfQPos, getSheepQPos) for weight in rolloutHeuristicWeights]
 
         numTrees = 2
-        numSimulationsPerTree = 100
+        numSimulationsPerTree = 150
         maxRolloutSteps = 10
         #composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
-        composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
-                selectChild, isTerminal, transit, getApproximatePolicy)
         # composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
-        #         selectChild, isTerminal, transit, getApproximateUniformActionPrior)
+        #         selectChild, isTerminal, transit, getApproximatePolicy)
+        composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
+                selectChild, isTerminal, transit, getApproximateUniformActionPrior)
 
         trainableAgentIds = [sheepId, wolfId]
         imageOthersPolicy = [lambda policy : policy] * numAgent
         imageOthersPolicy[masterId] = lambda policy: RandomPolicy(masterActionSpace)
+        #imageOthersPolicy[masterId] = lambda policy: lambda state : stationaryAgentPolicy(state)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy, imageOthersPolicy)
 
         # sample and save trajectories

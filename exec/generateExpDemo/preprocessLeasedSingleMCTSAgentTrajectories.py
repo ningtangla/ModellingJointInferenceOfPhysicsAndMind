@@ -46,7 +46,7 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    maxRunningSteps = 2
+    maxRunningSteps = 250
     numSimulations = 200
     killzoneRadius = 0.7
     # preyPowerRatio = 0.7
@@ -73,8 +73,9 @@ def main():
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
 
-    minLength = 1
-    minDeviation = math.pi/4
+    print(len(trajectories))
+    minLength = 185
+    minDeviation = math.pi/400
     maxDeviation = math.pi/1
     minDistractorMoveDistance = 0
     maxDistractorMoveDistance = 100
