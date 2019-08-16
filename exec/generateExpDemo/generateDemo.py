@@ -8,10 +8,10 @@ from collections import OrderedDict
 DIRNAME = os.path.dirname(__file__)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, GetAgentCoordinateFromTrajectoryAndStateDf, \
+from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, \
     loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath,conditionDfFromParametersDict
-from exec.generateVideosForLeashedDemo.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
-from exec.generateVideosForLeashedDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj,DrawStateWithRope, ChaseTrialWithRopeTraj
+from exec.generateExpDemo.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
+from exec.generateExpDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj,DrawStateWithRope, ChaseTrialWithRopeTraj
 
 def getFileName(parameters,fixedParameters):
     allParameters = dict(list(parameters.items()) + list(fixedParameters.items()))
@@ -20,6 +20,17 @@ def getFileName(parameters,fixedParameters):
     fileName = '_'.join(nameValueStringPairs)
 
     return fileName
+
+class GetAgentCoordinateFromTrajectoryAndStateDf:
+    def __init__(self, coordinates):
+        self.coordinates = coordinates
+
+    def __call__(self, trajectory, df):
+        timeStep = df.index.get_level_values('timeStep')[0]
+        objectId = df.index.get_level_values('agentId')[0]
+        coordinates = trajectory[timeStep][objectId][self.coordinates]
+
+        return coordinates
 
 def main():
     manipulatedVariables = OrderedDict()
@@ -31,10 +42,11 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [30]
-    manipulatedVariables['maxRunningSteps'] = [125]
-    manipulatedVariables['numSimulations'] = [199]
-    manipulatedVariables['killzoneRadius'] = [1]
+    manipulatedVariables['agentId'] = [310]
+    manipulatedVariables['maxRunningSteps'] = [250]
+    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['killzoneRadius'] = [0.7]
+    manipulatedVariables['offset'] = [0, 4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -45,6 +57,7 @@ def main():
     # manipulatedVariables['safeBound'] = [1.5]
     # manipulatedVariables['preyPowerRatio'] =[0.7]
     # manipulatedVariables['wallPunishRatio'] = [0.6]
+
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
@@ -53,23 +66,20 @@ def main():
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
-    # fuzzySearchParameterNames = []
+    # fuzzySearchParameterNames = ['sampleIndex']
+    fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
-    traj = loadTrajectories(conditionParametersAll[0])
-    # print(traj[0][0][0])
+    trajectory = loadTrajectories(conditionParametersAll[0])
 
-    stateIndex = 0
-    getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0][stateIndex])[0]))
+    getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0])[0]))
     getRangeTrajectoryLength = lambda trajectory: list(range(len(trajectory)))
     getAllLevelValuesRange = {'timeStep': getRangeTrajectoryLength, 'agentId': getRangeNumAgentsFromTrajectory}
 
-    getAgentPosXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 0)
-    getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
-    getAgentVelXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 4)
-    getAgentVelYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 5)
-    extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord, 'xVel': getAgentVelXCoord, 'yVel': getAgentVelYCoord}
+    getAgentPosXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(0)
+    getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(1)
+    extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord}
+
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
 
 
@@ -77,9 +87,11 @@ def main():
     for conditionParameters in conditionParametersAll:
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
-        maxNumTrajectories = 10
+        print(numTrajectories)
+        maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-        selectedTrajectories = trajectories[0:numTrajectoryChoose]
+        selectedTrajectories = trajectories[0:3]
+
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
         dataFileName = getFileName(conditionParameters,trajectoryFixedParameters)
@@ -101,41 +113,49 @@ def main():
         yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
         screenColor = THECOLORS['black']
         lineColor = THECOLORS['white']
+        ropeColor = THECOLORS['white']
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
         circleSize = 10
         positionIndex = [0, 1]
-        tiedAgentId = [1, 2]
 
         numOfAgent = 3
-        ropeColor = THECOLORS['white']
+        sheepId = 0
+        wolfId = 1
+        masterId = 2
+        distractorId = 3
+
+        conditionList = [0]
+        conditionValues = [[wolfId, masterId],[wolfId, distractorId], None]
+
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
 
-        # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
-        colorSpace = colorSpace[:numOfAgent]
-        for index in range(numTrajectoryChoose):
-            imageFolderName = "{}".format(index)
-            saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
+        circleColorList = colorSpace[:numOfAgent]
 
-            FPS = 60
-            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, saveImageDir=saveImageDir)
-            chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, colorSpace, drawStateWithRope, saveImage=True, saveImageDir=saveImageDir)
+        for index in range(len(selectedTrajectories)):
+            for condition in conditionList:
+                imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
+                saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
 
-            rawXRange = [-10, 10]
-            rawYRange = [-10, 10]
-            scaledXRange = [200, 600]
-            scaledYRange = [200, 600]
-            scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+                FPS = 60
+                chaseTrial = ChaseTrialWithTraj(FPS, circleColorList, drawState, saveImage=True, saveImageDir=saveImageDir)
+                chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, circleColorList, drawStateWithRope, saveImage=True, saveImageDir=saveImageDir)
 
-            oldFPS = 5
-            adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
+                rawXRange = [-10, 10]
+                rawYRange = [-10, 10]
+                scaledXRange = [200, 600]
+                scaledYRange = [200, 600]
+                scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-            getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
-            trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
-            trajectory = getTrajectory(trajectoryDf)
-            # chaseTrial(trajectory)
-            chaseTrialWithRope(trajectory, tiedAgentId)
+                oldFPS = 5
+                adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
+
+                getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
+                trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
+                trajectory = getTrajectory(trajectoryDf)
+                chaseTrial(trajectory)
+                # chaseTrialWithRope(trajectory, conditionValues[condition])
 
 if __name__ == '__main__':
     main()

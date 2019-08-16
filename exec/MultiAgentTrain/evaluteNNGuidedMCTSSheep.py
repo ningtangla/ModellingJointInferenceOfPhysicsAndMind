@@ -17,6 +17,7 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTra
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
+from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, ActionToOneHot, ProcessTrajectoryForPolicyValueNet, PreProcessTrajectories
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
@@ -33,38 +34,63 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                             'multiAgentTrain', 'multiMCTSAgent', 'NNGuideMCTSSheepTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    distractorId = 3
+    maxRunningSteps = 20
+    numSimulations = 200
+    killzoneRadius = 2
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    trajectorySaveExtension = '.pickle'
+
+    sheepId = 0
+    wolfId = 1
+
     startTime = time.time()
 
-    numTrajectories = 4000
+    numTrajectories = 1000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
-    # sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
-
+    sampleTrajectoryFileName = 'sampleNNGuidedMCTSSheep.py'
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
+    pathParameters = {'iterationIndex':-1}
+    cmdList = generateTrajectoriesParallel(pathParameters)
 
 
-    print("start")
-    trainableAgentIds = [distractorId]
-    for agentId in trainableAgentIds:
-        print("agent {}".format(agentId))
-        pathParameters = {'agentId': agentId}
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)    
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectories = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+    print("DATASET LOADED!")
 
-        cmdList = generateTrajectoriesParallel(pathParameters)
+    # accumulate rewards for trajectories
+    xPosIndex = [2, 3]
+    getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
+    getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
+    playAliveBonus = 0.05
+    playDeathPenalty = -1
+    playKillzoneRadius = 2
+    playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
+    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
+
+    decay = 1
+    accumulateRewards = AccumulateRewards(decay, playReward)
+    addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
 
-    endTime = time.time()
-    print("Time taken {} seconds".format((endTime - startTime)))
+    trajectories = loadTrajectories(pathParameters)
 
+    valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
+ 
+    trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
+    std = np.std([tra[0][3] for tra in valuedTrajectories])
+
+    print(trainDataMeanAccumulatedReward, std)
 
 if __name__ == '__main__':
     main()
