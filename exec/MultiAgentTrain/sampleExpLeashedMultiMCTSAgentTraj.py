@@ -118,7 +118,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 125
+    maxRunningSteps = 126
     numSimulations = 200
     killzoneRadius = 1
 
@@ -241,13 +241,13 @@ def main():
         wolfPreTrainModel = restoreVariables(initWolfNNModel, wolfPreTrainModelPath)
 
 # distractor NN model
-        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
+        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorAvoidRopeNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
         distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
         depth = 4
 
-        multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel,masterPreTrainModel, distractorPreTrainModel]
+        multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel, masterPreTrainModel, distractorPreTrainModel]
 
-        trainableAgentIds = [sheepId, distractorId]
+        trainableAgentIds = [sheepId, wolfId, distractorId]
 
         startTime = time.time()
 

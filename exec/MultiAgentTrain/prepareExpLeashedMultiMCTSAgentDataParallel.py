@@ -39,7 +39,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 420
+    numTrajectories = 48
 
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleExpLeashedMultiMCTSAgentTraj.py'
@@ -53,7 +53,7 @@ def main():
 
     print("start")
 
-    pathParameters = {'agentId': 30}
+    pathParameters = {'agentId': 430}
     cmdList = generateTrajectoriesParallel(pathParameters)
 
     endTime = time.time()
