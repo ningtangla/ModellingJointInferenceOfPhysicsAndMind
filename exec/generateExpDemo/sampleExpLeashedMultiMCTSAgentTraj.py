@@ -64,6 +64,11 @@ def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, others
     transitInSelfMCTS = transit(state, multiAgentActions)
     return transitInSelfMCTS
 
+def composeMultiAgentRolloutInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
+    multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
+    multiAgentActions.insert(agentId, selfAction)
+    transitInSelfMCTS = transit(state, multiAgentActions)
+    return transitInSelfMCTS
 
 class ComposeSingleAgentGuidedMCTS():
     def __init__(self, numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue):

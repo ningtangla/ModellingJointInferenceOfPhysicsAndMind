@@ -53,6 +53,32 @@ class RewardFunctionWithWall():
 
         return reward + wallPunish
 
+class RewardFunctionAvoidCollisionAndWall():
+    def __init__(self, aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getPosition, getVelocity):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.safeBound = safeBound
+        self.wallDisToCenter = wallDisToCenter
+        self.wallPunishRatio = wallPunishRatio
+        self.velocityBound = velocityBound
+        self.isCollided = isCollided
+        self.getPosition = getPosition
+        self.getVelocity = getVelocity
+
+    def __call__(self, state, action):
+        reward = self.aliveBonus
+        if self.isCollided(state):
+            reward += self.deathPenalty
+
+        agentPos = self.getPosition(state)
+        minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
+        wallPunish =  - self.wallPunishRatio * np.abs(self.aliveBonus) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
+
+        agentVel = self.getVelocity(state)
+        velPunish = -np.abs(self.aliveBonus) if np.linalg.norm(agentVel) <= self.velocityBound else 0
+
+        return reward + wallPunish + velPunish
+
 class HeuristicDistanceToTarget:
     def __init__(self, weight, getPredatorPosition, getPreyPosition):
         self.weight = weight
@@ -67,4 +93,3 @@ class HeuristicDistanceToTarget:
         reward = -self.weight * distance
 
         return reward
-

@@ -42,11 +42,11 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [30]
-    manipulatedVariables['maxRunningSteps'] = [125]
-    manipulatedVariables['numSimulations'] = [199]
+    manipulatedVariables['agentId'] = [310]
+    manipulatedVariables['maxRunningSteps'] = [250]
+    manipulatedVariables['numSimulations'] = [140]
     manipulatedVariables['killzoneRadius'] = [1]
-    manipulatedVariables['offset'] = [0]
+    manipulatedVariables['offset'] = [0,4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -148,7 +148,7 @@ def main():
                 scaledYRange = [200, 600]
                 scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-                oldFPS = 5
+                oldFPS = 4
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))

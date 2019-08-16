@@ -32,45 +32,30 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def main():
     dirName = os.path.dirname(__file__)
-    # load save dir
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    distractorId = 3
-    startTime = time.time()
+    agentId = 310
 
-    numTrajectories = 16
-    # generate and load trajectories before train parallelly
-    # sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
-    sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
+    numTrajectories = 300
+    sampleTrajectoryFileName = 'sampleMultiMCTSInLeashedWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.75*numCpuCores)
+    numCpuToUse = int(0.72*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    killzoneRadius = 1
-    maxRunningSteps = 125
-    numSimulations = 200
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-    trajectorySaveExtension = '.pickle'
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+
+    startTime = time.time()
 
     print("start")
-    trainableAgentIds = [distractorId]
-    for agentId in trainableAgentIds:
-        print("agent {}".format(agentId))
-        pathParameters = {'agentId': agentId}
 
-        cmdList = generateTrajectoriesParallel(pathParameters)
-        # print(cmdList)
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
-        # import ipdb; ipdb.set_trace()
+    pathParameters = {'agentId': agentId}
+    cmdList = generateTrajectoriesParallel(pathParameters)
+
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))

@@ -46,8 +46,8 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    maxRunningSteps = 125
-    numSimulations = 199
+    maxRunningSteps = 250
+    numSimulations = 150
     killzoneRadius = 1
     preyPowerRatio = 0.7
     predatorPowerRatio = 1.3
@@ -55,7 +55,7 @@ def main():
     distractorPowerRatio = 0.7
     # trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations,\
     #         'preyPowerRatio':preyPowerRatio, 'predatorPowerRatio':predatorPowerRatio, 'masterPowerRatio':masterPowerRatio, 'distractorPoweRatio':distractorPowerRatio}
-    trajectoryFixedParameters = {'agentId': 30, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
+    trajectoryFixedParameters = {'agentId': 310, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
@@ -71,17 +71,21 @@ def main():
     calculateSheepMoveDistance = CalculateDistractorMoveDistance(sheepId, stateIndex, qPosIndex)
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
-    minLength = 125
-    minDeviation = math.pi/8
-    minDistractorMoveDistance = 0.8
-    DeviationLegelTrajIndex = np.nonzero(trajectoryDeviationes >= minDeviation)
-    lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
-    distractorMoveDistanceLegelTrajIndex = np.nonzero(trajectoryDistractorMoveDistances >= minDistractorMoveDistance)
+    minLength = 30
+    minDeviation = math.pi/1000
+    maxDeviation = math.pi/1
+    minDistractorMoveDistance = 0
+    # DeviationLegelTrajIndex = np.nonzero(trajectoryDeviationes >= minDeviation & trajectoryDeviationes <= maxDeviation)
 
+    DeviationLegelTraj = filter(lambda x: x <= maxDeviation  and x >= minDeviation, trajectoryDeviationes)
+    DeviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in DeviationLegelTraj]
+
+    lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
+    distractorMoveDistanceLegelTrajIndex = np.nonzero(trajectoryDistractorMoveDistances >= minDistractorMoveDistance )
     leagelTrajIndex = ft.reduce(np.intersect1d, [DeviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex])
 
     print(leagelTrajIndex)
-
+    print(np.mean(trajectoryDeviationes[leagelTrajIndex]))
     leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
     masterDelayStep = 4
     offsetMasterStates = OffsetMasterStates(masterId, stateIndex, masterDelayStep)
