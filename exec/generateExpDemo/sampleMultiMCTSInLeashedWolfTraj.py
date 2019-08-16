@@ -153,7 +153,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 250
     numSimulations = 200
-    killzoneRadius = 0.7
+    killzoneRadius = 1
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -189,10 +189,12 @@ def main():
         getWolfQPos = GetAgentPosFromState(wolfId, qPosIndex)
 
         isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
-
+        isTerminalInPlay = lambda state: False
+        
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-
+        transitInPlay = TransitionFunction(physicsSimulation, isTerminalInPlay, numSimulationFrames)
+        
         numAgent = 3
         numRopePart = 9
         qPosInit = (0, ) * 2 * (numAgent + numRopePart)
@@ -207,7 +209,7 @@ def main():
                 ropePartIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
         
         # sample trajectory
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transitInPlay, isTerminalInPlay, reset, chooseGreedyAction)
 
 # neural network init
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
