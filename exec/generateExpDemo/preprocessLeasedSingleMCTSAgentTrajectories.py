@@ -46,9 +46,9 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    maxRunningSteps = 250
+    maxRunningSteps = 2
     numSimulations = 200
-    killzoneRadius = 1
+    killzoneRadius = 0.7
     # preyPowerRatio = 0.7
     # predatorPowerRatio = 1.3
     # masterPowerRatio = 0.3
@@ -56,8 +56,6 @@ def main():
     # trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations,\
     #         'preyPowerRatio':preyPowerRatio, 'predatorPowerRatio':predatorPowerRatio, 'masterPowerRatio':masterPowerRatio, 'distractorPoweRatio':distractorPowerRatio}
     trajectoryFixedParameters = {'agentId': 310, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
-
-    trajectoryFixedParameters = {'agentId': 10, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
@@ -75,8 +73,8 @@ def main():
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
 
-    minLength = 30
-    minDeviation = math.pi/1000
+    minLength = 1
+    minDeviation = math.pi/4
     maxDeviation = math.pi/1
     minDistractorMoveDistance = 0
     maxDistractorMoveDistance = 100

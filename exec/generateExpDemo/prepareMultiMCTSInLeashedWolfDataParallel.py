@@ -38,12 +38,12 @@ def main():
 
     agentId = 310
 
-    numTrajectories = 300
+    numTrajectories = 42
     sampleTrajectoryFileName = 'sampleMultiMCTSInLeashedWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.72*numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)

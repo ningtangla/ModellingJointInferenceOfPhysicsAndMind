@@ -23,7 +23,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
     ActionToOneHot
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, StochasticMCTS, backup, establishPlainActionDistFromMultipleTrees, RollOut
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
@@ -88,15 +88,14 @@ class ComposeSingleAgentGuidedMCTS():
         terminalReward = self.terminalRewardList[agentId]
         approximateValue = self.getApproximateValue[agentId](selfNNModel)
         estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
+        guidedMCTSPolicy = StochasticMCTS(self.numTrees, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees)
 
         return guidedMCTSPolicy
 
 class ComposeSingleAgentMCTS():
-    def __init__(self, numSimulations, actionSpaces, agentIdsForNNState, maxRolloutSteps, rewardFunctions, rolloutHeuristicFunctions, selectChild, isTerminal, transit,
-            getApproximateActionPrior):
-        self.numSimulations = numSimulations
+    def __init__(self, numTrees, numSimulationsPerTree, actionSpaces, agentIdsForNNState, maxRolloutSteps, rewardFunctions, rolloutHeuristicFunctions, selectChild, isTerminal, transit, getApproximateActionPrior):
+        self.numTrees = numTrees
+        self.numSimulationsPerTree = numSimulationsPerTree
         self.actionSpaces = actionSpaces
         self.agentIdsForNNState = agentIdsForNNState
         self.maxRolloutSteps = maxRolloutSteps
@@ -117,10 +116,9 @@ class ComposeSingleAgentMCTS():
         rewardFunction = self.rewardFunctions[agentId]
         rolloutHeuristic = self.rolloutHeuristicFunctions[agentId]
         estimateValue = RollOut(rolloutPolicy, self.maxRolloutSteps, transitInMCTS, rewardFunction, self.isTerminal, rolloutHeuristic)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
+        MCTSPolicy = StochasticMCTS(self.numTrees, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees)
 
-        return guidedMCTSPolicy
+        return MCTSPolicy
 
 class PrepareMultiAgentPolicy:
     def __init__(self, MCTSAgentIds, actionSpaces, agentIdsForNNState, composeSingleAgentPolicy, getApproximatePolicy, imageOthersPolicy):
@@ -134,8 +132,8 @@ class PrepareMultiAgentPolicy:
     def __call__(self, multiAgentNNModel):
         multiAgentApproximatePolicy = np.array([self.getApproximatePolicy(NNModel, actionSpace, agentStateIdsForNN) for NNModel, actionSpace, agentStateIdsForNN in zip(multiAgentNNModel,
             self.actionSpaces, self.agentIdsForNNState)])
-        multiAgentApproximatePolicyInMCTS = np.array([self.imagePolicy(
-        otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])  for agentId in self.MCTSAgentIds])
+        multiAgentApproximatePolicyInMCTS = np.array([image(policy) for image, policy in zip(self.imageOthersPolicy, multiAgentApproximatePolicy)])
+        otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicyInMCTS[:agentId], multiAgentApproximatePolicyInMCTS[agentId + 1:]])  for agentId in self.MCTSAgentIds])
         MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
         MCTSAgentsPolicy = np.array([self.composeSingleAgentPolicy(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy) for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
         multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
@@ -154,8 +152,8 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 250
-    numSimulations = 160
-    killzoneRadius = 1
+    numSimulations = 200
+    killzoneRadius = 0.7
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -170,14 +168,14 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'noRopeCollision.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'noRopeCollision3Agents.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         draggerBodyIndex = 8
 
         #set physical model parameter
-        physicsSimulation.model.body_mass[[draggerBodyIndex]] = [13]
+        physicsSimulation.model.body_mass[[draggerBodyIndex]] = [12]
         physicsSimulation.set_constants()
         physicsSimulation.forward()
 
@@ -195,13 +193,14 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        qPosInit = (0, ) * 26
-        qVelInit = (0, ) * 26
+        numAgent = 3
+        numRopePart = 9
+        qPosInit = (0, ) * 2 * (numAgent + numRopePart)
+        qVelInit = (0, ) * 2 * (numAgent + numRopePart)
         qPosInitNoise = 6
         qVelInitNoise = 6
-        numAgent = 4
         tiedAgentId = [1, 2]
-        ropePartIndex = list(range(4, 13))
+        ropePartIndex = list(range(numAgent, numAgent + numRopePart))
         maxRopePartLength = 0.35
 
         reset  = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
@@ -226,18 +225,21 @@ def main():
 # sheep NN model
         sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'sheepAvoidRopeModel','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
         sheepPreTrainModel = restoreVariables(initMultiAgentNNModels[sheepId], sheepPreTrainModelPath)
-# master NN model
-        masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=0')
-        masterPreTrainModel = restoreVariables(initMultiAgentNNModels[wolfId], masterPreTrainModelPath)
+
 # wolf NN model
         wolfPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedWolfNNModels','agentId=1_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
-        wolfPreTrainModel = restoreVariables(initMultiAgentNNModels[masterId], wolfPreTrainModelPath)
+        wolfPreTrainModel = restoreVariables(initMultiAgentNNModels[wolfId], wolfPreTrainModelPath)
+
+# master NN model
+        masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
+        masterPreTrainModel = restoreVariables(initMultiAgentNNModels[masterId], masterPreTrainModelPath)
+
 # distractor NN model
         distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorAvoidRopeNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
         distractorPreTrainModel = restoreVariables(initMultiAgentNNModels[distractorId], distractorPreTrainModelPath)
 
         
-        multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel,masterPreTrainModel, distractorPreTrainModel]
+        multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel,masterPreTrainModel]#, distractorPreTrainModel]
 
 
 # MCTS compose
@@ -247,19 +249,19 @@ def main():
         selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-        preyPowerRatio = 0.9
+        preyPowerRatio = 0.85
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.25
+        predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.08
+        masterPowerRatio = 0.06
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
         distractorPowerRatio = 0.95
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
 
-        actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace, distractorActionSpace]
-        agentStateIdsForNNList = [range(4), range(3), range(3), range(4)]
+        actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace]#, distractorActionSpace]
+        agentStateIdsForNNList = [range(4), range(3), range(3)]#, range(4)]
         getApproximatePolicy = lambda NNmodel, actionSpace, agentStateIdsForNN: ApproximatePolicy(NNmodel, actionSpace, agentStateIdsForNN)
-        getApproximateActionPrior = lambda NNModel, actionSpace, agentStateIdsForNN: lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
+        getApproximateUniformActionPrior = lambda NNModel, actionSpace, agentStateIdsForNN: lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
 
 # multiAgent ApproximateValue 
        # sheepAliveBonus = 0.05
@@ -274,39 +276,42 @@ def main():
        # getApproximateValue = lambda NNmodel, agentStateIdsForNN: ApproximateValue(NNmodel, agentStateIdsForNN)
         
 # multiAgent RewardFunctionForRollout 
-        aliveBonuses = [0.05, -0.05, 0.05, 0.05]
-        deathPenalties = [-1, 1, -1, -1]
+        aliveBonuses = [0.05, -0.05, 0.05]#, 0.05]
+        deathPenalties = [-1, 1, -1]#, -1]
         
         agentIds = list(range(numAgent))
         getSelfQPoses = [GetAgentPosFromState(Id, qPosIndex) for Id in agentIds]
-        otherIdsList = [[wolfId] + ropePartIndex, [sheepId], [sheepId], [sheepId, wolfId, masterId] + ropePartIndex] 
+        otherIdsList = [[wolfId] + ropePartIndex, [sheepId], [sheepId]]#, [sheepId, wolfId, masterId] + ropePartIndex] 
         getOthersPoses = [[GetAgentPosFromState(otherId, qPosIndex) for otherId in otherIds] for otherIds in otherIdsList]
         
         velIndex = [4, 5]
         getSelfVels =  [GetAgentPosFromState(Id, velIndex) for Id in agentIds]
         
         isCollidedFunctions = [IsCollided(killzoneRadius, getSelfQPos, getOthersPos) for getSelfQPos, getOthersPos in zip(getSelfQPoses, getOthersPoses)]
-        safeBoundes = [2, 0.1, 0.1, 2]
+        safeBoundes = [2.5, 0.1, 0.1]#, 2]
         wallDisToCenter = 10
-        wallPunishRatios = [3, 0, 0, 4]
-        velocityBounds = [0, 0, 0, 6]
+        wallPunishRatios = [3, 0, 0]#, 4]
+        velocityBounds = [0, 0, 0]#, 6]
         rewardFunctions = [RewardFunctionAvoidCollisionAndWall(aliveBonuses[agentId], deathPenalties[agentId], safeBoundes[agentId], wallDisToCenter, \
                 wallPunishRatios[agentId], velocityBounds[agentId], isCollidedFunctions[agentId], getSelfQPoses[agentId], getSelfVels[agentId]) \
                 for agentId in agentIds]
 
-        rolloutHeuristicWeights = [-0.1, 0.1, -0.1, 0]
+        rolloutHeuristicWeights = [-0.1, 0.1, -0.1]#, 0]
         rolloutHeuristics = [HeuristicDistanceToTarget(weight, getWolfQPos, getSheepQPos) for weight in rolloutHeuristicWeights]
 
-
-        #composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, agentStateIdsForNNList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
+        numTrees = 2
+        numSimulationsPerTree = 100
         maxRolloutSteps = 10
-        # composeSingleAgentMCTS = ComposeSingleAgentMCTS(numSimulations, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
-        #         selectChild, isTerminal, transit, getApproximatePolicy)
-        composeSingleAgentMCTS = ComposeSingleAgentMCTS(numSimulations, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
-                selectChild, isTerminal, transit, getApproximateActionPrior)
+        #composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
+        composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
+                selectChild, isTerminal, transit, getApproximatePolicy)
+        # composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
+        #         selectChild, isTerminal, transit, getApproximateUniformActionPrior)
 
-        trainableAgentIds = [sheepId, wolfId, distractorId]
-        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy, trainableAgentIds)
+        trainableAgentIds = [sheepId, wolfId]
+        imageOthersPolicy = [lambda policy : policy] * numAgent
+        imageOthersPolicy[masterId] = lambda policy: RandomPolicy(masterActionSpace)
+        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy, imageOthersPolicy)
 
         # sample and save trajectories
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
