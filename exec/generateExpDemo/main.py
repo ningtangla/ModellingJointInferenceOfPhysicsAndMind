@@ -106,14 +106,14 @@ def main():
         positionIndex = [0, 1]
         tiedAgentId = [1, 2]
 
-        numOfAgent = 4
+        numOfAgent = 3
         ropeColor = THECOLORS['white']
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
 
         # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
-
+        colorSpace = colorSpace[:numOfAgent]
         for index in range(numTrajectoryChoose):
             imageFolderName = "{}".format(index)
             saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))

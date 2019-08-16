@@ -120,6 +120,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 125
     numSimulations = 199
+
     killzoneRadius = 1
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -243,9 +244,9 @@ def main():
         distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
         depth = 4
 
-        multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel,masterPreTrainModel, distractorPreTrainModel]
+        multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel, masterPreTrainModel, distractorPreTrainModel]
 
-        trainableAgentIds = [sheepId, distractorId]
+        trainableAgentIds = [sheepId, wolfId, distractorId]
 
         startTime = time.time()
 

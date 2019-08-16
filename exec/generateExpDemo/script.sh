@@ -34,7 +34,6 @@ do
     done
 done
 
-cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
 
 
 

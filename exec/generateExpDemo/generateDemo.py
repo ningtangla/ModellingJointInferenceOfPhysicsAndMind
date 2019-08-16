@@ -46,7 +46,7 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [250]
     manipulatedVariables['numSimulations'] = [140]
     manipulatedVariables['killzoneRadius'] = [1]
-    manipulatedVariables['offset'] = [0,4]
+    manipulatedVariables['offset'] = [0]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -88,9 +88,9 @@ def main():
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
         print(numTrajectories)
-        maxNumTrajectories = 1000
+        maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-        selectedTrajectories = trajectories[0:numTrajectoryChoose]
+        selectedTrajectories = trajectories[10:11]
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
@@ -118,7 +118,7 @@ def main():
         circleSize = 10
         positionIndex = [0, 1]
 
-        numOfAgent = 4
+        numOfAgent = 3
         sheepId = 0
         wolfId = 1
         masterId = 2
@@ -133,7 +133,7 @@ def main():
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
         circleColorList = colorSpace[:numOfAgent]
 
-        for index in range(numTrajectoryChoose):
+        for index in range(len(selectedTrajectories)):
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
