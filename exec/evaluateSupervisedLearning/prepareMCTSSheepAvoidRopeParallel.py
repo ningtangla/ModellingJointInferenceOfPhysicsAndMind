@@ -41,7 +41,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 19
+    numTrajectories = 16
 
     # generate and load trajectories before train parallelly
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajAvoidRope.py'

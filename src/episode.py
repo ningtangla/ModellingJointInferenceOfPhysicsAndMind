@@ -117,14 +117,14 @@ def chooseGreedyAction(actionDist):
 
 class SampleAction():
     def __init__(self, temperature):
-        sefl.temperature = temperature
+        self.temperature = temperature
 
-    def __call__(actionDist):
+    def __call__(self, actionDist):
         actions = list(actionDist.keys())
         probs = list(actionDist.values())
-        exponent = np.true_divide(probs - np.max(probs), temperature)
-        newProbs = np.exp(exponent) / np.sum(np.exp(exponent))
-        selectedIndex = list(np.random.multinomial(1, newProbs)).index(1)
+        newProbs = np.array([np.power(prob, self.temperature) for prob in probs])
+        normProbs = newProbs / np.sum(newProbs)
+        selectedIndex = list(np.random.multinomial(1, normProbs)).index(1)
         selectedAction = actions[selectedIndex]
         return selectedAction
 

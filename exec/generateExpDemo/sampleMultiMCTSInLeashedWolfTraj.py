@@ -157,7 +157,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 250
+    maxRunningSteps = 2
     numSimulations = 211
     killzoneRadius = 0.3
 
@@ -213,7 +213,10 @@ def main():
                 ropePartIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
         # sample trajectory
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+        temperature = 0.5
+        sampleAction = SampleAction(temperature)
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction, sampleAction]
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
 
 # neural network init
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
@@ -310,9 +313,9 @@ def main():
         numSimulationsPerTree = 150
         maxRolloutSteps = 10
 
-        temperature = 1
-        sampleAction = SampleAction(temperature)
-        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(sampleAction)
+        temperatureInMCTS = 1
+        sampleActionInMCTS = SampleAction(temperatureInMCTS)
+        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(sampleActionInMCTS)
         # composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \
         #         selectChild, isTerminal, transit, getApproximatePolicy, composeMultiAgentTransitInSingleAgentMCTS)
         composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, \

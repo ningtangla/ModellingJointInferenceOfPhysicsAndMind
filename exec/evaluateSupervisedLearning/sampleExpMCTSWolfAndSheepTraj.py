@@ -41,7 +41,7 @@ class IsTerminalWithRope:
 
 def main():
     # manipulated variables and other important parameters
-    killzoneRadius = 1
+    killzoneRadius = 0.6
     numSimulations = 200
     maxRunningSteps = 250
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -65,11 +65,11 @@ def main():
     if not os.path.isfile(trajectorySavePath):
         # Mujoco Environment
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        preyPowerRatio = 0.7
+        preyPowerRatio = 0.75
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.3
+        predatorPowerRatio = 1.5
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.07
+        masterPowerRatio = 0.05
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
 
 
@@ -166,7 +166,7 @@ def main():
         sheepRollout = RollOut(sheepRolloutPolicy, sheepMaxRolloutSteps, transitInSheepMCTSSimulation, sheepRewardFunction, isTerminalWithRope,
                           sheepRolloutHeuristic)
         numTrees = 2
-        numSimulationsPerTree = 100
+        numSimulationsPerTree = 150
         mctsSheep = StochasticMCTS(numTrees, numSimulationsPerTree, selectChild, sheepExpand, sheepRollout, backup, establishPlainActionDistFromMultipleTrees)
 # MCTS wolf
         getWolfUniformActionPrior = lambda state: {action: 1/numActionSpace for action in wolfActionSpace}
@@ -184,7 +184,7 @@ def main():
         wolfRollout = RollOut(wolfRolloutPolicy, wolfMaxRolloutSteps, transitInWolfMCTSSimulation, wolfRewardFunction, isTerminal,
                           wolfRolloutHeuristic)
 
-        numSimulationsPerTreeForWolf = 100
+        numSimulationsPerTreeForWolf = 150
         mctsWolf = StochasticMCTS(numTrees, numSimulationsPerTreeForWolf, selectChild, wolfExpand, wolfRollout, backup, establishPlainActionDistFromMultipleTrees)
 
 
