@@ -128,11 +128,7 @@ def main():
         restoredModel = restoreVariables(initNNModel, modelPath)
         sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
 
-<<<<<<< HEAD
-        initWolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
-        wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                            'wolfModel','killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
-=======
+
         # initWolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
         # wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
         #                                     'wolfModel','killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
@@ -141,7 +137,6 @@ def main():
         wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'preTrainBaseline',
                                             'wolfModels','agentId=1_depth=4_learningRate=0.001_maxRunningSteps=20_miniBatchSize=256_numSimulations=100_trainSteps=40000')
 
->>>>>>> generateExpDemo
         restoredWolfModel = restoreVariables(initWolfNNModel, wolfNNModelPath)
 
         wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
