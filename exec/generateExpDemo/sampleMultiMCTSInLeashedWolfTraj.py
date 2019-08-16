@@ -21,7 +21,7 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist,RollOut
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, StochasticMCTS, backup, establishPlainActionDistFromMultipleTrees, RollOut
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
@@ -66,8 +66,9 @@ def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, others
 
 
 class ComposeSingleAgentGuidedMCTS():
-    def __init__(self, numSimulations, actionSpaces, agentIdsForNNState, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximateActionPrior, getApproximateValue):
-        self.numSimulations = numSimulations
+    def __init__(self, numTrees, numSimulationsPerTree, actionSpaces, agentIdsForNNState, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximateActionPrior, getApproximateValue):
+        self.numTrees = numTrees
+        self.numSimulationsPerTree = numSimulationsPerTree
         self.actionSpaces = actionSpaces
         self.agentIdsForNNState = agentIdsForNNState
         self.terminalRewardList = terminalRewardList
@@ -122,17 +123,18 @@ class ComposeSingleAgentMCTS():
         return guidedMCTSPolicy
 
 class PrepareMultiAgentPolicy:
-    def __init__(self, actionSpaces, agentIdsForNNState, composeSingleAgentPolicy, getApproximatePolicy, MCTSAgentIds):
+    def __init__(self, MCTSAgentIds, actionSpaces, agentIdsForNNState, composeSingleAgentPolicy, getApproximatePolicy, imageOthersPolicy):
+        self.MCTSAgentIds = MCTSAgentIds
         self.actionSpaces = actionSpaces
         self.agentIdsForNNState = agentIdsForNNState
         self.composeSingleAgentPolicy = composeSingleAgentPolicy
         self.getApproximatePolicy = getApproximatePolicy
-        self.MCTSAgentIds = MCTSAgentIds
+        self.imageOthersPolicy = imageOthersPolicy
 
     def __call__(self, multiAgentNNModel):
         multiAgentApproximatePolicy = np.array([self.getApproximatePolicy(NNModel, actionSpace, agentStateIdsForNN) for NNModel, actionSpace, agentStateIdsForNN in zip(multiAgentNNModel,
             self.actionSpaces, self.agentIdsForNNState)])
-
+        multiAgentApproximatePolicyInMCTS = np.array([self.imagePolicy(
         otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])  for agentId in self.MCTSAgentIds])
         MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
         MCTSAgentsPolicy = np.array([self.composeSingleAgentPolicy(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy) for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
