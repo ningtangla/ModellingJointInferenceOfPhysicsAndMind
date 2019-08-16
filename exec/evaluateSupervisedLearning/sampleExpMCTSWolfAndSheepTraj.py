@@ -151,7 +151,13 @@ def main():
 
         sheepAliveBonus = 0.05
         sheepDeathPenalty = -1
-        sheepRewardFunction = RewardFunctionCompete(sheepAliveBonus, sheepDeathPenalty, isTerminalWithRope)
+        safeBound = 2
+        wallDisToCenter = 10
+        wallPunishRatio = 2
+        velocityBound = 1
+        velIndex = [4,5]
+        getSheepVelocity = GetAgentPosFromState(sheepId, velIndex)
+        sheepRewardFunction = RewardFunctionAvoidCollisionAndWall(sheepAliveBonus, sheepDeathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isTerminalWithRope, getSheepQPos, getSheepVelocity)
 
         sheepRolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
         sheepRolloutHeuristicWeight = sheepDeathPenalty/10
@@ -193,11 +199,13 @@ def main():
         maxRopePartLength = 0.35
         reset = ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
 
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # saving trajectories
-        # policy
+        isTerminalInPlay = lambda state: False
+        transitInPlay = TransitionFunction(physicsSimulation, isTerminalInPlay, numSimulationFrames)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transitInPlay, isTerminalInPlay, reset, chooseGreedyAction)
 
+        # policy
         policy = lambda state: [mctsSheep(state), mctsWolf(state),  masterPolicy(state[:3])]
 
         # generate trajectories
