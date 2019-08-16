@@ -201,9 +201,7 @@ def main():
 
 
         # saving trajectories
-        isTerminalInPlay = lambda state: False
-        transitInPlay = TransitionFunction(physicsSimulation, isTerminalInPlay, numSimulationFrames)
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transitInPlay, isTerminalInPlay, reset, chooseGreedyAction)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # policy
         policy = lambda state: [mctsSheep(state), mctsWolf(state),  masterPolicy(state[:3])]
