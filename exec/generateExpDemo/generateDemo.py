@@ -44,7 +44,7 @@ def main():
 
     manipulatedVariables['agentId'] = [310]
     manipulatedVariables['maxRunningSteps'] = [250]
-    manipulatedVariables['numSimulations'] = [211]
+    manipulatedVariables['numSimulations'] = [301]
     manipulatedVariables['killzoneRadius'] = [0.4]
     manipulatedVariables['offset'] = [0, 4]
 
@@ -148,7 +148,7 @@ def main():
                 scaledYRange = [200, 600]
                 scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-                oldFPS = 15
+                oldFPS = 10
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))

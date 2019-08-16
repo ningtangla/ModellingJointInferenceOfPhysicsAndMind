@@ -38,7 +38,7 @@ def main():
 
     agentId = 310
 
-    numTrajectories = 36
+    numTrajectories = 300
     sampleTrajectoryFileName = 'sampleMultiMCTSInLeashedWolfTraj.py'
 
     numCpuCores = os.cpu_count()
