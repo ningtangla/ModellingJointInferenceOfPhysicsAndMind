@@ -18,7 +18,7 @@
 
 
 
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
+cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
 mkdir demo
 
 
@@ -34,7 +34,7 @@ do
     done
 done
 
-cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
+cd ~/Downloads/sheepWolf_preTrain//ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
 
 
 

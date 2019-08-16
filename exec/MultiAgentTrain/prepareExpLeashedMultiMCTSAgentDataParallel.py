@@ -31,18 +31,12 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def main():
-    dirName = os.path.dirname(__file__)
-    # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
-    if not os.path.exists(trajectoriesSaveDirectory):
-        os.makedirs(trajectoriesSaveDirectory)
-
-    startTime = time.time()
 
     numTrajectories = 48
 
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleExpLeashedMultiMCTSAgentTraj.py'
+
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
@@ -51,6 +45,7 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
+    startTime = time.time()
     print("start")
 
     pathParameters = {'agentId': 430}
