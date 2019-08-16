@@ -11,7 +11,7 @@ from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, Stochasti
 from src.constrainedChasingEscapingEnv.envMujoco import  ResetUniformForLeashed,TransitionFunctionWithoutXPos, ResetUniformWithoutXPosForLeashed, TransitionFunction, IsTerminal
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
-from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete, RewardFunctionWithWall
+from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete, RewardFunctionWithWall,RewardFunctionAvoidCollisionAndWall
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
@@ -132,11 +132,11 @@ def main():
 
 
         transitInSheepMCTSSimulation = \
-                lambda state, sheepSelfAction: transit(state, [sheepSelfAction, sampleAction(wolfPolicy(state[:3])),  sampleAction(randomMasterPolicy(state))])
+                lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[:3])),  chooseGreedyAction(randomMasterPolicy(state))])
 
 
         transitInWolfMCTSSimulation = \
-                lambda state, wolfSelfAction: transit(state, [sampleAction(sheepPolicy(state[:4])), wolfSelfAction, sampleAction(randomMasterPolicy(state))])
+                lambda state, wolfSelfAction: transit(state, [chooseGreedyAction(sheepPolicy(state[:4])), wolfSelfAction, chooseGreedyAction(randomMasterPolicy(state))])
 
 
 # MCTS sheep
