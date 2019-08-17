@@ -161,6 +161,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 250
     numSimulations = 200
+
     killzoneRadius = 0.5
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -183,7 +184,7 @@ def main():
         draggerBodyIndex = 8
 
         #set physical model parameter
-        physicsSimulation.model.body_mass[[draggerBodyIndex]] = [12]
+        physicsSimulation.model.body_mass[[draggerBodyIndex]] = [13]
         physicsSimulation.set_constants()
         physicsSimulation.forward()
 
