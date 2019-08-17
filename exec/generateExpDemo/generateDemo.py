@@ -44,9 +44,9 @@ def main():
 
     manipulatedVariables['agentId'] = [310]
     manipulatedVariables['maxRunningSteps'] = [250]
-    manipulatedVariables['numSimulations'] = [301]
-    manipulatedVariables['killzoneRadius'] = [0.4]
-    manipulatedVariables['offset'] = [0, 4]
+    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['killzoneRadius'] = [0.5]
+    manipulatedVariables['offset'] = [0, 8]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -90,7 +90,7 @@ def main():
         print(numTrajectories)
         maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-        selectedTrajectories = trajectories[0:3]
+        selectedTrajectories = trajectories[2:3]
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
@@ -148,7 +148,7 @@ def main():
                 scaledYRange = [200, 600]
                 scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-                oldFPS = 10
+                oldFPS = 5
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))

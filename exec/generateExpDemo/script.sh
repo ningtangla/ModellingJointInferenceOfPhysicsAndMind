@@ -22,19 +22,19 @@ cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/g
 mkdir demo
 
 
-for offset in 0 4
+for offset in 0 8
 do
     for index in 0
     do
 
-    cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/agentId=310_killzoneRadius=1_maxRunningSteps=250_numSimulations=140_offset=${offset}/${index}/condition=0
+    cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/agentId=310_killzoneRadius=0.5_maxRunningSteps=250_numSimulations=200_offset=${offset}/${index}/condition=0
 
-    ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/agentId=310_killzoneRadius=1_maxRunningSteps=250_numSimulations=140_offset=${offset}_Demo${index}.mp4
+    ffmpeg -r 55 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/agentId=310_killzoneRadius=0.5_maxRunningSteps=250_numSimulations=200_offset=${offset}_Demo${index}.mp4
 
     done
 done
 
-
+cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
 
 
 

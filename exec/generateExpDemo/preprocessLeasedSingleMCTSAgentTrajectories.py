@@ -47,8 +47,8 @@ def main():
     masterId = 2
     distractorId = 3
     maxRunningSteps = 250
-    numSimulations = 301
-    killzoneRadius = 0.4
+    numSimulations = 200
+    killzoneRadius = 0.5
     # preyPowerRatio = 0.7
     # predatorPowerRatio = 1.3
     # masterPowerRatio = 0.3
@@ -74,7 +74,7 @@ def main():
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
 
     print(len(trajectories))
-    minLength = 200
+    minLength = 235
     minDeviation = math.pi/400
     maxDeviation = math.pi/1
     minDistractorMoveDistance = 0
@@ -95,7 +95,7 @@ def main():
     print(len(leagelTrajIndex))
 
     leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
-    masterDelayStep = 4
+    masterDelayStep = 8
     offsetMasterStates = OffsetMasterStates(masterId, stateIndex, masterDelayStep)
     masterDelayedStates = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
     masterDelayedStatesPathParameters = {'offset': masterDelayStep}
