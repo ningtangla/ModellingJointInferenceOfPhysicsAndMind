@@ -44,7 +44,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0, 0.05, 0.1, 0.2]
+    manipulatedVariables['masterPowerRatio'] = [0, 0.1, 0.2, 0.4]
     manipulatedVariables['beta'] = [0, 0.5, 1, 2]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
