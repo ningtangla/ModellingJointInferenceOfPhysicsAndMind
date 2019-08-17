@@ -115,14 +115,29 @@ def chooseGreedyAction(actionDist):
     return selectedAction
 
 
-class SampleAction():
-    def __init__(self, temperature):
-        self.temperature = temperature
+class SelectSoftmaxAction():
+    def __init__(self, beta):
+        self.beta = beta
 
     def __call__(self, actionDist):
         actions = list(actionDist.keys())
         probs = list(actionDist.values())
-        newProbs = np.array([np.power(prob, self.temperature) for prob in probs])
+
+        exponent = np.multiply(probs, self.beta)
+        newProbs = np.exp(exponent) / np.sum(np.exp(exponent))
+
+        selectedIndex = list(np.random.multinomial(1, newProbs)).index(1)
+        selectedAction = actions[selectedIndex]
+        return selectedAction
+
+class SampleAction():
+    def __init__(self, beta):
+        self.beta = beta
+
+    def __call__(self, actionDist):
+        actions = list(actionDist.keys())
+        probs = list(actionDist.values())
+        newProbs = np.array([np.power(prob, self.beta) for prob in probs])
         normProbs = newProbs / np.sum(newProbs)
         selectedIndex = list(np.random.multinomial(1, normProbs)).index(1)
         selectedAction = actions[selectedIndex]

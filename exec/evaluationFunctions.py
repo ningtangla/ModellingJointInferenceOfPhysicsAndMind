@@ -9,8 +9,8 @@ class ComputeStatistics:
     def __call__(self, oneConditionDf):
         allTrajectories = self.getTrajectories(oneConditionDf)
         allMeasurements = np.array([self.measurementFunction(trajectory) for trajectory in allTrajectories])
-        measurementMean = np.mean(allMeasurements, axis = 0)
-        measurementStd = np.std(allMeasurements, axis = 0)
+        measurementMean = np.mean(allMeasurements)
+        measurementStd = np.std(allMeasurements)
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
 
 class GenerateInitQPosUniform:

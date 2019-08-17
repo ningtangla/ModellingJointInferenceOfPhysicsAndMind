@@ -48,10 +48,7 @@ def main():
     maxRunningSteps = 250
     numSimulations = 200
     killzoneRadius = 0.5
-<<<<<<< HEAD
-=======
 
->>>>>>> 88f0d16549525d152cd3b5528d770d424b8cc595
     # preyPowerRatio = 0.7
     # predatorPowerRatio = 1.3
     # masterPowerRatio = 0.3
@@ -77,7 +74,7 @@ def main():
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
 
     print(len(trajectories))
-    minLength = 235
+    minLength = 250
     minDeviation = math.pi/400
     maxDeviation = math.pi/1
 

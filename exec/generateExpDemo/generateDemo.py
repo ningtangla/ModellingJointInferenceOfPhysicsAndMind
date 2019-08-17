@@ -91,11 +91,7 @@ def main():
         print(numTrajectories)
         maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-<<<<<<< HEAD
-        selectedTrajectories = trajectories[2:3]
-=======
-        selectedTrajectories = trajectories[0:numTrajectoryChoose]
->>>>>>> 88f0d16549525d152cd3b5528d770d424b8cc595
+        selectedTrajectories = trajectories[0:1]
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
