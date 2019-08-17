@@ -9,17 +9,19 @@ DIRNAME = os.path.dirname(__file__)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, \
-    loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath,conditionDfFromParametersDict
+    loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath, conditionDfFromParametersDict
 from exec.generateExpDemo.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
-from exec.generateExpDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj,DrawStateWithRope, ChaseTrialWithRopeTraj
+from exec.generateExpDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj, DrawStateWithRope, ChaseTrialWithRopeTraj
 
-def getFileName(parameters,fixedParameters):
+
+def getFileName(parameters, fixedParameters):
     allParameters = dict(list(parameters.items()) + list(fixedParameters.items()))
     sortedParameters = sorted(allParameters.items())
     nameValueStringPairs = [parameter[0] + '=' + str(parameter[1]) for parameter in sortedParameters]
     fileName = '_'.join(nameValueStringPairs)
 
     return fileName
+
 
 class GetAgentCoordinateFromTrajectoryAndStateDf:
     def __init__(self, coordinates):
@@ -31,6 +33,7 @@ class GetAgentCoordinateFromTrajectoryAndStateDf:
         coordinates = trajectory[timeStep][objectId][self.coordinates]
 
         return coordinates
+
 
 def main():
     manipulatedVariables = OrderedDict()
@@ -62,15 +65,13 @@ def main():
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo','trajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo', 'trajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     # fuzzySearchParameterNames = ['sampleIndex']
     fuzzySearchParameterNames = []
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
-
-    trajectory = loadTrajectories(conditionParametersAll[0])
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0])[0]))
     getRangeTrajectoryLength = lambda trajectory: list(range(len(trajectory)))
@@ -80,10 +81,10 @@ def main():
     getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(1)
     extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord}
 
-    convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict,extractColumnValues)
+    convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict, extractColumnValues)
 
 
-#### convert traj pickle to df
+# convert traj pickle to df
     for conditionParameters in conditionParametersAll:
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
@@ -94,14 +95,14 @@ def main():
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
-        dataFileName = getFileName(conditionParameters,trajectoryFixedParameters)
+        dataFileName = getFileName(conditionParameters, trajectoryFixedParameters)
         imageSavePath = os.path.join(trajectoryDirectory, dataFileName)
         if not os.path.exists(imageSavePath):
             os.makedirs(imageSavePath)
 
         [saveToPickle(df, os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(sampleIndex))) for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
 
-### generate demo image
+# generate demo image
         screenWidth = 800
         screenHeight = 800
         fullScreen = False
@@ -125,7 +126,7 @@ def main():
         distractorId = 3
 
         conditionList = [0]
-        conditionValues = [[wolfId, masterId],[wolfId, distractorId], None]
+        conditionValues = [[wolfId, masterId], [wolfId, distractorId], None]
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
@@ -156,6 +157,7 @@ def main():
                 trajectory = getTrajectory(trajectoryDf)
                 chaseTrial(trajectory)
                 # chaseTrialWithRope(trajectory, conditionValues[condition])
+
 
 if __name__ == '__main__':
     main()

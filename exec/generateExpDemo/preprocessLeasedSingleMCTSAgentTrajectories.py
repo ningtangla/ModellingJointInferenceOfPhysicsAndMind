@@ -28,9 +28,9 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import  SampleTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
-from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance, OffsetMasterStates
+from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance, OffsetMasterStates, FindCirlceBetweenWolfAndMaster
 
 
 def main():
@@ -46,16 +46,16 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    maxRunningSteps = 250
-    numSimulations = 301
-    killzoneRadius = 0.4
+    maxRunningSteps = 100
+    numSimulations = 200
+    killzoneRadius = 2
     # preyPowerRatio = 0.7
     # predatorPowerRatio = 1.3
     # masterPowerRatio = 0.3
     # distractorPowerRatio = 0.7
     # trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations,\
     #         'preyPowerRatio':preyPowerRatio, 'predatorPowerRatio':predatorPowerRatio, 'masterPowerRatio':masterPowerRatio, 'distractorPoweRatio':distractorPowerRatio}
-    trajectoryFixedParameters = {'agentId': 310, 'maxRunningSteps':maxRunningSteps, 'killzoneRadius':killzoneRadius, 'numSimulations':numSimulations}
+    trajectoryFixedParameters = {'agentId': 0, 'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius, 'numSimulations': numSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
@@ -73,26 +73,31 @@ def main():
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
 
-    print(len(trajectories))
-    minLength = 200
-    minDeviation = math.pi/400
-    maxDeviation = math.pi/1
+    print('num of trajectories:', len(trajectories))
+    minLength = 100
+    minDeviation = math.pi / 400
+    maxDeviation = math.pi / 1
     minDistractorMoveDistance = 0
     maxDistractorMoveDistance = 100
 
-    DeviationLegelTraj = filter(lambda x: x <= maxDeviation  and x >= minDeviation, trajectoryDeviationes)
+    DeviationLegelTraj = filter(lambda x: x <= maxDeviation and x >= minDeviation, trajectoryDeviationes)
     DeviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in DeviationLegelTraj]
 
+    timeWindow = 10
+    angleVariance = math.pi / 6
+    circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
+    filterlist = [circleFilter(trajectory) for trajectory in trajectories]
+    timewindowLeagelTrajIndex = np.where(filterlist)[0]
+
     lengthLeagelTrajIndex = np.nonzero(trajectoryLengthes >= minLength)
+    distractorMoveDistanceLegelTraj = filter(lambda x: x <= maxDistractorMoveDistance and x >= minDistractorMoveDistance, trajectoryDistractorMoveDistances)
+    distractorMoveDistanceLegelTrajIndex = [list(trajectoryDistractorMoveDistances).index(i) for i in distractorMoveDistanceLegelTraj]
 
-    distractorMoveDistanceLegelTraj = filter(lambda x :x <= maxDistractorMoveDistance and x >= minDistractorMoveDistance, trajectoryDistractorMoveDistances)
-    distractorMoveDistanceLegelTrajIndex = [list(trajectoryDistractorMoveDistances).index(i) for i in distractorMoveDistanceLegelTraj ]
-
-    leagelTrajIndex = ft.reduce(np.intersect1d, [DeviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex])
+    leagelTrajIndex = ft.reduce(np.intersect1d, [DeviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex, timewindowLeagelTrajIndex])
     # leagelTrajIndex = lengthLeagelTrajIndex[0]
     print(leagelTrajIndex)
-    print(np.mean(trajectoryDeviationes[leagelTrajIndex]))
-    print(len(leagelTrajIndex))
+    print('leagelTraj length:', len(leagelTrajIndex))
+    print('mean deviation:', np.mean(trajectoryDeviationes[leagelTrajIndex]))
 
     leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
     masterDelayStep = 4
@@ -111,6 +116,7 @@ def main():
     endTime = time.time()
 
     print("Time taken {} seconds".format((endTime - startTime)))
+
+
 if __name__ == '__main__':
     main()
-
