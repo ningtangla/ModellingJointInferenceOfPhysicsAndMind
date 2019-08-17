@@ -29,7 +29,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import  SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel,ExcuteCodeOnConditionsParallel
 from exec.evaluationFunctions import ComputeStatistics
-from exec.generateExpDemo.filterTraj import * 
+from exec.generateExpDemo.filterTraj import *
 from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance
 
 def drawPerformanceLine(dataDf, axForDraw):
@@ -44,8 +44,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0.06, 0.1]
-    manipulatedVariables['beta'] =[0.4, 0.8]
+    manipulatedVariables['masterPowerRatio'] = [0, 0.05, 0.1, 0.2]
+    manipulatedVariables['beta'] = [0, 0.5, 1, 2]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
