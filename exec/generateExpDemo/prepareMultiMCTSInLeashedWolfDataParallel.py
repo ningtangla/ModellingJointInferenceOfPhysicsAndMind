@@ -36,9 +36,9 @@ def main():
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    agentId = 310
+    agentId = 1.05
 
-    numTrajectories = 300
+    numTrajectories = 180
     sampleTrajectoryFileName = 'sampleMultiMCTSInLeashedWolfTraj.py'
 
     numCpuCores = os.cpu_count()
