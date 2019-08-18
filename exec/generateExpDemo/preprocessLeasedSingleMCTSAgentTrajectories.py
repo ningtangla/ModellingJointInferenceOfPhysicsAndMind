@@ -31,6 +31,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
 from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance, OffsetMasterStates, FindCirlceBetweenWolfAndMaster
+from exec.generateExpDemo.filterTraj import CountSheepCrossRope, isCrossAxis, tranformCoordinates
 
 
 def main():
@@ -46,7 +47,7 @@ def main():
     masterId = 2
     distractorId = 3
     maxRunningSteps = 250
-    numSimulations = 200
+    numSimulations = 210
     killzoneRadius = 0.5
 
     # preyPowerRatio = 0.7
@@ -72,9 +73,11 @@ def main():
     calculateSheepMoveDistance = CalculateDistractorMoveDistance(sheepId, stateIndex, qPosIndex)
     trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
+    countCross = CountSheepCrossRope(sheepId, wolfId, masterId, stateIndex, qPosIndex,tranformCoordinates, isCrossAxis)
+    trajectoryCountCross =  np.array([countCross(trajectory) for trajectory in trajectories])
 
     print(len(trajectories))
-    minLength = 250
+    minLength = 200
     minDeviation = math.pi/400
     maxDeviation = math.pi/1
 
@@ -85,7 +88,7 @@ def main():
     deviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in deviationLegelTraj]
 
     timeWindow = 10
-    angleVariance = math.pi / 6
+    angleVariance = math.pi / 10
     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
     filterlist = [circleFilter(trajectory) for trajectory in trajectories]
     timewindowLeagelTrajIndex = np.where(filterlist)[0]
@@ -94,7 +97,9 @@ def main():
     distractorMoveDistanceLegelTraj = filter(lambda x: x <= maxDistractorMoveDistance and x >= minDistractorMoveDistance, trajectoryDistractorMoveDistances)
     distractorMoveDistanceLegelTrajIndex = [list(trajectoryDistractorMoveDistances).index(i) for i in distractorMoveDistanceLegelTraj]
 
-    leagelTrajIndex = ft.reduce(np.intersect1d, [deviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex, timewindowLeagelTrajIndex])
+    acrossLegelTrajIndex = np.nonzero(trajectoryCountCross == 0 )
+
+    leagelTrajIndex = ft.reduce(np.intersect1d, [deviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex, timewindowLeagelTrajIndex], acrossLegelTrajIndex)
     # leagelTrajIndex = lengthLeagelTrajIndex[0]
     print(leagelTrajIndex)
     print('leagelTraj length:', len(leagelTrajIndex))
