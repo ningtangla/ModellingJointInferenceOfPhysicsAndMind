@@ -44,8 +44,9 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0,5001,400))
-    manipulatedVariables['otherIteration'] = list(range(0,5001,400))
+    manipulatedVariables['selfIteration'] = list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = list(range(0,10001,2000))
+
     manipulatedVariables['selfId'] = [0,1]
 
     levelNames = list(manipulatedVariables.keys())
@@ -63,7 +64,7 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    maxRunningSteps = 20
+    maxRunningSteps = 25
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
@@ -100,7 +101,7 @@ def main():
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.4*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numCmdList)

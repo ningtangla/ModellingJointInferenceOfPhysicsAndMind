@@ -13,15 +13,15 @@ import mujoco_py as mujoco
 from matplotlib import pyplot as plt
 import numpy as np
 
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.envMujoco import ResetUniformForLeashed, IsTerminal, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
     establishPlainActionDist, RollOut
 from src.episode import SampleTrajectory, chooseGreedyAction
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy, \
     HeatSeekingContinuesDeterministicPolicy
 from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
-from exec.evaluationFunctions import ComputeStatistics, GenerateInitQPosUniform
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
+from exec.evaluationFunctions import ComputeStatistics
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables
 from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos, GetAgentPosFromTrajectory, GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -30,7 +30,39 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from exec.preProcessing import AccumulateRewards
 
+class ApproximatePolicy:
+    def __init__ (self, policyValueNet, actionSpace, agentIdForNNState):
+        self.policyValueNet = policyValueNet
+        self.actionSpace = actionSpace
+        self.agentIdForNNState = agentIdForNNState
 
+    def __call__(self, state):
+        stateNN = state[self.agentIdForNNState]
+        stateBatch = [np.concatenate(stateNN)]
+        graph = self.policyValueNet.graph
+        state_ = graph.get_collection_ref("inputs")[0]
+        actionDist_ = graph.get_collection_ref("actionDistributions")[0]
+        actionProbs = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
+        actionDist = {action: prob for action, prob in zip(self.actionSpace, actionProbs)}
+        return actionDist
+
+
+class GenerateInitQPosUniform:
+    def __init__(self, minQPos, maxQPos, isTerminal, getResetFromInitQPos):
+        self.minQPos = minQPos
+        self.maxQPos = maxQPos
+        self.isTerminal = isTerminal
+        self.getResetFromInitQPos = getResetFromInitQPos
+
+    def __call__(self):
+        while True:
+            qPosInit = np.random.uniform(self.minQPos, self.maxQPos, 24)
+            reset = self.getResetFromInitQPos(qPosInit)
+            initState = reset()
+            if not self.isTerminal(initState):
+                break
+
+        return qPosInit
 class RestoreNNModel:
     def __init__(self, getModelSavePath, multiAgentNNModel, restoreVariables):
         self.getModelSavePath = getModelSavePath
@@ -59,12 +91,12 @@ class PreparePolicy:
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgent', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'leashedMultiMCTSAgent', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
-    trainMaxRunningSteps = 20
+    trainMaxRunningSteps = 25
     trainNumSimulations = 200
     killzoneRadius = 2
     trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -80,10 +112,10 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'leased.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
-        numAgents = 2
+        numAgents = 3
         agentIds = list(range(numAgents))
 
         sheepId = 0
@@ -101,7 +133,7 @@ def main():
         numActionSpace = len(actionSpace)
 
         # neural network init and save path
-        numStateSpace = 12
+        numStateSpace = 18
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
@@ -111,7 +143,7 @@ def main():
         NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
         dirName = os.path.dirname(__file__)
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                            'multiAgentTrain', 'multiMCTSAgent', 'NNModel')
+                                            'multiAgentTrain', 'leashedMultiMCTSAgent', 'NNModel')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
         depth = 4
@@ -121,28 +153,40 @@ def main():
         restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
 
         # function to prepare policy
-        selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        numAgent = 3
+
+        agentIdForNNState = range(numAgent)
+
+        selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace, agentIdForNNState)
+        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace, agentIdForNNState)
         preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
 
-
+        qPosInit = (0, ) * 24
+        qVelInit = (0, ) * 24
+        qPosInitNoise = 7
+        qVelInitNoise = 5
+        tiedAgentId = [1, 2]
+        ropeParaIndex = list(range(3, 12))
+        maxRopePartLength = 0.25
 
         evalQPosInitNoise = 0
         evalQVelInitNoise = 0
-        qVelInit = [0, 0, 0, 0]
+        qVelInit = (0, ) * 24
 
-        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromQPosInitDummy = lambda qPosInit: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
+
 
         evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
         evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
-        evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
-        getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial], numAgents, evalQPosInitNoise, evalQVelInitNoise)
-        evalMaxRunningSteps = 20
+        evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 24))
+        getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],numAgent, tiedAgentId, ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
+        evalMaxRunningSteps = 25
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
                                                              getResetFromTrial(trial), chooseGreedyAction)
+
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
