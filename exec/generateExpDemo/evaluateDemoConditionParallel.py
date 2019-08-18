@@ -62,7 +62,7 @@ def main():
     print("start")
     startTime = time.time()
 
-    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
+    # cmdList = generateTrajectoriesParallel(parametersAllCondtion)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
@@ -109,25 +109,26 @@ def main():
     measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision]
     ylim=[[0.8, 1.6], [0, 0.1], [0, 0.5], [0, 1], [0, 0.01]] 
     numRows = 1
-    numColumns = 1
+    numColumns = 5
     plotCounter = 1
+    fig = plt.figure()
     for index in range(len(measurementFunctionList)):
 
         computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunctionList[index])
         statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
         print(statisticsDf)
         # plot the results
-        fig = plt.figure()
 
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-        numColumns = numColumns + 1
         plotCounter = plotCounter + 1
         drawPerformanceLine(statisticsDf, axForDraw)
 
         axForDraw.set_title("measure={}".format(measurementFunctionName[index]))
-        axForDraw.set_ylim(ylim[index][0], ylim[index][1] )
-        # plt.show()
+        axForDraw.set_ylim(ylim[index][0], ylim[index][1])
 
+
+        plt.legend(loc='best')
+    plt.show()
     picSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories', 'pic')
     if not os.path.exists(picSaveDirectory):
         os.makedirs(picSaveDirectory)
