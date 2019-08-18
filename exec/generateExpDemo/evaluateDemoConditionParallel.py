@@ -77,7 +77,8 @@ def main():
     trajectorySaveExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
 
 
@@ -103,8 +104,8 @@ def main():
     collisionRadius = 0.41
     countCollision = CountCollision(sheepId,wolfId,stateIndex, positionIndex,collisionRadius,isCollision)
 
-    measurementFunctionName = ['calculateChasingDeviation','countCross', 'countCircles', 'countCorner','countCollision']
-    measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision]
+    measurementFunctionName = ['calculateChasingDeviation','countCross', 'countCircles', 'countCorner','countCollision', 'len']
+    measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision, len]
 
     for index in range(len(measurementFunctionList)):
 
