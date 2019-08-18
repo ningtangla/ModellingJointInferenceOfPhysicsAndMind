@@ -105,9 +105,12 @@ def main():
     collisionRadius = 0.41
     countCollision = CountCollision(sheepId,wolfId,stateIndex, positionIndex,collisionRadius,isCollision)
 
-    measurementFunctionName = ['calculateChasingDeviation','countCross', 'countCircles', 'countCorner','countCollision', 'len']
-    measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision, len]
-
+    measurementFunctionName = ['calculateChasingDeviation','countCross', 'countCircles', 'countCorner','countCollision']
+    measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision]
+    ylim=[[0.8, 1.6], [0, 0.1], [0, 0.5], [0, 1], [0, 0.01]] 
+    numRows = 1
+    numColumns = 1
+    plotCounter = 1
     for index in range(len(measurementFunctionList)):
 
         computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunctionList[index])
@@ -115,22 +118,21 @@ def main():
         print(statisticsDf)
         # plot the results
         fig = plt.figure()
-        numRows = 1
-        numColumns = 1
-        plotCounter = 1
 
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+        numColumns = numColumns + 1
+        plotCounter = plotCounter + 1
         drawPerformanceLine(statisticsDf, axForDraw)
 
-        plt.suptitle("measure={}".format(measurementFunctionName[index]))
-        plt.legend(loc='best')
+        axForDraw.set_title("measure={}".format(measurementFunctionName[index]))
+        axForDraw.set_ylim(ylim[index][0], ylim[index][1] )
         # plt.show()
 
-        picSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories', 'pic')
-        if not os.path.exists(picSaveDirectory):
-            os.makedirs(picSaveDirectory)
-        picFileName = "measure={}.png".format(measurementFunctionName[index])
-        fig.savefig(os.path.join(picSaveDirectory, picFileName))
+    picSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories', 'pic')
+    if not os.path.exists(picSaveDirectory):
+        os.makedirs(picSaveDirectory)
+    picFileName = "mcts=uniformPriorRollout.png"#.format(measurementFunctionName[index])
+    fig.savefig(os.path.join(picSaveDirectory, picFileName))
 
 if __name__ == '__main__':
     main()
