@@ -30,7 +30,6 @@ from src.episode import  SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel,ExcuteCodeOnConditionsParallel
 from exec.evaluationFunctions import ComputeStatistics
 from exec.generateExpDemo.filterTraj import *
-from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance
 
 def drawPerformanceLine(dataDf, axForDraw):
     for masterPowerRatio, grp in dataDf.groupby('masterPowerRatio'):
@@ -87,15 +86,17 @@ def main():
     masterId=2
     stateIndex=0
     positionIndex=[0,1]
-    timeWindow=10
 
     calculateChasingDeviation = CalculateChasingDeviation(sheepId, wolfId, stateIndex, positionIndex)
 
     countCross=CountSheepCrossRope(sheepId, wolfId, masterId,stateIndex, positionIndex,tranformCoordinates,isCrossAxis)
 
-    circleFilter=FindCirlceBetweenWolfAndMaster(wolfId, masterId,stateIndex, positionIndex,timeWindow,allinRange)
-
-    countCircles=CountCirclesBetweenWolfAndMaster(wolfId, masterId,stateIndex, positionIndex,timeWindow,findCirleMove)
+    angleVariance = math.pi / 18
+    lowBound = math.pi / 2 - angleVariance
+    upBound = math.pi/ 2 + angleVariance
+    isInAngelRange = IsAllInAngelRange(lowBound, upBound)
+    timeWindow=1
+    countCircles=CountCirclesBetweenWolfAndMaster(wolfId, masterId,stateIndex, positionIndex,timeWindow,isInAngelRange)
 
     spaceSize=10
     cornerSize=2

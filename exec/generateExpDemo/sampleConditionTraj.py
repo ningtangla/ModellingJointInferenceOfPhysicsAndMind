@@ -168,12 +168,13 @@ def main():
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
+
+    masterPowerRatio = float(parametersForTrajectoryPath['masterPowerRatio'])
+    beta = float(parametersForTrajectoryPath['beta'])
+    numTrials = 6
+    parametersForTrajectoryPath['sampleIndex'] = (0, numTrials)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-
-    masterPowerRatio = parametersForTrajectoryPath['masterPowerRatio']
-    beta = parametersForTrajectoryPath['beta']
-
-    numTrials = 4
+    
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
@@ -346,13 +347,6 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         trajectories = [sampleTrajectory(policy) for _ in range(numTrials)]
         saveToPickle(trajectories, trajectorySavePath)
-    else :
-        loadTrajectories = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
-        trajectories = loadTrajectories(parametersForTrajectoryPath)
-        parametersForTrajectoryPath.update({'beta': float(beta)})
-        parametersForTrajectoryPath.update({'masterPowerRatio': float(masterPowerRatio)})
-        parametersForTrajectoryPath.update({'sampleIndex': (0, numTrials)})
-        trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-        saveToPickle(trajectories, trajectorySavePath)
+
 if __name__ == '__main__':
     main()
