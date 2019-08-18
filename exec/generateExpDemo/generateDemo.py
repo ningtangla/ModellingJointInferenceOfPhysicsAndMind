@@ -49,7 +49,7 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [250]
     manipulatedVariables['numSimulations'] = [200]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0, 8]
+    manipulatedVariables['offset'] = [0, 10]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -91,7 +91,7 @@ def main():
         print(numTrajectories)
         maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-        selectedTrajectories = trajectories[0:1]
+        selectedTrajectories = trajectories[0:numTrajectoryChoose]
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
