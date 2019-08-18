@@ -45,11 +45,11 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [310]
-    manipulatedVariables['maxRunningSteps'] = [250]
-    manipulatedVariables['numSimulations'] = [210]
+    # manipulatedVariables['agentId'] = [310]
+    manipulatedVariables['maxRunningSteps'] = [90]
+    manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0, 10]
+    manipulatedVariables['offset'] = [0]
 
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
@@ -92,7 +92,7 @@ def main():
         print(numTrajectories)
         maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-        selectedTrajectories = trajectories[0:numTrajectoryChoose]
+        selectedTrajectories = trajectories[0:1]
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
@@ -150,7 +150,7 @@ def main():
                 scaledYRange = [200, 600]
                 scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-                oldFPS = 15
+                oldFPS = 7
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))

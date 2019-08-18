@@ -159,7 +159,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
+    maxRunningSteps = 360
     numSimulations = 400
     killzoneRadius = 0.5
 
@@ -168,13 +168,15 @@ def main():
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     masterPowerRatio = float(parametersForTrajectoryPath['masterPowerRatio'])
     beta = float(parametersForTrajectoryPath['beta'])
-    numTrials = 6
-    parametersForTrajectoryPath['sampleIndex'] = (0, numTrials)
+    numTrials = endSampleIndex - startSampleIndex
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    
+
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
@@ -201,7 +203,7 @@ def main():
         # isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
         isTerminal = lambda state : False
 
-        numSimulationFrames = 10
+        numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         numAgent = 3

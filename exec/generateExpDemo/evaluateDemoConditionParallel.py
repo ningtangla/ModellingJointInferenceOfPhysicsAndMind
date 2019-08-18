@@ -11,6 +11,7 @@ from collections import OrderedDict, deque
 import pandas as pd
 from matplotlib import pyplot as plt
 import mujoco_py as mujoco
+import math
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
@@ -43,8 +44,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0, 0.1, 0.2, 0.4]
-    manipulatedVariables['beta'] = [0, 0.5, 1, 2]
+    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
+    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -56,19 +57,21 @@ def main():
 
 
     sampleTrajectoryFileName = 'sampleConditionTraj.py'
-
-    generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName)
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.88 * numCpuCores)
+    numTrials = math.floor(numCpuToUse/len(parametersAllCondtion)) * 2
+    generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName, numTrials, numCpuToUse)
 
     print("start")
     startTime = time.time()
 
-    # cmdList = generateTrajectoriesParallel(parametersAllCondtion)
+    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
-    maxRunningSteps = 150
+    maxRunningSteps = 360
     numSimulations = 400
     killzoneRadius = 0.5
 
