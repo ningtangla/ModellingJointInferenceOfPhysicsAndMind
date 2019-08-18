@@ -64,8 +64,7 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    maxRunningSteps = 25
-    sheepAliveBonus = 1 / maxRunningSteps
+    sheepAliveBonus = 0.05
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
