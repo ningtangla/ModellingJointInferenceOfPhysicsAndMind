@@ -46,10 +46,12 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     # manipulatedVariables['agentId'] = [310]
-    manipulatedVariables['maxRunningSteps'] = [90]
+    manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0]
+    manipulatedVariables['offset'] = [0, 10]
+    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
+    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
 
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
@@ -71,7 +73,7 @@ def main():
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     # fuzzySearchParameterNames = ['sampleIndex']
-    fuzzySearchParameterNames = []
+    fuzzySearchParameterNames = ['timeStep']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0])[0]))
@@ -92,7 +94,7 @@ def main():
         print(numTrajectories)
         maxNumTrajectories = 50
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
-        selectedTrajectories = trajectories[0:1]
+        selectedTrajectories = trajectories[0:numTrajectoryChoose]
 
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
 
@@ -110,12 +112,12 @@ def main():
         initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
         screen = initializeScreen()
         leaveEdgeSpace = 200
-        lineWidth = 3
+        lineWidth = 4
         xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
         yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
         screenColor = THECOLORS['black']
         lineColor = THECOLORS['white']
-        ropeColor = THECOLORS['white']
+
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
         circleSize = 10
         positionIndex = [0, 1]
@@ -126,11 +128,13 @@ def main():
         masterId = 2
         distractorId = 3
 
-        conditionList = [0]
+        conditionList = [0, 2]
         conditionValues = [[wolfId, masterId], [wolfId, distractorId], None]
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
-        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
+        ropeColor = THECOLORS['white']
+        ropeWidth = 4
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor,ropeWidth,  drawBackground)
 
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
         circleColorList = colorSpace[:numOfAgent]
@@ -156,8 +160,8 @@ def main():
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
                 trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
                 trajectory = getTrajectory(trajectoryDf)
-                chaseTrial(trajectory)
-                # chaseTrialWithRope(trajectory, conditionValues[condition])
+                # chaseTrial(trajectory)
+                chaseTrialWithRope(trajectory, conditionValues[condition])
 
 
 if __name__ == '__main__':
