@@ -139,7 +139,9 @@ def main():
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
         circleColorList = colorSpace[:numOfAgent]
 
-        for index in range(len(selectedTrajectories)):
+        # for index in range(len(selectedTrajectories)):
+        if len(selectedTrajectories)>0:
+            index = np.random.choice(list(range(len(selectedTrajectories))))
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
@@ -154,7 +156,7 @@ def main():
                 scaledYRange = [200, 600]
                 scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
-                oldFPS = 15
+                oldFPS = 9
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
