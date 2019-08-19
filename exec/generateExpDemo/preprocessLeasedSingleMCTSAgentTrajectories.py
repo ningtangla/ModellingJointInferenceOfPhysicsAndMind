@@ -46,7 +46,7 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    maxRunningSteps = 90
+    maxRunningSteps = 360
     numSimulations = 400
     killzoneRadius = 0.5
 
@@ -60,10 +60,10 @@ def main():
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius, 'numSimulations': numSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
+    fuzzySearchParameterNames = ['sampleIndex','beta', 'masterPowerRatio']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
-    pathParameters = { 'beta':1.0,  'masterPowerRatio': 0.4}
-    trajectories = loadTrajectories(pathParameters)
+    # pathParameters = { 'beta':1.0,  'masterPowerRatio': 0.4}
+    trajectories = loadTrajectories({})
 
     stateIndex = 0
     qPosIndex = [0, 1]
@@ -79,8 +79,8 @@ def main():
 
     print(len(trajectories))
     print(np.max(trajectoryLengthes))
-    minLength = 90
-    minDeviation = math.pi/40
+    minLength = 311
+    minDeviation = math.pi/4
     maxDeviation = math.pi/1
 
     minDistractorMoveDistance = 0
@@ -89,7 +89,7 @@ def main():
     deviationLegelTraj = filter(lambda x: x <= maxDeviation and x >= minDeviation, trajectoryDeviationes)
     deviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in deviationLegelTraj]
 
-    timeWindow = 100
+    timeWindow = 10
     angleVariance = math.pi / 10
     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
     filterlist = [circleFilter(trajectory) for trajectory in trajectories]
@@ -101,8 +101,9 @@ def main():
 
     acrossLegelTrajIndex = np.nonzero(trajectoryCountCross == 0 )
 
-    # leagelTrajIndex = ft.reduce(np.intersect1d, [deviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex, timewindowLeagelTrajIndex], acrossLegelTrajIndex)
-    leagelTrajIndex = list(range(len(trajectoryLengthes)))
+    leagelTrajIndex = ft.reduce(np.intersect1d, [deviationLegelTrajIndex, lengthLeagelTrajIndex, distractorMoveDistanceLegelTrajIndex, timewindowLeagelTrajIndex], acrossLegelTrajIndex)
+
+    # leagelTrajIndex = list(range(len(trajectoryLengthes)))
     # leagelTrajIndex = lengthLeagelTrajIndex[0]
     print(leagelTrajIndex)
     print('leagelTraj length:', len(leagelTrajIndex))
@@ -110,7 +111,7 @@ def main():
     print('mean deviation:', np.mean(trajectoryDeviationes[leagelTrajIndex]))
 
     leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
-    masterDelayStep = 1
+    masterDelayStep = 4
     offsetMasterStates = OffsetMasterStates(masterId, stateIndex, masterDelayStep)
     masterDelayedStates = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
     masterDelayedStatesPathParameters = {'offset': masterDelayStep}
