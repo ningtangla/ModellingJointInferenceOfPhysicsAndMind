@@ -59,13 +59,13 @@ def main():
     sampleTrajectoryFileName = 'sampleConditionTraj.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.88 * numCpuCores)
-    numTrials = math.floor(numCpuToUse/len(parametersAllCondtion)) * 2
+    numTrials = math.floor(numCpuToUse/len(parametersAllCondtion)) * 1
     generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName, numTrials, numCpuToUse)
 
     print("start")
     startTime = time.time()
 
-    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
+    # cmdList = generateTrajectoriesParallel(parametersAllCondtion)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
@@ -89,28 +89,29 @@ def main():
     masterId=2
     stateIndex=0
     positionIndex=[0,1]
+    velocityIndex=[4,5]
 
     calculateChasingDeviation = CalculateChasingDeviation(sheepId, wolfId, stateIndex, positionIndex)
 
     countCross=CountSheepCrossRope(sheepId, wolfId, masterId,stateIndex, positionIndex,tranformCoordinates,isCrossAxis)
 
-    angleVariance = math.pi / 18
+    angleVariance = math.pi / 10
     lowBound = math.pi / 2 - angleVariance
     upBound = math.pi/ 2 + angleVariance
     isInAngelRange = IsAllInAngelRange(lowBound, upBound)
-    timeWindow=1
-    countCircles=CountCirclesBetweenWolfAndMaster(wolfId, masterId,stateIndex, positionIndex,timeWindow,isInAngelRange)
+    timeWindow=5
+    countCircles=CountCirclesBetweenWolfAndMaster(wolfId, masterId,stateIndex, positionIndex, velocityIndex, timeWindow,isInAngelRange)
 
     spaceSize=10
-    cornerSize=2
+    cornerSize=3
     countCorner = CountSheepInCorner(sheepId,stateIndex, positionIndex,spaceSize,cornerSize,isInCorner)
 
-    collisionRadius = 0.41
+    collisionRadius = 0.8
     countCollision = CountCollision(sheepId,wolfId,stateIndex, positionIndex,collisionRadius,isCollision)
 
     measurementFunctionName = ['calculateChasingDeviation','countCross', 'countCircles', 'countCorner','countCollision']
     measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision]
-    ylim=[[0.8, 1.6], [0, 0.1], [0, 0.5], [0, 1], [0, 0.01]] 
+    ylim=[[0.8, 1.6], [0, 0.1], [0, 0.2], [0, 1], [0, 0.01]] 
     numRows = 1
     numColumns = 5
     plotCounter = 1

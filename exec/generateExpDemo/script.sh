@@ -15,32 +15,32 @@
 # done
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo1.05
 
-cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
+cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
 mkdir demo
 
-for beta in 0.5 1.0 2.0
+for beta in 1.0 #0.5 1.0 2.0
 do
-    for masterPowerRatio in 0.2 0.4
+    for masterPowerRatio in 0.4 #0.4
     do 
-        for offset in 0 10
+        for offset in 6
         do
-            for index in 0 1 2 3 4 5
+            for index in 1 
             do
                 for condition in 0 2
+                do
+                # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}/${index}/condition=${condition}/
 
-                cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}/${index}/condition=${condition}
-
-                ffmpeg -r 40 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}_Demo${index}_condition=${condition}.mp4
+                ffmpeg -r 29 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}/${index}/condition=${condition}/%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}_Demo${index}_condition=${condition}.mp4
                 done
             done
         done
     done
 done
 
-cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
+cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
 
 
-# cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
+# cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
 # mkdir demo
 
 
@@ -49,15 +49,15 @@ cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/exec/g
 #     for index in 0 
 #     do
 
-#     cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/killzoneRadius=0.5_maxRunningSteps=90_numSimulations=400_offset=${offset}/${index}/condition=0
+#     cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/killzoneRadius=0.5_maxRunningSteps=90_numSimulations=400_offset=${offset}/${index}/condition=0
 
-#     ffmpeg -r 40 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/killzoneRadius=0.5_maxRunningSteps=90_numSimulations=400_offset=${offset}_Demo${index}.mp4
+#     ffmpeg -r 40 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/killzoneRadius=0.5_maxRunningSteps=90_numSimulations=400_offset=${offset}_Demo${index}.mp4
 
 
 #     done
 # done
 
-# cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
+# cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateExpDemo
 
 
 

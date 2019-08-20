@@ -49,9 +49,9 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0]
-    # manipulatedVariables['beta'] = [1.0]
-    # manipulatedVariables['masterPowerRatio'] = [0.4]
+    manipulatedVariables['offset'] = [6]
+    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -72,8 +72,8 @@ def main():
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     # fuzzySearchParameterNames = ['sampleIndex']
-    # fuzzySearchParameterNames = ['timeStep']
-    fuzzySearchParameterNames = []
+    fuzzySearchParameterNames = ['timeStep']
+    # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0])[0]))

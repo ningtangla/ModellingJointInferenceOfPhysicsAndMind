@@ -30,8 +30,8 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
-from src.constrainedChasingEscapingEnv.demoFilter import CalculateChasingDeviation, CalculateDistractorMoveDistance, OffsetMasterStates, FindCirlceBetweenWolfAndMaster
-from exec.generateExpDemo.filterTraj import CountSheepCrossRope, isCrossAxis, tranformCoordinates, CountCollision, isCollision
+from src.constrainedChasingEscapingEnv.demoFilter import OffsetMasterStates, FindCirlceBetweenWolfAndMaster
+from exec.generateExpDemo.filterTraj import CalculateChasingDeviation, CalculateDistractorMoveDistance, CountSheepCrossRope, isCrossAxis, tranformCoordinates, CountCollision, isCollision
 
 
 def main():
@@ -51,8 +51,8 @@ def main():
     killzoneRadius = 0.5
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
-    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
+    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
@@ -63,9 +63,9 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    masterDelayStep = 10
+    masterDelayStep = 6
     minLength = 250 + masterDelayStep
-    timestepCheckInterval = 20
+    timestepCheckInterval = 40
 
     for pathParameters in conditionParametersAll:
         originalTrajectories = loadTrajectories(pathParameters)
@@ -90,7 +90,7 @@ def main():
                     trajectoryLengthes = np.array([len(trajectory) for trajectory in trajectories])
                     calculateDistractorMoveDistance = CalculateDistractorMoveDistance(distractorId, stateIndex, qPosIndex)
                     calculateSheepMoveDistance = CalculateDistractorMoveDistance(sheepId, stateIndex, qPosIndex)
-                    trajectoryDistractorMoveDistances = np.array([np.mean(calculateDistractorMoveDistance(trajectory)) for trajectory in trajectories])
+                    trajectoryDistractorMoveDistances = np.array([calculateDistractorMoveDistance(trajectory) for trajectory in trajectories])
                     trajectorySheepMoveDistances = np.array([np.mean(calculateSheepMoveDistance(trajectory)) for trajectory in trajectories])
                     countCross = CountSheepCrossRope(sheepId, wolfId, masterId, stateIndex, qPosIndex,tranformCoordinates, isCrossAxis)
                     try:
@@ -98,14 +98,14 @@ def main():
                     except:
                         print('ggg', pathParameters)
                         #print('ggg', trajectories)
-                    collisionRadius = 0.5
+                    collisionRadius = 1
                     countCollision = CountCollision(sheepId,wolfId,stateIndex, qPosIndex,collisionRadius,isCollision)
                     trajectoryCountCollision =  np.array([countCollision(trajectory) for trajectory in trajectories])
 
                     # print(len(trajectories))
                     # print(np.max(trajectoryLengthes))
                     minDeviation = math.pi/4
-                    maxDeviation = math.pi/2
+                    maxDeviation = math.pi/2.5
 
                     minDistractorMoveDistance = 0
                     maxDistractorMoveDistance = 100
@@ -114,7 +114,7 @@ def main():
                     deviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in deviationLegelTraj]
 
                     timeWindow = 10
-                    angleVariance = math.pi / 18
+                    angleVariance = math.pi / 10
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterlist = [circleFilter(trajectory) for trajectory in trajectories]
                     timewindowLeagelTrajIndex = np.where(filterlist)[0]
@@ -135,7 +135,8 @@ def main():
                         print('mean deviation:', np.mean(trajectoryDeviationes[leagelTrajIndex]))
 
                         leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
-                        offsetMasterStates = OffsetMasterStates(masterId, stateIndex, masterDelayStep)
+                        ropePartIndexes = list(range(3, 12))
+                        offsetMasterStates = OffsetMasterStates(wolfId, masterId, ropePartIndexes, qPosIndex, stateIndex, masterDelayStep)
                         masterDelayedStates = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
                         masterDelayedStatesPathParameters = pathParameters.copy()
                         masterDelayedStatesPathParameters['offset'] = masterDelayStep

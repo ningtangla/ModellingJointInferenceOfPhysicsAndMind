@@ -23,32 +23,45 @@ class CalculateChasingDeviation:
         sheepWolfAngleList = np.array([calculateIncludedAngle(v1, v2) for (v1, v2) in zip(heatSeekingVectorList, wolfVectorList)])
         return np.mean(sheepWolfAngleList)
 
+class CalculateDistractorMoveDistance:
+    def __init__(self, distractorId, stateIndex, positionIndex):
+        self.distractorId = distractorId
+        self.stateIndex = stateIndex
+        self.positionIndex = positionIndex
+
+    def __call__(self, traj):
+        traj = np.array(traj)
+        distractorVectorlist = [traj[i][self.stateIndex][self.distractorId][self.positionIndex] - traj[i - 1][self.stateIndex][self.distractorId][self.positionIndex] for i in range(1, len(traj))]
+        distractorMoveDistances = [np.linalg.norm(distractorVector, ord=2) for distractorVector in distractorVectorlist]
+        return np.mean(distractorMoveDistances)
+
 class IsAllInAngelRange():
     def __init__(self, lowBound, upBound):
         self.lowBound = lowBound
         self.upBound = upBound
     def __call__(self, angleList):
         filterangleList=list(filter(lambda x: x<=self.upBound and x>=self.lowBound,angleList))
-        return len(filterangleList)<len(angleList)
+        return len(filterangleList)==len(angleList)
 
 class CountCirclesBetweenWolfAndMaster:
-    def __init__(self, wolfId, masterId,stateIndex, positionIndex,timeWindow,findCirleMove):
+    def __init__(self, wolfId, masterId,stateIndex, positionIndex, velocityIndex, timeWindow,findCirleMove):
         self.wolfId = wolfId
         self.masterId=masterId
         self.stateIndex = stateIndex
         self.positionIndex = positionIndex
+        self.velocityIndex = velocityIndex
         self.timeWindow=timeWindow
         self.findCirleMove=findCirleMove
 
     def __call__(self, traj):
         traj = np.array(traj)
-        wolfVectorList = [traj[i][self.stateIndex][self.wolfId][self.positionIndex] - traj[i - 1][self.stateIndex][self.wolfId][self.positionIndex] for i in range(1, len(traj))]
+        wolfVectorList = [traj[i - 1][self.stateIndex][self.wolfId][self.velocityIndex] for i in range(1, len(traj))]
         ropeVectorList = [traj[i-1][self.stateIndex][self.wolfId][self.positionIndex] - traj[i - 1][self.stateIndex][self.masterId][self.positionIndex] for i in range(1, len(traj)) ]
         ropeWolfAngleList = np.array([calculateIncludedAngle(v1, v2) for (v1, v2) in zip(wolfVectorList, ropeVectorList)])
         filterList=[self.findCirleMove(ropeWolfAngleList[i:i+self.timeWindow]) for i in range(0, len(ropeWolfAngleList)-self.timeWindow+1) ]
         # countList=[ filterList[i]!=filterList[i+1] for i in range(0, len(filterList)-1) ]
         countList = filterList
-        ciclrNumber=math.ceil(len(np.where(countList)[0])/2)
+        ciclrNumber=math.ceil(len(np.where(countList)[0]))
         ciclrRatio = ciclrNumber/len(traj)
         return ciclrRatio
 
@@ -106,7 +119,7 @@ class CountSheepInCorner :
         return cornerRatio     
 
 def isInCorner(lowerBound,coordinate):
-	return np.all(np.abs(coordinate)>lowerBound)
+    return np.all(np.abs(coordinate)>lowerBound)
 
 class CountCollision :
     def __init__(self,sheepId,wolfId,stateIndex, positionIndex,collisionRadius,isCollision):
@@ -126,7 +139,7 @@ class CountCollision :
         return collisionRatio
 
 def isCollision (coor1,coor2,disttance):
-	return np.linalg.norm(coor1-coor2) < disttance   
+    return np.linalg.norm(coor1-coor2) < disttance   
 
 if __name__ =='__main__' :
 
