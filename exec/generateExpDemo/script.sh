@@ -18,15 +18,15 @@
 cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
 mkdir demo
 
-for beta in 1.0 #0.5 1.0 2.0
+for beta in 0.5 #0.5 1.0 2.0
 do
     for masterPowerRatio in 0.4 #0.4
     do 
-        for offset in 6
+        for offset in 0
         do
             for index in 1 
             do
-                for condition in 0 2
+                for condition in 0
                 do
                 # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}/${index}/condition=${condition}/
 

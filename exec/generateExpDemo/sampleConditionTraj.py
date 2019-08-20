@@ -160,7 +160,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 360
-    numSimulations = 400
+    numSimulations = 600
     killzoneRadius = 0.5
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -264,9 +264,9 @@ def main():
         selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-        preyPowerRatio = 1.15
+        preyPowerRatio = 1.7
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.3
+        predatorPowerRatio = 1.95
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         masterPowerRatio = masterPowerRatio
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))

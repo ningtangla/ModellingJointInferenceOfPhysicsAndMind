@@ -13,16 +13,13 @@ def compose2DCoordinateRotateMatrix(rotateAngle):
     rotateMat = np.mat([[np.cos(rotateAngle), np.sin(rotateAngle), 0], [-np.sin(rotateAngle), np.cos(rotateAngle), 0], [0, 0, 1]])
     return rotateMat
 
-def compose2DCoordinateScaleMatrix(scaleVector):
-    norm = np.linalg.norm(scaleVector)
-    #scaleMat = np.mat([[norm, 0, 0], [0, norm, 0], [0, 0, 1]])
-    scaleMat = np.mat([[scaleVector[0], 0, 0], [0, scaleVector[1], 0], [0, 0, 1]])
+def compose2DCoordinateScaleMatrix(scale):
+    scaleMat = np.mat([[scale, 0, 0], [0, scale, 0], [0, 0, 1]])
     return scaleMat
 
 def transposeCoordinate(coordinate, transposeMat):
     coordinateMat = np.mat([coordinate[0], coordinate[1], 1])
     transposedCoordinate = np.array(coordinateMat * transposeMat)[0][:2]
-    print(np.array(coordinate) == transposedCoordinate)
     return transposedCoordinate
 
 class OffsetMasterStates:
@@ -44,17 +41,17 @@ class OffsetMasterStates:
         originalWolfPoses = originalWolfStates[:,self.positionIndex]
         masterWolfVectors = masterStates[:,self.positionIndex] - originalWolfStates[:,self.positionIndex]
         originalMasterWolfVectors = originalMasterStates[:,self.positionIndex] - originalWolfStates[:,self.positionIndex]
-        print(masterWolfVectors[1], originalMasterWolfVectors[1])
 
         translateMats = [compose2DCoordinateTranslateMatrix(wolfPos) for wolfPos in originalWolfPoses]
         rotateAngles = [calculateIncludedAngle(masterWolfVector, originalMasterWolfVector) for masterWolfVector, originalMasterWolfVector in zip(masterWolfVectors, originalMasterWolfVectors)]
         rotateMats = [compose2DCoordinateRotateMatrix(rotateAngle) for rotateAngle in rotateAngles]
-        scales = [np.abs(masterWolfVector)/np.abs(originalMasterWolfVector) for masterWolfVector, originalMasterWolfVector in zip(masterWolfVectors, originalMasterWolfVectors)]
-        scaleMats = [compose2DCoordinateScaleMatrix(scale) for scale in scales]
-        scaleBackMats = [compose2DCoordinateScaleMatrix(1/np.array(scale)) for scale in scales]
-        translateBackMats = [compose2DCoordinateTranslateMatrix(-wolfPos) for wolfPos in originalWolfPoses]
+        scales = [np.linalg.norm(masterWolfVector)/np.linalg.norm(originalMasterWolfVector) for masterWolfVector, originalMasterWolfVector in zip(masterWolfVectors, originalMasterWolfVectors)]
 
-        transposeMats = [translateMat*rotateMat*scaleMat*scaleBackMat*translateBackMat for translateMat, rotateMat, scaleMat, scaleBackMat, translateBackMat in zip(translateMats, rotateMats, scaleMats, scaleBackMats,translateBackMats)]
+        scaleMats = [compose2DCoordinateScaleMatrix(min(1.5, scale)) for scale in scales]
+        scaleBackMats = [compose2DCoordinateScaleMatrix(1/scale) for scale in scales]
+        translateBackMats = [compose2DCoordinateTranslateMatrix(-wolfPos) for wolfPos, scale in zip(originalWolfPoses,scales)]
+        print(np.max(scales))
+        transposeMats = [translateMat*scaleMat*rotateMat*translateBackMat for translateMat, rotateMat, scaleMat, scaleBackMat, translateBackMat in zip(translateMats, rotateMats, scaleMats, scaleBackMats,translateBackMats)]
         transposedRopePartPoses = np.array([[transposeCoordinate(ropePartState[self.positionIndex], transposeMat) for ropePartState in ropePartsState] for ropePartsState, transposeMat in zip(originalRopePartsStates, transposeMats)])
 
         allAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj[self.masterDelayStep:]])

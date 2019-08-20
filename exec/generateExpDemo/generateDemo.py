@@ -50,7 +50,7 @@ def main():
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
     manipulatedVariables['offset'] = [6]
-    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
@@ -111,7 +111,7 @@ def main():
         fullScreen = False
         initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
         screen = initializeScreen()
-        leaveEdgeSpace = 200
+        leaveEdgeSpace = 195
         lineWidth = 4
         xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
         yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
@@ -145,7 +145,7 @@ def main():
         # for index in range(len(selectedTrajectories)):
         if len(selectedTrajectories) > 0:
             # index = np.random.choice(list(range(len(selectedTrajectories))))
-            index = 0
+            index = 1
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))

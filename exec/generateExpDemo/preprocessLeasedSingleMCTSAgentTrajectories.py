@@ -51,7 +51,7 @@ def main():
     killzoneRadius = 0.5
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -98,7 +98,7 @@ def main():
                     except:
                         print('ggg', pathParameters)
                         #print('ggg', trajectories)
-                    collisionRadius = 1
+                    collisionRadius = 0.8
                     countCollision = CountCollision(sheepId,wolfId,stateIndex, qPosIndex,collisionRadius,isCollision)
                     trajectoryCountCollision =  np.array([countCollision(trajectory) for trajectory in trajectories])
 
@@ -114,7 +114,7 @@ def main():
                     deviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in deviationLegelTraj]
 
                     timeWindow = 10
-                    angleVariance = math.pi / 10
+                    angleVariance = math.pi / 18
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterlist = [circleFilter(trajectory) for trajectory in trajectories]
                     timewindowLeagelTrajIndex = np.where(filterlist)[0]
