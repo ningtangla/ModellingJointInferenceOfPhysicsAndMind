@@ -49,9 +49,9 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0, 10]
-    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
-    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
+    manipulatedVariables['offset'] = [6]
+    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
 
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
@@ -141,7 +141,8 @@ def main():
 
         # for index in range(len(selectedTrajectories)):
         if len(selectedTrajectories)>0:
-            index = np.random.choice(list(range(len(selectedTrajectories))))
+            # index = np.random.choice(list(range(len(selectedTrajectories))))
+            index = 1
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
