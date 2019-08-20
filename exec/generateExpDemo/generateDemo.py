@@ -49,10 +49,9 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [6]
-    manipulatedVariables['beta'] = [1.0]
-    manipulatedVariables['masterPowerRatio'] = [0.4]
-
+    manipulatedVariables['offset'] = [0]
+    # manipulatedVariables['beta'] = [1.0]
+    # manipulatedVariables['masterPowerRatio'] = [0.4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -73,7 +72,8 @@ def main():
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     # fuzzySearchParameterNames = ['sampleIndex']
-    fuzzySearchParameterNames = ['timeStep']
+    # fuzzySearchParameterNames = ['timeStep']
+    fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0])[0]))
@@ -119,8 +119,6 @@ def main():
         lineColor = THECOLORS['white']
 
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
-        circleSize = 10
-        positionIndex = [0, 1]
 
         numOfAgent = 3
         sheepId = 0
@@ -128,21 +126,26 @@ def main():
         masterId = 2
         distractorId = 3
 
-        conditionList = [0, 2]
+        circleSize = 10
+        positionIndex = [0, 1]
+        numRopePart = 9
+        ropePartIndex = list(range(numOfAgent, numOfAgent + numRopePart))
+
+        conditionList = [0]
         conditionValues = [[wolfId, masterId], [wolfId, distractorId], None]
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
-        ropeColor = THECOLORS['white']
+        ropeColor = THECOLORS['grey']
         ropeWidth = 4
-        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor,ropeWidth,  drawBackground)
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
 
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
         circleColorList = colorSpace[:numOfAgent]
 
         # for index in range(len(selectedTrajectories)):
-        if len(selectedTrajectories)>0:
+        if len(selectedTrajectories) > 0:
             # index = np.random.choice(list(range(len(selectedTrajectories))))
-            index = 1
+            index = 0
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))

@@ -41,7 +41,7 @@ class DrawBackground:
 
 
 class DrawState:
-    def __init__(self, screen, circleSize, numOfAgent, positionIndex, drawBackGround ):
+    def __init__(self, screen, circleSize, numOfAgent, positionIndex, drawBackGround):
         self.screen = screen
         self.circleSize = circleSize
         self.numOfAgent = numOfAgent
@@ -57,12 +57,14 @@ class DrawState:
         pg.display.flip()
         return self.screen
 
+
 class DrawStateWithRope():
-    def __init__(self, screen, circleSize, numOfAgent, positionIndex, ropeColor, ropeWidth, drawBackGround):
+    def __init__(self, screen, circleSize, numOfAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackGround):
         self.screen = screen
         self.circleSize = circleSize
         self.numOfAgent = numOfAgent
         self.xIndex, self.yIndex = positionIndex
+        self.ropePartIndex = ropePartIndex
         self.ropeColor = ropeColor
         self.ropeWidth = ropeWidth
         self.drawBackGround = drawBackGround
@@ -71,7 +73,13 @@ class DrawStateWithRope():
         self.drawBackGround()
         if tiedAgentId:
             tiedAgentPos = [[np.int(state[agentId][self.xIndex]), np.int(state[agentId][self.yIndex])] for agentId in tiedAgentId]
-            pg.draw.lines(self.screen, self.ropeColor, False, tiedAgentPos, self.ropeWidth)
+            ropePosList = [[np.int(state[ropeId][self.xIndex]), np.int(state[ropeId][self.yIndex])] for ropeId in self.ropePartIndex]
+
+            tiedPosList = [[ropePosList[i], ropePosList[i + 1]] for i in range(0, len(ropePosList) - 1)]
+            tiedPosList.insert(0, [tiedAgentPos[0], ropePosList[0]])
+            tiedPosList.insert(-1, [tiedAgentPos[1], ropePosList[-1]])
+
+            [pg.draw.lines(self.screen, self.ropeColor, False, tiedPos, self.ropeWidth) for tiedPos in tiedPosList]
 
         for agentIndex in range(self.numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
@@ -81,6 +89,7 @@ class DrawStateWithRope():
         pg.time.wait(10)
 
         return self.screen
+
 
 class ChaseTrialWithTraj:
     def __init__(self, fps, colorSpace,
@@ -106,6 +115,7 @@ class ChaseTrialWithTraj:
                 pg.image.save(screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
 
         return
+
 
 class ChaseTrialWithRopeTraj:
     def __init__(self, fps, colorSpace, drawStateWithRope, saveImage, saveImageDir):
