@@ -65,14 +65,14 @@ def main():
     print("start")
     startTime = time.time()
 
-    # cmdList = generateTrajectoriesParallel(parametersAllCondtion)
+    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
     maxRunningSteps = 360
-    numSimulations = 400
+    numSimulations = 600
     killzoneRadius = 0.5
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}

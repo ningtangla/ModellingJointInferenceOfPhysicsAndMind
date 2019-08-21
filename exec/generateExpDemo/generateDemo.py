@@ -47,10 +47,10 @@ def main():
 
     # manipulatedVariables['agentId'] = [310]
     manipulatedVariables['maxRunningSteps'] = [360]
-    manipulatedVariables['numSimulations'] = [400]
+    manipulatedVariables['numSimulations'] = [600]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [6]
-    manipulatedVariables['beta'] = [0.5]
+    manipulatedVariables['offset'] = [0]
+    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
     manipulatedVariables['masterPowerRatio'] = [0.4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]

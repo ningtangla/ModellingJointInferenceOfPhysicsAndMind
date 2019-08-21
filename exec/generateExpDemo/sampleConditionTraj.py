@@ -160,7 +160,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 360
-    numSimulations = 600
+    numSimulations = 400
     killzoneRadius = 0.5
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -327,15 +327,6 @@ def main():
         reasonMindList[sheepId][wolfId] = lambda policy: policy
         reasonMindList[wolfId][sheepId] = lambda policy: policy
 
-        # unknowPolicy = lambda policy, actionSpace : RandomPolicy(actionSpace)
-        # sheepKnowMind = [lambda policy : policy] * numAgent
-        # sheepKnowMind[masterId] = lambda policy: RandomPolicy(masterActionSpace)
-        # wolfKnowMind = [lambda policy : policy] * numAgent
-        # wolfKnowMind[masterId] = lambda policy: RandomPolicy(masterActionSpace)
-        # masterKnowMind = [lambda policy : policy] * numAgent
-        # masterKnowMind[sheepId] = lambda policy: RandomPolicy(sheepActionSpace)
-        # masterKnowMind[wolfId] = lambda policy: RandomPolicy(wolfActionSpace)
-        # knowMind = [sheepKnowMind, wolfKnowMind, masterKnowMind]
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS, reasonMindList)
         # composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, selectChild, isTerminal, transit, getApproximatePolicy, composeMultiAgentTransitInSingleAgentMCTS)
         composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, selectChild, isTerminal, transit, getApproximateUniformActionPrior, composeMultiAgentTransitInSingleAgentMCTS)

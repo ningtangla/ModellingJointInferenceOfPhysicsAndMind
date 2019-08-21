@@ -47,7 +47,7 @@ class OffsetMasterStates:
         rotateMats = [compose2DCoordinateRotateMatrix(rotateAngle) for rotateAngle in rotateAngles]
         scales = [np.linalg.norm(masterWolfVector)/np.linalg.norm(originalMasterWolfVector) for masterWolfVector, originalMasterWolfVector in zip(masterWolfVectors, originalMasterWolfVectors)]
 
-        scaleMats = [compose2DCoordinateScaleMatrix(min(1.5, scale)) for scale in scales]
+        scaleMats = [compose2DCoordinateScaleMatrix(min(1.3, scale)) for scale in scales]
         scaleBackMats = [compose2DCoordinateScaleMatrix(1/scale) for scale in scales]
         translateBackMats = [compose2DCoordinateTranslateMatrix(-wolfPos) for wolfPos, scale in zip(originalWolfPoses,scales)]
         print(np.max(scales))

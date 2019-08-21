@@ -63,7 +63,7 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    masterDelayStep = 6
+    masterDelayStep = 12
     minLength = 250 + masterDelayStep
     timestepCheckInterval = 40
 
@@ -113,7 +113,7 @@ def main():
                     deviationLegelTraj = filter(lambda x: x <= maxDeviation and x >= minDeviation, trajectoryDeviationes)
                     deviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in deviationLegelTraj]
 
-                    timeWindow = 10
+                    timeWindow = 100
                     angleVariance = math.pi / 18
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterlist = [circleFilter(trajectory) for trajectory in trajectories]
