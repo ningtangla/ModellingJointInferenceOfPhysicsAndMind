@@ -2,16 +2,6 @@ import pandas as pd
 import pygame as pg
 import numpy as np
 
-def softenPolicy(policy):
-    getNormalizingParam = lambda actionDist: np.sum(np.exp(list(actionDist.values())))
-    softenActionProb = lambda actionDist: {action: np.exp(actionDist[action]) / getNormalizingParam(actionDist) for action
-                                     in actionDist.keys()}
-    softenedPolicy = lambda state: softenActionProb(policy(state))
-
-    return softenedPolicy
-
-
-
 class ObserveStateOnly:
     def __init__(self, trajectory):
         self.trajectory = trajectory
@@ -49,20 +39,30 @@ class ObserveWithRope:
 
 
 class IsInferenceTerminal:
-    def __init__(self, thresholdPosterior, mindPhysicsName, inferenceIndex):
+    def __init__(self, thresholdPosterior, inferenceIndex):
         self.thresholdPosterior = thresholdPosterior
-        self.mindName, self.physicsName = mindPhysicsName
         self.inferenceIndex = inferenceIndex
 
     def __call__(self, posterior):
         inferenceDf = pd.DataFrame(index= self.inferenceIndex)
         inferenceDf['posterior'] = posterior
-        rank = inferenceDf.groupby([self.mindName, self.physicsName]).sum().reset_index()
+        groupingNames = self.inferenceIndex.names[:-1]
+
+        rank = inferenceDf.groupby(groupingNames).sum().reset_index()
         largestPosterior = max(rank['posterior'])
         if largestPosterior >= self.thresholdPosterior:
             return True
         else:
             return False
+
+
+def softenPolicy(policy, softParameter):
+    getNormalizingParam = lambda actionDist: np.sum(np.exp(np.array(list(actionDist.values())) * softParameter))
+    softenActionProb = lambda actionDist: {
+        action: np.exp(actionDist[action] * softParameter) / getNormalizingParam(actionDist) for action in
+        actionDist.keys()}
+    softenedPolicy = lambda state: softenActionProb(policy(state))
+    return softenedPolicy
 
 
 class InferOneStep:
@@ -104,6 +104,31 @@ class InferOneStepLikelihood:
         return jointLikelihood
 
 
+class InferOneStepLikelihoodWithParams:
+    def __init__(self, inferenceIndex, getMindsPhysicsActionsJointLikelihoodWithSoftParam):
+        self.inferenceIndex = inferenceIndex
+
+        self.softenIndex = inferenceIndex.names.index('softPolicy')
+        self.decayIndex = inferenceIndex.names.index('decayMemory')
+        self.mindIndex = inferenceIndex.names.index('mind')
+        self.physicsIndex = inferenceIndex.names.index('physics')
+        self.actionIndex = inferenceIndex.names.index('action')
+
+        self.getJointLikelihood = getMindsPhysicsActionsJointLikelihoodWithSoftParam
+
+    def __call__(self, state, nextState):
+        mindsPhysicsActionsDf = pd.DataFrame(index=self.inferenceIndex)
+
+        getLikelihood = lambda softParam, mind, physics, action: \
+            self.getJointLikelihood(softParam, mind, state, action, physics, nextState)
+
+        jointLikelihood = [getLikelihood(index[self.softenIndex], index[self.mindIndex], index[self.physicsIndex],
+                                         index[self.actionIndex])
+                           for index, value in mindsPhysicsActionsDf.iterrows()]
+
+        return jointLikelihood
+
+
 class QueryDecayedLikelihood:
     def __init__(self, mindPhysicsName, decayParameter):
         self.mindName, self.physicsName = mindPhysicsName
@@ -122,24 +147,36 @@ class QueryDecayedLikelihood:
                                   for timeStep in range(queryTimeStep+ 1)], axis = 0)
 
         queryLikelihood = np.exp(queryLogLikelihood) / np.sum(np.exp(queryLogLikelihood))
+        return queryLikelihood
 
-        # query1LogLikelihood = np.sum([posteriorDf[timeStep] for timeStep in range(queryTimeStep+ 1)], axis = 0)
-        #
-        # query1Likelihood = np.exp(query1LogLikelihood) / np.sum(np.exp(query1LogLikelihood))
 
-        # print('nodecayLog', query1LogLikelihood)
-        # print('decayLog', queryLogLikelihood)
-        #
-        # print('nodecayexp', np.exp(query1LogLikelihood))
-        # print('decayexp', np.exp(queryLogLikelihood))
-        #
-        # print('nodecayexpSum', np.sum(np.exp(query1LogLikelihood)))
-        # print('decayexpSum', np.sum(np.exp(queryLogLikelihood)))
-        #
-        # print('param', self.decayParam)
-        #
-        # print('nodecay', query1Likelihood)
-        # print('decay', queryLikelihood)
+
+class QueryDecayedLikelihoodWithParam:
+    def __init__(self, inferenceIndex, decayParamName):
+        self.inferenceIndex = inferenceIndex
+        self.decayIndex = self.inferenceIndex.names.index(decayParamName)
+
+    def __call__(self, likelihoodDf, queryTimeStep):
+
+        posteriorDf = pd.DataFrame(index = self.inferenceIndex)
+        softParamName, decayName, mindName, physicsName, actionName = self.inferenceIndex.names
+
+        for timeStep in range(queryTimeStep+1):
+            actionsIntegratedOut = list(likelihoodDf.groupby([softParamName, decayName, mindName, physicsName])[
+                timeStep].transform('sum'))
+            posteriorDf[timeStep] = np.log(actionsIntegratedOut)
+
+        querySingleLik = lambda decayParameter, singleHypoLikForAllTimesteps: np.sum(
+            [singleHypoLikForAllTimesteps[timeStep] * np.power(decayParameter, queryTimeStep - timeStep)
+             for timeStep in range(queryTimeStep + 1)], axis=0)
+
+        queryLogLikelihood = [querySingleLik(index[self.decayIndex], singleLik) for index, singleLik in posteriorDf.iterrows()]
+
+        queriedDf = pd.DataFrame(index = likelihoodDf.index)
+        queriedDf['likelihood'] = np.exp(queryLogLikelihood)
+        normalizingParams = queriedDf.groupby(['softPolicy', 'decayMemory'])['likelihood'].transform('sum')
+
+        queryLikelihood = np.exp(queryLogLikelihood) / np.array(normalizingParams)
 
         return queryLikelihood
 
@@ -171,9 +208,6 @@ class InferDiscreteChasingWithMemoryDecayAndDrawDemo:
             print('round', currentTimeStep)
 
             inferenceLikDf[currentTimeStep] = mindsPhysicsCurrentLikelihood
-            # currentLikelihood of timestep 0 = inference result of timestep 0 and timestep 1
-            # print(inferenceLikDf)
-            # print(np.sum(mindsPhysicsCurrentLikelihood))
 
             currentPosterior = self.queryLikelihood(inferenceLikDf, currentTimeStep)
             queriedLikelihoodDf[currentTimeStep] = currentPosterior
@@ -196,8 +230,6 @@ class InferDiscreteChasingWithMemoryDecayAndDrawDemo:
 
             mindsPhysicsCurrentLikelihood = self.inferOneStepLik(currentState, nextState)
             currentTimeStep = nextTimeStep
-
-
 
 
 class InferDiscreteChasingAndDrawDemo:
@@ -285,44 +317,4 @@ class InferContinuousChasingAndDrawDemo:
 
             mindsPhysicsCurrentLikelihood = self.inferOneStepLik(currentState, nextState)
             currentTimeStep = nextTimeStep
-
-
-
-class InferContinuousChasingAndDrawDemoNoDecay:
-    def __init__(self, fps, inferenceIndex, isInferenceTerminal, observe, inferOneStep, visualize = None):
-        self.fps = fps
-        self.inferenceIndex = inferenceIndex
-
-        self.isInferenceTerminal = isInferenceTerminal
-        self.observe = observe
-        self.inferOneStep = inferOneStep
-        self.visualize = visualize
-
-    def __call__(self, numOfAgents, mindsPhysicsPrior):
-        currentState = self.observe(0)
-        nextTimeStep = 1
-        mindsPhysicsActionsDf = pd.DataFrame(index = self.inferenceIndex)
-        fpsClock = pg.time.Clock()
-        while True:
-            mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
-            print('round', nextTimeStep)
-            nextState = self.observe(nextTimeStep)
-            if nextState is None:
-                return mindsPhysicsActionsDf
-
-            if self.visualize:
-                fpsClock.tick(self.fps)
-                agentsCurrentState = currentState[:numOfAgents]
-                agentsNextState = nextState[:numOfAgents]
-                self.visualize(agentsCurrentState, agentsNextState, mindsPhysicsPrior)
-
-            mindsPhysicsPosterior = self.inferOneStep(currentState, nextState, mindsPhysicsPrior)
-
-            nextTimeStep += 1
-            mindsPhysicsPrior = mindsPhysicsPosterior
-            currentState = nextState
-
-            if self.isInferenceTerminal(mindsPhysicsPosterior):
-                mindsPhysicsActionsDf[nextTimeStep] = mindsPhysicsPrior
-                return mindsPhysicsActionsDf
 

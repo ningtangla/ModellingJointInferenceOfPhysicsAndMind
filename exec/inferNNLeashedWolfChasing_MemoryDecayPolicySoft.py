@@ -74,10 +74,9 @@ def main():
 
     randomPolicy = RandomPolicy(actionSpace)
 
-    wolfInferencePolicy = softenPolicy(wolfPolicy)
-    sheepInferencePolicy = softenPolicy(sheepPolicy)
+    softParameter = 0.5
 
-    policy = ThreeAgentsPolicyForNN(wolfInferencePolicy, sheepInferencePolicy, randomPolicy)
+    policy = ThreeAgentsPolicyForNN(wolfPolicy, sheepPolicy, randomPolicy, softenPolicy, softParameter)
 
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
@@ -147,9 +146,9 @@ def main():
 
     thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
-    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
+    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
-    decayParameter = 1
+    decayParameter = 0.75
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 
     inferOneStepLikelihood = InferOneStepLikelihood(inferenceIndex, getMindsPhysicsActionsJointLikelihood)
@@ -165,7 +164,7 @@ def main():
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotName = 'NNLeashedWolfInf_MemoryDecay10_SoftenPolicy'
+    plotName = 'NNLeashedWolfInf_MemoryDecay075_SoftenPolicy05'
     plotMindInferenceProb(posteriorDf, dataIndex, plotName)
     plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
 
