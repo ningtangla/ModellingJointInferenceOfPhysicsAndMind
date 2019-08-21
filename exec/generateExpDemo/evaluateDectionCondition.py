@@ -44,8 +44,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
-    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
+    manipulatedVariables['beta'] = [0.5, 1.0]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -56,7 +56,7 @@ def main():
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
 
-    sampleTrajectoryFileName = 'sampleConditionTraj.py'
+    sampleTrajectoryFileName = 'sampleCondition4AgentsTraj.py'
 
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.88 * numCpuCores)
@@ -75,8 +75,9 @@ def main():
     maxRunningSteps = 360
     numSimulations = 400
     killzoneRadius = 0.5
+    agentId = 310
 
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'agentId': agentId }
     trajectorySaveExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
