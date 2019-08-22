@@ -42,7 +42,7 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 3000
+    numTrajectories = 20000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSLeashedWolfTrajectory.py'
 
@@ -53,7 +53,7 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    killzoneRadius = 2
+    killzoneRadius = 1
     maxRunningSteps = 25
     numSimulations = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
