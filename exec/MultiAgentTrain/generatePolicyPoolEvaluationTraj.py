@@ -1,8 +1,8 @@
 import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..'))
+DIRNAME = os.path.dirname(__file__)
+sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
 import json
 from collections import OrderedDict
@@ -31,10 +31,35 @@ from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, Heur
 from exec.preProcessing import AccumulateRewards
 
 
+class RestoreNNModel:
+    def __init__(self, getModelSavePath, multiAgentNNModel, restoreVariables):
+        self.getModelSavePath = getModelSavePath
+        self.multiAgentNNModel = multiAgentNNModel
+        self.restoreVariables = restoreVariables
+
+    def __call__(self, agentId, iteration):
+        modelPath = self.getModelSavePath({'agentId': agentId, 'iterationIndex': iteration})
+        restoredNNModel = self.restoreVariables(self.multiAgentNNModel[agentId], modelPath)
+
+        return restoredNNModel
+
+
+class PreparePolicy:
+    def __init__(self, selfApproximatePolicy, otherApproximatePolicy):
+        self.selfApproximatePolicy = selfApproximatePolicy
+        self.otherApproximatePolicy = otherApproximatePolicy
+
+    def __call__(self, agentId, multiAgentNNModel):
+        multiAgentPolicy = [self.otherApproximatePolicy(NNModel) for NNModel in multiAgentNNModel]
+        selfNNModel = multiAgentNNModel[agentId]
+        multiAgentPolicy[agentId] = self.selfApproximatePolicy(selfNNModel)
+        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
+        return policy
+
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
+                                        'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -42,8 +67,7 @@ def main():
     trainMaxRunningSteps = 20
     trainNumSimulations = 200
     killzoneRadius = 2
-    sheepId = 0
-    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
@@ -76,8 +100,8 @@ def main():
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numActionSpace = len(actionSpace)
 
-        alivePenalty = 0.05
-        deathBonus = -1
+        alivePenalty = -0.05
+        deathBonus = 1
         rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
 
         # neural network init and save path
@@ -88,26 +112,35 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-        NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+        NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
         dirName = os.path.dirname(__file__)
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                            'trainedModels')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+                                            'multiAgentTrain', 'multiMCTSAgentFromPolicyPool', 'NNModel')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+        depth = 4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in range(numAgents)]
 
-        depth = int(parametersForTrajectoryPath['depth'])
-        initNNModel = generateModel(sharedWidths * 2, actionLayerWidths * depth, valueLayerWidths)
+        # functions to get prediction from NN
+        restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
+
+        # function to prepare policy
+        selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        # otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+        preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         evalQPosInitNoise = 0
         evalQVelInitNoise = 0
         qVelInit = [0, 0, 0, 0]
 
-        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents,
+                                                                  evalQPosInitNoise, evalQVelInitNoise)
 
         evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
-        evalAllQPosInit = [generateInitQPosinitNNModel() for _ in range(evalNumTrials)]
+        evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
         getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
                                                        numAgents, evalQPosInitNoise, evalQVelInitNoise)
@@ -117,24 +150,18 @@ def main():
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
-        manipulatedVariables = json.loads(sys.argv[1])
-        modelPath = getNNModelSavePath(manipulatedVariables)
-        restoredModel = restoreVariables(initNNModel, modelPath)
-        sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-        
-        initWolfNNModel = generateModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'preTrainBaseline',
-                                            'wolfModels','agentId=1_depth=4_learningRate=0.001_maxRunningSteps=20_miniBatchSize=256_numSimulations=100_trainSteps=40000')
-        restoredWolfModel = restoreVariables(initWolfNNModel, wolfNNModelPath)
-        wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
-        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+        selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+        otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+        selfId = int(parametersForTrajectoryPath['selfId'])
+        multiAgentIterationIndex = [otherIteration] * numAgents
+        multiAgentIterationIndex[selfId] = selfIteration
 
+        restoredMultiAgentNNModel = [restoreNNModel(agentId, multiAgentIterationIndex[agentId]) for agentId in range(numAgents)]
+        policy = preparePolicy(selfId, multiAgentNNmodel)
         beginTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]
         processTime = time.time() - beginTime
         saveToPickle(trajectories, trajectorySavePath)
-        restoredModel.close()
-
 
 if __name__ == '__main__':
     main()
