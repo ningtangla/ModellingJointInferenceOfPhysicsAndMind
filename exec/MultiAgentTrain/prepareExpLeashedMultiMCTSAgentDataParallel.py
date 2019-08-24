@@ -10,7 +10,6 @@ import numpy as np
 from collections import OrderedDict, deque
 import pandas as pd
 import mujoco_py as mujoco
-import itertools as it
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
@@ -27,34 +26,33 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import  SampleTrajectory, chooseGreedyAction
-from exec.parallelComputing import GenerateTrajectoriesParallel, ExcuteCodeOnConditionsParallel
+from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 
 def main():
-    startTime = time.time()
 
-    # manipulated variables
-    manipulatedVariables = OrderedDict()
-    manipulatedVariables['predatorPowerRatio'] = [1.5, 2]
-    manipulatedVariables['masterPowerRatio'] =[0.4, 0.8]
-    manipulatedVariables['numSimulationsPerTree'] = [50, 100]
-
-    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
-
+    numTrajectories = 42
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSSheepInLeashedWolfTrajectory.py'
+    sampleTrajectoryFileName = 'sampleExpLeashedMultiMCTSAgentTraj.py'
 
-    generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName)
 
+    numCpuCores = os.cpu_count()
+    print(numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
+    numCmdList = min(numTrajectories, numCpuToUse)
+
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
+
+    startTime = time.time()
     print("start")
-    cmdList = generateTrajectoriesParallel(parametersAllCondtion)
-    # import ipdb; ipdb.set_trace()
+
+    pathParameters = {'agentId': 430}
+    cmdList = generateTrajectoriesParallel(pathParameters)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
+
 if __name__ == '__main__':
     main()
-

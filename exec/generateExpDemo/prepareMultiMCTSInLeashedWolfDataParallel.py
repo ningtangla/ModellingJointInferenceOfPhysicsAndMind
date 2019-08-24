@@ -32,34 +32,32 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def main():
     dirName = os.path.dirname(__file__)
-    # load save dir
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    agentId = 10
+    agentId = 1.05
 
-    startTime = time.time()
+    numTrajectories = 84
 
-    numTrajectories = 16
-
-    # generate and load trajectories before train parallelly
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajAvoidRope.py'
-    # sampleTrajectoryFileName = 'sampleExpMCTSSheepTraj.py'
-    sampleTrajectoryFileName = 'sampleExpMCTSWolfAndSheepTraj.py'
+    sampleTrajectoryFileName = 'sampleMultiMCTSInLeashedWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
+
+    startTime = time.time()
+
     print("start")
 
-    print("agent {}".format(agentId))
     pathParameters = {'agentId': agentId}
     cmdList = generateTrajectoriesParallel(pathParameters)
+
+
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 
