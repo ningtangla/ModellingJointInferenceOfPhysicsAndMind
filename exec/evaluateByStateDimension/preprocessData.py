@@ -16,7 +16,9 @@ from preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTermin
 from collections import OrderedDict
 import pickle
 
+
 class RemoveNoiseFromState:
+
     def __init__(self, noiseIndex):
         self.noiseIndex = noiseIndex
 
@@ -26,6 +28,7 @@ class RemoveNoiseFromState:
 
 
 class ProcessTrajectoryForNN:
+
     def __init__(self, agentId, actionToOneHot, removeNoiseFromState):
         self.agentId = agentId
         self.actionToOneHot = actionToOneHot
@@ -38,7 +41,9 @@ class ProcessTrajectoryForNN:
 
         return processedTrajectory
 
+
 class ZeroValueInState:
+
     def __init__(self, valueIndex):
         self.valueIndex = valueIndex
 
@@ -49,15 +54,25 @@ class ZeroValueInState:
 
 
 class AddFramesForTrajectory:
+
     def __init__(self, stateIndex, zeroValueInState):
         self.stateIndex = stateIndex
         self.zeroValueInState = zeroValueInState
+
     def __call__(self, trajectory, numOfFrame):
         augmentedTraj = list()
         for index in range(len(trajectory)):
-            toCombinedStates = [trajectory[index-num+1][self.stateIndex] if index-num+1>0 else trajectory[0][self.stateIndex] for num in range(numOfFrame, 0, -1)]
-            if index < numOfFrame-1:
-                zeroedToCombinedStates = [self.zeroValueInState(toCombinedStates[num]) if num < numOfFrame-index-1 else toCombinedStates[num] for num in range(numOfFrame)]
+            toCombinedStates = [
+                trajectory[index - num + 1][self.stateIndex]
+                if index - num + 1 > 0 else trajectory[0][self.stateIndex]
+                for num in range(numOfFrame, 0, -1)
+            ]
+            if index < numOfFrame - 1:
+                zeroedToCombinedStates = [
+                    self.zeroValueInState(toCombinedStates[num])
+                    if num < numOfFrame - index - 1 else toCombinedStates[num]
+                    for num in range(numOfFrame)
+                ]
                 newState = np.concatenate(zeroedToCombinedStates)
             else:
                 newState = np.concatenate(toCombinedStates)
@@ -66,32 +81,51 @@ class AddFramesForTrajectory:
             augmentedTraj.append(newStep)
         return augmentedTraj
 
+
 class PreProcessTrajectories:
-    def __init__(self, addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN, addFramesForTrajectory):
+
+    def __init__(self, addValuesToTrajectory, removeTerminalTupleFromTrajectory,
+                 processTrajectoryForNN, addFramesForTrajectory):
         self.addValuesToTrajectory = addValuesToTrajectory
         self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
         self.processTrajectoryForNN = processTrajectoryForNN
         self.addFramesForTrajectory = addFramesForTrajectory
 
     def __call__(self, trajectories, numOfFrame):
-        trajectoriesWithValues = [self.addValuesToTrajectory(trajectory) for trajectory in trajectories]
-        filteredTrajectories = [self.removeTerminalTupleFromTrajectory(trajectory) for trajectory in trajectoriesWithValues]
-        processedTrajectories = [self.processTrajectoryForNN(trajectory) for trajectory in filteredTrajectories]
-        augmentedTrajectories = [self.addFramesForTrajectory(trajectory, numOfFrame) for trajectory in processedTrajectories]
-        allDataPoints = [dataPoint for trajectory in augmentedTrajectories for dataPoint in trajectory]
+        trajectoriesWithValues = [
+            self.addValuesToTrajectory(trajectory)
+            for trajectory in trajectories
+        ]
+        filteredTrajectories = [
+            self.removeTerminalTupleFromTrajectory(trajectory)
+            for trajectory in trajectoriesWithValues
+        ]
+        processedTrajectories = [
+            self.processTrajectoryForNN(trajectory)
+            for trajectory in filteredTrajectories
+        ]
+        augmentedTrajectories = [
+            self.addFramesForTrajectory(trajectory, numOfFrame)
+            for trajectory in processedTrajectories
+        ]
+        allDataPoints = [
+            dataPoint for trajectory in augmentedTrajectories
+            for dataPoint in trajectory
+        ]
         trainData = [list(varBatch) for varBatch in zip(*allDataPoints)]
 
         return trainData
 
 
 class GenerateTrainingData:
+
     def __init__(self, getSavePathForData, preProcessTrajectories):
         self.getSavePathForData = getSavePathForData
         self.preProcessTrajectories = preProcessTrajectories
 
     def __call__(self, df, trajectories):
         numOfFrame = df.index.get_level_values('numOfFrame')[0]
-        trainingData  = self.preProcessTrajectories(trajectories, numOfFrame)
+        trainingData = self.preProcessTrajectories(trajectories, numOfFrame)
         indexLevelNames = df.index.names
         parameters = {
             levelName: df.index.get_level_values(levelName)[0]
@@ -111,6 +145,7 @@ def main():
     trajectoryParameter['killzoneRadius'] = 2
     trajectoryParameter['maxRunningSteps'] = 25
     trajectoryParameter['numSimulations'] = 100
+    trajectoryParameter['numTrajectories'] = 6000
     trajectoryParameter['qPosInitNoise'] = 9.7
     trajectoryParameter['qVelInitNoise'] = 8
     trajectoryParameter['rolloutHeuristicWeight'] = -0.1
@@ -120,9 +155,10 @@ def main():
     trajectories = loadTrajectories({})
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7),
                    (0, -10), (7, -7)]
-    actionToOneHot = lambda action: np.asarray(
-        [1 if (np.array(action) == np.array(actionSpace[index])).all() else 0
-         for index in range(len(actionSpace))])
+    actionToOneHot = lambda action: np.asarray([
+        1 if (np.array(action) == np.array(actionSpace[index])).all() else 0
+        for index in range(len(actionSpace))
+    ])
     actionIndex = 1
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][
         actionIndex]
@@ -148,13 +184,13 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
     stateIndexInTrajectory = 0
-    zeroIndex = [2,3,6,7]
+    zeroIndex = [2, 3, 6, 7]
     zeroValueInState = ZeroValueInState(zeroIndex)
-    addFramesForTrajectory = AddFramesForTrajectory(stateIndexInTrajectory, zeroValueInState)
-    preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory,
-                                                    removeTerminalTupleFromTrajectory,
-                                                    processTrajectoryForNN,
-                                                    addFramesForTrajectory)
+    addFramesForTrajectory = AddFramesForTrajectory(stateIndexInTrajectory,
+                                                    zeroValueInState)
+    preProcessTrajectories = PreProcessTrajectories(
+        addValuesToTrajectory, removeTerminalTupleFromTrajectory,
+        processTrajectoryForNN, addFramesForTrajectory)
 
     trainingDataDir = os.path.join(dataDir, "trainingData")
     if not os.path.exists(trainingDataDir):
@@ -171,7 +207,8 @@ def main():
     levelValues = list(independentVariables.values())
     levelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=levelIndex)
-    generateTrainingData = GenerateTrainingData(getSavePathForData, preProcessTrajectories)
+    generateTrainingData = GenerateTrainingData(getSavePathForData,
+                                                preProcessTrajectories)
     toSplitFrame.groupby(levelNames).apply(generateTrainingData, trajectories)
 
 
