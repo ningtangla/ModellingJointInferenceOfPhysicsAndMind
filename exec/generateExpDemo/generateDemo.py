@@ -9,7 +9,7 @@ DIRNAME = os.path.dirname(__file__)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, \
-    loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath, conditionDfFromParametersDict
+    loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath, conditionDfFromParametersDict, GetAgentCoordinateFromTrajectoryAndStateDf
 from exec.generateExpDemo.trajectory import ScaleTrajectory, AdjustDfFPStoTraj
 from exec.generateExpDemo.chasingVisualization import InitializeScreen, DrawBackground, DrawState, ChaseTrialWithTraj, DrawStateWithRope, ChaseTrialWithRopeTraj
 
@@ -23,17 +23,6 @@ def getFileName(parameters, fixedParameters):
     return fileName
 
 
-class GetAgentCoordinateFromTrajectoryAndStateDf:
-    def __init__(self, coordinates):
-        self.coordinates = coordinates
-
-    def __call__(self, trajectory, df):
-        timeStep = df.index.get_level_values('timeStep')[0]
-        objectId = df.index.get_level_values('agentId')[0]
-        coordinates = trajectory[timeStep][objectId][self.coordinates]
-
-        return coordinates
-
 
 def main():
     manipulatedVariables = OrderedDict()
@@ -46,13 +35,14 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     # manipulatedVariables['agentId'] = [310]
-    manipulatedVariables['maxRunningSteps'] = [360]
-    manipulatedVariables['numSimulations'] = [600]
+    #manipulatedVariables['maxRunningSteps'] = [360]
+    manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0]
-    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
+    manipulatedVariables['offset'] = [0, 12]
+    manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
-
+    manipulatedVariables['numAgents'] = [3]
+    manipulatedVariables['pureMCTSAgentId'] = [10]
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
@@ -72,16 +62,17 @@ def main():
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     # fuzzySearchParameterNames = ['sampleIndex']
-    fuzzySearchParameterNames = ['timeStep']
+    fuzzySearchParameterNames = ['timeStep', 'maxRunningSteps']
     # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0])[0]))
+    getRangeNumAgentsFromTrajectory = lambda trajectory: list(range(np.shape(trajectory[0][stateIndex])[0]))
     getRangeTrajectoryLength = lambda trajectory: list(range(len(trajectory)))
     getAllLevelValuesRange = {'timeStep': getRangeTrajectoryLength, 'agentId': getRangeNumAgentsFromTrajectory}
 
-    getAgentPosXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(0)
-    getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(1)
+    stateIndex = 0
+    getAgentPosXCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 0)
+    getAgentPosYCoord = GetAgentCoordinateFromTrajectoryAndStateDf(stateIndex, 1)
     extractColumnValues = {'xPos': getAgentPosXCoord, 'yPos': getAgentPosYCoord}
 
     convertTrajectoryToStateDf = ConvertTrajectoryToStateDf(getAllLevelValuesRange, conditionDfFromParametersDict, extractColumnValues)
@@ -120,7 +111,7 @@ def main():
 
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
 
-        numOfAgent = 3
+        numOfAgent = int(conditionParameters['numAgents'])
         sheepId = 0
         wolfId = 1
         masterId = 2
@@ -131,7 +122,7 @@ def main():
         numRopePart = 9
         ropePartIndex = list(range(numOfAgent, numOfAgent + numRopePart))
 
-        conditionList = [0]
+        conditionList = [2]
         conditionValues = [[wolfId, masterId], [wolfId, distractorId], None]
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
@@ -144,8 +135,9 @@ def main():
 
         # for index in range(len(selectedTrajectories)):
         if len(selectedTrajectories) > 0:
-            # index = np.random.choice(list(range(len(selectedTrajectories))))
-            index = 1
+            index = 4
+            conditionParameters.update({'demoIndex':index})
+            saveToPickle([trajectories[index]], getTrajectorySavePath(conditionParameters))
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))

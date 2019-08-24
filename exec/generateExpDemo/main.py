@@ -31,10 +31,12 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [30]
-    manipulatedVariables['maxRunningSteps'] = [125]
-    manipulatedVariables['numSimulations'] = [199]
-    manipulatedVariables['killzoneRadius'] = [1]
+    manipulatedVariables['maxRunningSteps'] = [360]
+    manipulatedVariables['numSimulations'] = [400]
+    manipulatedVariables['killzoneRadius'] = [0.5]
+    manipulatedVariables['offset'] = [12]
+    manipulatedVariables['beta'] = [0.5, 1.0]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -53,7 +55,7 @@ def main():
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
+    fuzzySearchParameterNames = ['timeStep']
     # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 

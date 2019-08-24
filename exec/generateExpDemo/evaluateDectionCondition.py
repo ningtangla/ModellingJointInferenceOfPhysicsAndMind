@@ -60,7 +60,7 @@ def main():
 
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.88 * numCpuCores)
-    numTrials = math.floor(numCpuToUse/len(parametersAllCondtion)) * 1
+    numTrials = math.floor(numCpuToUse/len(parametersAllCondtion)) * 2
     generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName, numTrials, numCpuToUse)
 
     print("start")
@@ -75,9 +75,10 @@ def main():
     maxRunningSteps = 360
     numSimulations = 400
     killzoneRadius = 0.5
-    agentId = 310
+    pureMCTSAgentId = 310
+    numAgent = 4
 
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'agentId': agentId }
+    fixedParameters = {'numAgents': numAgent,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'pureMCTSAgentId': pureMCTSAgentId }
     trajectorySaveExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 

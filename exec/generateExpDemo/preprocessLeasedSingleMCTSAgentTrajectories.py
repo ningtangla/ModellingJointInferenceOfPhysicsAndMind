@@ -42,6 +42,8 @@ def main():
 
     trajectoryExtension = '.pickle'
 
+    numAgents = 3
+    pureMCTSAgentId = 10
     sheepId = 0
     wolfId = 1
     masterId = 2
@@ -53,11 +55,12 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
+    manipulatedVariables['maxRunningSteps'] = [360]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius, 'numSimulations': numSimulations}
+    trajectoryFixedParameters = {'numAgents': numAgents, 'pureMCTSAgentId':pureMCTSAgentId, 'killzoneRadius': killzoneRadius, 'numSimulations': numSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
@@ -69,6 +72,7 @@ def main():
 
     for pathParameters in conditionParametersAll:
         originalTrajectories = loadTrajectories(pathParameters)
+        print(len(originalTrajectories))
         numRunningStepsInOrigTra = np.array([len(trajectory) for trajectory in originalTrajectories])
         print(numRunningStepsInOrigTra, pathParameters)
         leagelOriginalTrajctories = np.array(originalTrajectories)[np.nonzero(numRunningStepsInOrigTra >= minLength)]
@@ -100,21 +104,31 @@ def main():
                         #print('ggg', trajectories)
                     collisionRadius = 0.8
                     countCollision = CountCollision(sheepId,wolfId,stateIndex, qPosIndex,collisionRadius,isCollision)
-                    trajectoryCountCollision =  np.array([countCollision(trajectory) for trajectory in trajectories])
+                    if numAgents == 4:
+                        countCollisionDistractorWolf = CountCollision(distractorId,wolfId,stateIndex, qPosIndex,collisionRadius,isCollision)
+                        countCollisionDistractorSheep = CountCollision(distractorId,sheepId,stateIndex, qPosIndex,collisionRadius,isCollision)
+                        countCollisionDistractorMaster = CountCollision(distractorId,masterId,stateIndex, qPosIndex,collisionRadius,isCollision)
+                    else:
+                        countCollisionDistractorWolf = lambda trajectory: 0
+                        countCollisionDistractorSheep = lambda trajectory: 0
+                        countCollisionDistractorMaster = lambda trajectory: 0
+
+                    trajectoryCountCollision =  np.array([countCollision(trajectory) + countCollisionDistractorWolf(trajectory) + countCollisionDistractorSheep(trajectory)+ countCollisionDistractorMaster(trajectory) for trajectory in trajectories])
+
 
                     # print(len(trajectories))
                     # print(np.max(trajectoryLengthes))
-                    minDeviation = math.pi/4
-                    maxDeviation = math.pi/2.5
+                    minDeviation = math.pi/4.5
+                    maxDeviation = math.pi/2
 
-                    minDistractorMoveDistance = 0
+                    minDistractorMoveDistance = 0.0
                     maxDistractorMoveDistance = 100
 
                     deviationLegelTraj = filter(lambda x: x <= maxDeviation and x >= minDeviation, trajectoryDeviationes)
                     deviationLegelTrajIndex = [list(trajectoryDeviationes).index(i) for i in deviationLegelTraj]
 
-                    timeWindow = 100
-                    angleVariance = math.pi / 18
+                    timeWindow = 10
+                    angleVariance = math.pi / 6
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterlist = [circleFilter(trajectory) for trajectory in trajectories]
                     timewindowLeagelTrajIndex = np.where(filterlist)[0]
@@ -135,21 +149,21 @@ def main():
                         print('mean deviation:', np.mean(trajectoryDeviationes[leagelTrajIndex]))
 
                         leagelTrajectories = [trajectory[:minLength] for trajectory in np.array(trajectories)[leagelTrajIndex]]
-                        ropePartIndexes = list(range(3, 12))
+                        numRopePats = 9
+                        ropePartIndexes = list(range(numAgents, numAgents + numRopePats))
                         offsetMasterStates = OffsetMasterStates(wolfId, masterId, ropePartIndexes, qPosIndex, stateIndex, masterDelayStep)
-                        masterDelayedStates = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
-                        masterDelayedStatesPathParameters = pathParameters.copy()
-                        masterDelayedStatesPathParameters['offset'] = masterDelayStep
-                        masterDelayedStatesPath = getTrajectorySavePath(masterDelayedStatesPathParameters)
-                        saveToPickle(masterDelayedStates, masterDelayedStatesPath)
+                        masterDelayedTrajs = [offsetMasterStates(trajectory) for trajectory in leagelTrajectories]
+                        masterDelayedTrajsPathParameters = pathParameters.copy()
+                        masterDelayedTrajsPathParameters['offset'] = masterDelayStep
+                        masterDelayedTrajsPath = getTrajectorySavePath(masterDelayedTrajsPathParameters)
+                        saveToPickle(masterDelayedTrajs, masterDelayedTrajsPath)
 
                         demoStepIndex = list(range(masterDelayStep, minLength))
-                        demoTajectories = [np.array(trajectory)[demoStepIndex] for trajectory in leagelTrajectories]
-                        demoStates = np.array([[timestep[stateIndex] for timestep in trajectory] for trajectory in demoTajectories])
-                        demoStatesPathParameters = pathParameters.copy()
-                        demoStatesPathParameters['offset'] = 0
-                        demoStatesPath = getTrajectorySavePath(demoStatesPathParameters)
-                        saveToPickle(demoStates, demoStatesPath)
+                        demoTrajs = [np.array(trajectory)[demoStepIndex] for trajectory in leagelTrajectories]
+                        demoTrajsPathParameters = pathParameters.copy()
+                        demoTrajsPathParameters['offset'] = 0
+                        demoTrajsPath = getTrajectorySavePath(demoTrajsPathParameters)
+                        saveToPickle(demoTrajs, demoTrajsPath)
                         endTime = time.time()
 
                         print("Time taken {} seconds".format((endTime - startTime)))

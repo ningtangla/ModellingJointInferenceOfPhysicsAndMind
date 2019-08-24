@@ -68,6 +68,7 @@ class LoadTrajectories:
             filesNames = []
         mergedTrajectories = []
         for fileName in filesNames:
+            print(fileName)
             oneFileTrajectories = self.loadFromPickle(fileName)
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
@@ -127,6 +128,7 @@ class ConvertTrajectoryToStateDf:
         indexLevels = {levelName: getLevelValueRange(trajectory) for levelName, getLevelValueRange in
                        self.getAllLevelsValueRange.items()}
         emptyDf = self.getDfFromIndexLevelDict(indexLevels)
+
         extractTrajectoryInformation = lambda df: pd.Series({columnName: extractColumnValue(trajectory, df) for
                                                              columnName, extractColumnValue in
                                                              self.extractColumnValues.items()})

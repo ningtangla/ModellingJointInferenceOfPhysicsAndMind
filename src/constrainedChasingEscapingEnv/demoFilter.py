@@ -32,11 +32,13 @@ class OffsetMasterStates:
         self.masterDelayStep = masterDelayStep
 
     def __call__(self, traj):
-        traj = np.array(traj)
-        originalMasterStates = np.array([np.array(timeStep)[self.stateIndex][self.masterId] for timeStep in traj[self.masterDelayStep:]])
-        originalWolfStates = np.array([np.array(timeStep)[self.stateIndex][self.wolfId] for timeStep in traj[self.masterDelayStep:]])
-        originalRopePartsStates = np.array([np.array(timeStep)[self.stateIndex][self.ropePartIndexes] for timeStep in traj[self.masterDelayStep:]])
-        masterStates = np.array([np.array(timeStep)[self.stateIndex][self.masterId] for timeStep in traj[: -self.masterDelayStep]])
+        cutHeadTraj = np.array(traj)[self.masterDelayStep:]
+        cutTailTraj = np.array(traj)[:-self.masterDelayStep]
+
+        originalMasterStates = np.array([np.array(timeStep)[self.stateIndex][self.masterId] for timeStep in cutHeadTraj])
+        originalWolfStates = np.array([np.array(timeStep)[self.stateIndex][self.wolfId] for timeStep in cutHeadTraj])
+        originalRopePartsStates = np.array([np.array(timeStep)[self.stateIndex][self.ropePartIndexes] for timeStep in cutHeadTraj])
+        masterStates = np.array([np.array(timeStep)[self.stateIndex][self.masterId] for timeStep in cutTailTraj])
 
         originalWolfPoses = originalWolfStates[:,self.positionIndex]
         masterWolfVectors = masterStates[:,self.positionIndex] - originalWolfStates[:,self.positionIndex]
@@ -47,17 +49,17 @@ class OffsetMasterStates:
         rotateMats = [compose2DCoordinateRotateMatrix(rotateAngle) for rotateAngle in rotateAngles]
         scales = [np.linalg.norm(masterWolfVector)/np.linalg.norm(originalMasterWolfVector) for masterWolfVector, originalMasterWolfVector in zip(masterWolfVectors, originalMasterWolfVectors)]
 
-        scaleMats = [compose2DCoordinateScaleMatrix(min(1.3, scale)) for scale in scales]
+        scaleMats = [compose2DCoordinateScaleMatrix(min(1.6, scale)) for scale in scales]
         scaleBackMats = [compose2DCoordinateScaleMatrix(1/scale) for scale in scales]
         translateBackMats = [compose2DCoordinateTranslateMatrix(-wolfPos) for wolfPos, scale in zip(originalWolfPoses,scales)]
-        print(np.max(scales))
         transposeMats = [translateMat*scaleMat*rotateMat*translateBackMat for translateMat, rotateMat, scaleMat, scaleBackMat, translateBackMat in zip(translateMats, rotateMats, scaleMats, scaleBackMats,translateBackMats)]
         transposedRopePartPoses = np.array([[transposeCoordinate(ropePartState[self.positionIndex], transposeMat) for ropePartState in ropePartsState] for ropePartsState, transposeMat in zip(originalRopePartsStates, transposeMats)])
 
-        allAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj[self.masterDelayStep:]])
-        allAgentsStates[:, self.masterId] = masterStates
-        allAgentsStates[:, min(self.ropePartIndexes):max(self.ropePartIndexes) + 1, min(self.positionIndex):max(self.positionIndex) + 1] = transposedRopePartPoses
-        return allAgentsStates
+        allTimestepAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj[self.masterDelayStep:]])
+        allTimestepAgentsStates[:, self.masterId] = np.array([masterStates])
+        allTimestepAgentsStates[:, min(self.ropePartIndexes):max(self.ropePartIndexes) + 1, min(self.positionIndex):max(self.positionIndex) + 1] = transposedRopePartPoses
+        cutHeadTraj[:, self.stateIndex] = [np.array(allAgentsStates) for allAgentsStates in allTimestepAgentsStates]
+        return cutHeadTraj
 
 
 class FindCirlceBetweenWolfAndMaster:

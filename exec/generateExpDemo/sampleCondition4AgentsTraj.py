@@ -162,10 +162,10 @@ def main():
     maxRunningSteps = 360
     numSimulations = 400
     killzoneRadius = 0.5
-    agentId = 310
+    pureMCTSAgentId = 310
+    numAgent = 4
 
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'agentId': agentId }
-
+    fixedParameters = {'numAgents': numAgent,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'pureMCTSAgentId': pureMCTSAgentId }
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
