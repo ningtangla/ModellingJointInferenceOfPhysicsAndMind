@@ -169,7 +169,7 @@ def main():
         rewardMaster = RewardFunctionWithWall(sheepAliveBonus, sheepTerminalPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getSheepXPos)
 
         rewardMultiAgents = [rewardSheep, rewardWolf, rewardMaster]
-
+        
         decay = 1
         accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 

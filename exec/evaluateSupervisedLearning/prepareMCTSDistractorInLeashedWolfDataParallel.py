@@ -11,6 +11,7 @@ from collections import OrderedDict, deque
 import pandas as pd
 import mujoco_py as mujoco
 
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -32,21 +33,18 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'evaluateSupervisedLearningNoPhyscis', 'trajectories')
-
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    sheepId = 0
-    wolfId = 1
-
+    distractorId = 3
     startTime = time.time()
 
-    numTrajectories = 4500
+    numTrajectories = 16
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleNoPhysicsMCTSSheepHeatseakingWolfTraj.py'
-    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajectory.py'
+    # sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
+    sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
+
     numCpuCores = os.cpu_count()
     print(numCpuCores)
     numCpuToUse = int(0.75*numCpuCores)
@@ -54,9 +52,9 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
-    killzoneRadius = 35
-    numSimulations = 500
-    maxRunningSteps = 100
+    killzoneRadius = 1
+    maxRunningSteps = 125
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -64,14 +62,14 @@ def main():
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
-    trainableAgentIds = [sheepId]
+    trainableAgentIds = [distractorId]
     for agentId in trainableAgentIds:
         print("agent {}".format(agentId))
         pathParameters = {'agentId': agentId}
 
         cmdList = generateTrajectoriesParallel(pathParameters)
         # print(cmdList)
-        trajectories = loadTrajectoriesForParallel(pathParameters)
+        # trajectories = loadTrajectoriesForParallel(pathParameters)
         # import ipdb; ipdb.set_trace()
 
     endTime = time.time()

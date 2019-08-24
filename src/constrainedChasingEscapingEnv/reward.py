@@ -15,8 +15,25 @@ class RewardFunctionCompete():
         return reward
 
 
+class IsCollided:
+    def __init__(self, minXDis, getSelfPos, getOtherPos):
+        self.minXDis = minXDis
+        self.getSelfPos = getSelfPos
+        self.getOtherPos = getOtherPos
+
+    def __call__(self, state):
+        state = np.asarray(state)
+        selfPos = self.getSelfPos(state)
+        otherPositions = [getPos(state) for getPos in self.getOtherPos]
+
+        L2Normdistance = [np.linalg.norm((selfPos - otherPosition), ord=2) for otherPosition in otherPositions]
+        terminal = np.any(np.array(L2Normdistance) <= self.minXDis)
+
+        return terminal
+
+
 class RewardFunctionWithWall():
-    def __init__(self, aliveBonus, deathPenalty,safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getPosition):
+    def __init__(self, aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getPosition):
         self.aliveBonus = aliveBonus
         self.deathPenalty = deathPenalty
         self.safeBound = safeBound

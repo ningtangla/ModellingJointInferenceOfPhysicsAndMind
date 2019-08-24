@@ -120,7 +120,6 @@ class PrepareMultiAgentPolicy:
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
 
         policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
-
         return policy
 
 
@@ -195,7 +194,6 @@ def main():
 
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-
 
     # rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     safeBound = 1.5

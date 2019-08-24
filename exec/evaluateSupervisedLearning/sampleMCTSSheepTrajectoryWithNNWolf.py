@@ -3,10 +3,12 @@ import os
 import json
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, backup, RollOut
+from src.algorithms.mcts import Expand, ScoreChild, SelectChild, MCTS, InitializeChildren, establishPlainActionDist, \
+    backup, RollOut
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.episode import SampleTrajectory, chooseGreedyAction, sampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
@@ -14,8 +16,7 @@ from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from exec.trajectoriesSaveLoad import readParametersFromDf
 from exec.parallelComputing import GenerateTrajectoriesParallel
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
-    ApproximatePolicy, restoreVariables
+
 import mujoco_py as mujoco
 import numpy as np
 
@@ -67,6 +68,7 @@ def main():
         # transitInWolfMCTSSimulation = \
         #     lambda state, wolfSelfAction: transit(state, [sheepActionInWolfSimulation(state), wolfSelfAction])
 
+         #init and load NN
         numStateSpace = 12
         numActionSpace = len(actionSpace)
         regularizationFactor = 1e-4
@@ -74,17 +76,18 @@ def main():
         actionLayerWidths = [128]
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-        depth = 1
-        initModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+        wolfModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
         wolfModelPath = os.path.join(dirName, '..', '..', 'data',
-                                        'evaluateSupervisedLearning', 'wolfModel', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+                                            'evaluateSupervisedLearning', 'NNModel',
+                                            'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
+        
+        restoredWolfModel = restoreVariables(wolfModel, wolfModelPath)
 
-        wolfModel = restoreVariables(initModel, wolfModelPath)
-        wolfPolicy = ApproximatePolicy(wolfModel, actionSpace)
-
+        wolfPolicy = ApproximatePolicy(restoredWolfModel, actionSpace)
 
         transitInSheepMCTSSimulation = \
             lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state))])
+
         # MCTS
         cInit = 1
         cBase = 100
@@ -109,6 +112,8 @@ def main():
 
         mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
+
+
         # sample trajectory
         qPosInit = (0, 0, 0, 0)
         qVelInit = (0, 0, 0, 0)
@@ -123,11 +128,10 @@ def main():
         # policy
         policy = lambda state: [mcts(state), wolfPolicy(state)]
 
-
         # generate trajectories
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
-
+        wolfModel.close()
 
 if __name__ == '__main__':
     main()
