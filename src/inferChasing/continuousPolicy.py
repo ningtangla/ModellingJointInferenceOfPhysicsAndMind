@@ -77,7 +77,7 @@ class ThreeAgentsPolicyForNN:
 
 
 
-class ThreeAgentsPolicyForMCTS:
+class ThreeAgentsPolicyForWolfOnlyMCTS:
     def __init__(self, mctsPolicy, randomPolicy):
         self.mctsPolicy = mctsPolicy
         self.randomPolicy = randomPolicy
@@ -106,4 +106,57 @@ class ThreeAgentsPolicyForMCTS:
         print(policyLikelihood)
 
         return policyLikelihood
+
+
+
+
+
+
+
+class InferencePolicy:
+    def __init__(self, wolfPolicy, sheepPolicy, randomPolicy, softenPolicy = None, softParam = None):
+        self.wolfPolicy = wolfPolicy
+        self.sheepPolicy = sheepPolicy
+        self.randomPolicy = randomPolicy
+
+        self.softenPolicy = softenPolicy
+        self.softParam = softParam
+
+    def __call__(self, mind, state, allAgentsActions):
+
+        if self.softParam is not None:
+            wolfPolicy = self.softenPolicy(self.wolfPolicy, self.softParam)
+            sheepPolicy = self.softenPolicy(self.sheepPolicy, self.softParam)
+            randomPolicy = self.softenPolicy(self.randomPolicy, self.softParam)
+
+        else:
+            wolfPolicy = self.wolfPolicy
+            sheepPolicy = self.sheepPolicy
+            randomPolicy = self.randomPolicy
+
+        wolfID = mind.index('wolf')
+        sheepID = mind.index('sheep')
+
+        sheepWolfState = [state[sheepID][:6], state[wolfID][:6]] # outside
+
+        wolfAction = allAgentsActions[wolfID]
+        wolfActionDist = wolfPolicy(sheepWolfState)
+        wolfActionLikelihood = wolfActionDist.get(wolfAction, 0)
+
+        sheepAction = allAgentsActions[sheepID]
+        sheepActionDist = sheepPolicy(sheepWolfState)
+        sheepActionLikelihood = sheepActionDist.get(sheepAction, 0)
+
+        randomID = mind.index('random')
+        randomAction = allAgentsActions[randomID]
+        randomAllActionsLikelihood = randomPolicy(state)
+        randomActionLikelihood = randomAllActionsLikelihood.get(randomAction, 0)
+
+        actionLikelihood = [wolfActionLikelihood, sheepActionLikelihood, randomActionLikelihood]
+        policyLikelihood = np.product(actionLikelihood)
+
+        return policyLikelihood
+
+
+
 

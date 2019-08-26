@@ -3,15 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="276dc5ef-9267-468a-9851-15c3caa658ad" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferDiscreteChasing_MemoryDecay.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferDiscreteChasing_MemoryDecayPolicySoft.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/inferDiscreteChasing_MemoryDecayPolicySoft.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferDiscreteChasing_SoftenedPolicy.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_MemoryDecay.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_MemoryDecayPolicySoft.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_MemoryDecayPolicySoft.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_SoftenedPolicy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exec/inferMCTSLeashedWolf.py" beforeDir="false" afterPath="$PROJECT_DIR$/exec/inferMCTSLeashedWolf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/mcts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/mcts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/episode.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/episode.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/inferChasing/inference.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/inferChasing/inference.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/visualize/inferenceVisualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualize/inferenceVisualization.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,50 +18,60 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/visualize/inferenceVisualization.py">
+        <entry file="file://$PROJECT_DIR$/exec/inferNNLeashedWolfChasing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="20">
-              <caret line="1" column="19" lean-forward="true" selection-start-line="1" selection-start-column="19" selection-end-line="1" selection-end-column="19" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/inferChasing/inference.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="280">
-              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+            <state relative-caret-position="276">
+              <caret line="70" column="51" selection-start-line="70" selection-start-column="51" selection-end-line="70" selection-end-column="51" />
               <folding>
-                <element signature="e#0#19#0" expanded="true" />
-                <element signature="e#2784#4065#0" />
-                <element signature="e#5452#6840#0" />
-                <element signature="e#6506#8285#0" />
-                <element signature="e#8333#9846#0" />
-                <element signature="e#9894#11664#0" />
+                <element signature="e#0#10#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/exec/visualizeInferenceParams.py">
+        <entry file="file://$PROJECT_DIR$/exec/inferNoRopeCollision3Agents.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="341">
-              <caret line="142" column="52" lean-forward="true" selection-start-line="142" selection-start-column="52" selection-end-line="142" selection-end-column="52" />
+            <state relative-caret-position="2595">
+              <caret line="309" selection-start-line="309" selection-end-line="309" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
+                <element signature="e#1821#2536#0" />
+                <element signature="e#2567#3146#0" />
+                <element signature="e#3202#3864#0" />
+                <element signature="e#3908#5764#0" />
+                <element signature="e#5802#7780#0" />
+                <element signature="e#7817#9234#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_MemoryDecayPolicySoft.py">
+        <entry file="file://$PROJECT_DIR$/exec/generateExpDemo/sampleConditionTraj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="512">
-              <caret line="172" column="10" lean-forward="true" selection-start-line="172" selection-start-column="10" selection-end-line="172" selection-end-column="10" />
+            <state relative-caret-position="1265">
+              <caret line="285" column="29" lean-forward="true" selection-start-line="285" selection-start-column="29" selection-end-line="285" selection-end-column="29" />
               <folding>
-                <element signature="e#0#10#0" expanded="true" />
+                <element signature="e#0#11#0" expanded="true" />
+                <element signature="e#1821#2536#0" />
+                <element signature="e#2567#3146#0" />
+                <element signature="e#3202#3864#0" />
+                <element signature="e#3908#5764#0" />
+                <element signature="e#5802#7780#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="409">
+              <caret line="114" selection-start-line="114" selection-end-line="114" />
+              <folding>
+                <element signature="e#1125#2792#0" />
+                <element signature="e#2833#3898#0" />
               </folding>
             </state>
           </provider>
@@ -83,7 +89,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>3</find>
       <find>large</find>
       <find>small</find>
       <find>10</find>
@@ -113,6 +118,7 @@
       <find>drawH</find>
       <find>subplot</find>
       <find>groupby</find>
+      <find>multiAgentNNmodel</find>
     </findStrings>
     <replaceStrings>
       <replace>getPulledAgentForceProb</replace>
@@ -156,10 +162,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/exec/visualize2Objects.py" />
-        <option value="$PROJECT_DIR$/exec/inferContinuousChasing.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_25.py" />
-        <option value="$PROJECT_DIR$/exec/sampleMCTS.py" />
         <option value="$PROJECT_DIR$/exec/a.py" />
         <option value="$PROJECT_DIR$/exec/b.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_27.py" />
@@ -194,19 +196,23 @@
         <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py" />
         <option value="$PROJECT_DIR$/src/inferChasing/discreteGridTransition.py" />
         <option value="$PROJECT_DIR$/exec/inferDiffActionSpaceDiscreteChasing.py" />
-        <option value="$PROJECT_DIR$/src/episode.py" />
         <option value="$PROJECT_DIR$/exec/sampleDiffActionNNLeashedChasingTraj.py" />
         <option value="$PROJECT_DIR$/exec/inferDiffActionSpaceNNLeashedChasing.py" />
         <option value="$PROJECT_DIR$/exec/inferDiscreteChasing_MemoryDecayPolicySoft.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_32.py" />
         <option value="$PROJECT_DIR$/src/inferChasing/inferenceEvaluation.py" />
         <option value="$PROJECT_DIR$/exec/tryPlotInfParameters.py" />
-        <option value="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" />
         <option value="$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_MemoryDecayPolicySoft.py" />
         <option value="$PROJECT_DIR$/exec/visualizeInferenceParams.py" />
         <option value="$PROJECT_DIR$/exec/evaluateNNvsLearningRateDecay.py" />
         <option value="$PROJECT_DIR$/visualize/inferenceVisualization.py" />
         <option value="$PROJECT_DIR$/src/inferChasing/inference.py" />
+        <option value="$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py" />
+        <option value="$PROJECT_DIR$/src/algorithms/mcts.py" />
+        <option value="$PROJECT_DIR$/src/episode.py" />
+        <option value="$PROJECT_DIR$/src/inferChasing/continuousPolicy.py" />
+        <option value="$PROJECT_DIR$/exec/inferNoRopeCollision3Agents.py" />
+        <option value="$PROJECT_DIR$/exec/generateExpDemo/sampleConditionTraj.py" />
       </list>
     </option>
   </component>
@@ -252,6 +258,11 @@
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
               <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="data" type="9f88c78c:ScopeViewTreeModel$FileNode" />
             </path>
             <path>
               <item name="ModellingJointInferenceOfPhysicsAndMind" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
@@ -319,7 +330,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.inferNNLeashedWolfChasing_MemoryDecayPolicySoft">
+  <component name="RunManager" selected="Python.sampleConditionTraj">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="ModellingJointInferenceOfPhysicsAndMind" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -338,28 +349,6 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="true" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="evaluateDataSetDistribution" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="ModellingJointInferenceOfPhysicsAndMind" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="false" />
-      <option name="ADD_SOURCE_ROOTS" value="false" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/evaluateDataSetDistribution.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
       <method v="2" />
@@ -452,6 +441,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="sampleConditionTraj" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ModellingJointInferenceOfPhysicsAndMind" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/exec/generateExpDemo" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exec/generateExpDemo/sampleConditionTraj.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="tryPlotInfParameters" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="ModellingJointInferenceOfPhysicsAndMind" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -476,19 +487,19 @@
     </configuration>
     <list>
       <item itemvalue="Python.inferDiscreteChasing" />
-      <item itemvalue="Python.evaluateDataSetDistribution" />
       <item itemvalue="Python.evaluateNNvsLearningRateDecay" />
       <item itemvalue="Python.inferNNLeashedWolfChasing_MemoryDecayPolicySoft" />
       <item itemvalue="Python.inferDiscreteChasing_MemoryDecayPolicySoft" />
       <item itemvalue="Python.tryPlotInfParameters" />
+      <item itemvalue="Python.sampleConditionTraj" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.sampleConditionTraj" />
         <item itemvalue="Python.inferNNLeashedWolfChasing_MemoryDecayPolicySoft" />
         <item itemvalue="Python.tryPlotInfParameters" />
         <item itemvalue="Python.inferDiscreteChasing_MemoryDecayPolicySoft" />
         <item itemvalue="Python.evaluateNNvsLearningRateDecay" />
-        <item itemvalue="Python.evaluateDataSetDistribution" />
       </list>
     </recent_temporary>
   </component>
@@ -509,7 +520,7 @@
       <workItem from="1562975142081" duration="34495000" />
       <workItem from="1563297484652" duration="204000" />
       <workItem from="1563297717574" duration="415000" />
-      <workItem from="1563298153221" duration="197278000" />
+      <workItem from="1563298153221" duration="200569000" />
     </task>
     <servers />
   </component>
@@ -546,7 +557,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="421444000" />
+    <option name="totallyTimeSpent" value="424735000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -561,12 +572,12 @@
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.20028819" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.123198844" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.18618989" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4963977" weight="0.15289766" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.08014797" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.4963977" visible="true" weight="0.19358817" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.12453761" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -705,6 +716,7 @@
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$visualizeChasing.coverage" NAME="visualizeChasing Coverage Results" MODIFIED="1563082572135" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$infer3ObjectsContinChasing_MemoryDecay.coverage" NAME="infer3ObjectsContinChasing_MemoryDecay Coverage Results" MODIFIED="1565472167648" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$visualize3Objects.coverage" NAME="visualize3Objects Coverage Results" MODIFIED="1563583730085" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec" />
+    <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$sampleConditionTraj.coverage" NAME="sampleConditionTraj Coverage Results" MODIFIED="1566544022908" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exec/generateExpDemo" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$Unittests_in_testEvaluateDataSetDistribution_issueLucy_py.coverage" NAME="Unittests in testEvaluateDataSetDistribution_issueLucy.py Coverage Results" MODIFIED="1565112843956" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_for_testDiscreteGridEnv_TestEnvironment_testAgentsForceAction.coverage" NAME="pytest for testDiscreteGridEnv.TestEnvironment.testAgentsForceAction Coverage Results" MODIFIED="1561488935979" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ModellingJointInferenceOfPhysicsAndMind$pytest_in_testPolicies_IssueShaozhe_py.coverage" NAME="pytest in testPolicies_IssueShaozhe.py Coverage Results" MODIFIED="1561524717293" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -834,53 +846,6 @@ np.sum(posteriorDf[0])</expression-string>
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/visualize/discreteGridVisualization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="536">
-          <caret line="134" column="42" selection-start-line="134" selection-start-column="42" selection-end-line="134" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/inferDiscreteChasing_SoftenedPolicy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="562">
-          <caret line="155" selection-start-line="155" selection-end-line="155" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/inferNNLeashedWolfChasing_SoftenedPolicy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="211">
-          <caret line="77" column="51" selection-start-line="77" selection-start-column="51" selection-end-line="77" selection-end-column="51" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/inferDiscreteChasing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="498">
-          <caret line="136" lean-forward="true" selection-start-line="136" selection-end-line="136" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/analyticGeometryFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="13" column="40" lean-forward="true" selection-start-line="13" selection-start-column="40" selection-end-line="13" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/drawDiscreteGridChasing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-771">
@@ -915,9 +880,6 @@ np.sum(posteriorDf[0])</expression-string>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/envDiscreteGrid.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="430">
@@ -932,16 +894,6 @@ np.sum(posteriorDf[0])</expression-string>
             <element signature="e#3534#4419#0" />
             <element signature="e#4443#4923#0" />
             <element signature="e#4948#5346#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/inferNNLeashedWolfChasing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="280">
-          <caret line="15" column="14" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1082,16 +1034,6 @@ np.sum(posteriorDf[0])</expression-string>
         <state relative-caret-position="-943" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/episode.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2580">
-          <caret line="129" column="21" lean-forward="true" selection-start-line="129" selection-start-column="21" selection-end-line="129" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/evaluationFunctions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
@@ -1106,16 +1048,6 @@ np.sum(posteriorDf[0])</expression-string>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="487">
           <caret line="31" column="35" selection-start-line="31" selection-start-column="35" selection-end-line="31" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exec/sampleMCTSLeasedWolfTrajectory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="172">
-          <caret line="23" column="39" lean-forward="true" selection-start-line="23" selection-start-column="39" selection-end-line="23" selection-end-column="39" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -1195,16 +1127,6 @@ np.sum(posteriorDf[0])</expression-string>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exec/sampleNNLeashedChasingTraj.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="591">
-          <caret line="83" column="10" lean-forward="true" selection-start-line="83" selection-start-column="10" selection-end-line="83" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/inferChasing/inferenceEvaluation.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -1219,13 +1141,6 @@ np.sum(posteriorDf[0])</expression-string>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="100">
           <caret line="12" column="21" lean-forward="true" selection-start-line="12" selection-start-column="21" selection-end-line="12" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="467">
-          <caret line="105" column="31" lean-forward="true" selection-start-line="105" selection-start-column="31" selection-end-line="105" selection-end-column="31" />
         </state>
       </provider>
     </entry>
@@ -1246,21 +1161,6 @@ np.sum(posteriorDf[0])</expression-string>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/inferChasing/inference.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="280">
-          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-            <element signature="e#2784#4065#0" />
-            <element signature="e#5452#6840#0" />
-            <element signature="e#6506#8285#0" />
-            <element signature="e#8333#9846#0" />
-            <element signature="e#9894#11664#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exec/visualizeInferenceParams.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="341">
@@ -1277,6 +1177,142 @@ np.sum(posteriorDf[0])</expression-string>
           <caret line="172" column="10" lean-forward="true" selection-start-line="172" selection-start-column="10" selection-end-line="172" selection-end-column="10" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/constrainedChasingEscapingEnv/reward.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="588">
+          <caret line="94" column="21" selection-start-line="94" selection-start-column="21" selection-end-line="94" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/algorithms/mcts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="637">
+          <caret line="204" column="10" selection-start-line="204" selection-start-column="10" selection-end-line="204" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/episode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2960">
+          <caret line="148" column="21" selection-start-line="148" selection-start-column="21" selection-end-line="148" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sampleConditionTraj.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="294">
+          <caret line="157" column="19" lean-forward="true" selection-start-line="157" selection-start-column="19" selection-end-line="157" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#1821#2536#0" />
+            <element signature="e#2567#3146#0" />
+            <element signature="e#3202#3864#0" />
+            <element signature="e#3908#5764#0" />
+            <element signature="e#5802#7780#0" />
+            <element signature="e#7817#9234#0" />
+            <element signature="e#15581#15610#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/continuousPolicy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="409">
+          <caret line="114" selection-start-line="114" selection-end-line="114" />
+          <folding>
+            <element signature="e#1125#2792#0" />
+            <element signature="e#2833#3898#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/inferChasing/inference.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-7">
+          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/inferNoRopeCollision3Agents.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2595">
+          <caret line="309" selection-start-line="309" selection-end-line="309" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#1821#2536#0" />
+            <element signature="e#2567#3146#0" />
+            <element signature="e#3202#3864#0" />
+            <element signature="e#3908#5764#0" />
+            <element signature="e#5802#7780#0" />
+            <element signature="e#7817#9234#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/inferMCTSLeashedWolf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="232">
+          <caret line="82" column="24" lean-forward="true" selection-start-line="82" selection-start-column="24" selection-end-line="82" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sampleNNLeashedChasingTraj.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="532">
+          <caret line="77" column="17" lean-forward="true" selection-start-line="77" selection-start-column="17" selection-end-line="77" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/sampleMCTSLeasedWolfTrajectory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1740">
+          <caret line="87" column="42" lean-forward="true" selection-start-line="87" selection-start-column="42" selection-end-line="87" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/inferNNLeashedWolfChasing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="276">
+          <caret line="70" column="51" selection-start-line="70" selection-start-column="51" selection-end-line="70" selection-end-column="51" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exec/generateExpDemo/sampleConditionTraj.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1265">
+          <caret line="285" column="29" lean-forward="true" selection-start-line="285" selection-start-column="29" selection-end-line="285" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#1821#2536#0" />
+            <element signature="e#2567#3146#0" />
+            <element signature="e#3202#3864#0" />
+            <element signature="e#3908#5764#0" />
+            <element signature="e#5802#7780#0" />
           </folding>
         </state>
       </provider>

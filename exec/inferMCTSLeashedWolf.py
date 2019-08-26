@@ -16,7 +16,7 @@ from src.episode import chooseGreedyAction
 from src.constrainedChasingEscapingEnv.reward import HeuristicDistanceToTarget, RewardFunctionCompete
 from src.constrainedChasingEscapingEnv.policies import RandomPolicy
 
-from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForMCTS
+from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForWolfOnlyMCTS
 from src.inferChasing.continuousTransition import TransitConstantPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
     InferContinuousChasingAndDrawDemo
@@ -88,7 +88,7 @@ def main():
 
     mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
 
-    policy = ThreeAgentsPolicyForMCTS(mcts, randomPolicy)
+    policy = ThreeAgentsPolicyForWolfOnlyMCTS(mcts, randomPolicy)
 
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
