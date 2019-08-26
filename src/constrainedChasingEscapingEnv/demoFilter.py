@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 def calculateIncludedAngle(vector1, vector2):
     includedAngle = np.angle(complex(vector1[0], vector1[1]) / complex(vector2[0], vector2[1]))
@@ -32,8 +33,8 @@ class OffsetMasterStates:
         self.masterDelayStep = masterDelayStep
 
     def __call__(self, traj):
-        cutHeadTraj = np.array(traj)[self.masterDelayStep:]
-        cutTailTraj = np.array(traj)[:-self.masterDelayStep]
+        cutHeadTraj = np.array(traj)[self.masterDelayStep: -1]
+        cutTailTraj = np.array(traj)[:-(self.masterDelayStep + 1)]
 
         originalMasterStates = np.array([np.array(timeStep)[self.stateIndex][self.masterId] for timeStep in cutHeadTraj])
         originalWolfStates = np.array([np.array(timeStep)[self.stateIndex][self.wolfId] for timeStep in cutHeadTraj])
@@ -55,12 +56,53 @@ class OffsetMasterStates:
         transposeMats = [translateMat*scaleMat*rotateMat*translateBackMat for translateMat, rotateMat, scaleMat, scaleBackMat, translateBackMat in zip(translateMats, rotateMats, scaleMats, scaleBackMats,translateBackMats)]
         transposedRopePartPoses = np.array([[transposeCoordinate(ropePartState[self.positionIndex], transposeMat) for ropePartState in ropePartsState] for ropePartsState, transposeMat in zip(originalRopePartsStates, transposeMats)])
 
-        allTimestepAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj[self.masterDelayStep:]])
+        allTimestepAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj[self.masterDelayStep:-1]])
         allTimestepAgentsStates[:, self.masterId] = np.array([masterStates])
         allTimestepAgentsStates[:, min(self.ropePartIndexes):max(self.ropePartIndexes) + 1, min(self.positionIndex):max(self.positionIndex) + 1] = transposedRopePartPoses
         cutHeadTraj[:, self.stateIndex] = [np.array(allAgentsStates) for allAgentsStates in allTimestepAgentsStates]
         return cutHeadTraj
 
+class TransposeRopePoses:
+    def __init__(self, wolfId, masterId, basePointAgentId, notBasePointAgentId, ropePartIndexes, positionIndex, stateIndex):
+        self.wolfId = wolfId
+        self.masterId = masterId
+        self.basePointAgentId = basePointAgentId
+        self.notBasePointAgentId = notBasePointAgentId
+        self.ropePartIndexes = ropePartIndexes
+        self.positionIndex = positionIndex
+        self.stateIndex = stateIndex
+
+    def __call__(self, traj):
+        trajArray = np.array(traj)
+
+        originalMasterStates = np.array([np.array(timeStep)[self.stateIndex][self.masterId] for timeStep in trajArray])
+        originalWolfStates = np.array([np.array(timeStep)[self.stateIndex][self.wolfId] for timeStep in trajArray])
+        originalRopePartsStates = np.array([np.array(timeStep)[self.stateIndex][self.ropePartIndexes] for timeStep in trajArray])
+        originalBasePointAgentStates = np.array([np.array(timeStep)[self.stateIndex][self.basePointAgentId] for timeStep in trajArray])
+        originalNotBasePointAgentStates = np.array([np.array(timeStep)[self.stateIndex][self.notBasePointAgentId] for timeStep in trajArray])
+
+        originalBasePointAgentPoses = originalBasePointAgentStates[:,self.positionIndex]
+        newVectors = originalNotBasePointAgentStates[:,self.positionIndex] - originalBasePointAgentStates[:,self.positionIndex]
+        if self.basePointAgentId == self.wolfId:
+            originalVectors = originalMasterStates[:,self.positionIndex] - originalWolfStates[:,self.positionIndex]
+        if self.basePointAgentId == self.masterId:
+            originalVectors = originalWolfStates[:,self.positionIndex] - originalMasterStates[:,self.positionIndex]
+
+        translateMats = [compose2DCoordinateTranslateMatrix(basePointAgentPos) for basePointAgentPos in originalBasePointAgentPoses]
+        rotateAngles = [calculateIncludedAngle(newVector, originalVector) for newVector, originalVector in zip(newVectors, originalVectors)]
+        rotateMats = [compose2DCoordinateRotateMatrix(rotateAngle) for rotateAngle in rotateAngles]
+        scales = [np.linalg.norm(newVector)/np.linalg.norm(originalVector) for newVector, originalVector in zip(newVectors, originalVectors)]
+
+        scaleMats = [compose2DCoordinateScaleMatrix(min(1.6, scale)) for scale in scales]
+        scaleBackMats = [compose2DCoordinateScaleMatrix(1/scale) for scale in scales]
+        translateBackMats =  [compose2DCoordinateTranslateMatrix(-basePointAgentPos) for basePointAgentPos in originalBasePointAgentPoses]
+        transposeMats = [translateMat*scaleMat*rotateMat*translateBackMat for translateMat, rotateMat, scaleMat, scaleBackMat, translateBackMat in zip(translateMats, rotateMats, scaleMats, scaleBackMats,translateBackMats)]
+        transposedRopePartPoses = np.array([[transposeCoordinate(ropePartState[self.positionIndex], transposeMat) for ropePartState in ropePartsState] for ropePartsState, transposeMat in zip(originalRopePartsStates, transposeMats)])
+
+        allTimestepAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj])
+        allTimestepAgentsStates[:, min(self.ropePartIndexes):max(self.ropePartIndexes) + 1, min(self.positionIndex):max(self.positionIndex) + 1] = transposedRopePartPoses
+        trajArray[:, self.stateIndex] = [np.array(allAgentsStates) for allAgentsStates in allTimestepAgentsStates]
+        return trajArray
 
 class FindCirlceBetweenWolfAndMaster:
     def __init__(self, wolfId, masterId, stateIndex, positionIndex, timeWindow, angleDeviation):
@@ -124,3 +166,21 @@ class CountSheepCrossRope:
         crossNumber=len(np.where(crossList)[0])
         crossRatio = crossNumber/ len(traj)
         return crossRatio
+
+class ReplaceSheep:
+    def __init__(self, sheepId, stateIndex):
+        self.sheepId = sheepId
+        self.stateIndex = stateIndex
+
+    def __call__(self, trajectories):
+        trajectoriesCopy = copy.deepcopy(trajectories)
+        numTrajectories = len(trajectories)
+        for trajIndex in range(len(trajectories)):
+            lastTraj = np.array(trajectoriesCopy)[trajIndex - 1]
+            traj =  np.array(trajectories)[trajIndex]
+            lastSheepStates = np.array([np.array(timeStep)[self.stateIndex][self.sheepId] for timeStep in lastTraj])
+            allTimestepAgentsStates = np.array([timeStep[self.stateIndex] for timeStep in traj])
+            allTimestepAgentsStates[:, self.sheepId] = np.array([lastSheepStates])
+            traj[:, self.stateIndex] = [np.array(allAgentsStates) for allAgentsStates in allTimestepAgentsStates]
+            trajectories[trajIndex] = traj
+        return trajectories

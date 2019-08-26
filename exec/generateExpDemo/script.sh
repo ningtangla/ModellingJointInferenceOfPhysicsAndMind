@@ -18,19 +18,28 @@
 cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
 mkdir demo
 
-for beta in 0.5 
+for linkedAgentId in 32 21
 do
-    for masterPowerRatio in 0.4
-    do 
-        for offset in 0  12
-        do
-            for index in {4..4} 
-            do
-                for condition in 2
-                do
-                # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numSimulations=400_offset=${offset}/${index}/condition=${condition}/
 
-                ffmpeg -r 29 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numAgents=3_numSimulations=400_offset=${offset}_pureMCTSAgentId=10/${index}/condition=${condition}/%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numAgents=3_numSimulations=400_offset=${offset}_pureMCTSAgentId=10_Demo${index}_condition=${condition}.mp4
+    for pureMCTSAgentId in 999 
+    do
+
+        for beta in 0.5 
+        do
+            for masterPowerRatio in 0.4
+            do 
+                for offset in 0 
+                do
+                    for index in {0..45} 
+                    do
+                        for condition in 0
+                        do
+                        # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numSimulations=400_offset=${offset}/${index}/condition=${condition}/
+
+                        ffmpeg -r 29 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_linkedAgentId=${linkedAgentId}_masterPowerRatio=${masterPowerRatio}_numAgents=4_numSimulations=400_offset=${offset}_pureMCTSAgentId=${pureMCTSAgentId}/${index}/condition=${condition}/%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/beta=${beta}_killzoneRadius=0.5_linkedAgentId=${linkedAgentId}_masterPowerRatio=${masterPowerRatio}_numAgents=4_numSimulations=400_offset=${offset}_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}_condition=${condition}.mp4
+
+                        done
+                    done
                 done
             done
         done

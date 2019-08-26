@@ -159,7 +159,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 360
+    maxRunningSteps = 320
     numSimulations = 400
     killzoneRadius = 0.5
     pureMCTSAgentId = 310
@@ -296,20 +296,20 @@ def main():
 
         agentIds = list(range(numAgent))
         getSelfQPoses = [GetAgentPosFromState(Id, qPosIndex) for Id in agentIds]
-        otherIdsList = [[wolfId] + ropePartIndex, [sheepId], [sheepId], [sheepId, wolfId, masterId] + ropePartIndex]
+        otherIdsList = [[wolfId, masterId, distractorId] + ropePartIndex, [sheepId], [sheepId], [sheepId, wolfId, masterId] + ropePartIndex]
         getOthersPoses = [[GetAgentPosFromState(otherId, qPosIndex) for otherId in otherIds] for otherIds in otherIdsList]
         velIndex = [4, 5]
         getSelfVels =  [GetAgentPosFromState(Id, velIndex) for Id in agentIds]
 
         collisionRadius = 1
         isCollidedFunctions = [IsCollided(collisionRadius, getSelfQPos, getOthersPos) for getSelfQPos, getOthersPos in zip(getSelfQPoses, getOthersPoses)]
-        safeBoundes = [2.5, 0.1, 0.1, 2]
+        safeBoundes = [2, 0.1, 0.1, 2]
         wallDisToCenter = 10
         wallPunishRatios = [3, 0, 0, 3]
-        velocityBounds = [0, 0, 0, 6]
+        velocityBounds = [6, 0, 0, 6]
         rewardFunctions = [RewardFunctionAvoidCollisionAndWall(aliveBonuses[agentId], deathPenalties[agentId], safeBoundes[agentId], wallDisToCenter,  wallPunishRatios[agentId], velocityBounds[agentId], isCollidedFunctions[agentId], getSelfQPoses[agentId], getSelfVels[agentId]) for agentId in agentIds]
 
-        rolloutHeuristicWeights = [-0.1, 0.1, -0.1, 0]
+        rolloutHeuristicWeights = [0, 0.1, -0.1, 0]
         rolloutHeuristics = [HeuristicDistanceToTarget(weight, getWolfQPos, getSheepQPos) for weight in rolloutHeuristicWeights]
 
         numTrees = 4

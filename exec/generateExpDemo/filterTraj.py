@@ -55,13 +55,18 @@ class CountCirclesBetweenWolfAndMaster:
 
     def __call__(self, traj):
         traj = np.array(traj)
-        wolfVectorList = [traj[i - 1][self.stateIndex][self.wolfId][self.velocityIndex] for i in range(1, len(traj))]
+        # wolfVectorList = [traj[i - 1][self.stateIndex][self.wolfId][self.velocityIndex] for i in range(1, len(traj))]
+        wolfVectorList = [traj[i][self.stateIndex][self.wolfId][self.positionIndex] - traj[i - 1][self.stateIndex][self.wolfId][self.positionIndex] for i in range(1, len(traj)) ]
+        masterVectorList = [traj[i][self.stateIndex][self.masterId][self.positionIndex] - traj[i - 1][self.stateIndex][self.masterId][self.positionIndex] for i in range(1, len(traj)) ]
         ropeVectorList = [traj[i-1][self.stateIndex][self.wolfId][self.positionIndex] - traj[i - 1][self.stateIndex][self.masterId][self.positionIndex] for i in range(1, len(traj)) ]
+
         ropeWolfAngleList = np.array([calculateIncludedAngle(v1, v2) for (v1, v2) in zip(wolfVectorList, ropeVectorList)])
-        filterList=[self.findCirleMove(ropeWolfAngleList[i:i+self.timeWindow]) for i in range(0, len(ropeWolfAngleList)-self.timeWindow+1) ]
+        ropeMasterAngleList = np.array([calculateIncludedAngle(v1, v2) for (v1, v2) in zip(masterVectorList, ropeVectorList)])
+
+        filterList=[self.findCirleMove(ropeWolfAngleList[i:i+self.timeWindow]) or self.findCirleMove(ropeMasterAngleList[i:i+self.timeWindow]) for i in range(0, len(ropeWolfAngleList)-self.timeWindow+1) ]
         # countList=[ filterList[i]!=filterList[i+1] for i in range(0, len(filterList)-1) ]
         countList = filterList
-        ciclrNumber=math.ceil(len(np.where(countList)[0]))
+        ciclrNumber = math.ceil(len(np.where(countList)[0]))
         ciclrRatio = ciclrNumber/len(traj)
         return ciclrRatio
 

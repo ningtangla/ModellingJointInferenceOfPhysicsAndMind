@@ -6,7 +6,7 @@ import numpy as np
 import itertools as it
 from collections import OrderedDict
 DIRNAME = os.path.dirname(__file__)
-
+import random
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from exec.trajectoriesSaveLoad import ConvertTrajectoryToStateDf, \
     loadFromPickle, saveToPickle, LoadTrajectories, GetSavePath, conditionDfFromParametersDict, GetAgentCoordinateFromTrajectoryAndStateDf
@@ -38,11 +38,12 @@ def main():
     #manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0, 12]
+    manipulatedVariables['offset'] = [0]
+    manipulatedVariables['linkedAgentId'] = [32, 21]
     manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
-    manipulatedVariables['numAgents'] = [3]
-    manipulatedVariables['pureMCTSAgentId'] = [10]
+    manipulatedVariables['numAgents'] = [4]
+    manipulatedVariables['pureMCTSAgentId'] = [999]
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
@@ -83,7 +84,7 @@ def main():
         trajectories = loadTrajectories(conditionParameters)
         numTrajectories = len(trajectories)
         print(numTrajectories)
-        maxNumTrajectories = 50
+        maxNumTrajectories = 100
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
         selectedTrajectories = trajectories[0:numTrajectoryChoose]
 
@@ -122,25 +123,34 @@ def main():
         numRopePart = 9
         ropePartIndex = list(range(numOfAgent, numOfAgent + numRopePart))
 
-        conditionList = [2]
-        conditionValues = [[wolfId, masterId], [wolfId, distractorId], None]
+
+        linkedAgentDict = {21:[wolfId, masterId], 32:[distractorId, masterId]}
+        linkedAgentId = int(conditionParameters['linkedAgentId'])
+        conditionList = [0]
+        conditionValues = [linkedAgentDict[linkedAgentId], None]
+
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         ropeColor = THECOLORS['grey']
         ropeWidth = 4
         drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
 
-        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
+        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow'], THECOLORS['pink'], THECOLORS['purple'], THECOLORS['cyan'] ]
+
+        random.shuffle(colorSpace)
         circleColorList = colorSpace[:numOfAgent]
 
-        # for index in range(len(selectedTrajectories)):
-        if len(selectedTrajectories) > 0:
-            index = 4
+        for index in range(len(selectedTrajectories)):
+        # if len(selectedTrajectories) > 0:
+            # index = 4
             conditionParameters.update({'demoIndex':index})
             saveToPickle([trajectories[index]], getTrajectorySavePath(conditionParameters))
             for condition in conditionList:
                 imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
+
+                random.shuffle(colorSpace)
+                circleColorList = colorSpace[:numOfAgent]
 
                 FPS = 60
                 chaseTrial = ChaseTrialWithTraj(FPS, circleColorList, drawState, saveImage=True, saveImageDir=saveImageDir)
