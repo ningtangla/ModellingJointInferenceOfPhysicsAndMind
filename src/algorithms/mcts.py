@@ -175,7 +175,7 @@ class StochasticMCTS:
         self.outputDistribution = outputDistribution
         self.mctsRender = mctsRender
         self.mctsRenderOn = mctsRenderOn
-
+        
     def __call__(self, currentState):
         roots = []
         backgroundScreen = None
@@ -190,7 +190,7 @@ class StochasticMCTS:
                 while currentNode.isExpanded:
                     nextNode = self.selectChild(currentNode)
                     if self.mctsRenderOn:
-                        backgroundScreen = self.mctsRender(curr_node, next_node, roots, backgroundScreen)
+                        backgroundScreen = self.mctsRender(currentNode, nextNode, roots, backgroundScreen)
                     nodePath.append(nextNode)
                     currentNode = nextNode
 

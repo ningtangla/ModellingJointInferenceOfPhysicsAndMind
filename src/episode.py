@@ -54,7 +54,32 @@ class SampleTrajectory:
 
         return trajectory
 
+class SampleTrajectoryForMCTSDemo:
+    def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
+        self.maxRunningSteps = maxRunningSteps
+        self.transit = transit
+        self.isTerminal = isTerminal
+        self.reset = reset
+        self.chooseAction = chooseAction
 
+    def __call__(self, policy):
+        state = self.reset()
+
+        while self.isTerminal(state):
+            state = self.reset()
+
+        trajectory = []
+        for runningStep in range(self.maxRunningSteps):
+            if self.isTerminal(state):
+                trajectory.append((state, None, None))
+                break
+            actionDists = policy(state)
+            action = [choose(actionDist) for choose, actionDist in zip(self.chooseAction, actionDists)]
+            trajectory.append((state, action, actionDists))
+            nextState = self.transit(state, action)
+            state = nextState
+
+        return trajectory
 
 class Sample3ObjectsTrajectory:
     def __init__(self, maxRunningSteps, transit, reset, chooseAction):
