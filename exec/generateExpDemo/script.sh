@@ -21,7 +21,7 @@ mkdir demo
 for linkedAgentId in 32 21
 do
 
-    for pureMCTSAgentId in 999 
+    for pureMCTSAgentId in 310 999 
     do
 
         for beta in 0.5 
@@ -30,7 +30,7 @@ do
             do 
                 for offset in 0 
                 do
-                    for index in {0..45} 
+                    for index in {46..58} 
                     do
                         for condition in 0
                         do

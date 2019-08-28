@@ -55,7 +55,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
-    manipulatedVariables['maxRunningSteps'] = [360]
+    manipulatedVariables['maxRunningSteps'] = [320]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
@@ -121,7 +121,7 @@ def main():
 
                     trajectoryCountCollision =  np.array([countCollision(trajectory) + countCollisionDistractorWolf(trajectory) + countCollisionDistractorSheep(trajectory)+ countCollisionDistractorMaster(trajectory) for trajectory in trajectories])
 
-                    timeWindow = 10
+                    timeWindow = 8
                     angleVariance = math.pi / 8
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterList = [circleFilter(trajectory) for trajectory in trajectories]

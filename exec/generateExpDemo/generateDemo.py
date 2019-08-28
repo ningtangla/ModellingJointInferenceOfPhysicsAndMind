@@ -43,7 +43,7 @@ def main():
     manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['numAgents'] = [4]
-    manipulatedVariables['pureMCTSAgentId'] = [999]
+    manipulatedVariables['pureMCTSAgentId'] = [310, 999]
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
@@ -95,7 +95,7 @@ def main():
         if not os.path.exists(imageSavePath):
             os.makedirs(imageSavePath)
 
-        [saveToPickle(df, os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(sampleIndex))) for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
+        [saveToPickle(df, os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(sampleIndex + 46))) for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
 
 # generate demo image
         screenWidth = 800
@@ -143,10 +143,10 @@ def main():
         for index in range(len(selectedTrajectories)):
         # if len(selectedTrajectories) > 0:
             # index = 4
-            conditionParameters.update({'demoIndex':index})
+            conditionParameters.update({'demoIndex':index + 46})
             saveToPickle([trajectories[index]], getTrajectorySavePath(conditionParameters))
             for condition in conditionList:
-                imageFolderName = os.path.join("{}".format(index), 'condition='"{}".format((condition)))
+                imageFolderName = os.path.join("{}".format(index + 46), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
 
                 random.shuffle(colorSpace)
@@ -166,7 +166,7 @@ def main():
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
-                trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index)))
+                trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index + 46)))
                 trajectory = getTrajectory(trajectoryDf)
                 # chaseTrial(trajectory)
                 chaseTrialWithRope(trajectory, conditionValues[condition])
