@@ -44,8 +44,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
-    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
+    manipulatedVariables['masterPowerRatio'] = [0.01]
+    manipulatedVariables['beta'] = [0.5]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -59,7 +59,7 @@ def main():
     sampleTrajectoryFileName = 'sampleConditionTraj.py'
 
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.88 * numCpuCores)
+    numCpuToUse = int(0.5 * numCpuCores)
     numTrials = math.floor(numCpuToUse/len(parametersAllCondtion)) * 1
     generateTrajectoriesParallel = ExcuteCodeOnConditionsParallel(sampleTrajectoryFileName, numTrials, numCpuToUse)
 
@@ -72,8 +72,8 @@ def main():
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
-    maxRunningSteps = 360
-    numSimulations = 400
+    maxRunningSteps = 15
+    numSimulations = 80
     killzoneRadius = 0.5
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}

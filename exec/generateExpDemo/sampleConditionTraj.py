@@ -10,6 +10,7 @@ import numpy as np
 from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
+from pygame.color import THECOLORS
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniformForLeashed
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, RewardFunctionAvoidCollisionAndWall, IsCollided,HeuristicDistanceToTarget
@@ -24,7 +25,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, StochasticMCTS, backup, establishPlainActionDistFromMultipleTrees, RollOut
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, SampleAction, SelectSoftmaxAction, chooseGreedyAction
+from src.episode import SampleTrajectoryForMCTSDemo, SampleAction, SelectSoftmaxAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 from exec.generateExpDemo.MCTSVisualization import ScalePos, InitializeScreen, DrawBackground, DrawStateWithRope, MCTSRender
 
@@ -118,7 +119,7 @@ class ComposeSingleAgentMCTS():
         self.getApproximateActionPrior = getApproximateActionPrior
         self.composeMultiAgentTransitInSingleAgentMCTS = composeMultiAgentTransitInSingleAgentMCTS
         self.MCTSRenders = MCTSRenders
-        self.MCTSRenderOn = self.MCTSRenderOn
+        self.MCTSRenderOn = MCTSRenderOn
 
     def __call__(self, agentId, selfNNModel, othersPolicy):
         approximateActionPrior = self.getApproximateActionPrior(selfNNModel, self.actionSpaces[agentId], self.agentIdsForNNState[agentId])
@@ -130,26 +131,38 @@ class ComposeSingleAgentMCTS():
         rewardFunction = self.rewardFunctions[agentId]
         rolloutHeuristic = self.rolloutHeuristicFunctions[agentId]
         estimateValue = RollOut(rolloutPolicy, self.maxRolloutSteps, transitInMCTS, rewardFunction, self.isTerminal, rolloutHeuristic)
+
         MCTSPolicy = StochasticMCTS(self.numTrees, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees,
                 self.MCTSRenders[agentId], self.MCTSRenderOn)
 
         return MCTSPolicy
 
 class PrepareMultiAgentPolicy:
-    def __init__(self, MCTSAgentIds, actionSpaces, agentIdsForNNState, composeSingleAgentPolicy, getApproximatePolicy):
+    def __init__(self, MCTSAgentIds, actionSpaces, agentIdsForNNState, composeSingleAgentPolicy, getApproximatePolicy, MCTSRenderInterval, callTime):
         self.MCTSAgentIds = MCTSAgentIds
         self.actionSpaces = actionSpaces
         self.agentIdsForNNState = agentIdsForNNState
         self.composeSingleAgentPolicy = composeSingleAgentPolicy
         self.getApproximatePolicy = getApproximatePolicy
+        self.MCTSRenderInterval = MCTSRenderInterval
+        self.callTime = callTime
 
     def __call__(self, multiAgentNNModel):
         multiAgentApproximatePolicy= np.array([self.getApproximatePolicy(NNModel, actionSpace, agentStateIdsForNN) for NNModel, actionSpace, agentStateIdsForNN in zip(multiAgentNNModel,
             self.actionSpaces, self.agentIdsForNNState)])
         otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])  for agentId in self.MCTSAgentIds])
         MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
+
+        if self.callTime%self.MCTSRenderInterval == 0:
+            self.composeSingleAgentPolicy.MCTSRenderOn = True
+        else:
+            self.composeSingleAgentPolicy.MCTSRenderOn = False
+        print(self.callTime)
+        print(self.composeSingleAgentPolicy.MCTSRenderOn)
+
         MCTSAgentsPolicy = np.array([self.composeSingleAgentPolicy(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy) for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
         multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
+
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
         policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
         return policy
@@ -158,25 +171,30 @@ class PrepareMultiAgentPolicy:
 
 def main():
     #check file exists or not
+
+    trajectorySaveExtension = '.pickle'
+    maxRunningSteps = 15
+    numSimulations = 80
+    killzoneRadius = 0.5
+    pureMCTSAgentId = 10
+    numAgent = 3
+
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo','trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateMCTSDemo','image')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 360
-    numSimulations = 400
-    killzoneRadius = 0.5
-
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-
+    fixedParameters = {'numAgents': numAgent,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'pureMCTSAgentId': pureMCTSAgentId }
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    mctsDemoParameters = parametersForTrajectoryPath.copy()
+    mctsDemoParameters.update({'index': startSampleIndex})
+    mctsDemoSavePath = generateTrajectorySavePath(mctsDemoParameters)
 
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     masterPowerRatio = float(parametersForTrajectoryPath['masterPowerRatio'])
     beta = float(parametersForTrajectoryPath['beta'])
     numTrials = endSampleIndex - startSampleIndex
@@ -211,13 +229,12 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        numAgent = 3
         numRopePart = 9
         qPosInit = (0, ) * 2 * (numAgent + numRopePart)
         qVelInit = (0, ) * 2 * (numAgent + numRopePart)
         qPosInitNoise = 6
         qVelInitNoise = 6
-        tiedAgentId = [1, 2]
+        tiedAgentId = [wolfId, masterId]
         ropePartIndex = list(range(numAgent, numAgent + numRopePart))
         maxRopePartLength = 0.35
 
@@ -227,7 +244,7 @@ def main():
         # sample trajectory
         selectSoftmaxAction = SelectSoftmaxAction(beta)
         chooseActionList = [chooseGreedyAction, chooseGreedyAction, selectSoftmaxAction]
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
+        sampleTrajectory = SampleTrajectoryForMCTSDemo(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
 
 # neural network init
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
@@ -269,9 +286,9 @@ def main():
         selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-        preyPowerRatio = 1.7
+        preyPowerRatio = 0.01
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.95
+        predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         masterPowerRatio = masterPowerRatio
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
@@ -319,8 +336,8 @@ def main():
         rolloutHeuristicWeights = [-0.1, 0.1, -0.1]#, 0]
         rolloutHeuristics = [HeuristicDistanceToTarget(weight, getWolfQPos, getSheepQPos) for weight in rolloutHeuristicWeights]
 
-        numTrees = 4
-        numSimulationsPerTree = 100
+        numTrees = 2
+        numSimulationsPerTree = 40
         maxRolloutSteps = 5
 
         betaInMCTS = 1
@@ -349,48 +366,42 @@ def main():
 
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
 
-        numOfAgent = int(conditionParameters['numAgents'])
-        sheepId = 0
-        wolfId = 1
-        masterId = 2
-        distractorId = 3
-
         circleSize = 10
-        positionIndex = [0, 1]
-        numRopePart = 9
-        ropePartIndex = list(range(numOfAgent, numOfAgent + numRopePart))
 
         ropeColor = THECOLORS['grey']
         ropeWidth = 4
-        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
-
-        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow'], THECOLORS['pink'], THECOLORS['purple'], THECOLORS['cyan'] ]
-
-        tiedAgentId = [wolfId, masterId]
-        circleColorList = colorSpace[:numOfAgent]
-        saveImage = False
-        saveImageFile = 1
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numAgent, qPosIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
 
         rawXRange = [-10, 10]
         rawYRange = [-10, 10]
         scaledXRange = [200, 600]
         scaledYRange = [200, 600]
-        scalePos = ScalePos(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+        scalePos = ScalePos(qPosIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+        
+        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow'], THECOLORS['pink'], THECOLORS['purple'], THECOLORS['cyan'] ]
 
-        mctsRenders = [MCTSRender(numOfAgent, MCTSAgentId, tiedAgentId, screen, screenWidth, screenHeight, screenColor, circleColorList, circleSize, saveImage, saveImageFile,
-            drawStateWithRope, scalePos) for MCTSAgentId in numOfAgent]
+        circleColorList = colorSpace[:numAgent]
+        mctsLineColor = np.array([240, 240, 240, 180])
+        circleSizeForMCTS = int(0.6*circleSize)
+        saveImage = True
+        saveImageDir = os.path.join(mctsDemoSavePath, "image")
+        if not os.path.exists(saveImageDir):
+            os.makedirs(saveImageDir)
+        mctsRenders = [MCTSRender(numAgent, MCTSAgentId, tiedAgentId, screen, screenWidth, screenHeight, screenColor, circleColorList, mctsLineColor, circleSizeForMCTS, saveImage, saveImageDir, drawStateWithRope, scalePos) for MCTSAgentId in range(numAgent)]
         mctsRenderOn = True
         composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions,
                 rolloutHeuristics, selectChild, isTerminal, transit, getApproximateUniformActionPrior, composeMultiAgentTransitInSingleAgentMCTS, mctsRenders, mctsRenderOn)
 
         #imageOthersPolicy[masterId] = lambda policy: lambda state : stationaryAgentPolicy(state)
-        trainableAgentIds = [sheepId, wolfId]
-        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy)
+        trainableAgentIds = [wolfId]
+        MCTSRenderInterval = 1
+        callTime = 0
+        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy, MCTSRenderInterval, callTime)
 
         # sample and save trajectories
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         trajectories = [sampleTrajectory(policy) for _ in range(numTrials)]
-        saveToPickle(trajectories, trajectorySavePath)
+        #saveToPickle(trajectories, trajectorySavePath)
 
 if __name__ == '__main__':
     main()
