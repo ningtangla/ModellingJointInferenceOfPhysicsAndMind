@@ -123,13 +123,6 @@ def main():
         numRopePart = 9
         ropePartIndex = list(range(numOfAgent, numOfAgent + numRopePart))
 
-
-        linkedAgentDict = {21:[wolfId, masterId], 32:[distractorId, masterId]}
-        linkedAgentId = int(conditionParameters['linkedAgentId'])
-        conditionList = [0]
-        conditionValues = [linkedAgentDict[linkedAgentId], None]
-
-
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         ropeColor = THECOLORS['grey']
         ropeWidth = 4

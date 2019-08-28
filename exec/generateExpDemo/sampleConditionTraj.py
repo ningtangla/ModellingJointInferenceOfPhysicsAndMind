@@ -26,6 +26,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, SampleAction, SelectSoftmaxAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from exec.generateExpDemo.MCTSVisualization import ScalePos, InitializeScreen, DrawBackground, DrawStateWithRope, MCTSRender
 
 class ApproximatePolicy:
     def __init__ (self, policyValueNet, actionSpace, agentStateIdsForNN):
@@ -102,7 +103,8 @@ class ComposeSingleAgentGuidedMCTS():
         return guidedMCTSPolicy
 
 class ComposeSingleAgentMCTS():
-    def __init__(self, numTrees, numSimulationsPerTree, actionSpaces, agentIdsForNNState, maxRolloutSteps, rewardFunctions, rolloutHeuristicFunctions, selectChild, isTerminal, transit, getApproximateActionPrior,composeMultiAgentTransitInSingleAgentMCTS):
+    def __init__(self, numTrees, numSimulationsPerTree, actionSpaces, agentIdsForNNState, maxRolloutSteps, rewardFunctions, rolloutHeuristicFunctions, selectChild, isTerminal,
+            transit, getApproximateActionPrior, composeMultiAgentTransitInSingleAgentMCTS, MCTSRenders, MCTSRenderOn):
         self.numTrees = numTrees
         self.numSimulationsPerTree = numSimulationsPerTree
         self.actionSpaces = actionSpaces
@@ -115,6 +117,8 @@ class ComposeSingleAgentMCTS():
         self.transit = transit
         self.getApproximateActionPrior = getApproximateActionPrior
         self.composeMultiAgentTransitInSingleAgentMCTS = composeMultiAgentTransitInSingleAgentMCTS
+        self.MCTSRenders = MCTSRenders
+        self.MCTSRenderOn = self.MCTSRenderOn
 
     def __call__(self, agentId, selfNNModel, othersPolicy):
         approximateActionPrior = self.getApproximateActionPrior(selfNNModel, self.actionSpaces[agentId], self.agentIdsForNNState[agentId])
@@ -126,7 +130,8 @@ class ComposeSingleAgentMCTS():
         rewardFunction = self.rewardFunctions[agentId]
         rolloutHeuristic = self.rolloutHeuristicFunctions[agentId]
         estimateValue = RollOut(rolloutPolicy, self.maxRolloutSteps, transitInMCTS, rewardFunction, self.isTerminal, rolloutHeuristic)
-        MCTSPolicy = StochasticMCTS(self.numTrees, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees)
+        MCTSPolicy = StochasticMCTS(self.numTrees, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees,
+                self.MCTSRenders[agentId], self.MCTSRenderOn)
 
         return MCTSPolicy
 
@@ -329,11 +334,57 @@ def main():
 
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS, reasonMindList)
         # composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, selectChild, isTerminal, transit, getApproximatePolicy, composeMultiAgentTransitInSingleAgentMCTS)
-        composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, selectChild, isTerminal, transit, getApproximateUniformActionPrior, composeMultiAgentTransitInSingleAgentMCTS)
+        
+        screenWidth = 800
+        screenHeight = 800
+        fullScreen = False
+        initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
+        screen = initializeScreen()
+        leaveEdgeSpace = 195
+        lineWidth = 4
+        xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
+        yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+        screenColor = THECOLORS['black']
+        lineColor = THECOLORS['white']
 
-        trainableAgentIds = [sheepId, wolfId]
+        drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
+
+        numOfAgent = int(conditionParameters['numAgents'])
+        sheepId = 0
+        wolfId = 1
+        masterId = 2
+        distractorId = 3
+
+        circleSize = 10
+        positionIndex = [0, 1]
+        numRopePart = 9
+        ropePartIndex = list(range(numOfAgent, numOfAgent + numRopePart))
+
+        ropeColor = THECOLORS['grey']
+        ropeWidth = 4
+        drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
+
+        colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow'], THECOLORS['pink'], THECOLORS['purple'], THECOLORS['cyan'] ]
+
+        tiedAgentId = [wolfId, masterId]
+        circleColorList = colorSpace[:numOfAgent]
+        saveImage = False
+        saveImageFile = 1
+
+        rawXRange = [-10, 10]
+        rawYRange = [-10, 10]
+        scaledXRange = [200, 600]
+        scaledYRange = [200, 600]
+        scalePos = ScalePos(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+
+        mctsRenders = [MCTSRender(numOfAgent, MCTSAgentId, tiedAgentId, screen, screenWidth, screenHeight, screenColor, circleColorList, circleSize, saveImage, saveImageFile,
+            drawStateWithRope, scalePos) for MCTSAgentId in numOfAgent]
+        mctsRenderOn = True
+        composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions,
+                rolloutHeuristics, selectChild, isTerminal, transit, getApproximateUniformActionPrior, composeMultiAgentTransitInSingleAgentMCTS, mctsRenders, mctsRenderOn)
 
         #imageOthersPolicy[masterId] = lambda policy: lambda state : stationaryAgentPolicy(state)
+        trainableAgentIds = [sheepId, wolfId]
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy)
 
         # sample and save trajectories
