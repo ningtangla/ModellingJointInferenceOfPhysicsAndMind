@@ -110,14 +110,10 @@ class ThreeAgentsPolicyForWolfOnlyMCTS:
 
 
 
-
-
-
 class InferencePolicy:
-    def __init__(self, wolfPolicy, sheepPolicy, randomPolicy, softenPolicy = None, softParam = None):
-        self.wolfPolicy = wolfPolicy
-        self.sheepPolicy = sheepPolicy
-        self.randomPolicy = randomPolicy
+    def __init__(self, agentsNameList, agentsPolicyList, softenPolicy = None, softParam = None):
+        self.agentsNameList = agentsNameList
+        self.agentsPolicyList = agentsPolicyList
 
         self.softenPolicy = softenPolicy
         self.softParam = softParam
@@ -125,35 +121,18 @@ class InferencePolicy:
     def __call__(self, mind, state, allAgentsActions):
 
         if self.softParam is not None:
-            wolfPolicy = self.softenPolicy(self.wolfPolicy, self.softParam)
-            sheepPolicy = self.softenPolicy(self.sheepPolicy, self.softParam)
-            randomPolicy = self.softenPolicy(self.randomPolicy, self.softParam)
-
+            agentsInferencePolicyList = [self.softenPolicy(policy, self.softParam) for policy in self.agentsPolicyList]
         else:
-            wolfPolicy = self.wolfPolicy
-            sheepPolicy = self.sheepPolicy
-            randomPolicy = self.randomPolicy
+            agentsInferencePolicyList = self.agentsPolicyList
 
-        wolfID = mind.index('wolf')
-        sheepID = mind.index('sheep')
+        actionDistList = [agentPolicy(state) for agentPolicy in agentsInferencePolicyList]
+        actionList = [allAgentsActions[mind.index(agentName)] for agentName in self.agentsNameList]
 
-        sheepWolfState = [state[sheepID][:6], state[wolfID][:6]] # outside
+        actionAndActionInfDistPair = zip(actionList, actionDistList)
+        getActionLik = lambda action, actionDist: actionDist.get(action, 0)
+        likelihoodList = [getActionLik(action, actionDist) for action, actionDist in actionAndActionInfDistPair]
 
-        wolfAction = allAgentsActions[wolfID]
-        wolfActionDist = wolfPolicy(sheepWolfState)
-        wolfActionLikelihood = wolfActionDist.get(wolfAction, 0)
-
-        sheepAction = allAgentsActions[sheepID]
-        sheepActionDist = sheepPolicy(sheepWolfState)
-        sheepActionLikelihood = sheepActionDist.get(sheepAction, 0)
-
-        randomID = mind.index('random')
-        randomAction = allAgentsActions[randomID]
-        randomAllActionsLikelihood = randomPolicy(state)
-        randomActionLikelihood = randomAllActionsLikelihood.get(randomAction, 0)
-
-        actionLikelihood = [wolfActionLikelihood, sheepActionLikelihood, randomActionLikelihood]
-        policyLikelihood = np.product(actionLikelihood)
+        policyLikelihood = np.product(likelihoodList)
 
         return policyLikelihood
 

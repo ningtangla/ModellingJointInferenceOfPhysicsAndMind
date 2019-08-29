@@ -19,7 +19,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import RandomPolicy
 from src.episode import SampleAction
 
-from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForNN
+from src.inferChasing.continuousPolicy import InferencePolicy
 from src.inferChasing.continuousTransition import TransitConstantPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, QueryDecayedLikelihood, \
     InferOneStepLikelihood, InferContinuousChasingAndDrawDemo, softenPolicy
@@ -273,7 +273,7 @@ def main():
     reasonMindList[sheepId][wolfId] = lambda policy: policy
     reasonMindList[wolfId][sheepId] = lambda policy: policy
 
-#####################################################
+##################################################### try
     sheepStateIdsForNN = range(4)
     wolfStateIdsForNN = range(3)
     masterStateIdsForNN = range(3)
@@ -281,7 +281,9 @@ def main():
     getSheepApproximatePolicy = getApproximatePolicy(sheepPreTrainModel, sheepActionSpace, sheepStateIdsForNN)
     getWolfApproximatePolicy = getApproximatePolicy(wolfPreTrainModel, wolfActionSpace, wolfStateIdsForNN)
     getMasterApproximatePolicy = getApproximatePolicy(masterPreTrainModel, masterActionSpace, masterStateIdsForNN)
+
     multiAgentApproximatePolicy = np.array([getSheepApproximatePolicy, getWolfApproximatePolicy, getMasterApproximatePolicy])
+    multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel, masterPreTrainModel]
 
     MCTSAgentIds = [sheepId, wolfId]
     otherAgentPolicyForMCTSAgents = np.array(
@@ -296,54 +298,12 @@ def main():
     prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy)
 
 
-
-
-    class PolicyNoRopeCollisionInference:
-        def __init__(self, wolfPolicy, sheepPolicy, randomPolicy, softenPolicy=None, softParam=None):
-            self.wolfPolicy = wolfPolicy
-            self.sheepPolicy = sheepPolicy
-            self.randomPolicy = randomPolicy
-
-            self.softenPolicy = softenPolicy
-            self.softParam = softParam
-
-        def __call__(self, mind, state, allAgentsActions):
-
-    class PrepareMultiAgentPolicy:
-        def __init__(self, MCTSAgentIds, actionSpaces, agentIdsForNNState, composeSingleAgentPolicy,
-                     getApproximatePolicy):
-            self.MCTSAgentIds = MCTSAgentIds
-            self.actionSpaces = actionSpaces
-            self.agentIdsForNNState = agentIdsForNNState
-            self.composeSingleAgentPolicy = composeSingleAgentPolicy
-            self.getApproximatePolicy = getApproximatePolicy
-
-        def __call__(self, multiAgentNNModel):
-            multiAgentApproximatePolicy = np.array(
-                [self.getApproximatePolicy(NNModel, actionSpace, agentStateIdsForNN) for
-                 NNModel, actionSpace, agentStateIdsForNN in zip(multiAgentNNModel,
-                                                                 self.actionSpaces, self.agentIdsForNNState)])
-            otherAgentPolicyForMCTSAgents = np.array(
-                [np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]]) for
-                 agentId in self.MCTSAgentIds])
-            MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
-            MCTSAgentsPolicy = np.array(
-                [self.composeSingleAgentPolicy(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy) for
-                 agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
-            multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
-            multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-            policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
-            return policy
-
-
-
-
-
-
     policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
     # need function: policy(mind, state, allAgentsActions), output jointLikelihood (like 'ThreeAgentsPolicyForNN' in src/inferChasing/continuousPolicy)
     # mind = ['wolf', 'sheep', 'master']
+    agentsNameList = ['wolf', 'sheep', 'master']
+    policy = InferencePolicy(agentsNameList, agentsPolicyList, softenPolicy=None, softParam=None)
 
 #####################################################
 
