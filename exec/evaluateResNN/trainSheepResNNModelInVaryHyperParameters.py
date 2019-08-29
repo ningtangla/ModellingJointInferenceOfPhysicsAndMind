@@ -50,13 +50,14 @@ class TrainModelForConditions:
         print(parameters)
         miniBatchSize = parameters['miniBatchSize']
         learningRate = parameters['learningRate']
-        depth = parameters['depth']
+        dropOutRate = parameters['dropOutRate']
         # width = parameters['width']
 
-        model = self.getNNModel(depth)
+        model = self.getNNModel(dropOutRate)
         train = self.getTrain(miniBatchSize, learningRate)
         parameters.update({'trainSteps': 0})
         modelSavePath = self.getModelSavePath(parameters)
+        print(modelSavePath)
         saveVariables(model, modelSavePath)
 
         for trainIntervelIndex in self.trainIntervelIndexes:
@@ -80,8 +81,8 @@ def main():
     manipulatedVariables = OrderedDict()
 
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] =  [1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = [9, 17, 33]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedVariables['dropOutRate'] = [0, 0.2, 0.4]
     # manipulatedVariables['resBlock'] = [2 ,4, 6, 8]
     # manipulatedVariables['width'] = [32, 64 ,128, 256]
 
@@ -139,20 +140,21 @@ def main():
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
-
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
 
     # neural network init and save path
     numStateSpace = 12
-    regularizationFactor = 1e-4
-    sharedLayerWidths = [128]
-    actionLayerWidths = [128]
-    valueLayerWidths = [128]
+    numActionSpace = 8
+    regularizationFactor = 1e-2
+    resBlockSize = 2
+    initialization = 'uniform'
+    nnStructure = ((256,) * 17, (256,), (256,))
+    sharedWidths, actionLayerWidths, valueLayerWidths = nnStructure
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    resBlock = 4
-    getNNModel = lambda depth: generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths, resBlock)
+    getNNModel = lambda  dropoutRate: generateModel(sharedWidths, actionLayerWidths, valueLayerWidths, resBlockSize=resBlockSize,
+                          initialization=initialization, dropoutRate=dropoutRate)
 
     # function to train NN model
     terminalThreshold = 1e-10
@@ -180,24 +182,24 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedResSheepModels','res4')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateResNN', 'trainedResSheepModels','res2depth17')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(10,21))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
+    # trainModelForConditions({'miniBatchSize':128,'learningRate':0.001,'dropOutRate':0.2})
 
-
-    # # train models for all conditions
+    # train models for all conditions
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.7*numCpuCores)
+    numCpuToUse = int(0.8*numCpuCores)
     trainPool = mp.Pool(numCpuToUse)
-    trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    # trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     models = trainPool.map(trainModelForConditions, parametersAllCondtion)
 
 if __name__ == '__main__':

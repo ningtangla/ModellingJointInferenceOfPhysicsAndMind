@@ -42,10 +42,10 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] = [1e-3, 1e-4, 1e-5]
-    manipulatedVariables['trainSteps'] = list(range(0,500001,50000))
-    manipulatedVariables['depth'] = [9, 17, 33]
+    manipulatedVariables['miniBatchSize']=[64, 128, 256]
+    manipulatedVariables['learningRate']=  [1e-3, 1e-4]
+    manipulatedVariables['dropOutRate']= [0,0.2,0.4]
+    manipulatedVariables['trainSteps'] = list(range(0,1000001, 50000))
     # manipulatedVariables['width'] = [32, 64, 128, 256]
 
     levelNames = list(manipulatedVariables.keys())
@@ -83,7 +83,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateResNN', 'evaluateTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -108,20 +108,20 @@ def main():
     # plot the results
     fig = plt.figure()
     numRows = len(manipulatedVariables['miniBatchSize'])
-    numColumns = len(manipulatedVariables['depth'])
+    numColumns = len(manipulatedVariables['dropOutRate'])
     plotCounter = 1
 
     for miniBatchSize, grp in statisticsDf.groupby('miniBatchSize'):
         grp.index = grp.index.droplevel('miniBatchSize')
 
-        for depth, group in grp.groupby('depth'):
-            group.index = group.index.droplevel('depth')
+        for dropOutRate, group in grp.groupby('dropOutRate'):
+            group.index = group.index.droplevel('dropOutRate')
 
             axForDraw = fig.add_subplot(numRows,numColumns,plotCounter)
             if plotCounter % numColumns == 1:
                 axForDraw.set_ylabel('miniBatchSize: {}'.format(miniBatchSize))
             if plotCounter <= numColumns:
-                axForDraw.set_title('depth: {}'.format(depth))
+                axForDraw.set_title('dropOutRate: {}'.format(dropOutRate))
             axForDraw.set_ylim(-1, 1.3)
 
             # plt.ylabel('Distance between optimal and actual next position of sheep')
