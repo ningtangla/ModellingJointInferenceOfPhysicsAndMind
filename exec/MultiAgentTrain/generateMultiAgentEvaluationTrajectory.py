@@ -100,10 +100,6 @@ def main():
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numActionSpace = len(actionSpace)
 
-        alivePenalty = -0.05
-        deathBonus = 1
-        rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
-
         # neural network init and save path
         numStateSpace = 12
         regularizationFactor = 1e-4
@@ -126,24 +122,24 @@ def main():
 
         # function to prepare policy
         selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        # otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
         preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
+
+
+
         evalQPosInitNoise = 0
         evalQVelInitNoise = 0
         qVelInit = [0, 0, 0, 0]
 
-        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents,
-                                                                  evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, evalQPosInitNoise, evalQVelInitNoise)
 
         evalNumTrials = 1000
         generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
         evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
-        getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
-                                                       numAgents, evalQPosInitNoise, evalQVelInitNoise)
+        getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial], numAgents, evalQPosInitNoise, evalQVelInitNoise)
         evalMaxRunningSteps = 20
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
                                                              getResetFromTrial(trial), chooseGreedyAction)

@@ -18,7 +18,7 @@ from src.inferChasing.discreteGridPolicy import ActHeatSeeking, \
 from src.inferChasing.discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
 from src.inferChasing.inference import IsInferenceTerminal, ObserveStateOnly, InferOneStepLikelihood, \
-    InferDiscreteChasingWithMemoryDecayAndDrawDemo, QueryDecayedLikelihood, SoftenPolicy
+    InferDiscreteChasingWithMemoryDecayAndDrawDemo, QueryDecayedLikelihood, softenPolicy
 
 from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
     GetChasingResultColor, ColorChasingPoints, AdjustPullingLineWidth, \
@@ -38,9 +38,8 @@ def main():
     rationalityParam = 0.9
     heatSeekingPolicy = HeatSeekingPolicy(rationalityParam, actHeatSeeking)
     softParameter = 1
-    softenPolicy = SoftenPolicy(softParameter)
 
-    softenedHeatSeeking = softenPolicy(heatSeekingPolicy)
+    softenedHeatSeeking = softenPolicy(heatSeekingPolicy, softParameter)
 
     positionIndex = [0, 1]
     getAgentPosition = lambda agentID, state: GetAgentPosFromState(agentID, positionIndex)(state)

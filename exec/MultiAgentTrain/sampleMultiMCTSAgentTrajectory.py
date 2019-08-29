@@ -207,7 +207,7 @@ def main():
         for agentId in trainableAgentIds:
             baseLineModelPath = generateNNModelSavePath({'iterationIndex': -2, 'agentId': agentId})
             multiAgentNNmodel[agentId] = restoreVariables(multiAgentNNmodel[agentId], baseLineModelPath)
-        
+
         startTime = time.time()
 
         # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy

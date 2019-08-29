@@ -159,7 +159,7 @@ def main():
 
     thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
-    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
+    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
     mindPhysicsActionName = ['mind', 'physics', 'action']
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)

@@ -167,18 +167,13 @@ def main():
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-
-    parametersForTrajectoryPath = dict()
-    startSampleIndex = 1
-    endSampleIndex = 3
-
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    masterPowerRatio = 1
-    beta = 1
+    masterPowerRatio = float(parametersForTrajectoryPath['masterPowerRatio'])
+    beta = float(parametersForTrajectoryPath['beta'])
     numTrials = endSampleIndex - startSampleIndex
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 

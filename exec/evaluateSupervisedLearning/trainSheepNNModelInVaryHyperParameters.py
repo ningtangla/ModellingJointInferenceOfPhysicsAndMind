@@ -50,9 +50,10 @@ class TrainModelForConditions:
         print(parameters)
         miniBatchSize = parameters['miniBatchSize']
         learningRate = parameters['learningRate']
-        depth = parameters['depth']
+        # depth = parameters['depth']
+        width = parameters['width']
 
-        model = self.getNNModel(depth)
+        model = self.getNNModel(width)
         train = self.getTrain(miniBatchSize, learningRate)
         parameters.update({'trainSteps': 0})
         modelSavePath = self.getModelSavePath(parameters)
@@ -77,9 +78,10 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
-    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = [2 ,4, 6, 8]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4, 1e-5]
+    # manipulatedVariables['depth'] = [2 ,4, 6, 8]
+    manipulatedVariables['width'] = [32, 64 ,128, 256]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -92,8 +94,8 @@ def main():
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 20
-    dataSetNumSimulations = 200
+    dataSetMaxRunningSteps = 25
+    dataSetNumSimulations = 100
     killzoneRadius = 2
 
     dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -141,12 +143,13 @@ def main():
     # neural network init and save path
     numStateSpace = 12
     regularizationFactor = 1e-4
-    sharedWidths = [128]
-    actionLayerWidths = [128]
-    valueLayerWidths = [128]
+    # actionLayerWidths = [128]
+    # valueLayerWidths = [128]
+    depth = 8
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    getNNModel = lambda depth: generateModel(sharedWidths*2 , actionLayerWidths * depth, valueLayerWidths)
+    getNNModel = lambda width: generateModel([width] * depth, [width], [width])
+
     # function to train NN model
     terminalThreshold = 1e-6
     lossHistorySize = 10
@@ -158,8 +161,8 @@ def main():
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 1000
-    trainStepsIntervel = 40000
+    reportInterval = 10000
+    trainStepsIntervel = 50000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
@@ -170,15 +173,14 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                        'trainedModels')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6))
+    trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
 
@@ -188,7 +190,7 @@ def main():
     print(numCpuCores)
     numCpuToUse = int(0.8*numCpuCores)
     trainPool = mp.Pool(numCpuToUse)
-    #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     models = trainPool.map(trainModelForConditions, parametersAllCondtion)
 
 if __name__ == '__main__':

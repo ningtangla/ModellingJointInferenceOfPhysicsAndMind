@@ -154,10 +154,10 @@ def main():
                 drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
 
     thresholdPosterior = 1.5
-    mindPhysicsName = ['mind', 'physics']
-    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
+    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
     decayParameter = 1
+    mindPhysicsName = ['mind', 'physics']
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 
     inferOneStepLikelihood = InferOneStepLikelihood(inferenceIndex, getMindsPhysicsActionsJointLikelihood)

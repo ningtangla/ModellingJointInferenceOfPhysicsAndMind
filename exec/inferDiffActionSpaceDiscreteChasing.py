@@ -180,9 +180,8 @@ def main():
 
     thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
-    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
+    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
-    # inferOneStepLikelihood = InferOneStepLikelihood(inferenceIndex, getMindsPhysicsActionsJointLikelihood)
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsName, getMindsPhysicsActionsJointLikelihood)
 
     observe = ObserveStateOnly(trajectory)

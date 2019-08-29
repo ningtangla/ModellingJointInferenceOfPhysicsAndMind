@@ -80,8 +80,9 @@ def main():
     randomActionSpace = sheepActionSpace
     randomPolicy = RandomPolicy(randomActionSpace)
 
-    wolfInferencePolicy = softenPolicy(wolfPolicy)
-    sheepInferencePolicy = softenPolicy(sheepPolicy)
+    softParam = 1
+    wolfInferencePolicy = softenPolicy(wolfPolicy, softParam)
+    sheepInferencePolicy = softenPolicy(sheepPolicy, softParam)
 
     policy = ThreeAgentsPolicyForNN(wolfInferencePolicy, sheepInferencePolicy, randomPolicy)
 
@@ -158,7 +159,7 @@ def main():
 
     thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
-    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
+    isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
     decayParameter = 0.8
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)

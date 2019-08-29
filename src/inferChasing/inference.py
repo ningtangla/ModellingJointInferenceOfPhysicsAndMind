@@ -1,6 +1,7 @@
 import pandas as pd
 import pygame as pg
 import numpy as np
+import itertools as it
 
 class ObserveStateOnly:
     def __init__(self, trajectory):
@@ -22,19 +23,6 @@ class Observe:
         if timeStep >= len(self.trajectory):
             return None
         currentState = self.trajectory[timeStep][self.stateIndex]
-        return currentState
-
-
-class ObserveWithRope:
-    def __init__(self, stateIndex, trajectory, sheepWolfMasterIndex = 3):
-        self.stateIndex = stateIndex
-        self.trajectory = trajectory
-        self.sheepWolfMasterIndex = sheepWolfMasterIndex
-
-    def __call__(self, timeStep):
-        if timeStep >= len(self.trajectory):
-            return None
-        currentState = self.trajectory[timeStep][0][self.stateIndex][:self.sheepWolfMasterIndex]
         return currentState
 
 

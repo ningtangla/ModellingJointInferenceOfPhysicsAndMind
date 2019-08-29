@@ -92,4 +92,8 @@ class HeuristicDistanceToTarget:
         distance = np.linalg.norm(predatorPos - preyPos, ord = 2)
         reward = -self.weight * distance
 
+<<<<<<< HEAD
         return reward
+=======
+        return reward
+>>>>>>> develop
