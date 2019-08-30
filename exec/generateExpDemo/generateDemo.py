@@ -152,6 +152,7 @@ def main():
 
                 FPS = 60
                 chaseTrial = ChaseTrialWithTraj(FPS, circleColorList, drawState, saveImage=True, saveImageDir=saveImageDir)
+                
                 chaseTrialWithRope = ChaseTrialWithRopeTraj(FPS, circleColorList, drawStateWithRope, saveImage=True, saveImageDir=saveImageDir)
 
                 rawXRange = [-10, 10]

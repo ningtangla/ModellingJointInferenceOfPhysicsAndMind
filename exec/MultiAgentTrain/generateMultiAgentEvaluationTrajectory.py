@@ -141,8 +141,9 @@ def main():
         evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
         getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial], numAgents, evalQPosInitNoise, evalQVelInitNoise)
         evalMaxRunningSteps = 20
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
-                                                             getResetFromTrial(trial), chooseGreedyAction)
+                                                             getResetFromTrial(trial), chooseActionList)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories
