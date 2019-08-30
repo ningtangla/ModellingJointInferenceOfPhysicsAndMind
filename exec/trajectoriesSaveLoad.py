@@ -68,10 +68,11 @@ class LoadTrajectories:
              productedSpecificValues])
         genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
         if len(genericSavePath) != 0:
-            filesNames = np.concatenate([glob.glob(savePath) for savePath in genericSavePath])
+            filesNames = np.concatenate([sorted(glob.glob(savePath)) for savePath in genericSavePath])
         else:
             filesNames = []
         mergedTrajectories = []
+        print(filesNames)
         for fileName in filesNames:
             oneFileTrajectories = self.loadFromPickle(fileName)
             mergedTrajectories.extend(oneFileTrajectories)
