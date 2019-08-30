@@ -44,8 +44,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0, 500, 1000, 1500, 2000]
-    manipulatedVariables['otherIteration'] = [0, 500, 1000, 1500, 2000]
+    manipulatedVariables['selfIteration'] = list(range(0,6001,1500))
+    manipulatedVariables['otherIteration'] = list(range(0,6001,1500))
     manipulatedVariables['selfId'] = [0, 1]
 
     levelNames = list(manipulatedVariables.keys())
@@ -108,7 +108,7 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
