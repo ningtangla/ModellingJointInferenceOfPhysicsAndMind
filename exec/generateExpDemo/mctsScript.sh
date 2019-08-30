@@ -18,17 +18,17 @@
 cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
 mkdir demo
 
-for pureMCTSAgentId in 10 
+for pureMCTSAgentId in 210
 do
 
     for beta in 0.5 
     do
-        for masterPowerRatio in 0.01
+        for masterPowerRatio in 0.4
         do 
             for index in {0..27} 
             do
               
-            ffmpeg -r 60 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/image/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}/${index}/image/%00d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}.mp4
+            ffmpeg -r 60 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/image/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=30_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}.pickle/image/%0d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/demo/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=30_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}.mp4
 
             done
         done

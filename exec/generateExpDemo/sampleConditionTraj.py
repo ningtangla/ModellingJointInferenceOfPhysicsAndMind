@@ -173,10 +173,10 @@ def main():
     #check file exists or not
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 15
+    maxRunningSteps = 30
     numSimulations = 80
     killzoneRadius = 0.5
-    pureMCTSAgentId = 10
+    pureMCTSAgentId = 210
     numAgent = 3
 
     dirName = os.path.dirname(__file__)
@@ -286,7 +286,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-        preyPowerRatio = 0.01
+        preyPowerRatio = 1.15
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
@@ -390,10 +390,10 @@ def main():
         mctsRenders = [MCTSRender(numAgent, MCTSAgentId, tiedAgentId, screen, screenWidth, screenHeight, screenColor, circleColorList, mctsLineColor, circleSizeForMCTS, saveImage, saveImageDir, drawStateWithRope, scalePos) for MCTSAgentId in range(numAgent)]
         mctsRenderOn = True
         composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions,
-                rolloutHeuristics, selectChild, isTerminal, transit, getApproximateUniformActionPrior, composeMultiAgentTransitInSingleAgentMCTS, mctsRenders, mctsRenderOn)
+                rolloutHeuristics, selectChild, isTerminal, transit, getApproximatePolicy, composeMultiAgentTransitInSingleAgentMCTS, mctsRenders, mctsRenderOn)
 
         #imageOthersPolicy[masterId] = lambda policy: lambda state : stationaryAgentPolicy(state)
-        trainableAgentIds = [wolfId]
+        trainableAgentIds = [wolfId, sheepId, masterId]
         MCTSRenderInterval = 1
         callTime = 0
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy, MCTSRenderInterval, callTime)

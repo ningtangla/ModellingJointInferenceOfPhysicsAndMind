@@ -44,7 +44,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0.01]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['beta'] = [0.5]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -72,7 +72,7 @@ def main():
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
-    maxRunningSteps = 15
+    maxRunningSteps = 30
     numSimulations = 80
     killzoneRadius = 0.5
 
