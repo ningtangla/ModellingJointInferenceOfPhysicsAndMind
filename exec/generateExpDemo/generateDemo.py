@@ -35,15 +35,16 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     # manipulatedVariables['agentId'] = [310]
-    #manipulatedVariables['maxRunningSteps'] = [360]
+    manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [0]
-    manipulatedVariables['linkedAgentId'] = [32, 21]
+    manipulatedVariables['offset'] = [12]
+    manipulatedVariables['linkedAgentId'] = [21]
     manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
-    manipulatedVariables['numAgents'] = [4]
-    manipulatedVariables['pureMCTSAgentId'] = [310, 999]
+    manipulatedVariables['numAgents'] = [3]
+    manipulatedVariables['pureMCTSAgentId'] = [10]
+    numDemoExists = 0
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
     # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
@@ -63,7 +64,7 @@ def main():
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     # fuzzySearchParameterNames = ['sampleIndex']
-    fuzzySearchParameterNames = ['timeStep', 'maxRunningSteps']
+    fuzzySearchParameterNames = ['timeStep']
     # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
@@ -95,7 +96,7 @@ def main():
         if not os.path.exists(imageSavePath):
             os.makedirs(imageSavePath)
 
-        [saveToPickle(df, os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(sampleIndex + 46))) for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
+        [saveToPickle(df, os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(sampleIndex + numDemoExists))) for df, sampleIndex in zip(selectedDf, range(numTrajectories))]
 
 # generate demo image
         screenWidth = 800
@@ -137,19 +138,19 @@ def main():
 
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow'], THECOLORS['pink'], THECOLORS['purple'], THECOLORS['cyan'] ]
 
-        random.shuffle(colorSpace)
+        # random.shuffle(colorSpace)
         circleColorList = colorSpace[:numOfAgent]
 
         for index in range(len(selectedTrajectories)):
         # if len(selectedTrajectories) > 0:
             # index = 4
-            conditionParameters.update({'demoIndex':index + 46})
+            conditionParameters.update({'demoIndex':index + numDemoExists})
             saveToPickle([trajectories[index]], getTrajectorySavePath(conditionParameters))
             for condition in conditionList:
-                imageFolderName = os.path.join("{}".format(index + 46), 'condition='"{}".format((condition)))
+                imageFolderName = os.path.join("{}".format(index + numDemoExists), 'condition='"{}".format((condition)))
                 saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))
 
-                random.shuffle(colorSpace)
+                # random.shuffle(colorSpace)
                 circleColorList = colorSpace[:numOfAgent]
 
                 FPS = 60
@@ -166,7 +167,7 @@ def main():
                 adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
 
                 getTrajectory = lambda trajectoryDf: scaleTrajectory(adjustFPS(trajectoryDf))
-                trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index + 46)))
+                trajectoryDf = pd.read_pickle(os.path.join(imageSavePath, 'sampleIndex={}.pickle'.format(index + numDemoExists)))
                 trajectory = getTrajectory(trajectoryDf)
                 # chaseTrial(trajectory)
                 chaseTrialWithRope(trajectory, conditionValues[condition])

@@ -55,7 +55,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
-    manipulatedVariables['maxRunningSteps'] = [320]
+    manipulatedVariables['maxRunningSteps'] = [360]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
@@ -174,6 +174,7 @@ def main():
                         saveToPickle(demoTrajs, demoTrajsPath)
 
                         replaceSheep = ReplaceSheep(sheepId, stateIndex)
+                        leagelTrajectories
                         chasingAbsentTrajs = replaceSheep(leagelTrajectories)
                         chasingAbsentTrajsPathParameters = copy.deepcopy(pathParameters)
                         chasingAbsentTrajsPathParameters['offset'] = 0
