@@ -31,7 +31,7 @@ def main():
     dataIndex = 5
     dataPath = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain','multiMCTSAgent','evaluateTrajectories','killzoneRadius=2_maxRunningSteps=20_numSimulations=200_otherIteration=18000_sampleIndex=(0,46)_selfId=0_selfIteration=0.pickle')
     trajectory = list(loadFromPickle(dataPath)[42])
-    del trajectory[-1]
+    # del trajectory[-1]
     print(trajectory)
     stateIndex = 0
 
