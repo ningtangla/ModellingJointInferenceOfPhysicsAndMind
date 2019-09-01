@@ -264,9 +264,9 @@ def main():
         selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-        preyPowerRatio = 1.7
+        preyPowerRatio = 1.15
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.95
+        predatorPowerRatio = 1.3
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         masterPowerRatio = masterPowerRatio
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
