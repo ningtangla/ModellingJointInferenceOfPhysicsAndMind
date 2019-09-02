@@ -173,7 +173,7 @@ def main():
     #check file exists or not
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 10
+    maxRunningSteps = 6
     numSimulations = 80
     killzoneRadius = 0.5
     pureMCTSAgentId = 210
@@ -226,7 +226,7 @@ def main():
         # isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
         isTerminal = lambda state : False
 
-        numSimulationFrames = 20
+        numSimulationFrames = 30
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         numRopePart = 9

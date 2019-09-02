@@ -30,7 +30,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import  SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel,ExcuteCodeOnConditionsParallel
 from exec.evaluationFunctions import ComputeStatistics
-from exec.generateExpDemo.filterTraj import *
+from exec.generateSlidesDemo.filterTraj import *
 
 def drawPerformanceLine(dataDf, axForDraw):
     for masterPowerRatio, grp in dataDf.groupby('masterPowerRatio'):
@@ -72,7 +72,7 @@ def main():
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
-    maxRunningSteps = 10
+    maxRunningSteps = 6
     numSimulations = 80
     killzoneRadius = 0.5
 
