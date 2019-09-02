@@ -199,6 +199,6 @@ class AddSheep:
             traj =  trajectories[trajIndex]
             lastSheepStates = np.array([timeStep[self.stateIndex][self.sheepId] for timeStep in lastTraj])
             for timeStepIndex in range(len(lastTraj)):
-                timeState = np.append(np.array(traj[timeStepIndex][self.stateIndex]), lastSheepStates[timeStepIndex])
+                timeState = np.array(list(traj[timeStepIndex][self.stateIndex]) + [lastSheepStates[timeStepIndex]])
                 trajectoriesCopy[trajIndex][timeStepIndex][self.stateIndex] = timeState
         return trajectoriesCopy
