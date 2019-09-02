@@ -119,7 +119,6 @@ def establishSoftmaxActionDist(root):
     actionDist = dict(zip(actions, actionProbs))
     return actionDist
 
-
 class MCTS:
     def __init__(self, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution):
         self.numSimulation = numSimulation
@@ -147,6 +146,59 @@ class MCTS:
             self.backup(value, nodePath)
 
         actionDistribution = self.outputDistribution(root)
+        return actionDistribution
+
+def establishPlainActionDistFromMultipleTrees(roots):
+    visits = np.sum([[child.numVisited for child in root.children] for root in roots], axis=0)
+    actionProbs = visits / np.sum(visits)
+    actions = [list(child.id.keys())[0] for child in roots[0].children]
+    actionDist = dict(zip(actions, actionProbs))
+    return actionDist
+
+
+def establishSoftmaxActionDistFromMultipleTrees(roots):
+    visits = np.sum([[child.numVisited for child in root.children] for root in roots], axis=0)
+    expVisits = np.exp(visits)
+    actionProbs = expVisits / np.sum(expVisits)
+    actions = [list(child.id.keys())[0] for child in roots[0].children]
+    actionDist = dict(zip(actions, actionProbs))
+    return actionDist
+
+class StochasticMCTS:
+    def __init__(self, numTree, numSimulation, selectChild, expand, estimateValue, backup, outputDistribution, mctsRender, mctsRenderOn):
+        self.numTree = numTree
+        self.numSimulation = numSimulation
+        self.selectChild = selectChild
+        self.expand = expand
+        self.estimateValue = estimateValue
+        self.backup = backup
+        self.outputDistribution = outputDistribution
+        self.mctsRender = mctsRender
+        self.mctsRenderOn = mctsRenderOn
+        
+    def __call__(self, currentState):
+        roots = []
+        backgroundScreen = None
+        for treeIndex in range(self.numTree):
+            root = Node(id={None: currentState}, numVisited=0, sumValue=0, isExpanded=False)
+            root = self.expand(root)
+
+            for exploreStep in range(self.numSimulation):
+                currentNode = root
+                nodePath = [currentNode]
+
+                while currentNode.isExpanded:
+                    nextNode = self.selectChild(currentNode)
+                    if self.mctsRenderOn:
+                        backgroundScreen = self.mctsRender(currentNode, nextNode, roots, backgroundScreen)
+                    nodePath.append(nextNode)
+                    currentNode = nextNode
+
+                leafNode = self.expand(currentNode)
+                value = self.estimateValue(leafNode)
+                self.backup(value, nodePath)
+            roots.append(root)
+        actionDistribution = self.outputDistribution(roots)
         return actionDistribution
 
 
