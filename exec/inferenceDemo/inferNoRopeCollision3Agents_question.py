@@ -2,12 +2,13 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
 import numpy as np
 import pandas as pd
 import mujoco_py as mujoco
 import itertools as it
+from pygame.color import THECOLORS
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionAvoidCollisionAndWall, IsCollided,HeuristicDistanceToTarget
@@ -23,9 +24,13 @@ from src.inferChasing.continuousPolicy import InferencePolicy
 from src.inferChasing.continuousTransition import TransitConstantPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, QueryDecayedLikelihood, \
     InferOneStepLikelihood, InferContinuousChasingAndDrawDemo, softenPolicy
-from visualize.inferenceVisualization import PlotInferenceProb
 
-
+from visualize.initialization import initializeScreen
+from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
+    GetChasingResultColor, ColorChasingPoints, DrawContinuousInferenceResultNoPull, \
+    PlotInferenceProb
+from visualize.continuousVisualization import ScaleState, AdjustStateFPS,\
+    DrawBackground, DrawState
 
 class ApproximatePolicy:
     def __init__ (self, policyValueNet, actionSpace, agentStateIdsForNN):
@@ -95,7 +100,7 @@ class ComposeSingleAgentGuidedMCTS():
         expand = Expand(self.isTerminal, initializeChildren)
 
         terminalReward = self.terminalRewardList[agentId]
-        approximateValue = self.getApproximateValue[agentId](selfNNModel)
+        approximateValue = self.getApproximateValue(selfNNModel, self.agentIdsForNNState[agentId])
         estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
         guidedMCTSPolicy = StochasticMCTS(self.numTrees, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees)
 
@@ -170,7 +175,7 @@ class PrepareMultiAgentPolicyList:
 def main():
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo','trajectories')
-    trajectoryPath = os.path.join(trajectoriesSaveDirectory, 'beta=0.5_demoIndex=0_killzoneRadius=0.5_masterPowerRatio=0.4_maxRunningSteps=360_numAgents=3_numSimulations=400_offset=0_pureMCTSAgentId=10.pickle')
+    trajectoryPath = os.path.join(trajectoriesSaveDirectory, 'beta=0.5_demoIndex=1_killzoneRadius=0.5_linkedAgentId=21_masterPowerRatio=0.4_maxRunningSteps=360_numAgents=3_numSimulations=400_offset=0_pureMCTSAgentId=10.pickle')
 
     parametersForTrajectoryPath = {'masterPowerRatio':0.4, 'beta':0.5}
 
@@ -178,7 +183,7 @@ def main():
     beta = float(parametersForTrajectoryPath['beta'])
 
     # Mujoco environment
-    physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'noRopeCollision3Agents.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'noRopeCollision3Agents.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -199,16 +204,30 @@ def main():
 
     isTerminal = lambda state : False
 
+
     numSimulationFrames = 20
+
     transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-    transition = TransitConstantPhysics(transit)
+
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    preyPowerRatio = 1.15
+    # sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+    sheepActionSpace = actionSpace
+    predatorPowerRatio = 1.3
+    # wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+    wolfActionSpace = actionSpace
+    masterPowerRatio = masterPowerRatio
+    # masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
+    masterActionSpace = actionSpace
+    powerRatiosList = [preyPowerRatio, predatorPowerRatio, masterPowerRatio]
+    transition = TransitConstantPhysics(powerRatiosList, transit)
 
     numAgent = 3
     numRopePart = 9
     ropePartIndex = list(range(numAgent, numAgent + numRopePart))
 
 # neural network init
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+
     numStateSpaceList = [24, 18, 18, 24]
     numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
@@ -232,7 +251,7 @@ def main():
     masterPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedMasterNNModels','agentId=2_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')
     masterPreTrainModel = restoreVariables(initMultiAgentNNModels[masterId], masterPreTrainModelPath)
 
-    # multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel, masterPreTrainModel]
+    multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel, masterPreTrainModel]
 
 
 # MCTS compose
@@ -242,15 +261,10 @@ def main():
     selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-    preyPowerRatio = 1.15
-    sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    predatorPowerRatio = 1.3
-    wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-    masterPowerRatio = masterPowerRatio
-    masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
+
 
     actionSpaceList = [sheepActionSpace, wolfActionSpace, masterActionSpace]
-    # agentStateIdsForNNList = [range(4), range(3), range(3)]
+    agentStateIdsForNNList = [range(4), range(3), range(3)]
     getApproximatePolicy = lambda NNmodel, actionSpace, agentStateIdsForNN: ApproximatePolicy(NNmodel, actionSpace, agentStateIdsForNN)
     getApproximateUniformActionPrior = lambda NNModel, actionSpace, agentStateIdsForNN: lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
 
@@ -278,8 +292,8 @@ def main():
     rolloutHeuristics = [HeuristicDistanceToTarget(weight, getWolfQPos, getSheepQPos) for weight in rolloutHeuristicWeights]
 
     numTrees = 1
-    numSimulationsPerTree = 10
-    maxRolloutSteps = 5
+    numSimulationsPerTree = 20
+    maxRolloutSteps = 2
 
     betaInMCTS = 1
     chooseActionInMCTS = SampleAction(betaInMCTS)
@@ -289,35 +303,22 @@ def main():
     reasonMindList[sheepId][wolfId] = lambda policy: policy
     reasonMindList[wolfId][sheepId] = lambda policy: policy
 
-##################################################### try
-    sheepStateIdsForNN = range(4)
-    wolfStateIdsForNN = range(3)
-    masterStateIdsForNN = range(3)
 
-    getSheepApproximatePolicy = getApproximatePolicy(sheepPreTrainModel, sheepActionSpace, sheepStateIdsForNN)
-    getWolfApproximatePolicy = getApproximatePolicy(wolfPreTrainModel, wolfActionSpace, wolfStateIdsForNN)
-    getMasterApproximatePolicy = getApproximatePolicy(masterPreTrainModel, masterActionSpace, masterStateIdsForNN)
-
-    multiAgentApproximatePolicy = np.array([getSheepApproximatePolicy, getWolfApproximatePolicy, getMasterApproximatePolicy])
-    multiAgentNNmodel = [sheepPreTrainModel, wolfPreTrainModel, masterPreTrainModel]
-
-    MCTSAgentIds = [sheepId, wolfId]
-    otherAgentPolicyForMCTSAgents = np.array(
-        [np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]]) for
-         agentId in MCTSAgentIds])
+    getStateFromNode = lambda node: list(node.id.values())[0]
+    getApproximateValue = lambda NNmodel, agentStateIdsForNN: ApproximateValue(NNmodel, agentStateIdsForNN)
 
     composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS, reasonMindList)
-    composeSingleAgentMCTS = ComposeSingleAgentMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, selectChild, isTerminal, transit, getApproximateUniformActionPrior, composeMultiAgentTransitInSingleAgentMCTS)
+    composeSingleAgentMCTS = ComposeSingleAgentGuidedMCTS(numTrees, numSimulationsPerTree, actionSpaceList, agentStateIdsForNNList, deathPenalties, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
 
-
-#####################################################
-
+    trainableAgentIds = []
     prepareMultiAgentPolicyList = PrepareMultiAgentPolicyList(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy)
 
     agentsPolicyList = prepareMultiAgentPolicyList(multiAgentNNmodel)
 
+##################################################### try
+    softParameter = 0.9
     agentsNameList = ['sheep', 'wolf', 'master']
-    policy = InferencePolicy(agentsNameList, agentsPolicyList, softenPolicy=None, softParam=None)
+    policy = InferencePolicy(agentsNameList, agentsPolicyList, softenPolicy, softParameter)
 
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
@@ -330,13 +331,14 @@ def main():
     chasingSpace = list(it.permutations(chasingAgents))
     pullingSpace = ['constantPhysics']
     actionHypo = list(it.product(sheepActionSpace, wolfActionSpace, masterActionSpace))
+    print(actionHypo[0])
     iterables = [chasingSpace, pullingSpace, actionHypo]
     inferenceIndex = pd.MultiIndex.from_product(iterables, names=['mind', 'physics', 'action'])
 
     thresholdPosterior = 1.5
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
-    decayParameter = 0.8
+    decayParameter = 0.93
     mindPhysicsName = ['mind', 'physics']
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 
@@ -345,10 +347,61 @@ def main():
     stateIndex = 0
     observe = Observe(stateIndex, trajectory)
     FPS = 60
-    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,
-                                                                          isInferenceTerminal, observe, queryLikelihood,
-                                                                          inferOneStepLikelihood)
+    imageFolderName = 'inferNNLeasedChasing' + str(dataIndex) + 'decay' + str(decayParameter) + 'soft' + str(softParameter)
+    saveImage = SaveImage(imageFolderName)
+
+    # ffmpeg -r  60 -f image2 -s 1920x1080 -i  %05d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ../inferenceBeta0.8Decay0.95.mp4
+
+
+    oldFPS = 5
+    adjustFPS = AdjustStateFPS(oldFPS, FPS)
+
+# visualization
+    fullScreen = False
+    screenWidth = 800
+    screenHeight = 800
+    screen = initializeScreen(fullScreen, screenWidth, screenHeight)
+
+    leaveEdgeSpace = 200
+    lineWidth = 3
+    xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
+    yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+    screenColor = THECOLORS['black']
+    lineColor = THECOLORS['white']
+    drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary,
+                                    lineColor, lineWidth)
+    circleSize = 10
+    positionIndex = [0, 1]
+    drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
+
+    wolfColor = THECOLORS['red']
+    sheepColor = THECOLORS['green']
+    masterColor = THECOLORS['blue']
+
+    wolfIndex = 'wolf'
+    sheepIndex = 'sheep'
+    masterIndex = 'master'
+
+    getWolfColor = GetChasingRoleColor(wolfColor, wolfIndex)
+    getSheepColor = GetChasingRoleColor(sheepColor, sheepIndex)
+    getMasterColor = GetChasingRoleColor(masterColor, masterIndex)
+
+    getRolesColor = [getWolfColor, getSheepColor, getMasterColor]
+    getChasingResultColor = GetChasingResultColor(getRolesColor)
+    colorChasingPoints = ColorChasingPoints(getChasingResultColor)
+
+    rawXRange = [-10, 10]
+    rawYRange = [-10, 10]
+    scaledXRange = [210, 590]
+    scaledYRange = [210, 590]
+    scaleState = ScaleState(positionIndex, rawXRange,rawYRange, scaledXRange, scaledYRange)
+
     numOfAgents = 3
+
+    drawInferenceResult = DrawContinuousInferenceResultNoPull(numOfAgents, inferenceIndex,
+                drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
+
+    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,isInferenceTerminal, observe, queryLikelihood,inferOneStepLikelihood,drawInferenceResult)
     mindsPhysicsPrior = [1 / len(inferenceIndex)] * len(inferenceIndex)
     posteriorDf = inferContinuousChasingAndDrawDemo(numOfAgents, mindsPhysicsPrior)
 

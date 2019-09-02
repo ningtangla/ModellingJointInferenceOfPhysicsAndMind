@@ -17,7 +17,6 @@ class SaveImage:
         fileCount = len([name for name in os.listdir(saveImageDir) if os.path.isfile(os.path.join(saveImageDir, name))])
         pg.image.save(screen, saveImageDir + '/' + format(fileCount, '05') + ".png")
 
-
 class GetChasingRoleColor:
     def __init__(self, roleColor, roleIndex):
         self.roleColor = roleColor
@@ -79,7 +78,7 @@ class DrawInferenceResultWithPull:
     def __init__(self, inferenceIndex, gridPixelSize, drawGrid, drawCirclesAndLines,
                  colorChasingPoints, adjustPullingLineWidth):
         self.inferenceIndex = inferenceIndex
-        
+
         self.gridPixelSize = gridPixelSize
         self.drawGrid = drawGrid
         self.drawCirclesAndLines = drawCirclesAndLines
@@ -92,10 +91,10 @@ class DrawInferenceResultWithPull:
         pointsCoord = state
         pointsLocation = [list(np.array(pointCoord) * self.gridPixelSize - self.gridPixelSize // 2)
                           for pointCoord in pointsCoord]
-        
+
         inferenceDf = pd.DataFrame(index= self.inferenceIndex)
         inferenceDf['posterior'] = posterior
-        
+
         resultGroupedByChasingIndices = inferenceDf.groupby('mind').sum().reset_index()
         pointsColor = self.colorChasingPoints(resultGroupedByChasingIndices)
 

@@ -17,11 +17,13 @@ class TransitTwoMassPhysics:
 
 
 class TransitConstantPhysics:
-    def __init__(self, transitAgents):
+    def __init__(self, agentsPowerRatios, transitAgents):
+        self.agentsPowerRatios = agentsPowerRatios
         self.transitAgents = transitAgents
 
     def __call__(self, physics, state, allAgentsActions, nextState):
-        agentsNextIntendedState = self.transitAgents(state, allAgentsActions)
+        weightedAgentsActions = np.array([self.agentsPowerRatios[i] * np.array(allAgentsActions)[i] for i in range(len(self.agentsPowerRatios))])
+        agentsNextIntendedState = self.transitAgents(state, weightedAgentsActions)
         transitionLikelihood = 1 if np.allclose(agentsNextIntendedState, nextState) else 0
 
         # if transitionLikelihood == 1:
