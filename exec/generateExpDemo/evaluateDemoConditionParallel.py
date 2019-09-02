@@ -80,7 +80,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    fuzzySearchParameterNames = ['sampleIndex']
+    fuzzySearchParameterNames = ['timestep']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
 

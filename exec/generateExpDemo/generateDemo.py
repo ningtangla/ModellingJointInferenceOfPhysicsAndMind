@@ -38,9 +38,9 @@ def main():
     manipulatedVariables['maxRunningSteps'] = [360]
     manipulatedVariables['numSimulations'] = [400]
     manipulatedVariables['killzoneRadius'] = [0.5]
-    manipulatedVariables['offset'] = [12]
+    manipulatedVariables['offset'] = [0]
     manipulatedVariables['linkedAgentId'] = [21]
-    manipulatedVariables['beta'] = [0.5]
+    manipulatedVariables['beta'] = [1.0]
     manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['numAgents'] = [3]
     manipulatedVariables['pureMCTSAgentId'] = [10]
@@ -88,8 +88,9 @@ def main():
         maxNumTrajectories = 100
         numTrajectoryChoose = min(numTrajectories, maxNumTrajectories)
         selectedTrajectories = trajectories[0:numTrajectoryChoose]
-
+        # print(selectedTrajectories)
         selectedDf = [convertTrajectoryToStateDf(trajectory) for trajectory in selectedTrajectories]
+        #selectedDf=selectedTrajectories
 
         dataFileName = getFileName(conditionParameters, trajectoryFixedParameters)
         imageSavePath = os.path.join(trajectoryDirectory, dataFileName)
