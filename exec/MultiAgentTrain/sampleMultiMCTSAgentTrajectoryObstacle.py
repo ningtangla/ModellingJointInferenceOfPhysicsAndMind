@@ -55,8 +55,7 @@ class ComposeSingleAgentGuidedMCTS():
 
     def __call__(self, agentId, selfNNModel, othersPolicy):
         approximateActionPrior = self.getApproximatePolicy(selfNNModel)
-        transitInMCTS = lambda state, selfAction: composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction,
-                                                                                            othersPolicy, self.transit)
+        transitInMCTS = lambda state, selfAction: composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
         initializeChildren = InitializeChildren(self.actionSpace, transitInMCTS, approximateActionPrior)
         expand = Expand(self.isTerminal, initializeChildren)
 
@@ -214,8 +213,7 @@ def main():
         trainableAgentIds = [sheepId, wolfId]
 
         depth = 4
-        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in
-                             agentIds]
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
         # for agentId in trainableAgentIds:
         #     baseLineModelPath = generateNNModelSavePath({'iterationIndex': -2, 'agentId': agentId})
         #     multiAgentNNmodel[agentId] = restoreVariables(multiAgentNNmodel[agentId], baseLineModelPath)
@@ -225,11 +223,8 @@ def main():
         # otherAgentApproximatePolicy = lambda NNModel: stationaryAgentPolicy
 
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,
-                                                                    selectChild, isTerminal, transit, getStateFromNode,
-                                                                    getApproximatePolicy, getApproximateValue)
-        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy,
-                                                          trainableAgentIds)
+        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,selectChild, isTerminal, transit, getStateFromNode,getApproximatePolicy, getApproximateValue)
+        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy,trainableAgentIds)
 
         # load NN
         # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
