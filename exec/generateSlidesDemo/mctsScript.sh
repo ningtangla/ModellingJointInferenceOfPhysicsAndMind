@@ -28,7 +28,7 @@ do
             for index in {0..27} 
             do
               
-            ffmpeg -r 60 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/image/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=10_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}.pickle/image/%0d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/demo/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=10_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}.mp4
+            ffmpeg -r 60 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/image/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=4_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}.pickle/image/%0d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateMCTSDemo/demo/beta=${beta}_index=${index}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=4_numAgents=3_numSimulations=80_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}.mp4
 
             done
         done

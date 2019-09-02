@@ -72,7 +72,7 @@ def main():
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
-    maxRunningSteps = 6
+    maxRunningSteps = 4
     numSimulations = 80
     killzoneRadius = 0.5
 

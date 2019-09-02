@@ -27,7 +27,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, RandomPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectoryForMCTSDemo, SampleAction, SelectSoftmaxAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
-from exec.generateExpDemo.MCTSVisualization import ScalePos, InitializeScreen, DrawBackground, DrawStateWithRope, MCTSRender
+from exec.generateSlidesDemo.MCTSVisualization import ScalePos, InitializeScreen, DrawBackground, DrawStateWithRope, MCTSRender
 
 class ApproximatePolicy:
     def __init__ (self, policyValueNet, actionSpace, agentStateIdsForNN):
@@ -173,7 +173,7 @@ def main():
     #check file exists or not
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 6
+    maxRunningSteps = 4
     numSimulations = 80
     killzoneRadius = 0.5
     pureMCTSAgentId = 210
@@ -226,7 +226,7 @@ def main():
         # isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
         isTerminal = lambda state : False
 
-        numSimulationFrames = 30
+        numSimulationFrames = 25
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         numRopePart = 9
