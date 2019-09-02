@@ -31,7 +31,7 @@ from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
     TransposeRopePosesInState, DrawContinuousInferenceResultNoPull, \
     DrawContinuousInferenceResultWithPull, PlotInferenceProb
 from visualize.continuousVisualization import ScaleState, AdjustStateFPS,\
-    DrawBackground, DrawState, DrawRope, DrawStateWithRopeInProbability
+    DrawBackground, DrawBackgroundWithObstacles, DrawState, DrawRope, DrawStateWithRopeInProbability
 
 class ApproximatePolicy:
     def __init__ (self, policyValueNet, actionSpace, agentStateIdsForNN):
@@ -179,7 +179,7 @@ def main():
     trajectoryPath = os.path.join(trajectoriesSaveDirectory, 'addSheep=1_killzoneRadius=2_numSimulations=200_otherIteration=6000_selfId=0_selfIteration=6000.pickle')
 
     # Mujoco environment
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsObstacle.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -216,7 +216,7 @@ def main():
     ropePartIndex = list(range(numAgent, numAgent + numRopePart))
 
 # neural network init
-
+    numStateSpaceList = [12, 12, 12]
     numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
     sharedWidths = [128]
@@ -245,7 +245,6 @@ def main():
     selectChild = SelectChild(calculateScore)
 
 # multAgent ApproximatePolicyAndActionPrior
-
 
     actionSpaceList = [sheepActionSpace, wolfActionSpace, randomAgentActionSpace]
     agentStateIdsForNNList = [range(2), range(2), range(2)]
@@ -355,9 +354,20 @@ def main():
     lineColor = THECOLORS['white']
     drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary,
                                     lineColor, lineWidth)
+    leaveEdgeSpace = 200
+    lineWidth = 3
+    xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
+    yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+    obstacle1Pos = [377.5, 270, 45, 60]
+    obstacle2Pos = [377.5, 470, 45, 60]
+    allObstaclePos = [obstacle1Pos, obstacle2Pos]
+    screenColor = THECOLORS['black']
+    lineColor = THECOLORS['white']
+    drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
+    
     wolfColor = THECOLORS['red']
     sheepColor = THECOLORS['green']
-    randomAgentColor = THECOLORS['blue']
+    randomAgentColor = THECOLORS['grey']
 
     wolfIndex = 'wolf'
     sheepIndex = 'sheep'
