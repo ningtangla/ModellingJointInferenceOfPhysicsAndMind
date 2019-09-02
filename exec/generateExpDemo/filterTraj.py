@@ -5,7 +5,7 @@ import os
 import math
 
 def calculateIncludedAngle(vector1, vector2):
-    includedAngle = abs(np.angle(complex(vector1[0], vector1[1]) / complex(vector2[0], vector2[1])))
+    includedAngle = abs(np.angle(complex(vector1[0], vector1[1]) / complex(vector2[0] + 1e-12, vector2[1] + 1e-12)))
     return includedAngle
 
 class CalculateChasingDeviation:
@@ -16,7 +16,6 @@ class CalculateChasingDeviation:
         self.positionIndex = positionIndex
 
     def __call__(self, traj):
-        traj = np.array(traj)
         heatSeekingVectorList = [traj[i - 1][self.stateIndex][self.sheepId][self.positionIndex] - traj[i - 1][self.stateIndex][self.wolfId][self.positionIndex] for i in range(1, len(traj))]
         wolfVectorList = [traj[i][self.stateIndex][self.wolfId][self.positionIndex] - traj[i - 1][self.stateIndex][self.wolfId][self.positionIndex] for i in range(1, len(traj))]
 
@@ -30,7 +29,6 @@ class CalculateDistractorMoveDistance:
         self.positionIndex = positionIndex
 
     def __call__(self, traj):
-        traj = np.array(traj)
         distractorVectorlist = [traj[i][self.stateIndex][self.distractorId][self.positionIndex] - traj[i - 1][self.stateIndex][self.distractorId][self.positionIndex] for i in range(1, len(traj))]
         distractorMoveDistances = [np.linalg.norm(distractorVector, ord=2) for distractorVector in distractorVectorlist]
         return np.mean(distractorMoveDistances)
@@ -54,7 +52,6 @@ class CountCirclesBetweenWolfAndMaster:
         self.findCirleMove=findCirleMove
 
     def __call__(self, traj):
-        traj = np.array(traj)
         # wolfVectorList = [traj[i - 1][self.stateIndex][self.wolfId][self.velocityIndex] for i in range(1, len(traj))]
         wolfVectorList = [traj[i][self.stateIndex][self.wolfId][self.positionIndex] - traj[i - 1][self.stateIndex][self.wolfId][self.positionIndex] for i in range(1, len(traj)) ]
         masterVectorList = [traj[i][self.stateIndex][self.masterId][self.positionIndex] - traj[i - 1][self.stateIndex][self.masterId][self.positionIndex] for i in range(1, len(traj)) ]

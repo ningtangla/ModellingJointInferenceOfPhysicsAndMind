@@ -67,9 +67,13 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     stateIndex = 0
     addSheep = AddSheep(sheepId, stateIndex)
+    qPosIndex = [0, 1]
+    calculateChasingDeviation = CalculateChasingDeviation(sheepId, wolfId, stateIndex, qPosIndex)
     for pathParameters in conditionParametersAll:
         trajectories = loadTrajectories(pathParameters)
         addSheepTrajs = addSheep(trajectories)
+        trajectoryDeviationes = np.array([np.mean(calculateChasingDeviation(trajectory)) for trajectory in trajectories])
+        print(trajectoryDeviationes)
         addSheepTrajsPathParameters = copy.deepcopy(pathParameters)
         addSheepTrajsPathParameters['addSheep'] = 1
         addSheepTrajsPath = getTrajectorySavePath(addSheepTrajsPathParameters)
