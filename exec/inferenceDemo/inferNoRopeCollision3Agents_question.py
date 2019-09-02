@@ -27,10 +27,11 @@ from src.inferChasing.inference import IsInferenceTerminal, Observe, QueryDecaye
 
 from visualize.initialization import initializeScreen
 from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
-    GetChasingResultColor, ColorChasingPoints, DrawContinuousInferenceResultNoPull, \
-    PlotInferenceProb
+    GetChasingResultColor, ColorChasingPoints, \
+    TransposeRopePosesInState, DrawContinuousInferenceResultNoPull, \
+    DrawContinuousInferenceResultWithPull, PlotInferenceProb
 from visualize.continuousVisualization import ScaleState, AdjustStateFPS,\
-    DrawBackground, DrawState
+    DrawBackground, DrawState, DrawRope, DrawStateWithRopeInProbability
 
 class ApproximatePolicy:
     def __init__ (self, policyValueNet, actionSpace, agentStateIdsForNN):
@@ -329,16 +330,17 @@ def main():
 
     chasingAgents = ['sheep', 'wolf', 'master']
     chasingSpace = list(it.permutations(chasingAgents))
-    pullingSpace = ['constantPhysics']
+    pullingAgents = ['constant']
+    pullingSpaceArray = np.unique(list(it.permutations(pullingAgents)), axis=0)
+    pullingSpace = [tuple(pullingPair) for pullingPair in pullingSpaceArray.tolist()]
     actionHypo = list(it.product(sheepActionSpace, wolfActionSpace, masterActionSpace))
-    print(actionHypo[0])
     iterables = [chasingSpace, pullingSpace, actionHypo]
     inferenceIndex = pd.MultiIndex.from_product(iterables, names=['mind', 'physics', 'action'])
 
     thresholdPosterior = 1.5
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
-    decayParameter = 0.93
+    decayParameter = 0.95
     mindPhysicsName = ['mind', 'physics']
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 
@@ -370,10 +372,6 @@ def main():
     lineColor = THECOLORS['white']
     drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary,
                                     lineColor, lineWidth)
-    circleSize = 10
-    positionIndex = [0, 1]
-    drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
-
     wolfColor = THECOLORS['red']
     sheepColor = THECOLORS['green']
     masterColor = THECOLORS['blue']
@@ -394,16 +392,21 @@ def main():
     rawYRange = [-10, 10]
     scaledXRange = [210, 590]
     scaledYRange = [210, 590]
+    positionIndex = [0, 1]
     scaleState = ScaleState(positionIndex, rawXRange,rawYRange, scaledXRange, scaledYRange)
-
-    numOfAgents = 3
-
-    drawInferenceResult = DrawContinuousInferenceResultNoPull(numOfAgents, inferenceIndex,
-                drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
+    tiedMinds = ['wolf', 'master']
+    circleSize = 10
+    drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
+    ropeColor = THECOLORS['grey']
+    ropeWidth = 6
+    drawRope = DrawRope(screen, circleSize, numAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
+    drawStateWithRopeInProbability = DrawStateWithRopeInProbability(screen, circleSize, numAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
+    transposeRopePosesInState = TransposeRopePosesInState(wolfId, masterId, ropePartIndex, positionIndex)
+    drawInferenceResult = DrawContinuousInferenceResultWithPull(numAgent, tiedMinds, inferenceIndex, drawStateWithRopeInProbability, transposeRopePosesInState, scaleState, colorChasingPoints, adjustFPS, saveImage)
 
     inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,isInferenceTerminal, observe, queryLikelihood,inferOneStepLikelihood,drawInferenceResult)
     mindsPhysicsPrior = [1 / len(inferenceIndex)] * len(inferenceIndex)
-    posteriorDf = inferContinuousChasingAndDrawDemo(numOfAgents, mindsPhysicsPrior)
+    posteriorDf = inferContinuousChasingAndDrawDemo(numAgent, mindsPhysicsPrior)
 
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')

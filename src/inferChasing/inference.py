@@ -299,9 +299,7 @@ class InferContinuousChasingAndDrawDemo:
 
             if self.visualize:
                 fpsClock.tick(self.fps)
-                agentsCurrentState = currentState[:numOfAgents]
-                agentsNextState = nextState[:numOfAgents]
-                self.visualize(agentsCurrentState, agentsNextState, currentPosterior)
+                self.visualize(currentState, nextState, currentPosterior)
 
             mindsPhysicsCurrentLikelihood = self.inferOneStepLik(currentState, nextState)
             currentTimeStep = nextTimeStep
