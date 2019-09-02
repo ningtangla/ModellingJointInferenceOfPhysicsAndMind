@@ -184,3 +184,22 @@ class ReplaceSheep:
             traj[:, self.stateIndex] = [np.array(allAgentsStates) for allAgentsStates in allTimestepAgentsStates]
             trajectoriesCopy[trajIndex] = traj
         return trajectoriesCopy
+
+class AddSheep:
+    def __init__(self, sheepId, stateIndex):
+        self.sheepId = sheepId
+        self.stateIndex = stateIndex
+
+    def __call__(self, trajectories):
+        print(len(trajectories[0]), len(trajectories[1]))
+        trajectoriesCopy = [list(map(list, trajectory)) for trajectory in copy.deepcopy(trajectories)]
+        numTrajectories = len(trajectories)
+        for trajIndex in range(len(trajectories)):
+            lastTraj = trajectories[trajIndex - 1]
+            traj =  trajectories[trajIndex]
+            lastSheepStates = np.array([timeStep[self.stateIndex][self.sheepId] for timeStep in lastTraj])
+            print(lastSheepStates)
+            for timeStepIndex in range(len(lastTraj)):
+                timeState = np.append(np.array(traj[timeStepIndex][self.stateIndex]), lastSheepStates[timeStepIndex])
+                trajectoriesCopy[trajIndex][timeStepIndex][self.stateIndex] = timeState
+        return trajectoriesCopy
