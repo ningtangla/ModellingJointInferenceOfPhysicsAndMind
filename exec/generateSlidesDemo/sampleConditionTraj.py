@@ -173,7 +173,7 @@ def main():
     #check file exists or not
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 4
+    maxRunningSteps = 9
     numSimulations = 80
     killzoneRadius = 0.5
     pureMCTSAgentId = 210
@@ -226,14 +226,14 @@ def main():
         # isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
         isTerminal = lambda state : False
 
-        numSimulationFrames = 25
+        numSimulationFrames = 28
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         numRopePart = 9
         qPosInit = (0, ) * 2 * (numAgent + numRopePart)
         qVelInit = (0, ) * 2 * (numAgent + numRopePart)
         qPosInitNoise = 6
-        qVelInitNoise = 0.1
+        qVelInitNoise = 5
         tiedAgentId = [wolfId, masterId]
         ropePartIndex = list(range(numAgent, numAgent + numRopePart))
         maxRopePartLength = 1
@@ -337,7 +337,7 @@ def main():
         rolloutHeuristics = [HeuristicDistanceToTarget(weight, getWolfQPos, getSheepQPos) for weight in rolloutHeuristicWeights]
 
         numTrees = 2
-        numSimulationsPerTree = 40
+        numSimulationsPerTree = 30
         maxRolloutSteps = 5
 
         betaInMCTS = 1
@@ -393,7 +393,7 @@ def main():
                 rolloutHeuristics, selectChild, isTerminal, transit, getApproximatePolicy, composeMultiAgentTransitInSingleAgentMCTS, mctsRenders, mctsRenderOn)
 
         #imageOthersPolicy[masterId] = lambda policy: lambda state : stationaryAgentPolicy(state)
-        trainableAgentIds = [sheepId, wolfId, masterId]
+        trainableAgentIds = [sheepId,wolfId,masterId]
         MCTSRenderInterval = 1
         callTime = 0
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(trainableAgentIds, actionSpaceList, agentStateIdsForNNList, composeSingleAgentMCTS, getApproximatePolicy, MCTSRenderInterval, callTime)
