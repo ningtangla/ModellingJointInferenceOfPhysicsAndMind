@@ -179,7 +179,7 @@ def main():
     trajectoryPath = os.path.join(trajectoriesSaveDirectory, 'addSheep=1_killzoneRadius=2_numSimulations=200_otherIteration=6000_selfId=0_selfIteration=6000.pickle')
 
     # Mujoco environment
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'threeAgentsTwoObstacles.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -299,7 +299,7 @@ def main():
     agentsPolicyList = prepareMultiAgentPolicyList(multiAgentNNmodel)
 
 ##################################################### try
-    softParameter = 0.5
+    softParameter = 0.1
     agentsNameList = ['sheep', 'wolf', 'randomAgent']
     policy = InferencePolicy(agentsNameList, agentsPolicyList, softenPolicy, softParameter)
 
@@ -307,8 +307,9 @@ def main():
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
     trajectories = loadFromPickle(trajectoryPath)
-    dataIndex = 0
-    trajectory = trajectories[dataIndex]
+    dataIndex = 1
+    originalTrajectory = trajectories[dataIndex]
+    trajectory = [originalTrajectory[timeIndex] for timeIndex in range(20, 142)]
 
     chasingAgents = ['sheep', 'wolf', 'randomAgent']
     chasingSpace = list(it.permutations(chasingAgents))
@@ -322,7 +323,7 @@ def main():
     thresholdPosterior = 1.5
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
-    decayParameter = 0.95
+    decayParameter = 0.965
     mindPhysicsName = ['mind', 'physics']
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 

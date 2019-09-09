@@ -13,7 +13,6 @@ class ScaleState:
         self.scaledYMin, self.scaledYMax = scaledYRange
 
     def __call__(self, originalState):
-        __import__('ipdb').set_trace()
         xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
         yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
 
