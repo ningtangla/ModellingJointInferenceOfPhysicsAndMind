@@ -251,7 +251,7 @@ def main():
 
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
 
-        numSimulations = 400
+        numSimulations = 600
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue)
 
         actionSpaceList = [actionSpace,actionSpace]
