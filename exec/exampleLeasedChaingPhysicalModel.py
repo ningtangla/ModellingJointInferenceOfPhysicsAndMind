@@ -14,11 +14,16 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 def main():
     # transition function
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', 'leased.xml')
+    physicsDynamicsPath = os.path.join(dirName, '..', 'env', 'xmls', '1leased.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    init = [[-3, -5], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
+    #init = [[-3, -5], [-3, -3], [-5, -5]] + [[-3-0.2*(i), -3-0.2*(i)] for i in range(1, 10)]
     physicsSimulation = mujoco.MjSim(physicsModel)
-    physicsSimulation.model.body_pos[-12: , :2] = init
+    #physicsSimulation.model.body_pos[-12: , :2] = init
+    #physicsSimulation.model.geom_friction[:, 2] = 2*1e-3
+    physicsSimulation.model.geom_friction[:, 0] = 3
+    print(len(physicsSimulation.model.geom_friction))
+    print(physicsSimulation.model.geom_friction)
+    #physicsSimulation.model.geom_friction[0, :] = np.ones(3)*10
     #physicsSimulation.model.body_mass[8] = 10000
     #physicsSimulation.model.tendon_range[:] = [[0, 0.7]]*10
     #physicsSimulation.data.body_xpos[-12: , :2] = init
@@ -48,15 +53,16 @@ def main():
     print(baselinePhysicsSimulation.data.body_xpos)
     print(baselinePhysicsSimulation.data.qpos)
     print(baselinePhysicsSimulation.data.qvel)
-    #__import__('ipdb').set_trace()
+    __import__('ipdb').set_trace()
     
     
     physicsViewer = mujoco.MjViewer(physicsSimulation)
     numSimulationFrames = 10000
+    physicsSimulation.data.qvel[:] = np.array([10,10,0])
     for frameIndex in range(numSimulationFrames):
-        if frameIndex > 500:
-            action = np.array([-1, 1, 1, 1, 0, 0])
-            physicsSimulation.data.ctrl[:] = action
+        #if frameIndex > 100:
+            #action = np.array([-10, 10, 0, 10, 10, -1, -1])
+            #physicsSimulation.data.ctrl[:] = action
         physicsSimulation.step()
         physicsSimulation.forward()
         physicsViewer.render()
