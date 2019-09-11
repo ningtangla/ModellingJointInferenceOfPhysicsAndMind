@@ -44,8 +44,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['masterPowerRatio'] = [0.2, 0.4]
-    manipulatedVariables['beta'] = [0.5, 1.0, 2.0]
+    manipulatedVariables['masterPowerRatio'] = [0.4]
+    manipulatedVariables['beta'] = [0.5]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -80,7 +80,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    fuzzySearchParameterNames = ['sampleIndex']
+    fuzzySearchParameterNames = ['timestep']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
 

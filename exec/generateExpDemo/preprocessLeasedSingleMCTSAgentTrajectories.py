@@ -43,8 +43,8 @@ def main():
 
     trajectoryExtension = '.pickle'
 
-    numAgents = 4
-    pureMCTSAgentId = 310
+    numAgents = 3
+    pureMCTSAgentId = 10
     sheepId = 0
     wolfId = 1
     masterId = 2
@@ -53,7 +53,7 @@ def main():
     killzoneRadius = 0.5
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['beta'] = [0.5]
+    manipulatedVariables['beta'] = [1.0]
     manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['maxRunningSteps'] = [360]
 
@@ -71,8 +71,8 @@ def main():
     if delayStep == 0:
         linkedAgentId = 32
 
-    minLength = 88 + delayStep
-    timestepCheckInterval = 80
+    minLength = 250 + delayStep
+    timestepCheckInterval = 40
 
     for pathParameters in conditionParametersAll:
         loadParameters = copy.deepcopy(pathParameters)
@@ -121,8 +121,8 @@ def main():
 
                     trajectoryCountCollision =  np.array([countCollision(trajectory) + countCollisionDistractorWolf(trajectory) + countCollisionDistractorSheep(trajectory)+ countCollisionDistractorMaster(trajectory) for trajectory in trajectories])
 
-                    timeWindow = 8
-                    angleVariance = math.pi / 8
+                    timeWindow = 10
+                    angleVariance = math.pi / 10
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterList = [circleFilter(trajectory) for trajectory in trajectories]
 
@@ -136,8 +136,8 @@ def main():
 
                     # print(len(trajectories))
                     # print(np.max(trajectoryLengthes))
-                    minDeviation = math.pi/3.6
-                    maxDeviation = math.pi/3
+                    minDeviation = math.pi/4
+                    maxDeviation = math.pi/2.5
 
                     minDistractorMoveDistance = 0.0
                     maxDistractorMoveDistance = 100
