@@ -317,7 +317,7 @@ def main():
     agentsPolicyList = prepareMultiAgentPolicyList(multiAgentNNmodel)
 
 ##################################################### try
-    softParameter = 0.9
+    softParameter = 0.25#0.1 0.15 0.2 0.25
     agentsNameList = ['sheep', 'wolf', 'master']
     policy = InferencePolicy(agentsNameList, agentsPolicyList, softenPolicy, softParameter)
 
@@ -340,7 +340,7 @@ def main():
     thresholdPosterior = 1.5
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, inferenceIndex)
 
-    decayParameter = 0.95
+    decayParameter = 0.97
     mindPhysicsName = ['mind', 'physics']
     queryLikelihood = QueryDecayedLikelihood(mindPhysicsName, decayParameter)
 
@@ -398,7 +398,7 @@ def main():
     circleSize = 10
     drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
     ropeColor = THECOLORS['grey']
-    ropeWidth = 6
+    ropeWidth = 4
     drawRope = DrawRope(screen, circleSize, numAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
     drawStateWithRopeInProbability = DrawStateWithRopeInProbability(screen, circleSize, numAgent, positionIndex, ropePartIndex, ropeColor, ropeWidth, drawBackground)
     transposeRopePosesInState = TransposeRopePosesInState(wolfId, masterId, ropePartIndex, positionIndex)
