@@ -96,8 +96,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 20
-    numSimulations = 200
+    maxRunningSteps = 25
+    numSimulations = 100
     killzoneRadius = 2
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -131,7 +131,7 @@ def main():
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
-        sheepAliveBonus = 1 / maxRunningSteps
+        sheepAliveBonus = 0.05
         wolfAlivePenalty = -sheepAliveBonus
 
         sheepTerminalPenalty = -1
@@ -166,9 +166,9 @@ def main():
         numStateSpace = 12
         numActionSpace = len(actionSpace)
         regularizationFactor = 1e-4
-        sharedWidths = [128]
-        actionLayerWidths = [128]
-        valueLayerWidths = [128]
+        sharedWidths = [256]
+        actionLayerWidths = [256]
+        valueLayerWidths = [256]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
         # load save dir
@@ -206,9 +206,9 @@ def main():
         startTime = time.time()
         trainableAgentIds = [sheepId, wolfId]
 
-        depth = 4
+        depth = 17
         resBlockSize = 2
-        dropoutRate = 0.1
+        dropoutRate = 0.0
         initializationMethod = 'uniform'
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
 

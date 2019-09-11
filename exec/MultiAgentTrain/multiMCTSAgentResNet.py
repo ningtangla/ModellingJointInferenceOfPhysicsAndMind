@@ -141,8 +141,8 @@ def main():
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
-    maxRunningSteps = 20
-    sheepAliveBonus = 1 / maxRunningSteps
+    maxRunningSteps = 25
+    sheepAliveBonus = 0.05
     wolfAlivePenalty = -sheepAliveBonus
 
     sheepTerminalPenalty = -1
@@ -184,16 +184,16 @@ def main():
     numStateSpace = 12
     numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
-    sharedWidths = [128]
-    actionLayerWidths = [128]
-    valueLayerWidths = [128]
+    sharedWidths = [256]
+    actionLayerWidths = [256]
+    valueLayerWidths = [256]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
     # replay buffer
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 2  # 256
+    miniBatchSize = 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -222,14 +222,14 @@ def main():
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRate = 0.001
+    learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,
                     learningRateModifier, terminalController, coefficientController,
                     trainReporter)
 
     # load save dir
-    numSimulations = 200
+    numSimulations = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
@@ -270,9 +270,9 @@ def main():
     startTime = time.time()
     trainableAgentIds = [sheepId, wolfId]
 
-    depth = 4
+    depth = 17
     resBlockSize = 2
-    dropoutRate = 0.1
+    dropoutRate = 0.0
     initializationMethod = 'uniform'
     multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
 
@@ -316,7 +316,7 @@ def main():
     replayBuffer = []
 
     restoredIteration = 0
-    if restoredIteration == 0:
+    if restoredIteration == 11727:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
     preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
@@ -352,7 +352,8 @@ def main():
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
             NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
-            saveVariables(updatedAgentNNModel, NNModelSavePath)
+            if iterationIndex % 1000 == 0:
+                saveVariables(updatedAgentNNModel, NNModelSavePath)
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
             replayBuffer = updatedReplayBuffer
