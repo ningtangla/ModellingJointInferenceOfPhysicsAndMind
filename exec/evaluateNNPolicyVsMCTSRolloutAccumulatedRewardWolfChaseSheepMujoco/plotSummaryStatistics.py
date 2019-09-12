@@ -10,23 +10,6 @@ import pandas as pd
 
 from exec.trajectoriesSaveLoad import LoadTrajectories, GetSavePath, loadFromPickle, readParametersFromDf
 from exec.evaluationFunctions import conditionDfFromParametersDict
-from exec.preProcessing import AccumulateRewards
-
-
-# class ComputeAverageNumTerminalTrajectories:
-#     def __init__(self, terminalTimeStep, actionIndex, loadTrajectories):
-#         self.terminalTimeStep = terminalTimeStep
-#         self.actionIndex = actionIndex
-#         self.loadTrajectories = loadTrajectories
-#
-#     def __call__(self, oneConditionDf):
-#         maxRunningSteps = oneConditionDf.index.get_level_values('maxRunningSteps')[0]
-#         trajectories = self.loadTrajectories(maxRunningSteps)
-#         allTrajectoriesIsTerminal = [trajectory[self.terminalTimeStep][self.actionIndex] is None
-#                                      for trajectory in trajectories]
-#         mean = np.mean(allTrajectoriesIsTerminal)
-#
-#         return mean
 
 
 class PlotHistogram:

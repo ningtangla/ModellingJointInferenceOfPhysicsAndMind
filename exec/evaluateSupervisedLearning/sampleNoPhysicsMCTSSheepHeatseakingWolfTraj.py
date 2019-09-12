@@ -25,7 +25,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy,Hea
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 35
-    numSimulations = 200
+    numSimulations = 500
     maxRunningSteps = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'

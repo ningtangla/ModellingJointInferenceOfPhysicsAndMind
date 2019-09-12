@@ -108,8 +108,9 @@ class DrawInferenceResultWithPull:
 
 
 class DrawContinuousInferenceResultNoPull:
-    def __init__(self, inferenceIndex, drawState, scaleState,
+    def __init__(self, numOfAgents, inferenceIndex, drawState, scaleState,
                  colorChasingPoints, adjustFPS, saveImage):
+        self.numOfAgents = numOfAgents
         self.inferenceIndex = inferenceIndex
         self.drawState = drawState
         self.scaleState = scaleState
@@ -131,7 +132,7 @@ class DrawContinuousInferenceResultNoPull:
         positionsList = self.adjustFPS(currentPosition, nextPosition)
 
         for positionIndex in range(len(positionsList)):
-            screen = self.drawState(positionsList[positionIndex], circleColorList)
+            screen = self.drawState(self.numOfAgents, positionsList[positionIndex], circleColorList)
             if self.saveImage is not None:
                 self.saveImage(screen)
 
@@ -142,15 +143,16 @@ class PlotInferenceProb:
         self.yVaraibleName = yVaraibleName
         self.groupIndex = groupIndex
 
-    def __call__(self, inferenceDf, graphIndex):
+    def __call__(self, inferenceDf, graphIndex, plotname):
+        # print(inferenceDf)
         resultDf = inferenceDf.groupby(self.groupIndex).sum()
         print(resultDf)
         graph = resultDf.T.plot()
         graph.set_xlabel(self.xVariableName)
         graph.set_ylabel(self.yVaraibleName)
         plt.ylim([0, 1])
+        plt.title(self.groupIndex+ ": " + plotname + '_dataIndex'+ str(graphIndex))
         dirName = os.path.dirname(__file__)
         plotPath = os.path.join(dirName, '..', 'demo')
-        plt.savefig(os.path.join(plotPath, self.groupIndex + 'InferencePlot'+ str(graphIndex)))
+        plt.savefig(os.path.join(plotPath, self.groupIndex + plotname + 'data'+ str(graphIndex)))
         plt.show()
-
