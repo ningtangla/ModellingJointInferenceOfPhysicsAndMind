@@ -348,7 +348,7 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         # trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
 
-        numCpuToUseWhileTrain = int(2)
+        numCpuToUseWhileTrain = int(4)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
 
