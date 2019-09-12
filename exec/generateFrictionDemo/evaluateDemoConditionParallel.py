@@ -46,7 +46,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['beta'] = [0.5]
-    manipulatedVariables['friction'] = [1, 2]
+    manipulatedVariables['friction'] = [0, 1e-2, 1e-4]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
