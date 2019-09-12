@@ -121,6 +121,7 @@ class TrainOneAgent:
 
 def main():
     # Mujoco environment
+    parametersForResNetTrain = json.loads(sys.argv[1])
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
@@ -292,7 +293,7 @@ def main():
     prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
     numTrajectoriesToStartTrain = 4 * miniBatchSize
-    numTrainStepEachIteration = 1
+    numTrainStepEachIteration = int(parametersForTrajectoryPath['numTrainStepEachIteration'])
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     for agentId in trainableAgentIds:
@@ -333,8 +334,8 @@ def main():
     preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
-    numTrajectoriesPerIteration = 1
-    numIterations = 100000
+    numTrajectoriesPerIteration = int(parametersForTrajectoryPath['numTrajectoriesPerIteration'])
+    numIterations = 10
     for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
