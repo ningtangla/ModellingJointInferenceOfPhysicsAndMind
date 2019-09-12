@@ -46,7 +46,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['beta'] = [0.5]
-    manipulatedVariables['friction'] = [0, 1e-2, 1e-4]
+    manipulatedVariables['friction'] = [0.0, 1e-2, 1e-4]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -73,7 +73,7 @@ def main():
     print("Time taken {} seconds".format((endTime - startTime)))
 
 
-    maxRunningSteps = 150
+    maxRunningSteps = 400
     numSimulations = 300
     killzoneRadius = 0.5
     pureMCTSAgentId = 10
@@ -115,7 +115,7 @@ def main():
 
     measurementFunctionName = ['calculateChasingDeviation','countCross', 'countCircles', 'countCorner','countCollision']
     measurementFunctionList = [calculateChasingDeviation, countCross, countCircles, countCorner,countCollision]
-    ylim=[[0.8, 1.6], [0, 0.1], [0, 0.2], [0, 1], [0, 0.01]] 
+    ylim=[[0.8, 1.6], [0, 0.1], [0, 0.2], [0, 1], [0, 0.01]]
     numRows = 1
     numColumns = 5
     plotCounter = 1

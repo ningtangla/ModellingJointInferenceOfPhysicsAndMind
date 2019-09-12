@@ -160,8 +160,8 @@ def main():
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     trajectorySaveExtension = '.pickle'
-    
-    maxRunningSteps = 150
+
+    maxRunningSteps = 400
     numSimulations = 300
     killzoneRadius = 0.5
     pureMCTSAgentId = 10
@@ -187,7 +187,7 @@ def main():
         physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'noRopeCollision3AgentsWithFriction.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
-        
+
         #set physical model parameter
         draggerBodyIndex = 8
         physicsSimulation.model.body_mass[[draggerBodyIndex]] = [13]
@@ -207,7 +207,7 @@ def main():
         # isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
         isTerminal = lambda state : False
 
-        numSimulationFrames = 30
+        numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
         numAgent = 3
