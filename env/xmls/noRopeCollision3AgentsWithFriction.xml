@@ -1,5 +1,5 @@
 <mujoco>
-    <option timestep="0.005"/>
+    <option timestep="0.01"/>
 　　
 <default>
 <geom rgba="0 0 0 1"/>
@@ -11,28 +11,28 @@
         <camera name="center" mode="fixed" pos="0 0 30" />
     </body>
     <body>
-      <geom name='wall1' pos='-10.1 0 -0.2' size='.1 10.1 1.5' mass="10000" type='box' condim='3'/>
+      <geom name='wall1' pos='-10.1 0 -0.2' size='.1 10.1 2.5' mass="10000" type='box' condim='3'/>
     </body>
     <body>
-      <geom name='wall2' pos='10.1 0 -0.2' size='.1 10.1 1.5' mass="10000" type='box' condim='3'/>
+      <geom name='wall2' pos='10.1 0 -0.2' size='.1 10.1 2.5' mass="10000" type='box' condim='3'/>
     </body>
     <body>
-      <geom name='wall3' pos='0 -10 -0.2' size='10 .1 1.5' mass="10000" type='box' condim='3'/>
+      <geom name='wall3' pos='0 -10 -0.2' size='10 .1 2.5' mass="10000" type='box' condim='3'/>
     </body>
     <body>
-      <geom name='wall4' pos='0 10 -0.2' size='10 .1 1.5' mass="10000" type='box' condim='3'/>
+      <geom name='wall4' pos='0 10 -0.2' size='10 .1 2.5' mass="10000" type='box' condim='3'/>
     </body>
     <body name="prey" pos="0 0 0">
-            <joint axis="1 0 0" damping="0" name="prey0" pos="0 0 0" type="slide"/>
-            <joint axis="0 1 0" damping="0" name="prey1" pos="0 0 0" type="slide"/>
-      	    <joint axis="0 0 1" damping="0" name="prey2" pos="0 0 0" type="slide"/>
+            <joint axis="1 0 0" damping="1" name="prey0" pos="0 0 0" type="slide"/>
+            <joint axis="0 1 0" damping="1" name="prey1" pos="0 0 0" type="slide"/>
+      	    <joint axis="0 0 1" damping="1" name="prey2" pos="0 0 0" type="slide"/>
             <geom type="sphere" size="0.2" name="prey" mass="8" rgba="0 1 0 1"/>
         　　<site name="prey" pos="0 0 0" type="sphere" size="0.01"/>
 　　　　</body>
     <body name="predator" pos="0 0 0">
-            <joint axis="1 0 0" damping="0" name="predator0" pos="0 0 0" type="slide"/>
-            <joint axis="0 1 0" damping="0" name="predator1" pos="0 0 0" type="slide"/>
-      	    <joint axis="0 0 1" damping="0" name="predator2" pos="0 0 0" type="slide"/>
+            <joint axis="1 0 0" damping="1" name="predator0" pos="0 0 0" type="slide"/>
+            <joint axis="0 1 0" damping="1" name="predator1" pos="0 0 0" type="slide"/>
+      	    <joint axis="0 0 1" damping="1" name="predator2" pos="0 0 0" type="slide"/>
             <geom type="sphere" size="0.2" name="predator" mass="10" rgba="1 0 0 1"/>
             <site name="predator" pos="0 0 0" type="sphere" size="0.01"/>
         </body>
@@ -178,9 +178,9 @@
     <actuator>
 
 
-        <motor gear="10" joint="prey0"/>
-        <motor gear="10" joint="prey1"/>
-	<motor gear="10" joint="prey2"/>
+        <motor gear="1" joint="prey0"/>
+        <motor gear="1" joint="prey1"/>
+	<motor gear="1" joint="prey2"/>
 
         <motor gear="10" joint="predator0"/>
         <motor gear="10" joint="predator1"/>
