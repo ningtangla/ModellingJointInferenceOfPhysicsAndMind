@@ -35,15 +35,17 @@ def main():
     # manipulatedVariables['tendonStiffness'] = [10]
 
     # manipulatedVariables['agentId'] = [310]
-    manipulatedVariables['maxRunningSteps'] = [360]
-    manipulatedVariables['numSimulations'] = [400]
+    manipulatedVariables['maxRunningSteps'] = [150]
+    manipulatedVariables['numSimulations'] = [300]
     manipulatedVariables['killzoneRadius'] = [0.5]
     manipulatedVariables['offset'] = [0]
     manipulatedVariables['linkedAgentId'] = [21]
-    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
     manipulatedVariables['numAgents'] = [3]
     manipulatedVariables['pureMCTSAgentId'] = [10]
+    manipulatedVariables['friction'] = [1, 2]
+
     numDemoExists = 0
     # manipulatedVariables['sampleIndex'] = [(0,1)]
     # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
@@ -59,7 +61,7 @@ def main():
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo', 'trajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateFrictionDemo', 'trajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
@@ -129,7 +131,7 @@ def main():
         linkedAgentDict = {21:[wolfId, masterId], 32:[distractorId, masterId]}
         linkedAgentId = int(conditionParameters['linkedAgentId'])
         conditionList = [0]
-        conditionValues = [linkedAgentDict[linkedAgentId], None]
+        conditionValues = [linkedAgentDict[linkedAgentId]]
 
 
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)

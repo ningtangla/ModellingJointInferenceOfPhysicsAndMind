@@ -39,7 +39,7 @@ def main():
     startTime = time.time()
 
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo','trajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateFrictionDemo','trajectories')
 
     trajectoryExtension = '.pickle'
 
@@ -49,13 +49,14 @@ def main():
     wolfId = 1
     masterId = 2
     distractorId = 3
-    numSimulations = 400
+    numSimulations = 300
     killzoneRadius = 0.5
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['beta'] = [1.0]
+    manipulatedVariables['beta'] = [0.5]
     manipulatedVariables['masterPowerRatio'] = [0.4]
-    manipulatedVariables['maxRunningSteps'] = [360]
+    manipulatedVariables['maxRunningSteps'] = [150]
+    manipulatedVariables['friction'] = [1, 2]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
@@ -71,10 +72,11 @@ def main():
     if delayStep == 0:
         linkedAgentId = 32
 
-    minLength = 250 + delayStep
-    timestepCheckInterval = 40
+    minLength = 130 + delayStep
+    timestepCheckInterval = 48
 
     for pathParameters in conditionParametersAll:
+        print(pathParameters)
         loadParameters = copy.deepcopy(pathParameters)
         loadParameters['pureMCTSAgentId'] = pureMCTSAgentId
         originalTrajectories = loadTrajectories(loadParameters)
@@ -121,8 +123,8 @@ def main():
 
                     trajectoryCountCollision =  np.array([countCollision(trajectory) + countCollisionDistractorWolf(trajectory) + countCollisionDistractorSheep(trajectory)+ countCollisionDistractorMaster(trajectory) for trajectory in trajectories])
 
-                    timeWindow = 10
-                    angleVariance = math.pi / 10
+                    timeWindow = 6
+                    angleVariance = math.pi / 8
                     circleFilter = FindCirlceBetweenWolfAndMaster(wolfId, masterId, stateIndex, qPosIndex, timeWindow, angleVariance)
                     filterList = [circleFilter(trajectory) for trajectory in trajectories]
 
@@ -136,7 +138,7 @@ def main():
 
                     # print(len(trajectories))
                     # print(np.max(trajectoryLengthes))
-                    minDeviation = math.pi/4
+                    minDeviation = math.pi/3
                     maxDeviation = math.pi/2.5
 
                     minDistractorMoveDistance = 0.0

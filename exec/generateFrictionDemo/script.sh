@@ -15,7 +15,7 @@
 # done
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo1.05
 
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories
+cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateFrictionDemo/trajectories
 mkdir demo
 
 for linkedAgentId in 21
@@ -24,20 +24,22 @@ do
     for pureMCTSAgentId in 10
     do
 
-        for beta in 1.0 
+        for beta in 0.5
         do
             for masterPowerRatio in 0.4
             do 
                 for offset in 0
                 do
-                    for index in {0..10} 
+                    for index in {0..4} 
                     do
                         for condition in 0
                         do
-                        # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numSimulations=400_offset=${offset}/${index}/condition=${condition}/
+                            for friction in 1 2
+                            do 
+                        # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/generateFrictionDemo/trajectories/beta=${beta}_killzoneRadius=0.5_masterPowerRatio=${masterPowerRatio}_numSimulations=400_offset=${offset}/${index}/condition=${condition}/
 
-                        ffmpeg -r 29 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/beta=${beta}_killzoneRadius=0.5_linkedAgentId=${linkedAgentId}_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numAgents=3_numSimulations=400_offset=${offset}_pureMCTSAgentId=${pureMCTSAgentId}/${index}/condition=${condition}/%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateExpDemo/trajectories/demo/beta=${beta}_killzoneRadius=0.5_linkedAgentId=${linkedAgentId}_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=360_numAgents=3_numSimulations=400_offset=${offset}_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}_condition=${condition}0901.mp4
-
+                            ffmpeg -r 29 -f image2 -s 1920x1080 -i ~/ModellingJointInferenceOfPhysicsAndMind/data/generateFrictionDemo/trajectories/beta=${beta}_friction=${friction}_killzoneRadius=0.5_linkedAgentId=${linkedAgentId}_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=150_numAgents=3_numSimulations=300_offset=${offset}_pureMCTSAgentId=${pureMCTSAgentId}/${index}/condition=${condition}/%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/generateFrictionDemo/trajectories/demo/beta=${beta}_friction=${friction}_killzoneRadius=0.5_linkedAgentId=${linkedAgentId}_masterPowerRatio=${masterPowerRatio}_maxRunningSteps=150_numAgents=3_numSimulations=300_offset=${offset}_pureMCTSAgentId=${pureMCTSAgentId}_Demo${index}_condition=${condition}0901.mp4
+                            done
                         done
                     done
                 done
