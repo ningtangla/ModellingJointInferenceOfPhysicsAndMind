@@ -20,7 +20,7 @@ def main():
     physicsSimulation = mujoco.MjSim(physicsModel)
     #physicsSimulation.model.body_pos[-12: , :2] = init
     physicsSimulation.model.body_mass[8] = 13
-    physicsSimulation.model.geom_friction[:,0] = 1
+    physicsSimulation.model.geom_friction[:,0] = 0.1
     #physicsSimulation.model.tendon_range[:] = [[0, 0.7]]*10
     #physicsSimulation.data.body_xpos[-12: , :2] = init
     physicsSimulation.set_constants()
@@ -54,23 +54,29 @@ def main():
     
     
     physicsViewer = mujoco.MjViewer(physicsSimulation)
-    numSimulationFrames = 2000
+    numSimulationFrames = 1500
     totalMaxVel = 0
     print(physicsSimulation.data.qvel, '!!!')
     print(physicsSimulation.data.qpos, '~~~')
     print(physicsSimulation.data.body_xpos, '...')
     for frameIndex in range(numSimulationFrames):
-        if frameIndex == 850 or frameIndex == 900:
+        if frameIndex == 550 or frameIndex == 600:
             print(physicsSimulation.data.ctrl[:], '###')
             print(physicsSimulation.data.qvel, '!!!')
             print(physicsSimulation.data.qpos, '~~~')
             print(physicsSimulation.data.body_xpos, '...')
-        if frameIndex % 20 == 0 and frameIndex > 300:
-            action = np.array([-100, 100, 0, 13, 13, 0, -4, -4, 0])
+        if frameIndex % 20 == 0 and frameIndex > 200:
+            action = np.array([-10, 10, 0, 1, 13, 0, 4, 0, 0])
+            physicsSimulation.data.ctrl[:] = action
+        if frameIndex % 20 == 0 and frameIndex > 1500:
+            action = np.array([-10, 10, 0, -13, 0, 0, 4, 0, 0])
+            physicsSimulation.data.ctrl[:] = action
+        if frameIndex % 20 == 0 and frameIndex > 1800:
+            action = np.array([-10, 10, 0, 0, -13, 0, 4, 0, 0])
             physicsSimulation.data.ctrl[:] = action
         vels = physicsSimulation.data.qvel
-        maxVelInAllAgents = vels[2]
-        #maxVelInAllAgents = max([np.linalg.norm(vel) for vel in vels])
+        #maxVelInAllAgents = vels[2]
+        maxVelInAllAgents = max([np.linalg.norm(vels[i:i+3]) for i in range(3)])
         if maxVelInAllAgents > totalMaxVel:
             totalMaxVel = maxVelInAllAgents
         physicsSimulation.step()
