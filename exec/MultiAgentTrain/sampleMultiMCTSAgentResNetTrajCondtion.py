@@ -238,10 +238,9 @@ def main():
             if iterationIndex == 0:
                 modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId})
             else:
-                print(iterationIndex)
                 numTrainStepEachIteration = int(parametersForTrajectoryPath['numTrainStepEachIteration'])
                 numTrajectoriesPerIteration = int(parametersForTrajectoryPath['numTrajectoriesPerIteration'])
-                modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+                modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex-1, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
             restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
             multiAgentNNmodel[agentId] = restoredNNModel
 
@@ -249,7 +248,6 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
-
 
 if __name__ == '__main__':
     main()

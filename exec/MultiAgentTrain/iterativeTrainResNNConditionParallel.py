@@ -43,7 +43,7 @@ def main():
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
-    cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
+    # cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
 
     manipulatedVariables = OrderedDict()

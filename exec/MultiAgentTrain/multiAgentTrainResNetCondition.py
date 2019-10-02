@@ -341,7 +341,7 @@ def main():
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
 
-    numIterations = 100000
+    numIterations = 500
     for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
@@ -354,8 +354,9 @@ def main():
 
         trajectoryPathParameters = {'iterationIndex': iterationIndex, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
         cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
+
         trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
-        print(trajectories)
+        print('length of traj', len(trajectories))
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
 
@@ -367,8 +368,8 @@ def main():
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
             NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
-            if iterationIndex % 1000 == 0:
-                saveVariables(updatedAgentNNModel, NNModelSavePath)
+            # if iterationIndex % 50 == 0:
+            saveVariables(updatedAgentNNModel, NNModelSavePath)
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
             replayBuffer = updatedReplayBuffer
