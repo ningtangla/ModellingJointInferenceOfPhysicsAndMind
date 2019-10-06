@@ -21,7 +21,9 @@ class GenerateTrajectoriesParallel:
         print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
-            proc.wait()
+            # proc.wait()3
+            3
+            proc.communicate()
         return cmdList
 
 
@@ -43,5 +45,6 @@ class ExcuteCodeOnConditionsParallel:
         print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
-            proc.wait()
+            proc.communicate()
+            # proc.wait()
         return cmdList
