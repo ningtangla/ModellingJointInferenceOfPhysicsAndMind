@@ -15,7 +15,7 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
@@ -91,7 +91,7 @@ def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                             'multiAgentTrain', 'multiMCTSAgentResNet', 'trajectories')
+                                             'multiAgentTrain', 'multiMCTSAgentPolicyNet', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -176,7 +176,7 @@ def main():
         # load save dir
         NNModelSaveExtension = ''
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                            'multiAgentTrain', 'multiMCTSAgentResNet', 'NNModelRes')
+                                            'multiAgentTrain', 'multiMCTSAgentPolicyNet', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -208,11 +208,15 @@ def main():
         startTime = time.time()
         trainableAgentIds = [sheepId, wolfId]
 
-        depth = 17
-        resBlockSize = 2
-        dropoutRate = 0.0
-        initializationMethod = 'uniform'
-        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
+        depth=4
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
+
+        #resNet
+        # depth = 17
+        # resBlockSize = 2
+        # dropoutRate = 0.0
+        # initializationMethod = 'uniform'
+        # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
 
         # for agentId in trainableAgentIds:
         #     baseLineModelPath = generateNNModelSavePath({'iterationIndex': -2, 'agentId': agentId})

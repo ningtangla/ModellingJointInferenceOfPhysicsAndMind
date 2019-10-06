@@ -37,13 +37,13 @@ def main():
     dirName = os.path.dirname(__file__)
 
     numTrajectoriesToStartTrain = 1024
-    sampleTrajectoryFileName = 'sampleMultiMCTSAgentResNetTrajCondtion.py'
+    sampleTrajectoryFileName = 'sampleMultiMCTSAgentPolicyValueNetTrajCondtion.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
-    # cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
+    cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
 
     manipulatedVariables = OrderedDict()
@@ -58,8 +58,7 @@ def main():
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
-    sampleTrajectoryFileName = 'multiAgentTrainResNetCondition.py'
-    # sampleTrajectoryFileName = 'multiAgentTrainResNetConditionSerial.py'
+    sampleTrajectoryFileName = 'multiAgentTrainPolicyValueNetCondition.py'
 
     numCpuCores = os.cpu_count()
     numCpuToUse = len(parametersAllCondtion)

@@ -357,12 +357,12 @@ def main():
     for iterationIndex in range(restoredIteration + 1, numIterations):
         print("ITERATION INDEX: ", iterationIndex)
 
-        # policy = prepareMultiAgentPolicy(multiAgentNNmodel)
-        # trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
+        policy = prepareMultiAgentPolicy(multiAgentNNmodel)
+        trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
 
-        numCpuToUseWhileTrain = int(4)
+        numCpuToUseWhileTrain = int(2)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
-        generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
+        # generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
 
         trajectoryPathParameters = {'iterationIndex': iterationIndex, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
 
@@ -373,15 +373,15 @@ def main():
         # saveToPickle(trajectories, trajectorySavePath)
 
         # add trajctroy check 
-        trajecoriesNum=0
-        while trajecoriesNum!=numTrajectoriesPerIteration:
-            cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
+        # trajecoriesNum=0
+        # while trajecoriesNum!=numTrajectoriesPerIteration:
+        #     cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
 
-            trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
-            trajecoriesNum=len(trajectories)        
-            if trajecoriesNum!=numTrajectoriesPerIteration:
-                print('MISSSUBPROCESS,RETRY',trajecoriesNum)
-        print('length of traj', len(trajectories))
+        #     trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
+        #     trajecoriesNum=len(trajectories)        
+        #     if trajecoriesNum!=numTrajectoriesPerIteration:
+        #         print('MISSSUBPROCESS,RETRY',trajecoriesNum)
+        # print('length of traj', len(trajectories))
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
 
