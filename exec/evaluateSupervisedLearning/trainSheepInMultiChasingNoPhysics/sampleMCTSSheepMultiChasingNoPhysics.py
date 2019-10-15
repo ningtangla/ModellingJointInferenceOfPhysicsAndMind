@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..','..'))
 import numpy as np
 import pickle
 import random
-import pygame as pg
+import json
 from collections import OrderedDict
 
 from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild, Expand, RollOut, backup, InitializeChildren
@@ -17,21 +17,21 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 from src.episode import chooseGreedyAction,SampleTrajectory
 
-from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
+
 
 from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset
 
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 def main():
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
 
-    # agentId = int(parametersForTrajectoryPath['agentId'])
+    agentId = int(parametersForTrajectoryPath['agentId'])
     parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=20
+    # startSampleIndex=0
+    # endSampleIndex=1
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
@@ -62,6 +62,8 @@ def main():
         yBoundary = [0,600]
 
         #prepare render
+        # from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
+        # import pygame as pg
         # renderOn = True
         # from pygame.color import THECOLORS
         # screenColor = THECOLORS['black']
