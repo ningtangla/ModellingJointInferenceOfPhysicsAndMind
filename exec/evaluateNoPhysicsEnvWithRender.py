@@ -39,7 +39,7 @@ class Render():
             pg.time.wait(1)
 
 
-class SampleTrajectory:
+class SampleTrajectoryWithRender:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
