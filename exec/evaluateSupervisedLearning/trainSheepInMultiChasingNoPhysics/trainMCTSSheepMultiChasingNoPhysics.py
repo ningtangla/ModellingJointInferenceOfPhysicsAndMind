@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..'))
+sys.path.append(os.path.join(dirName, '..', '..','..'))
 
 import random
 import numpy as np
@@ -84,8 +84,7 @@ def main():
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data',
-                                             'evaluateEscapeMultiChasingNoPhysics', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
@@ -94,7 +93,7 @@ def main():
     dataSetNumSimulations = 100#200
     killzoneRadius = 20#2
 
-    dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+    dataSetFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -108,7 +107,7 @@ def main():
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolf1Pos = GetAgentPosFromState(wolf1Id, xPosIndex)
     getWolf2Pos = GetAgentPosFromState(wolf2Id, xPosIndex)
-    playAliveBonus = 0.05
+    playAliveBonus = 1/dataSetMaxRunningSteps
     playDeathPenalty = -1
     playKillzoneRadius =20 #2
 
@@ -138,8 +137,10 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
     loadedTrajectories = loadTrajectories(parameters={})
+    print(len(loadedTrajectories))
     filterState = lambda timeStep: (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])#!!? magic
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
+
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
@@ -180,8 +181,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data',
-                                             'evaluateEscapeMultiChasingNoPhysics', 'trainedModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trainedModels-playAliveBonus=1/maxSteps')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
