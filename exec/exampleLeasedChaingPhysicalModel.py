@@ -19,8 +19,8 @@ def main():
     init = [[0, -0, 0], [-7, -7, 0], [-9, -9, 0]] + [[-7-0.2*(i), -7-0.2*(i), 0] for i in range(1, 10)]
     physicsSimulation = mujoco.MjSim(physicsModel)
     #physicsSimulation.model.body_pos[-12: , :2] = init
-    physicsSimulation.model.body_mass[8] = 13
-    physicsSimulation.model.geom_friction[:,0] = 0.1
+    physicsSimulation.model.body_mass[8] = 30
+    physicsSimulation.model.geom_friction[:,0] = 0.15
     #physicsSimulation.model.tendon_range[:] = [[0, 0.7]]*10
     #physicsSimulation.data.body_xpos[-12: , :2] = init
     physicsSimulation.set_constants()
@@ -66,12 +66,12 @@ def main():
             print(physicsSimulation.data.qpos, '~~~')
             print(physicsSimulation.data.body_xpos, '...')
         if frameIndex % 20 == 0 and frameIndex > 200:
-            action = np.array([-10, 10, 0, 1, 13, 0, 4, 0, 0])
+            action = np.array([-10, 10, 0, 13, 13, -4, -4, 0, 0])
             physicsSimulation.data.ctrl[:] = action
-        if frameIndex % 20 == 0 and frameIndex > 1500:
+        if frameIndex % 20 == 0 and frameIndex > 500:
             action = np.array([-10, 10, 0, -13, 0, 0, 4, 0, 0])
             physicsSimulation.data.ctrl[:] = action
-        if frameIndex % 20 == 0 and frameIndex > 1800:
+        if frameIndex % 20 == 0 and frameIndex > 800:
             action = np.array([-10, 10, 0, 0, -13, 0, 4, 0, 0])
             physicsSimulation.data.ctrl[:] = action
         vels = physicsSimulation.data.qvel
