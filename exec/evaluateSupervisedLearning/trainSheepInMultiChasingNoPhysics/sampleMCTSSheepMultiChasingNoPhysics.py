@@ -37,8 +37,8 @@ def main():
 
 
     killzoneRadius = 20
-    numSimulations = 200 #100
-    maxRunningSteps = 100
+    numSimulations = 200
+    maxRunningSteps = 250
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -92,7 +92,7 @@ def main():
         numActionSpace = len(actionSpace)
 
 
-        preyPowerRatio = 1
+        preyPowerRatio = 1.1
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 1
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
@@ -122,8 +122,14 @@ def main():
 
         aliveBonus = 1 / maxRunningSteps
         deathPenalty = -1
-        rewardFunction = reward.RewardFunctionCompete(
-            aliveBonus, deathPenalty, isTerminal)
+        # rewardFunction = reward.RewardFunctionCompete(
+        #     aliveBonus, deathPenalty, isTerminal)
+
+        # reward function with wall
+        safeBound = 80
+        wallDisToCenter = xBoundary[-1]/2
+        wallPunishRatio = 3
+        rewardFunction = reward.RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal,getPreyPos)
 
         # initialize children; expand
         initializeChildren = InitializeChildren(
@@ -151,7 +157,6 @@ def main():
 
 
         policy = lambda state:[sheepPolicy(state),wolfOnePolicy(state),wolfTwoPolicy(state)]
-
 
         sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 

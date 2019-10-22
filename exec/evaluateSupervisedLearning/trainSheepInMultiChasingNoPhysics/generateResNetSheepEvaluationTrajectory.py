@@ -12,8 +12,8 @@ import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.neuralNetwork.policyValueNet import GenerateModel,ApproximatePolicy, restoreVariables
-
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 from src.episode import chooseGreedyAction,SampleTrajectory
 
 
@@ -41,7 +41,7 @@ def main():
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'evaluateSheepTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'evaluateSheepTrajectoriesResNet')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -104,19 +104,23 @@ def main():
             wolfActionSpace, getPredator2Pos, getPreyPos, computeAngleBetweenVectors)
 
 
-        numStateSpace = 6#18
+        numStateSpace = 6
+        numActionSpace = len(actionSpace)
         regularizationFactor = 1e-4
+        sharedWidths = [256]
+        actionLayerWidths = [256]
+        valueLayerWidths = [256]
+        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+        depth = 17
+        resBlockSize = 2
+        dropoutRate = 0.0
+        initializationMethod = 'uniform'
+        initSheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
         miniBatchSize=256
-        depth=4
         learningRate=1e-4
-        sharedWidths = [128]
-        actionLayerWidths = [128]
-        valueLayerWidths = [128]
-        generateSheepModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-        initSheepNNModel = generateSheepModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
 
-        NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':miniBatchSize,'learningRate':learningRate,'depth':depth}
-        NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trainedModels')
+        NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':miniBatchSize,'learningRate':learningRate,'depth':4}
+        NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trainedResNNModels')
         NNModelSaveExtension=''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
         sheepTrainedModelPath = getNNModelSavePath({'trainSteps':trainSteps})
