@@ -36,7 +36,7 @@ class Render():
                 pg.draw.circle(self.screen, self.circleColorList[i], [np.int(
                     agentPos[0]), np.int(agentPos[1])], self.circleSize)
             pg.display.flip()
-            pg.time.wait(1)
+            pg.time.wait(100)
 
 
 class SampleTrajectoryWithRender:
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit,
                       rewardFunction, isTerminal, rolloutHeuristic)
 
-    numSimulations = 200
+
     sheepPolicy = MCTS(numSimulations, selectChild, expand,
                        rollout, backup, establishSoftmaxActionDist)
 
