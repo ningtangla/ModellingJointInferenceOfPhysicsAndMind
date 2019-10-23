@@ -67,9 +67,9 @@ def main():
 
 
     trajectoryExtension = '.pickle'
-    trainMaxRunningSteps = 25
+    trainMaxRunningSteps = 100
     trainNumSimulations = 200
-    killzoneRadius = 1
+    killzoneRadius = 20
     distractorId = 3
 
     trajectoryFixedParameters = {'agentId': distractorId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
