@@ -1,6 +1,6 @@
 import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..','..'))
 
@@ -15,10 +15,12 @@ import itertools as it
 import pathos.multiprocessing as mp
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+# from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+#     ApproximatePolicy, restoreVariables
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
@@ -38,11 +40,11 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
 
 
 class TrainModelForConditions:
-    def __init__(self, trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrain, getModelSavePath):
+    def __init__(self, trainIntervelIndexes, trainStepsIntervel, trainData, NNModel, getTrain, getModelSavePath):
         self.trainIntervelIndexes = trainIntervelIndexes
         self.trainStepsIntervel = trainStepsIntervel
         self.trainData = trainData
-        self.getNNModel = getNNModel
+        self.NNModel = NNModel
         self.getTrain = getTrain
         self.getModelSavePath = getModelSavePath
 
@@ -52,7 +54,7 @@ class TrainModelForConditions:
         learningRate = parameters['learningRate']
         depth = parameters['depth']
 
-        model = self.getNNModel(depth)
+        model = self.NNModel
         train = self.getTrain(miniBatchSize, learningRate)
         parameters.update({'trainSteps': 0})
         modelSavePath = self.getModelSavePath(parameters)
@@ -77,7 +79,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = 256 #[64, 128, 256, 512]
     manipulatedVariables['learningRate'] =  1e-4#[1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = 4 #[2 ,4, 6, 8]
+    manipulatedVariables['depth'] = 17 #[2 ,4, 6, 8]
 
     # productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     # parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -89,7 +91,7 @@ def main():
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 100 #80
+    dataSetMaxRunningSteps = 250 #80
     dataSetNumSimulations = 200 #200
     killzoneRadius = 20 #2
 
@@ -115,15 +117,20 @@ def main():
     playIsTerminalByWolf2 = IsTerminal(playKillzoneRadius, getSheepPos, getWolf2Pos)
     playIsTerminal=lambda state:playIsTerminalByWolf1(state) or playIsTerminalByWolf2(state)
 
-    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
-
+    # playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
+    xBoundary = [0,600]
+    yBoundary = [0,600]
+    safeBound = 80
+    wallDisToCenter = xBoundary[-1]/2
+    wallPunishRatio = 3
+    playReward = RewardFunctionWithWall(playAliveBonus, playDeathPenalty, safeBound, wallDisToCenter, wallPunishRatio, playIsTerminal,getSheepPos)
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
     sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    preyPowerRatio = 1
+    preyPowerRatio = 1.1
     actionSpace = list(map(tuple, np.array(sheepActionSpace) * preyPowerRatio))
 
     numActionSpace = len(actionSpace)
@@ -147,12 +154,19 @@ def main():
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
     # neural network init and save path
-    numStateSpace = 6#18
+    numStateSpace = 6
+    numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+
+    depth = 5
+    resBlockSize = 2
+    dropoutRate = 0.0
+    initializationMethod = 'uniform'
+    sheepNNmodel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
     getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
@@ -181,7 +195,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trainedModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -189,7 +203,7 @@ def main():
 
     # function to train models
     trainIntervelIndexes = list(range(11))
-    trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
+    trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNmodel, getTrainNN, getNNModelSavePath)
 
     trainModelForConditions(manipulatedVariables)
     # train models for all conditions
