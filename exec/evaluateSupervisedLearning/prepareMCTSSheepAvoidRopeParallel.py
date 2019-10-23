@@ -33,7 +33,7 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'expMCTSSheepInLeashedWolfTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -43,8 +43,10 @@ def main():
 
     startTime = time.time()
 
-    numTrajectories = 10
+    numTrajectories = 16
+
     # generate and load trajectories before train parallelly
+    # sampleTrajectoryFileName = 'sampleMCTSSheepTrajAvoidRope.py'
     sampleTrajectoryFileName = 'sampleExpMCTSSheepTraj.py'
 
     numCpuCores = os.cpu_count()
@@ -53,15 +55,6 @@ def main():
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
-
-    killzoneRadius = 2
-    maxRunningSteps = 200
-    numSimulations = 400
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-    trajectorySaveExtension = '.pickle'
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-    fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     print("start")
     trainableAgentIds = [sheepId]

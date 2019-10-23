@@ -33,16 +33,18 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def main():
     dirName = os.path.dirname(__file__)
     # load save dir
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'leashedDistractorTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     distractorId = 3
     startTime = time.time()
 
-    numTrajectories = 6000
+
+    numTrajectories = 16
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
+    # sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
+    sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
@@ -52,7 +54,8 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
     killzoneRadius = 1
-    maxRunningSteps = 25
+
+    maxRunningSteps = 125
     numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'

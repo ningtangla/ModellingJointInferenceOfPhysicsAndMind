@@ -12,11 +12,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-<<<<<<< HEAD
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, IsCollided, RewardFunctionWithWall
-=======
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,IsCollided
->>>>>>> 2eb18c7353c19461cedd0166042f47cad81a5ea0
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -39,35 +35,10 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
         grp.plot(ax=axForDraw, label='lr={}'.format(learningRate), y='mean', yerr='std',
                  marker='o', logx=False)
 
-class RewardFunctionForDistractor():
-    def __init__(self, aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isTerminal, getPosition, getVelocity):
-        self.aliveBonus = aliveBonus
-        self.deathPenalty = deathPenalty
-        self.safeBound = safeBound
-        self.wallDisToCenter = wallDisToCenter
-        self.wallPunishRatio = wallPunishRatio
-        self.velocityBound = velocityBound
-        self.isTerminal = isTerminal
-        self.getPosition = getPosition
-        self.getVelocity = getVelocity
-
-    def __call__(self, state, action):
-        reward = self.aliveBonus
-        if self.isTerminal(state):
-            reward += self.deathPenalty
-
-        agentPos = self.getPosition(state)
-        minDisToWall = np.min(np.array([np.abs(agentPos - self.wallDisToCenter), np.abs(agentPos + self.wallDisToCenter)]).flatten())
-        wallPunish =  - self.wallPunishRatio * np.abs(self.aliveBonus) * np.power(max(0,self.safeBound -  minDisToWall), 2) / np.power(self.safeBound, 2)
-
-        agentVel = self.getVelocity(state)
-        velPunish = -np.abs(self.aliveBonus) if np.linalg.norm(agentVel) <= self.velocityBound else 0
-
-        return reward + wallPunish + velPunish
 
 def main():
     # important parameters
-    distractorId = 3
+    sheepId = 0
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
@@ -85,38 +56,20 @@ def main():
     # accumulate rewards for trajectories
     sheepId = 0
     wolfId = 1
-    masterId = 2
-    distractorId = 3
-    xPosIndex = [0, 1]
+    xPosIndex = [2, 3]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
-    getMasterPos = GetAgentPosFromState(masterId, xPosIndex)
-    getDistractorPos = GetAgentPosFromState(distractorId, xPosIndex)
-    killzoneRadius = 1
-
-    killzoneRadius = 1
-    aliveBonus = 0.05
-    deathPenalty = -1
-    safeBound = 2.5
-    wallDisToCenter = 10
-    wallPunishRatio = 4
-    velIndex = [4, 5]
-    getDistractorVel =  GetAgentPosFromState(distractorId, velIndex)
-    velocityBound = 5
-
-    otherIds = list(range(13))
-    otherIds.remove(distractorId)
-    getOthersPos = [GetAgentPosFromState(otherId, xPosIndex) for otherId in otherIds]
-
-    isCollided = IsCollided(killzoneRadius, getDistractorPos, getOthersPos)
-    playReward = RewardFunctionForDistractor(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getDistractorPos, getDistractorVel)
-
+    playAliveBonus = 0.05
+    playDeathPenalty = -1
+    playKillzoneRadius = 2
+    playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
+    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
 
 # generate trajectory parallel
-    generateTrajectoriesCodeName = 'generateLeashedDistractorEvaluationTrajectory.py'
-    evalNumTrials = 500
+    generateTrajectoriesCodeName = 'generateLeashedSheepAvoidRopeEvaluationTrajectory.py'
+    evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
@@ -124,11 +77,11 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedDistractorTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateSheepAvoidRopeTrajectories')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -136,8 +89,8 @@ def main():
 
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
-    killzoneRadius = 1
-    trajectoryFixedParameters = {'agentId': distractorId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+    killzoneRadius = 2
+    trajectoryFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
@@ -173,14 +126,10 @@ def main():
 
             drawPerformanceLine(group, axForDraw, depth)
             trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepsLevels, [0.193] * len(trainStepsLevels), label='mctsTrainData')
+            axForDraw.plot(trainStepsLevels, [1.097] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
-<<<<<<< HEAD
-    plt.suptitle('DistractorNN Policy Accumulate Rewards')
-=======
-    plt.suptitle('Distractor NN Policy Accumulate Rewards')
->>>>>>> 2eb18c7353c19461cedd0166042f47cad81a5ea0
+    plt.suptitle('ChaseNN Policy Accumulate Rewards')
     plt.legend(loc='best')
     plt.show()
 
