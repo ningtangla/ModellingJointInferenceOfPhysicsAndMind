@@ -315,11 +315,39 @@ def iterateTrainOneCondition(parameters):
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
     
+
+    # toRestoredNNmodelExtension=['.meta']
+    # # toDeleteNNModelExtensionList=['.meta','.index','.data-00000-of-00001']
+    # generatetoRestoredNNModelPath=GetSavePath(NNModelSaveDirectory, toRestoredNNmodelExtension, fixedParameters)
+    
     restoredIteration = 0
+    numIterations = 10001
+    modelSearchFrequency=250
+    #serach restroeIteration
+    while restoredIteration<numIterations:
+        
+        toRestoreTrajectoryPathParameters = {'iterationIndex': restoredIteration+modelSearchFrequency, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
+        restoreTrajectoryPath = generateTrajectorySavePath(toRestoreTrajectoryPathParameters)
+        
+        if  not os.path.isfile(restoreTrajectoryPath):
+            while restoredIteration<numIterations:
+                toRestoreTrajectoryPathParameters = {'iterationIndex': restoredIteration+1, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
+                restoreTrajectoryPath = generateTrajectorySavePath(toRestoreTrajectoryPathParameters)
+                if  not os.path.isfile(restoreTrajectoryPath):
+                    break
+                restoredIteration=restoredIteration+1
+            break
+        restoredIteration=restoredIteration+modelSearchFrequency
+
+
+    # modelPathForRestore = generatetoRestoredNNModelPath({'iterationIndex': restoredIteration, 'agentId': agentId,  'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
 
     for agentId in trainableAgentIds:
         modelPathBeforeTrain = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
-        saveVariables(multiAgentNNmodel[agentId], modelPathBeforeTrain)
+        #creat step 0 for evaluate
+        NNModelPathParameters = {'iterationIndex': 0, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
+        NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
+        saveVariables(multiAgentNNmodel[agentId], NNModelSavePath)
 
         # #tempversion: save tempModel for generate traj
         # if  restoredIteration==0:
@@ -364,12 +392,13 @@ def iterateTrainOneCondition(parameters):
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
 
-    numIterations = 1000
-    modelSaveFrequency=25
-
+    
+    modelSaveFrequency=250
+    print ({'iterationIndex': restoredIteration, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
     for iterationIndex in range(restoredIteration + 1, numIterations):
-        print("ITERATION INDEX: ", iterationIndex)
-
+        break
+        print("ITERATION INDEX: ", iterationIndex,'numTrajectoriesPerIteration',numTrajectoriesPerIteration, 'numTrainStepEachIteration',numTrainStepEachIteration)
+        
         # policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         # trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
 

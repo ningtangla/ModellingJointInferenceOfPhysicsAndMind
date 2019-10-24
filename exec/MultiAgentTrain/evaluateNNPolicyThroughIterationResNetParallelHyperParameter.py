@@ -39,17 +39,17 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
         grp.index = grp.index.droplevel('otherIteration')
         grp['agentMean'] = np.array([value[agentId] for value in grp['mean'].values])
         grp['agentStd'] = np.array([value[agentId] for value in grp['std'].values])
-        grp.plot(ax=axForDraw, title='agentId={}'.format(agentId), y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
+        grp.plot(ax=axForDraw, y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [-999]+list(range(0,10001,2000))
+    manipulatedVariables['selfIteration'] = [0,300,600,900]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,300,600,900]#[-999]+list(range(0,10001,2000))
     manipulatedVariables['numTrainStepEachIteration'] = [1,4,16]
     manipulatedVariables['numTrajectoriesPerIteration'] = [1,4,16]
-
-    manipulatedVariables['selfId'] = [0]
+    selfId=1
+    # manipulatedVariables['selfId'] = [0]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -118,7 +118,7 @@ def main():
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentResNet', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'multiMCTSAgentResNet', 'evaluateTrajectories','selfId=1')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -147,21 +147,22 @@ def main():
     numRows = len(manipulatedVariables['numTrajectoriesPerIteration'])
     plotCounter = 1
 
-    for miniBatchSize, grp in statisticsDf.groupby('numTrainStepEachIteration'):
+    for numTrainStepEachIteration, grp in statisticsDf.groupby('numTrainStepEachIteration'):
         grp.index = grp.index.droplevel('numTrainStepEachIteration')
 
-        for depth, group in grp.groupby('numTrajectoriesPerIteration'):
+        for numTrajectoriesPerIteration, group in grp.groupby('numTrajectoriesPerIteration'):
             group.index = group.index.droplevel('numTrajectoriesPerIteration')
 
             axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-            if plotCounter % numRows == 1:
-                axForDraw.set_ylabel('numTrainStepEachIteration: {}'.format(miniBatchSize))
-            if plotCounter <= numColumns:
-                axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(depth))
-
-            axForDraw.set_ylim(-1, 1.5)
+            axForDraw.set_ylim(-2, 1)
             plt.ylabel('Accumulated rewards')
-            drawPerformanceLine(grp, axForDraw, selfId)
+            if plotCounter % numRows == 1:
+                axForDraw.set_ylabel('numTrainStepEachIteration: {}'.format(numTrainStepEachIteration))
+            if plotCounter <= numColumns:
+                axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
+
+
+            drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 
 

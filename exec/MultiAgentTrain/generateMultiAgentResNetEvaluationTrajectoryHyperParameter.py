@@ -60,7 +60,7 @@ class PreparePolicy:
 def main():
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentResNet', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'multiMCTSAgentResNet', 'evaluateTrajectories','selfId=1')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
@@ -111,12 +111,14 @@ def main():
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
         NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius,'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
-        
+
         dirName = os.path.dirname(__file__)
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                            'multiAgentTrain', 'multiMCTSAgentResNet', 'NNModel')
+                                            'multiAgentTrain', 'multiMCTSAgentResNet', 'NNModelRes')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+
+
         depth = 17
         resBlockSize = 2
         dropoutRate = 0.0
@@ -126,7 +128,8 @@ def main():
         # functions to get prediction from NN
         selfIteration = int(parametersForTrajectoryPath['selfIteration'])
         otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-        selfId = int(parametersForTrajectoryPath['selfId'])
+        selfId=1
+        # selfId = int(parametersForTrajectoryPath['selfId'])
         if otherIteration != -999:
             restoreNNModel = RestoreNNModel(getNNModelSavePath, multiAgentNNmodel, restoreVariables)
         else:
