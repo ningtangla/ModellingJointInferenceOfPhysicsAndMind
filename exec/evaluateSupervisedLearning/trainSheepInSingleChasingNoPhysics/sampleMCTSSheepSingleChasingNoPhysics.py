@@ -32,13 +32,17 @@ def main():
     ##test
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=1
+    endSampleIndex=5
     ##test
 
 
-    killzoneRadius = 30
-    numSimulations = 200
-    maxRunningSteps = 100
+    preyPowerRatio = 1.5
+    predatorPowerRatio = 1
+    killzoneRadius = 10
+    imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
+
+    numSimulations = 50
+    maxRunningSteps = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -50,8 +54,8 @@ def main():
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    while True:
-    # if not os.path.isfile(trajectorySavePath):
+    # while True:
+    if  not os.path.isfile(trajectorySavePath):
         numOfAgent = 2
         sheepId = 0
         wolfId = 1
@@ -70,8 +74,12 @@ def main():
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
         circleSize = 10
         screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+        saveImage = True
+        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg',imageFolderName)
+        if not os.path.exists(saveImageDir):
+            os.makedirs(saveImageDir)
         render = Render(numOfAgent, positionIndex,
-                        screen, screenColor, circleColorList, circleSize)
+                        screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
@@ -93,9 +101,7 @@ def main():
         numActionSpace = len(actionSpace)
 
 
-        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
 
@@ -171,7 +177,7 @@ def main():
 
         print('lenght:',len(trajectories[0]))
 
-        print('time:',finshedTime)
+        print('timeTaken:',finshedTime)
 
 if __name__ == "__main__":
     main()
