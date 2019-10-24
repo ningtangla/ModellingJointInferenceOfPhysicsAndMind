@@ -40,6 +40,7 @@ def main():
     distractorId = 3
     startTime = time.time()
 
+
     numTrajectories = 16
     # generate and load trajectories before train parallelly
     # sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
@@ -53,6 +54,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
     killzoneRadius = 1
+
     maxRunningSteps = 125
     numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}

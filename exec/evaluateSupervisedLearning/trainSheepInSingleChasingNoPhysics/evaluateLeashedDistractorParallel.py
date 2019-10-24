@@ -12,11 +12,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-<<<<<<< HEAD
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, IsCollided, RewardFunctionWithWall
-=======
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,IsCollided
->>>>>>> 2eb18c7353c19461cedd0166042f47cad81a5ea0
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -94,7 +90,6 @@ def main():
     getDistractorPos = GetAgentPosFromState(distractorId, xPosIndex)
     killzoneRadius = 1
 
-    killzoneRadius = 1
     aliveBonus = 0.05
     deathPenalty = -1
     safeBound = 2.5
@@ -124,7 +119,7 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -176,11 +171,7 @@ def main():
             axForDraw.plot(trainStepsLevels, [0.193] * len(trainStepsLevels), label='mctsTrainData')
             plotCounter += 1
 
-<<<<<<< HEAD
-    plt.suptitle('DistractorNN Policy Accumulate Rewards')
-=======
     plt.suptitle('Distractor NN Policy Accumulate Rewards')
->>>>>>> 2eb18c7353c19461cedd0166042f47cad81a5ea0
     plt.legend(loc='best')
     plt.show()
 

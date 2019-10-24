@@ -33,6 +33,7 @@ def main():
 
     manipulatedVariables['agentId'] = [0]
     manipulatedVariables['maxRunningSteps'] = [50]
+
     manipulatedVariables['numSimulations'] = [200]
     manipulatedVariables['killzoneRadius'] = [1]
 

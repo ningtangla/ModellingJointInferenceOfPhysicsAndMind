@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..'))
+sys.path.append(os.path.join(dirName, '..', '..','..'))
 
 import random
 import numpy as np
@@ -12,15 +12,9 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-<<<<<<< HEAD
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, IsCollided, RewardFunctionWithWall
-=======
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,IsCollided
->>>>>>> 2eb18c7353c19461cedd0166042f47cad81a5ea0
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
-    ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
@@ -67,13 +61,13 @@ class RewardFunctionForDistractor():
 
 def main():
     # important parameters
-    distractorId = 3
+    d = 3
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = [128, 256]
-    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
-    manipulatedVariables['depth'] = [4]
+    #manipulatedVariables['miniBatchSize'] = [128, 256]
+    #manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    #manipulatedVariables['depth'] = [4]
     manipulatedVariables['trainSteps'] = list(range(0,100001, 20000))
 
 
@@ -85,37 +79,25 @@ def main():
     # accumulate rewards for trajectories
     sheepId = 0
     wolfId = 1
-    masterId = 2
-    distractorId = 3
+
     xPosIndex = [0, 1]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
-    getMasterPos = GetAgentPosFromState(masterId, xPosIndex)
-    getDistractorPos = GetAgentPosFromState(distractorId, xPosIndex)
-    killzoneRadius = 1
 
-    killzoneRadius = 1
-    aliveBonus = 0.05
-    deathPenalty = -1
-    safeBound = 2.5
-    wallDisToCenter = 10
-    wallPunishRatio = 4
-    velIndex = [4, 5]
-    getDistractorVel =  GetAgentPosFromState(distractorId, velIndex)
-    velocityBound = 5
 
-    otherIds = list(range(13))
-    otherIds.remove(distractorId)
-    getOthersPos = [GetAgentPosFromState(otherId, xPosIndex) for otherId in otherIds]
 
-    isCollided = IsCollided(killzoneRadius, getDistractorPos, getOthersPos)
-    playReward = RewardFunctionForDistractor(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, velocityBound, isCollided, getDistractorPos, getDistractorVel)
+    playAliveBonus = 0.005
+    playDeathPenalty = -1
+    playKillzoneRadius = 20
+    playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
+    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
 
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
+    addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
 # generate trajectory parallel
-    generateTrajectoriesCodeName = 'generateLeashedDistractorEvaluationTrajectory.py'
+    generateTrajectoriesCodeName = 'generateResNetSheepSingleChasingEvaluationTrajectory.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
@@ -124,20 +106,21 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning', 'evaluateLeashedDistractorTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'evaluateSheepTrajectoriesResNet')
 
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
 
-    trainMaxRunningSteps = 25
-    trainNumSimulations = 200
-    killzoneRadius = 1
-    trajectoryFixedParameters = {'agentId': distractorId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
+
+    killzoneRadius = 20
+    numSimulations = 200 #100
+    maxRunningSteps = 250
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
@@ -152,35 +135,12 @@ def main():
 
     # plot the results
     fig = plt.figure()
-    numRows = len(manipulatedVariables['miniBatchSize'])
-    numColumns = len(manipulatedVariables['depth'])
+    numRows = 1
+    numColumns = 1
     plotCounter = 1
-
-    for miniBatchSize, grp in statisticsDf.groupby('miniBatchSize'):
-        grp.index = grp.index.droplevel('miniBatchSize')
-
-        for depth, group in grp.groupby('depth'):
-            group.index = group.index.droplevel('depth')
-
-            axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-            if plotCounter % numColumns == 1:
-                axForDraw.set_ylabel('miniBatchSize: {}'.format(miniBatchSize))
-            if plotCounter <= numColumns:
-                axForDraw.set_title('depth: {}'.format(depth))
-
-            # axForDraw.set_ylim(-1, 0.6)
-            # plt.ylabel('Distance between optimal and actual next position of sheep')
-
-            drawPerformanceLine(group, axForDraw, depth)
-            trainStepsLevels = statisticsDf.index.get_level_values('trainSteps').values
-            axForDraw.plot(trainStepsLevels, [0.193] * len(trainStepsLevels), label='mctsTrainData')
-            plotCounter += 1
-
-<<<<<<< HEAD
-    plt.suptitle('DistractorNN Policy Accumulate Rewards')
-=======
-    plt.suptitle('Distractor NN Policy Accumulate Rewards')
->>>>>>> 2eb18c7353c19461cedd0166042f47cad81a5ea0
+    axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+    statisticsDf.plot(ax=axForDraw, y='mean', yerr='std',marker='o', logx=False)
+    plt.suptitle('ResNet')
     plt.legend(loc='best')
     plt.show()
 
