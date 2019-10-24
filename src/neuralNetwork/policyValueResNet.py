@@ -4,16 +4,18 @@ import random
 
 
 class GenerateModel:
-    def __init__(self, numStateSpace, numActionSpace, regularizationFactor=0, valueRelativeErrBound=0.01, seed=128):
+    def __init__(self, numStateSpace, numActionSpace, regularizationFactor=0.0, valueRelativeErrBound=0.01, seed=128):
         self.numStateSpace = numStateSpace
         self.numActionSpace = numActionSpace
         self.regularizationFactor = regularizationFactor
         self.valueRelativeErrBound = valueRelativeErrBound
         self.seed = seed
 
-    def __call__(self, sharedWidths, actionLayerWidths, valueLayerWidths, summaryPath="./tbdata"):
-        print("Generating NN with shared layers: {}, action layers: {}, value layers: {}"
-              .format(sharedWidths, actionLayerWidths, valueLayerWidths))
+    def __call__(self, sharedWidths, actionLayerWidths, valueLayerWidths, resBlockSize=0, initialization='uniform',
+                 dropoutRate=0.0, summaryPath="./tbdata"):
+        print(f'Generating NN with shared layers: {sharedWidths}, action layers: {actionLayerWidths}, '
+              f'value layers: {valueLayerWidths}\nresBlockSize={resBlockSize}, init={initialization}, '
+              f'dropoutRate={dropoutRate}')
         graph = tf.Graph()
         with graph.as_default():
             if self.seed is not None:
@@ -37,15 +39,33 @@ class GenerateModel:
                 tf.add_to_collection("lossCoefs", actionLossCoef_)
                 tf.add_to_collection("lossCoefs", valueLossCoef_)
 
-            initWeight = tf.random_uniform_initializer(-0.03, 0.03)
+            initWeightDict = {'uniform': tf.random_uniform_initializer(-0.03, 0.03),
+                              'normal': tf.random_normal_initializer(mean=0.0, stddev=1.0),
+                              'glorot': tf.glorot_normal_initializer(),
+                              'he': tf.initializers.he_normal()}
+            initWeight = initWeightDict[initialization]
             initBias = tf.constant_initializer(0.001)
 
             with tf.variable_scope("shared"):
-                activation_ = states_
-                for i in range(len(sharedWidths)):
-                    fcLayer = tf.layers.Dense(units=sharedWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fc{}".format(i+1))
-                    activation_ = fcLayer(activation_)
+                fcLayer = tf.layers.Dense(units=sharedWidths[0], activation=tf.nn.relu, kernel_initializer=initWeight,
+                                          bias_initializer=initBias, name="fc1")
+                activation_ = tf.nn.dropout(fcLayer(states_), rate=dropoutRate)
+                tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
+                tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
+                tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
+                if resBlockSize > 0:
+                    blockHeads = set([i for i in range(2, len(sharedWidths) + 1) if (i - 2) % resBlockSize == 0])
+                    blockTails = set([i + resBlockSize - 1 for i in blockHeads])
+                else:
+                    blockHeads, blockTails = set(), set()
+                for i in range(2, len(sharedWidths) + 1):
+                    if i in blockHeads:
+                        resBlockInput_ = activation_
+                    fcLayer = tf.layers.Dense(units=sharedWidths[i-1], activation=None, kernel_initializer=initWeight,
+                                              bias_initializer=initBias, name="fc{}".format(i))
+                    preActivation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
+                    activation_ = tf.nn.relu(preActivation_ + resBlockInput_) if i in blockTails \
+                        else tf.nn.relu(preActivation_)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
                     tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
@@ -56,7 +76,7 @@ class GenerateModel:
                 for i in range(len(actionLayerWidths)):
                     fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i+1))
-                    activation_ = fcLayer(activation_)
+                    activation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
                     tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
@@ -79,7 +99,7 @@ class GenerateModel:
                 for i in range(len(valueLayerWidths)):
                     fcLayer = tf.layers.Dense(units=valueLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i+1))
-                    activation_ = fcLayer(activation_)
+                    activation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
                     tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
@@ -103,6 +123,7 @@ class GenerateModel:
                     actionLoss_ = tf.reduce_mean(crossEntropy_, name='loss')
                     tf.add_to_collection("actionLoss", actionLoss_)
                     actionLossSummary = tf.summary.scalar("actionLoss", actionLoss_)
+
                     groundTruthActionIndices_ = tf.argmax(groundTruthAction_, axis=1)
                     actionAccuracy_ = tf.reduce_mean(tf.cast(tf.equal(actionIndices_, groundTruthActionIndices_), tf.float32), name="accuracy")
                     tf.add_to_collection("actionAccuracy", actionAccuracy_)
@@ -120,8 +141,13 @@ class GenerateModel:
                     valueAccuracySummary = tf.summary.scalar("valueAccuracy", valueAccuracy_)
 
                 with tf.name_scope("regularization"):
-                    l2RegularizationLoss_ = tf.multiply(tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name]),
-                                                        self.regularizationFactor, name="l2RegLoss")
+                    batchSize_ = tf.shape(states_)[0]
+                    halfWeightSquaredSum_ = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables()
+                                                      if 'bias' not in v.name])
+                    l2RegularizationLoss_ = tf.multiply(
+                        halfWeightSquaredSum_,
+                        tf.truediv(self.regularizationFactor, tf.cast(batchSize_, tf.float32)),
+                        name="l2RegLoss")
                     tf.summary.scalar("l2RegLoss", l2RegularizationLoss_)
 
                 loss_ = tf.add_n([actionLossCoef_*actionLoss_, valueLossCoef_*valueLoss_, l2RegularizationLoss_], name="loss")
@@ -218,7 +244,7 @@ class Train:
 
 class TrainWithCustomizedFetches:
     def __init__(self, maxStepNum, batchSize, sampleData, learningRateModifier, terimnalController,
-                 coefficientController, trainReporter, prepareFetches):
+                 coefficientController, trainReporter, prepareFetches, stepNumOffset=0):
         self.maxStepNum = maxStepNum
         self.batchSize = batchSize
         self.sampleData = sampleData
@@ -227,6 +253,7 @@ class TrainWithCustomizedFetches:
         self.coefficientController = coefficientController
         self.reporter = trainReporter
         self.prepareFetches = prepareFetches
+        self.stepNumOffset = stepNumOffset
 
     def __call__(self, model, trainingData):
         graph = model.graph
@@ -240,7 +267,7 @@ class TrainWithCustomizedFetches:
         evalDict = None
         trainingDataList = list(zip(*trainingData))
 
-        for stepNum in range(1, self.maxStepNum + 1):
+        for stepNum in range(self.stepNumOffset + 1, self.stepNumOffset + self.maxStepNum + 1):
             if self.batchSize == 0:
                 stateBatch, actionBatch, valueBatch = trainingData
             else:
@@ -270,7 +297,8 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
     valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
     evalSummaryOp = graph.get_collection_ref('summaryOps')[1]
     testWriter = graph.get_collection_ref('writers')[1]
-    fetches = [{"actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_},
+    fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_,
+                "valueAcc": valueAccuracy_},
                evalSummaryOp]
 
     stateBatch, actionBatch, valueBatch = testData
