@@ -113,7 +113,18 @@ def chooseGreedyAction(actionDist):
     selectedIndex = np.random.choice(maxIndices)
     selectedAction = actions[selectedIndex]
     return selectedAction
+class SampleAction():
+    def __init__(self, beta):
+        self.beta = beta
 
+    def __call__(self, actionDist):
+        actions = list(actionDist.keys())
+        probs = list(actionDist.values())
+        newProbs = np.array([np.power(prob, self.beta) for prob in probs])
+        normProbs = newProbs / np.sum(newProbs)
+        selectedIndex = list(np.random.multinomial(1, normProbs)).index(1)
+        selectedAction = actions[selectedIndex]
+        return selectedAction
 
 def sampleAction(actionDist):
     actions = list(actionDist.keys())
