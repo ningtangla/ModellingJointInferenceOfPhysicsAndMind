@@ -21,34 +21,32 @@ import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
 def main():
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath={}
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
+
     agentId = 0
-    parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=100
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath={}
+    # startSampleIndex=0
+    # endSampleIndex=100
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     killzoneRadius = 30
-
-    imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
+    # imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
 
     numSimulations = 50
-    maxRunningSteps = 200
+    maxRunningSteps = 150
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesWithStillAction')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-
-
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
+
     # while True:
     if  not os.path.isfile(trajectorySavePath):
         numOfAgent = 2
@@ -72,7 +70,7 @@ def main():
         screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
 
         saveImage = True
-        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg',imageFolderName)
+        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render = Render(numOfAgent, positionIndex,
@@ -99,9 +97,11 @@ def main():
         numActionSpace = len(actionSpace)
 
 
-        preyPowerRatio = 4.5
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 3
+        # sheepActionSpace.append((0,0))
+
+        predatorPowerRatio = 2
 
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
@@ -309,7 +309,7 @@ class SampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
-                self.render(state)
+                self.render(state,runningStep)
             actionDists = policy(state)
             action = [self.chooseAction(actionDist) for actionDist in actionDists]
             trajectory.append((state, action, actionDists))

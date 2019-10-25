@@ -17,7 +17,7 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 from src.episode import chooseGreedyAction#SampleTrajectory
 from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset#IsTerminal
 
-import time
+import timee
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
 def main():

@@ -16,9 +16,7 @@ from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariab
     ApproximatePolicy, restoreVariables
 from src.episode import chooseGreedyAction,SampleTrajectory
 
-
-
-from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset
+ from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset
 
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
