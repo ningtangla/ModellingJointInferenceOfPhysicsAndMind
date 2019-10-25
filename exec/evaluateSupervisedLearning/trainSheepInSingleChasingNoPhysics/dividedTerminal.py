@@ -32,16 +32,12 @@ def main():
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     killzoneRadius = 30
-
-    imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
-
     numSimulations = 50
     maxRunningSteps = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
-
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -49,8 +45,7 @@ def main():
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    # while True:
-    if  not os.path.isfile(trajectorySavePath):
+    if not os.path.isfile(trajectorySavePath):
         numOfAgent = 2
         sheepId = 0
         wolfId = 1
@@ -62,7 +57,6 @@ def main():
 
         #prepare render
         from exec.evaluateNoPhysicsEnvWithRender import Render #SampleTrajectoryWithRender
-
         import pygame as pg
         renderOn = True
         from pygame.color import THECOLORS
@@ -70,13 +64,8 @@ def main():
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
         circleSize = 10
         screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-
-        saveImage = True
-        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg',imageFolderName)
-        if not os.path.exists(saveImageDir):
-            os.makedirs(saveImageDir)
         render = Render(numOfAgent, positionIndex,
-                        screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+                        screen, screenColor, circleColorList, circleSize)
 
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
@@ -102,7 +91,6 @@ def main():
         preyPowerRatio = 4.5
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 3
-
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
 
@@ -177,10 +165,7 @@ def main():
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
         finshedTime = time.time() - startTime
-
-        print('lenght:',len(trajectories[0]))
-
-        print('timeTaken:',finshedTime)
+        print(finshedTime)
 
 class RollOut:
     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):

@@ -17,15 +17,17 @@ from src.episode import chooseGreedyAction
 
 
 class Render():
-    def __init__(self, numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize):
+    def __init__(self, numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize,saveImage, saveImageDir):
         self.numOfAgent = numOfAgent
         self.posIndex = posIndex
         self.screen = screen
         self.screenColor = screenColor
         self.circleColorList = circleColorList
         self.circleSize = circleSize
+        self.saveImage  = saveImage
+        self.saveImageDir = saveImageDir
 
-    def __call__(self, state):
+    def __call__(self, state, timeStep):
         for j in range(1):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -37,6 +39,12 @@ class Render():
                     agentPos[0]), np.int(agentPos[1])], self.circleSize)
             pg.display.flip()
             pg.time.wait(100)
+
+            if self.saveImage == True:
+                if not os.path.exists(self.saveImageDir):
+                    os.makedirs(self.saveImageDir)
+                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
+
 
 
 class SampleTrajectoryWithRender:
@@ -61,7 +69,7 @@ class SampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
-                self.render(state)
+                self.render(state, runningStep)
             actionDists = policy(state)
             action = [self.chooseAction(actionDist) for actionDist in actionDists]
             trajectory.append((state, action, actionDists))
