@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..'))
+sys.path.append(os.path.join(dirName, '..', '..','..'))
 
 import random
 import numpy as np
@@ -15,9 +15,11 @@ import itertools as it
 import pathos.multiprocessing as mp
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
+# from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+#     ApproximatePolicy, restoreVariables
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -30,6 +32,27 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 
 
+
+class ProcessTrajectoryForPolicyValueNetSampleSteps:
+    def __init__(self, actionToOneHot, agentId,sampleOneStepPerTraj):
+        self.actionToOneHot = actionToOneHot
+        self.agentId = agentId
+        self.sampleOneStepPerTraj = sampleOneStepPerTraj
+
+    def __call__(self, trajectory):
+        processTuple = lambda state, actions, actionDist, value: \
+            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
+
+        processedTrajectory = [processTuple(*triple) for triple in trajectory]
+
+        if not self.sampleOneStepPerTraj:
+            choosenIndex = random.choice(range(len(processedTrajectory)))
+            choosenStep = [processedTrajectory[choosenIndex]]
+            return choosenStep
+        else:
+            return processedTrajectory
+
+
 def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):
         grp.index = grp.index.droplevel('learningRate')
@@ -38,11 +61,11 @@ def drawPerformanceLine(dataDf, axForDraw, deth):
 
 
 class TrainModelForConditions:
-    def __init__(self, trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrain, getModelSavePath):
+    def __init__(self, trainIntervelIndexes, trainStepsIntervel, trainData, NNModel, getTrain, getModelSavePath):
         self.trainIntervelIndexes = trainIntervelIndexes
         self.trainStepsIntervel = trainStepsIntervel
         self.trainData = trainData
-        self.getNNModel = getNNModel
+        self.NNModel = NNModel
         self.getTrain = getTrain
         self.getModelSavePath = getModelSavePath
 
@@ -50,14 +73,11 @@ class TrainModelForConditions:
         print(parameters)
         miniBatchSize = parameters['miniBatchSize']
         learningRate = parameters['learningRate']
-        dropOutRate = parameters['dropOutRate']
-        # width = parameters['width']
 
-        model = self.getNNModel(dropOutRate)
+        model = self.NNModel
         train = self.getTrain(miniBatchSize, learningRate)
         parameters.update({'trainSteps': 0})
         modelSavePath = self.getModelSavePath(parameters)
-        print(modelSavePath)
         saveVariables(model, modelSavePath)
 
         for trainIntervelIndex in self.trainIntervelIndexes:
@@ -70,161 +90,172 @@ class TrainModelForConditions:
                 trainedModel = restoreVariables(model, modelSavePath)
             model = trainedModel
 
-        trainedModel.close()
-        model.close()
-
 def main():
-    # important parameters
-    sheepId = 0
-
-    # manipulated variables
     manipulatedVariables = OrderedDict()
-<<<<<<< Updated upstream:exec/MultiAgentTrain/trainSheepResNNModelInVaryHyperParameters.py
-=======
-    manipulatedVariables['miniBatchSize'] = 256 #[64, 128, 256, 512]
-    manipulatedVariables['learningRate'] =  1e-4#[1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = 5 #[2 ,4, 6, 8]
->>>>>>> Stashed changes:exec/evaluateSupervisedLearning/trainSheepInMultiChasingNoPhysics/trainMCTSSheepMultiChasingNoPhysics.py
-
-    manipulatedVariables['miniBatchSize'] = [64, 128, 256]
-    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
-    manipulatedVariables['dropOutRate'] = [0, 0.2, 0.4]
-    # manipulatedVariables['resBlock'] = [2 ,4, 6, 8]
-    # manipulatedVariables['width'] = [32, 64 ,128, 256]
+    manipulatedVariables['dataSize'] =  [5000]
+    manipulatedVariables['depth'] =  [5]
+    manipulatedVariables['sampleOneStepPerTraj'] =  [0]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.75*numCpuCores)
+    trainPool = mp.Pool(numCpuToUse)
+    trainPool.map(trainOneCondition, parametersAllCondtion)
+
+def trainOneCondition(parameters):
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['miniBatchSize'] = 256
+    manipulatedVariables['learningRate'] =  1e-4
+
+    depth =  int(parameters['depth'])
+    dataSize = int(parameters['dataSize'])
+    sampleOneStepPerTraj =  int(parameters['sampleOneStepPerTraj'])
+
+    manipulatedVariables['depth'] = depth
+    manipulatedVariables['dataSize'] = dataSize
+    manipulatedVariables['sampleOneStepPerTraj'] =sampleOneStepPerTraj
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                    'trajectories')
+    # dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
+    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectories')
+
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-<<<<<<< Updated upstream:exec/MultiAgentTrain/trainSheepResNNModelInVaryHyperParameters.py
-=======
     dataSetMaxRunningSteps = 150 #80
     dataSetNumSimulations = 200 #200
     killzoneRadius = 30 #2
->>>>>>> Stashed changes:exec/evaluateSupervisedLearning/trainSheepInMultiChasingNoPhysics/trainMCTSSheepMultiChasingNoPhysics.py
-
-    dataSetMaxRunningSteps = 25
-    dataSetNumSimulations = 100
-
-    killzoneRadius = 2
-
-    dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+    sheepId=0
+    dataSetFixedParameters = {'agentId':sheepId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
+    numOfAgent = 2
     sheepId = 0
-    wolfId = 1
-    xPosIndex = [2, 3]
+    wolf1Id = 1
+
+    xPosIndex = [0, 1]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
-    getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
-    playAliveBonus = 0.05
+    getWolf1Pos = GetAgentPosFromState(wolf1Id, xPosIndex)
+
+    playAliveBonus = 1/dataSetMaxRunningSteps
     playDeathPenalty = -1
-    playKillzoneRadius = 2
-    playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
+    playKillzoneRadius = killzoneRadius #2
+
+    playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolf1Pos)
+
+
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
+
+    # xBoundary = [0,600]
+    # yBoundary = [0,600]
+    # safeBound = 80
+    # wallDisToCenter = xBoundary[-1]/2
+    # wallPunishRatio = 3
+    # playReward = RewardFunctionWithWall(playAliveBonus, playDeathPenalty, safeBound, wallDisToCenter, wallPunishRatio, playIsTerminal,getSheepPos)
+
 
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
-<<<<<<< Updated upstream:exec/MultiAgentTrain/trainSheepResNNModelInVaryHyperParameters.py
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-=======
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
-                   (-10, 0), (-7, -7), (0, -10), (7, -7)]
->>>>>>> Stashed changes:exec/evaluateSupervisedLearning/trainSheepInMultiChasingNoPhysics/trainMCTSSheepMultiChasingNoPhysics.py
-    numActionSpace = len(actionSpace)
+    sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+
     preyPowerRatio = 3
-    sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    sheepActionSpace.append((0,0))
+    actionSpace = list(map(tuple, np.array(sheepActionSpace) * preyPowerRatio))
 
-    predatorPowerRatio = 2
-    wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-
+    numActionSpace = len(actionSpace)
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(sheepActionSpace)
+    actionToOneHot = ActionToOneHot(actionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
+    # processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNetSampleSteps(actionToOneHot, sheepId, sampleOneStepPerTraj)
+
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
-    trajectories = loadTrajectories(parameters={})
+
+    loadedTrajectories = loadTrajectories(parameters={})[:dataSize]
+
+    filterState = lambda timeStep: (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])#!!? magic
+    trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
+    print(len(trajectories),parameters)
+
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
+
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
 
+    
     # neural network init and save path
-    numStateSpace = 12
-    numActionSpace = 8
-    regularizationFactor = 1e-2
-    resBlockSize = 2
-    initialization = 'uniform'
-    nnStructure = ((256,) * 17, (256,), (256,))
-    sharedWidths, actionLayerWidths, valueLayerWidths = nnStructure
+    numStateSpace = 4
+    numActionSpace = len(actionSpace)
+    regularizationFactor = 1e-4
+    sharedWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
+
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    getNNModel = lambda  dropoutRate: generateModel(sharedWidths, actionLayerWidths, valueLayerWidths, resBlockSize=resBlockSize,
-                          initialization=initialization, dropoutRate=dropoutRate)
+
+    resBlockSize = 2
+    dropoutRate = 0.0
+    initializationMethod = 'uniform'
+    sheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+
 
     # function to train NN model
     terminalThreshold = 1e-10
     lossHistorySize = 10
     initActionCoeff = 1
-    initValueCoeff = 1
+    initValueCoeff = 0
     initCoeff = (initActionCoeff, initValueCoeff)
     afterActionCoeff = 1
-    afterValueCoeff = 1
+    afterValueCoeff = 0
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    terminalController = lambda evalDict, numStep: False
-    #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
+    # terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
+    terminalController = lambda evalDict, numSteps: False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-
-    reportInterval = 50000
-    trainStepsIntervel = 50000
-
+    reportInterval = 10000
+    trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,
-                                                                     trainReporter)
+    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,trainReporter)
 
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateResNN', 'trainedResSheepModels','res2depth17')
+    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsNoWall')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(10,21))
-    trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
+    trainIntervelIndexes = list(range(6))
+    trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNModel, getTrainNN, getNNModelSavePath)
 
-    # trainModelForConditions({'miniBatchSize':128,'learningRate':0.001,'dropOutRate':0.2})
+    # trainModelForConditions(manipulatedVariables)
 
     # train models for all conditions
-    numCpuCores = os.cpu_count()
-    print(numCpuCores)
-    numCpuToUse = int(0.8*numCpuCores)
-    trainPool = mp.Pool(numCpuToUse)
-    # trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
-    models = trainPool.map(trainModelForConditions, parametersAllCondtion)
+    # numCpuCores = os.cpu_count()
+    # print(numCpuCores)
+    # numCpuToUse = int(0.8*numCpuCores)
+    # trainPool = mp.Pool(numCpuToUse)
+    # #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    # trainPool.map(trainModelForConditions, parametersAllCondtion)
 
 if __name__ == '__main__':
     main()
