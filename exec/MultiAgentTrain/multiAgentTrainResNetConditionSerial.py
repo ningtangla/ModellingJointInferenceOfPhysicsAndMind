@@ -75,7 +75,12 @@ class PrepareMultiAgentPolicy:
 
     def __call__(self, multiAgentNNModel):
         multiAgentApproximatePolicy = np.array([self.approximatePolicy(NNModel) for NNModel in multiAgentNNModel])
+<<<<<<< HEAD
         otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]]) for agentId in self.MCTSAgentIds])
+=======
+        otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])
+                                                  for agentId in self.MCTSAgentIds])
+>>>>>>> iterativeTrainSheepAndWolf
         MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
         MCTSAgentsPolicy = np.array([self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy)
                                      for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
@@ -248,7 +253,11 @@ def main():
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> iterativeTrainSheepAndWolf
     #frequencyVersion: delete used model for disk space
     toDeleteNNModelExtensionList=['.meta','.index','.data-00000-of-00001']
     generatetoDeleteNNModelPathList=[GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParameters) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
@@ -300,7 +309,11 @@ def main():
     numTrajectoriesToStartTrain = 4 * miniBatchSize
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> iterativeTrainSheepAndWolf
     restoredIteration = 0
 
     for agentId in trainableAgentIds:
@@ -328,7 +341,11 @@ def main():
 # initRreplayBuffer
     replayBuffer = []
 
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> iterativeTrainSheepAndWolf
     # if restoredIteration == 0:
     #     cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
@@ -359,28 +376,48 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
 
+<<<<<<< HEAD
         # numCpuToUseWhileTrain = int(2)
         # numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
+=======
+        numCpuToUseWhileTrain = int(2)
+        numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
+>>>>>>> iterativeTrainSheepAndWolf
         # generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
 
         trajectoryPathParameters = {'iterationIndex': iterationIndex, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
 
         # cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
+<<<<<<< HEAD
         # trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
+=======
+        # trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)        
+>>>>>>> iterativeTrainSheepAndWolf
         # print('length of traj', len(trajectories))
         # trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         # saveToPickle(trajectories, trajectorySavePath)
 
+<<<<<<< HEAD
         # add trajctroy check
+=======
+        # add trajctroy check 
+>>>>>>> iterativeTrainSheepAndWolf
         # trajecoriesNum=0
         # while trajecoriesNum!=numTrajectoriesPerIteration:
         #     cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
 
         #     trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
+<<<<<<< HEAD
         #     trajecoriesNum=len(trajectories)
         #     if trajecoriesNum!=numTrajectoriesPerIteration:
         #         print('MISSSUBPROCESS,RETRY',trajecoriesNum)
         print('length of traj', len(trajectories))
+=======
+        #     trajecoriesNum=len(trajectories)        
+        #     if trajecoriesNum!=numTrajectoriesPerIteration:
+        #         print('MISSSUBPROCESS,RETRY',trajecoriesNum)
+        # print('length of traj', len(trajectories))
+>>>>>>> iterativeTrainSheepAndWolf
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
 

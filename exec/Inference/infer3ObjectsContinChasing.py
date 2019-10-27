@@ -5,13 +5,15 @@ DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-from src.inferChasing.continuousPolicy import ThreeAgentsPolicy, RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy
+from src.inferChasing.continuousPolicy import ThreeAgentsPolicyForNN
 from src.inferChasing.continuousTransition import TransitTwoMassPhysics
 from src.inferChasing.inference import IsInferenceTerminal, Observe, InferOneStep, \
-    InferContinuousChasingAndDrawDemo
+    InferContinuousChasingAndDrawDemoNoDecay
 
-from src.constrainedChasingEscapingEnv.envMujoco import Transition3Objects
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximateActionPrior
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 from exec.trajectoriesSaveLoad import loadFromPickle
 
 from visualize.initialization import initializeScreen
@@ -44,10 +46,17 @@ def main():
     physicsSmallMassSimulation.set_constants()
     physicsLargeMassSimulation.set_constants()
 
-    numSimulationFrames = 20
-    transitSmallMassAgents = Transition3Objects(physicsSmallMassSimulation, numSimulationFrames)
-    transitLargeMassAgents = Transition3Objects(physicsLargeMassSimulation, numSimulationFrames)
+    sheepId = 0
+    wolfId = 1
+    xPosIndex = [2, 3]
+    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
+    killzoneRadius = 2
+    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
+    numSimulationFrames = 20
+    transitSmallMassAgents = TransitionFunction(physicsSmallMassSimulation, isTerminal, numSimulationFrames)
+    transitLargeMassAgents = TransitionFunction(physicsLargeMassSimulation, isTerminal, numSimulationFrames)
     transition = TransitTwoMassPhysics(transitSmallMassAgents, transitLargeMassAgents)
 
     # Neural Network
@@ -65,22 +74,22 @@ def main():
                                  'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
     wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(wolfNNModel, wolfModelPath)
-    wolfPolicy = ApproximateActionPrior(wolfNNModel, actionSpace)  # input state, return action distribution
+    wolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace)  # input state, return action distribution
 
     # sheep NN Policy
     sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
     sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(sheepNNModel, sheepModelPath)
-    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace) # input sheepstate, return action distribution
+    sheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace) # input sheepstate, return action distribution
 
     randomPolicy = RandomPolicy(actionSpace)
 
-    policy = ThreeAgentsPolicy(wolfPolicy, sheepPolicy, randomPolicy)
+    policy = ThreeAgentsPolicyForNN(wolfPolicy, sheepPolicy, randomPolicy)
 
     getMindsPhysicsActionsJointLikelihood = lambda mind, state, allAgentsActions, physics, nextState: \
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
-    dataIndex = 14
+    dataIndex = 1
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0
@@ -141,7 +150,7 @@ def main():
 
     imageFolderName = '3ObjectsInfDemo' + str(dataIndex)
     saveImage = SaveImage(imageFolderName)
-    drawInferenceResult = DrawContinuousInferenceResultNoPull(inferenceIndex,
+    drawInferenceResult = DrawContinuousInferenceResultNoPull(numOfAgents, inferenceIndex,
                 drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
 
     thresholdPosterior = 1.5
@@ -151,19 +160,20 @@ def main():
     mindPhysicsActionName = ['mind', 'physics', 'action']
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
 
-    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemo(FPS, inferenceIndex,
+    inferContinuousChasingAndDrawDemo = InferContinuousChasingAndDrawDemoNoDecay(FPS, inferenceIndex,
                                                                           isInferenceTerminal, observe, inferOneStep,
                                                                           drawInferenceResult)
 
     mindsPhysicsPrior = [1 / len(inferenceIndex)] * len(inferenceIndex)
-    posteriorDf = inferContinuousChasingAndDrawDemo(mindsPhysicsPrior)
+    posteriorDf = inferContinuousChasingAndDrawDemo(numOfAgents, mindsPhysicsPrior)
 
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotMindInferenceProb(posteriorDf, dataIndex)
-    plotPhysicsInferenceProb(posteriorDf, dataIndex)
-#
+    plotName = '3Objects2PhysicsNNInference'
+    plotMindInferenceProb(posteriorDf, dataIndex, plotName)
+    plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
+
 
 if __name__ == '__main__':
     main()

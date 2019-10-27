@@ -1,29 +1,30 @@
 import sys
 import os
-sys.path.append(os.path.join('..', 'src', 'inferChasing'))
-sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
-sys.path.append(os.path.join('..', 'visualize'))
+sys.path.append(os.path.join('..'))
 
 import itertools
 import pandas as pd
 import numpy as np
 from pygame.color import THECOLORS
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
 
-from analyticGeometryFunctions import computeAngleBetweenVectors
-from discreteGridPolicy import ActHeatSeeking, \
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+
+from src.inferChasing.discreteGridPolicy import ActHeatSeeking, \
     HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
-from policies import UniformPolicy
-from discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
+from src.inferChasing.discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
-from inference import IsInferenceTerminal, Observe, InferOneStep, \
+from src.inferChasing.inference import IsInferenceTerminal, ObserveStateOnly, InferOneStep, \
     InferDiscreteChasingAndDrawDemo
-from state import GetAgentPosFromState
-from inferenceVisualization import SaveImage, GetChasingRoleColor, \
+
+from visualize.inferenceVisualization import SaveImage, GetChasingRoleColor, \
     GetChasingResultColor, ColorChasingPoints, AdjustPullingLineWidth, \
     DrawInferenceResultWithPull, PlotInferenceProb
-from initialization import initializeScreen
-
-from discreteGridVisualization import checkDuplicates, ModifyOverlappingPoints, DrawGrid,\
+from visualize.initialization import initializeScreen
+from visualize.discreteGridVisualization import checkDuplicates, ModifyOverlappingPoints, DrawGrid,\
     DrawCirclesAndLines
 
 
@@ -37,15 +38,16 @@ def main():
     rationalityParam = 0.9
     heatSeekingPolicy = HeatSeekingPolicy(rationalityParam, actHeatSeeking)
 
+
     positionIndex = [0, 1]
     getAgentPosition = lambda agentID, state: GetAgentPosFromState(agentID, positionIndex)(state)
 
     wolfPolicy = WolfPolicy(getAgentPosition, heatSeekingPolicy)
     sheepPolicy = SheepPolicy(getAgentPosition, heatSeekingPolicy)
 
-    uniformPolicy = UniformPolicy(actionSpace)
+    uniformPolicy = RandomPolicy(actionSpace)
     masterPolicy = MasterPolicy(uniformPolicy)
-    
+
     policyList = [wolfPolicy, sheepPolicy, masterPolicy]
     policy = lambda mind, state, allAgentsAction: np.product(
         [agentPolicy(mind, state, allAgentsAction) for agentPolicy in policyList])
@@ -113,7 +115,7 @@ def main():
                                                       drawGrid, drawCirclesAndLines,
                                                       colorChasingPoints, adjustPullingLineWidth)
 
-    thresholdPosterior = 1
+    thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
     isInferenceTerminal = IsInferenceTerminal(thresholdPosterior, mindPhysicsName, inferenceIndex)
 
@@ -121,9 +123,10 @@ def main():
     inferOneStep = InferOneStep(inferenceIndex, mindPhysicsActionName, getMindsPhysicsActionsJointLikelihood)
 
     trajectory = [[(6, 2), (9, 2), (5, 4)], [(7, 3), (10, 2), (6, 3)], [(6, 2), (10, 2), (7, 2)], [(8, 2), (10, 2), (6, 1)], [(8, 2), (10, 2), (7, 1)], [(8, 2), (10, 3), (7, 1)], [(9, 1), (10, 3), (8, 2)], [(8, 2), (10, 3), (8, 2)], [(8, 3), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (7, 2)], [(8, 3), (10, 3), (8, 1)], [(9, 2), (10, 3), (8, 1)], [(10, 1), (10, 4), (7, 2)], [(9, 2), (10, 5), (9, 2)], [(9, 3), (9, 5), (9, 3)], [(9, 4), (9, 6), (10, 3)], [(10, 5), (9, 7), (10, 3)], [(9, 4), (10, 7), (10, 4)], [(10, 5), (10, 7), (10, 4)], [(10, 5), (10, 8), (9, 5)], [(9, 6), (10, 9), (10, 4)], [(10, 7), (10, 9), (8, 4)], [(9, 8), (10, 10), (9, 3)], [(10, 7), (10, 10), (10, 4)], [(10, 7), (10, 10), (9, 5)], [(10, 7), (10, 10), (8, 6)], [(9, 8), (10, 10), (10, 6)], [(9, 8), (10, 10), (10, 6)], [(10, 9), (10, 9), (9, 7)]]
-    observe = Observe(positionIndex, trajectory)
+    observe = ObserveStateOnly(trajectory)
 
-    imageFolderName = 'demo'
+    dataIndex = 0
+    imageFolderName = 'demo' + str(dataIndex)
     saveImage = SaveImage(imageFolderName)
     FPS = 60
     inferDiscreteChasingAndDrawDemo = InferDiscreteChasingAndDrawDemo(FPS, inferenceIndex,
@@ -137,10 +140,10 @@ def main():
     plotMindInferenceProb = PlotInferenceProb('timeStep', 'mindPosterior', 'mind')
     plotPhysicsInferenceProb = PlotInferenceProb('timeStep', 'physicsPosterior', 'physics')
 
-    plotMindInferenceProb(posteriorDf)
-    plotPhysicsInferenceProb(posteriorDf)
+    plotName = 'Discrete3AgentsPullInference'
+    plotMindInferenceProb(posteriorDf, dataIndex, plotName)
+    plotPhysicsInferenceProb(posteriorDf, dataIndex, plotName)
 
-    # posteriorDf.to_csv('posterior.csv')
 
 
 if __name__ == '__main__':
