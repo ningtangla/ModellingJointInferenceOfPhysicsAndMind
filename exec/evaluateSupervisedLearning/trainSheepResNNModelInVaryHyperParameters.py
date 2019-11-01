@@ -18,7 +18,7 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
@@ -50,10 +50,10 @@ class TrainModelForConditions:
         print(parameters)
         miniBatchSize = parameters['miniBatchSize']
         learningRate = parameters['learningRate']
-        # depth = parameters['depth']
-        width = parameters['width']
+        depth = parameters['depth']
+        # width = parameters['width']
 
-        model = self.getNNModel(width)
+        model = self.getNNModel(depth)
         train = self.getTrain(miniBatchSize, learningRate)
         parameters.update({'trainSteps': 0})
         modelSavePath = self.getModelSavePath(parameters)
@@ -81,8 +81,9 @@ def main():
 
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
     manipulatedVariables['learningRate'] =  [1e-3, 1e-4, 1e-5]
-    # manipulatedVariables['depth'] = [2 ,4, 6, 8]
-    manipulatedVariables['width'] = [32, 64 ,128, 256]
+    manipulatedVariables['depth'] = [9, 17, 33]
+    # manipulatedVariables['resBlock'] = [2 ,4, 6, 8]
+    # manipulatedVariables['width'] = [32, 64 ,128, 256]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -146,12 +147,12 @@ def main():
     # neural network init and save path
     numStateSpace = 12
     regularizationFactor = 1e-4
-    # actionLayerWidths = [128]
-    # valueLayerWidths = [128]
-    depth = 8
+    sharedLayerWidths = [128]
+    actionLayerWidths = [128]
+    valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-
-    getNNModel = lambda width: generateModel([width] * depth, [width], [width])
+    resBlock = 4
+    getNNModel = lambda depth: generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths, resBlock)
 
     # function to train NN model
     terminalThreshold = 1e-10
@@ -166,8 +167,8 @@ def main():
     #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
 
-    reportInterval = 10000
-    trainStepsIntervel = 20000
+    reportInterval = 50000
+    trainStepsIntervel = 50000
 
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
@@ -179,7 +180,7 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedModels')
+    NNModelSaveDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'trainedResSheepModels','res4')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

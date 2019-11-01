@@ -29,15 +29,15 @@ def main():
     # trainSteps = int(parametersForTrajectoryPath['trainSteps'])
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=10
-    trainSteps=90000
+    endSampleIndex=1000
+    trainSteps=50000
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     parametersForTrajectoryPath['trainSteps']=trainSteps
 
 
-    killzoneRadius = 20
-    numSimulations = 200 #100
-    maxRunningSteps = 100
+    killzoneRadius = 30
+    numSimulations = 200
+    maxRunningSteps = 150
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -68,14 +68,19 @@ def main():
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
         circleSize = 10
         screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-        render = Render(numOfAgent, positionIndex,screen, screenColor, circleColorList, circleSize)
+        saveImage = True
+        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
+        if not os.path.exists(saveImageDir):
+            os.makedirs(saveImageDir)
+        render = Render(numOfAgent, positionIndex,
+                        screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
         getPredator2Pos=GetAgentPosFromState(wolf2Id, positionIndex)
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
-        playKillzoneRadius=20
+        playKillzoneRadius=30
         isTerminal1 = env.IsTerminal(getPredatorPos, getPreyPos, playKillzoneRadius)
         isTerminal2 =env.IsTerminal(getPredator2Pos, getPreyPos, playKillzoneRadius)
 
@@ -83,16 +88,19 @@ def main():
 
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
-        reset = env.Reset(xBoundary, yBoundary, numOfAgent)
+        # reset = env.Reset(xBoundary, yBoundary, numOfAgent)
+        reset =Reset(xBoundary, yBoundary, numOfAgent)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        numActionSpace = len(actionSpace)
 
 
-        preyPowerRatio = 1.2
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1
+        sheepActionSpace.append((0,0))
+        numActionSpace = len(sheepActionSpace)
+
+        predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
 
@@ -100,18 +108,16 @@ def main():
         wolf1Policy = HeatSeekingDiscreteDeterministicPolicy(
             wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
-        wolf2Policy=HeatSeekingDiscreteDeterministicPolicy(
-            wolfActionSpace, getPredator2Pos, getPreyPos, computeAngleBetweenVectors)
-
+        # wolf2Policy=HeatSeekingDiscreteDeterministicPolicy(wolfActionSpace, getPredator2Pos, getPreyPos, computeAngleBetweenVectors)
+        wolf2Policy = lambda state: {(0, 0): 1}
 
         numStateSpace = 6
-        numActionSpace = len(actionSpace)
         regularizationFactor = 1e-4
-        sharedWidths = [256]
-        actionLayerWidths = [256]
-        valueLayerWidths = [256]
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-        depth = 17
+        depth = 5
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
@@ -119,7 +125,7 @@ def main():
         miniBatchSize=256
         learningRate=1e-4
 
-        NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':miniBatchSize,'learningRate':learningRate,'depth':4}
+        NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':miniBatchSize,'learningRate':learningRate,'depth':depth}
         NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trainedResNNModels')
         NNModelSaveExtension=''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
@@ -135,7 +141,7 @@ def main():
 
         # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 
-        playRunninSteps=200
+        playRunninSteps=maxRunningSteps
         sampleTrajectory = SampleTrajectoryWithRender(playRunninSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
 
         startTime = time.time()
@@ -144,6 +150,19 @@ def main():
         finshedTime = time.time() - startTime
 
         print(finshedTime)
+class Reset():
+    def __init__(self, xBoundary, yBoundary, numOfAgent):
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.numOfAgnet = numOfAgent
+
+    def __call__(self):
+        xMin, xMax = self.xBoundary
+        yMin, yMax = self.yBoundary
+        initState = [[np.random.uniform(xMin, xMax),np.random.uniform(yMin, yMax)]for _ in range(self.numOfAgnet)]
+        initState[0] = [590,590]
+        return np.array(initState)
+
 
 if __name__ == "__main__":
     main()

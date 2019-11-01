@@ -69,6 +69,7 @@ class SampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
+                print(state)
                 self.render(state, runningStep)
             actionDists = policy(state)
             action = [self.chooseAction(actionDist) for actionDist in actionDists]

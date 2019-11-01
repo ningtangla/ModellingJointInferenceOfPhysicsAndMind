@@ -23,38 +23,38 @@ from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteF
 
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
+
 def main():
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    # agentId = int(parametersForTrajectoryPath['agentId'])
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
+    agentId = int(parametersForTrajectoryPath['agentId'])
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
     ##test
-    parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=1
+    # parametersForTrajectoryPath={}
+    # startSampleIndex=0
+    # endSampleIndex=1
     ##test
 
-    killzoneRadius = 30
-    numSimulations = 50
-    maxRunningSteps = 100
+    killzoneRadius = 15
+    numSimulations = 100
+    maxRunningSteps = 150
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trajectoriesTest')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trajectoriesWithWall')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
 
-
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
-    while True:
+    # while True:
 
-    # if not os.path.isfile(trajectorySavePath):
+    if not os.path.isfile(trajectorySavePath):
         numOfAgent = 3
         sheepId = 0
         wolfOneId = 1
@@ -65,16 +65,18 @@ def main():
         yBoundary = [0,600]
 
         #prepare render
-        from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
-        import pygame as pg
-        renderOn = True
-        from pygame.color import THECOLORS
-        screenColor = THECOLORS['black']
-        circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
-        circleSize = 10
-        screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-        render = Render(numOfAgent, positionIndex,
-                        screen, screenColor, circleColorList, circleSize)
+        # from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
+        # import pygame as pg
+        # renderOn = False
+        # from pygame.color import THECOLORS
+        # screenColor = THECOLORS['black']
+        # circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+        # circleSize = 10
+        # screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+        # saveImage = False
+        # saveImageDir = ''
+        # render = Render(numOfAgent, positionIndex,
+        #                 screen, screenColor, circleColorList, circleSize,saveImage,saveImageDir)
 
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorOnePos = GetAgentPosFromState(wolfOneId, positionIndex)
@@ -93,15 +95,16 @@ def main():
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        numActionSpace = len(actionSpace)
 
 
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        sheepActionSpace.append((0,0))
+
         predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
-
+        numActionSpace = len(sheepActionSpace)
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
             wolfActionSpace, getPredatorOnePos, getPreyPos, computeAngleBetweenVectors)
@@ -130,10 +133,10 @@ def main():
             aliveBonus, deathPenalty, isTerminal)
 
         # reward function with wall
-        # safeBound = 80
-        # wallDisToCenter = xBoundary[-1]/2
-        # wallPunishRatio = 3
-        # rewardFunction = reward.RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal,getPreyPos)
+        safeBound = 80
+        wallDisToCenter = xBoundary[-1]/2
+        wallPunishRatio = 3
+        rewardFunction = reward.RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal,getPreyPos)
 
         # initialize children; expand
         initializeChildren = InitializeChildren(
@@ -153,17 +156,16 @@ def main():
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit,rewardFunction, isTerminal, rolloutHeuristic)
 
 
-        sheepPolicy = MCTS(numSimulations, selectChild, expand,
-                    rollout, backup, establishSoftmaxActionDist)
+        sheepPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
 
 
         policy = lambda state:[sheepPolicy(state),wolfOnePolicy(state),wolfTwoPolicy(state)]
 
-        # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
+        sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
+        # sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
 
         startTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
@@ -171,7 +173,6 @@ def main():
         finshedTime = time.time() - startTime
 
         print('lenght:',len(trajectories[0]))
-
         print('timeTaken:',finshedTime)
 
 if __name__ == "__main__":

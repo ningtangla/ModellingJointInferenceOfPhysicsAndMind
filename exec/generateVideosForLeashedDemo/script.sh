@@ -15,30 +15,33 @@
 #     done
 # done
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
-cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/sheepAvoidRopeTrajectories/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200/
-mkdir demo
 
 
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=60_numSimulations=100
-mkdir demo
+
+# cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/sheepAvoidRopeTrajectories/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200/
+# mkdir demo
 
 
-# mv *.Demo${index}.mp4 ../../demo
-cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/
-mkdir demo
+# cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=60_numSimulations=100
+# mkdir demo
 
-for index in 0 1 2 3 4 5 6 7 8 9
-do
 
-cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/sheepAvoidRopeTrajectories/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200//${index}
+# # mv *.Demo${index}.mp4 ../../demo
+# cd ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/
+# mkdir demo
 
-ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/sheepAvoidRopeTrajectories/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200/demo/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200_Demo${index}.mp4
+# for index in 0 1 2 3 4 5 6 7 8 9
+# do
 
-# mv *.Demo${index}.mp4 ../../demo
-ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/demo/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100_Demo${index}.mp4
-done
+# cd ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/sheepAvoidRopeTrajectories/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200//${index}
 
-cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
+# ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/Downloads/sheepWolf_preTrain/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/sheepAvoidRopeTrajectories/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200/demo/agentId=0_killzoneRadius=1_maxRunningSteps=50_numSimulations=200_Demo${index}.mp4
+
+# # mv *.Demo${index}.mp4 ../../demo
+# ffmpeg -r 60 -f image2 -s 1920x1080 -i %04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p ~/ModellingJointInferenceOfPhysicsAndMind/data/evaluateSupervisedLearning/leashedDistractorTrajectories/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100/demo/agentId=3_killzoneRadius=1_maxRunningSteps=50_numSimulations=100_Demo${index}.mp4
+# done
+
+# cd ~/ModellingJointInferenceOfPhysicsAndMind/exec/generateVideosForLeashedDemo
 
 # cd ~/ModellingJointInferenceOfPhysicsAndMind/data/searchLeashedModelParameters/leasedTrajectories/
 # mkdir demo
