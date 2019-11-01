@@ -19,7 +19,7 @@ def main():
     wolfId = 1
 
     startTime = time.time()
-    numTrajectories = 10
+    numTrajectories = 6000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSSheepSingleChasingNoPhysics.py'
 

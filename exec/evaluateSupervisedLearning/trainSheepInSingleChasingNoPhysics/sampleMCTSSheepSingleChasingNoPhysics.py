@@ -22,31 +22,30 @@ import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
 def main():
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    # agentId = int(parametersForTrajectoryPath['agentId'])
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
+    agentId = int(parametersForTrajectoryPath['agentId'])
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     ##test
-    parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=5
+    # parametersForTrajectoryPath={}
+    # startSampleIndex=0
+    # endSampleIndex=5
     ##test
 
+    preyPowerRatio = 3
+    predatorPowerRatio = 2
+    killzoneRadius = 30
 
-    preyPowerRatio = 1.5
-    predatorPowerRatio = 1
-    killzoneRadius = 10
-    imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
+    # imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
 
-    numSimulations = 50
-    maxRunningSteps = 200
+    numSimulations = 200
+    maxRunningSteps = 150
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesTest')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesStillAction')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -66,20 +65,20 @@ def main():
         yBoundary = [0,600]
 
         #prepare render
-        from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
-        import pygame as pg
-        renderOn = True
-        from pygame.color import THECOLORS
-        screenColor = THECOLORS['black']
-        circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
-        circleSize = 10
-        screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-        saveImage = True
-        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg',imageFolderName)
-        if not os.path.exists(saveImageDir):
-            os.makedirs(saveImageDir)
-        render = Render(numOfAgent, positionIndex,
-                        screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+        # from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
+        # import pygame as pg
+        # renderOn = True
+        # from pygame.color import THECOLORS
+        # screenColor = THECOLORS['black']
+        # circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+        # circleSize = 10
+        # screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+        # saveImage = False
+        # saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg',imageFolderName)
+        # if not os.path.exists(saveImageDir):
+        #     os.makedirs(saveImageDir)
+        # render = Render(numOfAgent, positionIndex,
+        #                 screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
@@ -98,12 +97,11 @@ def main():
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        numActionSpace = len(actionSpace)
-
-
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        sheepActionSpace.append((0,0))
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
+        numActionSpace = len(sheepActionSpace)
 
 
         wolf1Policy = HeatSeekingDiscreteDeterministicPolicy(
@@ -166,9 +164,9 @@ def main():
         # policy = lambda state:[sheepPolicy(state),wolf1Policy(state),wolf2Policy(state)]
 
 
-        # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
+        sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
+        # sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
 
         startTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
@@ -176,7 +174,6 @@ def main():
         finshedTime = time.time() - startTime
 
         print('lenght:',len(trajectories[0]))
-
         print('timeTaken:',finshedTime)
 
 if __name__ == "__main__":

@@ -21,29 +21,35 @@ from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteF
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 def main():
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    trainSteps = int(parametersForTrajectoryPath['trainSteps'])
-    depth=int(parametersForTrajectoryPath['depth'])
-    dataSize=int(parametersForTrajectoryPath['dataSize'])
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # trainSteps = int(parametersForTrajectoryPath['trainSteps'])
+    # depth=int(parametersForTrajectoryPath['depth'])
+    # dataSize=int(parametersForTrajectoryPath['dataSize'])
 
-    parametersForTrajectoryPath['sampleOneStepPerTraj']=0 #0
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath['sampleOneStepPerTraj']=0 #0
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+
+    startSampleIndex = 0
+    endSampleIndex = 100
+    parametersForTrajectoryPath = {}
+    sampleOneStepPerTraj = 0
+    depth = 5
+    dataSize = 5000
+    trainSteps = 50000
+    killzoneRadius = 30
+    numSimulations = 100
+    maxRunningSteps = 150
 
 
-
-    killzoneRadius = 20
-    numSimulations = 200
-    maxRunningSteps = 250
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'evaluateSheepTrajectoriesHyperParameter')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'evaluateSheepTrajectoriesStillAction')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -60,20 +66,24 @@ def main():
         # prepare render
         from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
         import pygame as pg
-        renderOn = False
+        renderOn = True
         from pygame.color import THECOLORS
         screenColor = THECOLORS['black']
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
         circleSize = 10
         screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-        render = Render(numOfAgent, positionIndex,screen, screenColor, circleColorList, circleSize)
-
+        saveImage = False
+        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
+        if not os.path.exists(saveImageDir):
+            os.makedirs(saveImageDir)
+        render = Render(numOfAgent, positionIndex,
+                        screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
 
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
-        playKillzoneRadius=20
+        playKillzoneRadius=killzoneRadius
         isTerminal = env.IsTerminal(getPredatorPos, getPreyPos, playKillzoneRadius)
 
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
@@ -84,24 +94,25 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numActionSpace = len(actionSpace)
 
-
-        preyPowerRatio = 1.1
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio =1
+        sheepActionSpace.append((0,0))
+
+        predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
-
+        numActionSpace = len(sheepActionSpace)
 
         wolf1Policy = HeatSeekingDiscreteDeterministicPolicy(
             wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
         miniBatchSize=256
         learningRate=1e-4
+
         if depth in[5,9]:
             from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 
             numStateSpace = 4
-            numActionSpace = len(actionSpace)
             regularizationFactor = 1e-4
             sharedWidths = [128]
             actionLayerWidths = [128]
@@ -112,7 +123,8 @@ def main():
             dropoutRate = 0.0
             initializationMethod = 'uniform'
             initSheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-            NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsNoWall')
+            NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsStillAction')
+
         elif depth == 4:
             from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 
@@ -133,7 +145,7 @@ def main():
 
         NNModelSaveExtension=''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
-        sheepTrainedModelPath = getNNModelSavePath({'trainSteps':trainSteps,'depth':depth,'dataSize':dataSize,'sampleOneStepPerTraj':parametersForTrajectoryPath['sampleOneStepPerTraj']})
+        sheepTrainedModelPath = getNNModelSavePath({'trainSteps':trainSteps,'depth':depth,'dataSize':dataSize,'sampleOneStepPerTraj':sampleOneStepPerTraj})
 
         sheepTrainedModel = restoreVariables(initSheepNNModel, sheepTrainedModelPath)
 
@@ -145,7 +157,7 @@ def main():
 
         # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 
-        playRunninSteps=250
+        playRunninSteps=maxRunningSteps
         sampleTrajectory = SampleTrajectoryWithRender(playRunninSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
 
         startTime = time.time()

@@ -10,7 +10,6 @@ import pickle
 from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
-from mujoco_py import load_model_from_path, MjSim
 import itertools as it
 import pathos.multiprocessing as mp
 
@@ -18,8 +17,6 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-# from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
-#     ApproximatePolicy, restoreVariables
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -45,7 +42,7 @@ class ProcessTrajectoryForPolicyValueNetSampleSteps:
 
         processedTrajectory = [processTuple(*triple) for triple in trajectory]
 
-        if not self.sampleOneStepPerTraj:
+        if  self.sampleOneStepPerTraj:
             choosenIndex = random.choice(range(len(processedTrajectory)))
             choosenStep = [processedTrajectory[choosenIndex]]
             return choosenStep
@@ -92,9 +89,9 @@ class TrainModelForConditions:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['dataSize'] =  [1000,3000,5000]
-    manipulatedVariables['depth'] =  [5,9]
-    manipulatedVariables['sampleOneStepPerTraj'] =  [0, 1]
+    manipulatedVariables['dataSize'] =  [5000]
+    manipulatedVariables['depth'] =  [5]
+    manipulatedVariables['sampleOneStepPerTraj'] =  [0]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -119,15 +116,15 @@ def trainOneCondition(parameters):
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
     # dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
-    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
+    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesStillAction')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 250 #80
-    dataSetNumSimulations = 200 #200
-    killzoneRadius = 20 #2
+    dataSetMaxRunningSteps = 150
+    dataSetNumSimulations = 100
+    killzoneRadius = 30
     sheepId=0
     dataSetFixedParameters = {'agentId':sheepId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -166,11 +163,14 @@ def trainOneCondition(parameters):
 
     # pre-process the trajectories
     sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    sheepActionSpace.append((0,0))
 
-    preyPowerRatio = 1.1
+    preyPowerRatio = 3
     actionSpace = list(map(tuple, np.array(sheepActionSpace) * preyPowerRatio))
 
-    numActionSpace = len(actionSpace)
+    numActionSpace = len(sheepActionSpace)
+
+
     actionIndex = 1
     actionToOneHot = ActionToOneHot(actionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
@@ -239,7 +239,7 @@ def trainOneCondition(parameters):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsNoWall')
+    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsStillAction')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
