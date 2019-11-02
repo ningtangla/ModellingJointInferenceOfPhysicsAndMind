@@ -168,8 +168,7 @@ def main():
         getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial], numAgents, evalQPosInitNoise, evalQVelInitNoise)
         evalMaxRunningSteps = 25
         chooseActionList = [chooseGreedyAction]*numAgents
-        getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
-                                                             getResetFromTrial(trial), chooseActionList)
+        getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,getResetFromTrial(trial), chooseActionList)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
         # save evaluation trajectories

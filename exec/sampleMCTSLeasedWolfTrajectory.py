@@ -61,8 +61,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInWolfMCTSSimulation,
-                                                            getUniformActionPrior)
+        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInWolfMCTSSimulation,getUniformActionPrior)
         expand = Expand(isTerminal, initializeChildrenUniformPrior)
 
         aliveBonus = -0.05

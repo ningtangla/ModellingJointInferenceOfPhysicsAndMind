@@ -28,73 +28,17 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
 from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
-
-class ComposeMultiAgentTransitInSingleAgentMCTS:
-    def __init__(self, chooseAction):
-        self.chooseAction = chooseAction
-
-    def __call__(self, agentId, state, selfAction, othersPolicy, transit):
-        multiAgentActions = [self.chooseAction(policy(state)) for policy in othersPolicy]
-        multiAgentActions.insert(agentId, selfAction)
-        transitInSelfMCTS = transit(state, multiAgentActions)
-        return transitInSelfMCTS
-
-
-class ComposeSingleAgentGuidedMCTS():
-    def __init__(self, numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS):
-        self.numSimulations = numSimulations
-        self.actionSpace = actionSpace
-        self.terminalRewardList = terminalRewardList
-        self.selectChild = selectChild
-        self.isTerminal = isTerminal
-        self.transit = transit
-        self.getStateFromNode = getStateFromNode
-        self.getApproximatePolicy = getApproximatePolicy
-        self.getApproximateValue = getApproximateValue
-        self.composeMultiAgentTransitInSingleAgentMCTS = composeMultiAgentTransitInSingleAgentMCTS
-
-    def __call__(self, agentId, selfNNModel, othersPolicy):
-        approximateActionPrior = self.getApproximatePolicy(selfNNModel)
-        transitInMCTS = lambda state, selfAction: self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
-        initializeChildren = InitializeChildren(self.actionSpace, transitInMCTS, approximateActionPrior)
-        expand = Expand(self.isTerminal, initializeChildren)
-
-        terminalReward = self.terminalRewardList[agentId]
-        approximateValue = self.getApproximateValue(selfNNModel)
-        estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
-
-        return guidedMCTSPolicy
-
-
-class PrepareMultiAgentPolicy:
-    def __init__(self, composeSingleAgentGuidedMCTS, approximatePolicy, MCTSAgentIds):
-        self.composeSingleAgentGuidedMCTS = composeSingleAgentGuidedMCTS
-        self.approximatePolicy = approximatePolicy
-        self.MCTSAgentIds = MCTSAgentIds
-
-    def __call__(self, multiAgentNNModel):
-        multiAgentApproximatePolicy = np.array([self.approximatePolicy(NNModel) for NNModel in multiAgentNNModel])
-        otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])
-                                                  for agentId in self.MCTSAgentIds])
-        MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
-        MCTSAgentsPolicy = np.array([self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy)
-                                     for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
-        multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
-        multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
-        return policy
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysics', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysics', 'evaluateTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -107,10 +51,11 @@ def main():
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
     parametersForTrajectoryPath = json.loads(sys.argv[1])
-
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
+    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
@@ -146,18 +91,10 @@ def main():
         decay = 1
         accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
-        # NNGuidedMCTS init
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
-
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-        getApproximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
-        getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
-
-        getStateFromNode = lambda node: list(node.id.values())[0]
-
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
+                       (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        wolfActionSpace=actionSpace
+        sheepActionSpace=actionSpace
         # neural network init
         numStateSpace = 4
         numActionSpace = len(actionSpace)
@@ -190,31 +127,56 @@ def main():
         chooseActionList = [chooseActionInMCTS, chooseActionInMCTS]
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
 
-        otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-
-        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
-        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
-        prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
+        selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+        otherIteration = int(parametersForTrajectoryPath['otherIteration'])
 
 
-        iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
+        if otherIteration == -999:
+            positionIndex = [0, 1]
+            getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
+            getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
+            wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(
+            wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
+        else:
 
-        for agentId in trainableAgentIds:
-            if iterationIndex in [0,1] :
-                modelPath = generateNNModelSavePath({'iterationIndex': 0, 'agentId': agentId})
-            else:
-                numTrainStepEachIteration = int(parametersForTrajectoryPath['numTrainStepEachIteration'])
-                numTrajectoriesPerIteration = int(parametersForTrajectoryPath['numTrajectoriesPerIteration'])
+            wolfModelPath = generateNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolfId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+            restoredNNModel = restoreVariables(multiAgentNNmodel[wolfId], wolfModelPath)
+            multiAgentNNmodel[wolfId] = restoredNNModel
 
-                modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex-1, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
-            restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
-            multiAgentNNmodel[agentId] = restoredNNModel
+            wolfPolicy = ApproximatePolicy(multiAgentNNmodel[wolfId], wolfActionSpace)
 
         # sample and save trajectories
-        policy = prepareMultiAgentPolicy(multiAgentNNmodel)
+
+        sheepModelPath = generateNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+
+        sheepTrainedModel=restoreVariables(multiAgentNNmodel[sheepId], sheepModelPath)
+
+
+        sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
+        
+
+        policy = lambda state:[sheepPolicy(state),wolfPolicy(state),]
+
+
+
+
+
+
+
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         print(trajectories)
         saveToPickle(trajectories, trajectorySavePath)
+
+
+
+
+
+
+
+
+
+
+
 # class RollOut:
 #     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
 #         self.transitionFunction = transitionFunction

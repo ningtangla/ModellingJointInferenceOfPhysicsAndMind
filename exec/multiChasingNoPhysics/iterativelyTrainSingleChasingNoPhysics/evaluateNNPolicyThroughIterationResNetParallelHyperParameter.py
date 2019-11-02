@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 
 from subprocess import Popen, PIPE
 import json
@@ -11,11 +11,10 @@ from collections import OrderedDict
 import pickle
 import pandas as pd
 import time
-import mujoco_py as mujoco
 from matplotlib import pyplot as plt
 import numpy as np
+from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryByReflectVelocity
 
-from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform, IsTerminal, TransitionFunction
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
     establishPlainActionDist, RollOut
 from src.episode import SampleTrajectory, chooseGreedyAction
@@ -39,15 +38,15 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
         grp.index = grp.index.droplevel('otherIteration')
         grp['agentMean'] = np.array([value[agentId] for value in grp['mean'].values])
         grp['agentStd'] = np.array([value[agentId] for value in grp['std'].values])
-        grp.plot(ax=axForDraw, title='selfId={}'.format(agentId), y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
+        grp.plot(ax=axForDraw, y='agentMean', yerr='agentStd', marker='o', label='otherIteration={}'.format(key))
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,300,600,900]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,300,600,900]#[-999]+list(range(0,10001,2000))
-    manipulatedVariables['numTrainStepEachIteration'] = [1,4,16]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [1,4,16]
+    manipulatedVariables['selfIteration'] = [0,30,60,90]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [-999,0,30,60,90]#[-999]+list(range(0,10001,2000))
+    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1,10]
     selfId=0
     # manipulatedVariables['selfId'] = [0]
 
@@ -59,14 +58,16 @@ def main():
     numAgents = 2
     sheepId = 0
     wolfId = 1
-    xPosIndex = [2, 3]
+    xPosIndex = [0, 1]
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-
-    killzoneRadius = 2
-    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-
-    sheepAliveBonus = 0.05
+    
+    trainMaxRunningSteps = 150
+    trainNumSimulations = 100
+    killzoneRadius = 30
+    # isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+    isTerminal = IsTerminal(getWolfXPos, getSheepXPos, killzoneRadius)
+    sheepAliveBonus = 1/trainMaxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
@@ -74,51 +75,48 @@ def main():
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
+    # playReward = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
+    # actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    # numActionSpace = len(actionSpace)
+    # numStateSpace = 12
+    # regularizationFactor = 1e-4
+    # sharedWidths = [256]
+    # actionLayerWidths = [256]
+    # valueLayerWidths = [256]
+    # generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    numActionSpace = len(actionSpace)
-    numStateSpace = 12
-    regularizationFactor = 1e-4
-    sharedWidths = [256]
-    actionLayerWidths = [256]
-    valueLayerWidths = [256]
-    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-    trainMaxRunningSteps = 25
-    trainNumSimulations = 100
-    NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    # NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentResNet', 'NNModelRes')
-    NNModelSaveExtension = ''
-    getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+    # NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+    #                                     'multiAgentTrain', 'multiMCTSAgentResNet', 'NNModelRes')
+    # NNModelSaveExtension = ''
+    # getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
-    depth = 17
-    resBlockSize = 2
-    dropoutRate = 0.0
-    initializationMethod = 'uniform'
-    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in range(numAgents)]
+    # depth = 17
+    # resBlockSize = 2
+    # dropoutRate = 0.0
+    # initializationMethod = 'uniform'
+    # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in range(numAgents)]
 
-    for agentId  in range(numAgents):
-        modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
-        saveVariables(multiAgentNNmodel[agentId], modelPath)
+    # for agentId  in range(numAgents):
+    #     modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
+    #     saveVariables(multiAgentNNmodel[agentId], modelPath)
 
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 1000
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
-    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
-            numCmdList)
+    generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,numCmdList)
 
     # run all trials and save trajectories
-    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentResNet', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysics', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -135,6 +133,9 @@ def main():
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
+
+    # accumulateRewards = AccumulateRewards(decay, playReward)
+    # measurementFunction = lambda trajectory: accumulateRewards(trajectory)[0]
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     print(statisticsDf)
@@ -143,8 +144,8 @@ def main():
 
     # plot the results
     fig = plt.figure()
-    numColumns = len(manipulatedVariables['numTrainStepEachIteration'])
-    numRows = len(manipulatedVariables['numTrajectoriesPerIteration'])
+    numRows = len(manipulatedVariables['numTrainStepEachIteration'])
+    numColumns = len(manipulatedVariables['numTrajectoriesPerIteration'])
     plotCounter = 1
 
     for numTrainStepEachIteration, grp in statisticsDf.groupby('numTrainStepEachIteration'):
@@ -154,13 +155,13 @@ def main():
             group.index = group.index.droplevel('numTrajectoriesPerIteration')
 
             axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-            if plotCounter % numRows == 1:
+            if (plotCounter % numColumns == 1) or numColumns==1:
                 axForDraw.set_ylabel('numTrainStepEachIteration: {}'.format(numTrainStepEachIteration))
             if plotCounter <= numColumns:
                 axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
 
             axForDraw.set_ylim(-1, 1.5)
-            plt.ylabel('Accumulated rewards')
+            # plt.ylabel('Accumulated rewards')
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 
