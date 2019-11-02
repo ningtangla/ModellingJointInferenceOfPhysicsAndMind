@@ -10,7 +10,6 @@ import pickle
 from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
-from mujoco_py import load_model_from_path, MjSim
 import itertools as it
 import pathos.multiprocessing as mp
 
@@ -18,8 +17,6 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-# from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
-#     ApproximatePolicy, restoreVariables
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -79,23 +76,23 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = 256 #[64, 128, 256, 512]
     manipulatedVariables['learningRate'] =  1e-4#[1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = 17 #[2 ,4, 6, 8]
+    manipulatedVariables['depth'] = 5 #[2 ,4, 6, 8]
 
     # productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     # parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trajectoriesWithWall')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 250 #80
-    dataSetNumSimulations = 200 #200
-    killzoneRadius = 20 #2
-
-    dataSetFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+    dataSetMaxRunningSteps = 150
+    dataSetNumSimulations = 100
+    killzoneRadius = 15
+    agentId = 0
+    dataSetFixedParameters = {'agentId': agentId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -111,7 +108,7 @@ def main():
     getWolf2Pos = GetAgentPosFromState(wolf2Id, xPosIndex)
     playAliveBonus = 1/dataSetMaxRunningSteps
     playDeathPenalty = -1
-    playKillzoneRadius = killzoneRadius #2
+    playKillzoneRadius = killzoneRadius
 
     playIsTerminalByWolf1 = IsTerminal(playKillzoneRadius, getSheepPos, getWolf1Pos)
     playIsTerminalByWolf2 = IsTerminal(playKillzoneRadius, getSheepPos, getWolf2Pos)
@@ -130,9 +127,10 @@ def main():
 
     # pre-process the trajectories
     sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    preyPowerRatio = 1.1
+    preyPowerRatio = 3
     actionSpace = list(map(tuple, np.array(sheepActionSpace) * preyPowerRatio))
 
+    actionSpace.append((0,0))
     numActionSpace = len(actionSpace)
     actionIndex = 1
     actionToOneHot = ActionToOneHot(actionSpace)
@@ -176,10 +174,10 @@ def main():
     terminalThreshold = 1e-10
     lossHistorySize = 10
     initActionCoeff = 1
-    initValueCoeff = 1
+    initValueCoeff = 0
     initCoeff = (initActionCoeff, initValueCoeff)
     afterActionCoeff = 1
-    afterValueCoeff = 1
+    afterValueCoeff = 0
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     # terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     terminalController = lambda evalDict, numSteps: False
@@ -195,14 +193,14 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trainedResNNModelsWithWall')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(6))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNmodel, getTrainNN, getNNModelSavePath)
 
     trainModelForConditions(manipulatedVariables)

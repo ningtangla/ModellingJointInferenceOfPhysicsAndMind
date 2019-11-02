@@ -23,22 +23,24 @@ from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteF
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 def main():
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    trainSteps = int(parametersForTrajectoryPath['trainSteps'])
-    # parametersForTrajectoryPath={}
-    # startSampleIndex=0
-    # endSampleIndex=100
-    # trainSteps=90000
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # trainSteps = int(parametersForTrajectoryPath['trainSteps'])
     # parametersForTrajectoryPath['trainSteps']=trainSteps
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+
+    parametersForTrajectoryPath={}
+    startSampleIndex=0
+    endSampleIndex=100
+    trainSteps=50000
 
 
 
-    killzoneRadius = 20
-    numSimulations = 200 #100
-    maxRunningSteps = 250
+
+    killzoneRadius = 30
+    numSimulations = 100 #100
+    maxRunningSteps = 150
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)

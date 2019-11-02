@@ -21,7 +21,8 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
     HeatSeekingContinuesDeterministicPolicy
 from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
 from exec.evaluationFunctions import ComputeStatistics, GenerateInitQPosUniform
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
+
+from src.neuralNetwork.policyValueResNet import GenerateModel, restoreVariables, ApproximatePolicy
 from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
     ComputeOptimalNextPos, GetAgentPosFromTrajectory, GetStateFromTrajectory
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -91,13 +92,13 @@ def main():
         NNFixedParameters = {'agentId': sheepId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
         dirName = os.path.dirname(__file__)
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                            'trainedModels')
+                                            'trainedResSheepModels','res4')
         NNModelSaveExtension = ''
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
 
         depth = int(parametersForTrajectoryPath['depth'])
-        sheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
-        wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+        resBlockSheep = 4
+        sheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSheep)
 
         # generate a set of starting conditions to maintain consistency across all the conditions
         evalQPosInitNoise = 0
@@ -121,10 +122,10 @@ def main():
         manipulatedVariables = json.loads(sys.argv[1])
 
         modelPath = getNNModelSavePath(manipulatedVariables)
-        restoredModel = restoreVariables(initNNModel, modelPath)
-        sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-
-        initWolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+        restoredSheepModel = restoreVariables(sheepNNModel, modelPath)
+        sheepPolicy = ApproximatePolicy(restoredSheepModel, actionSpace)
+        resBlockWolf = 0
+        initWolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths, resBlockWolf)
         wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
                                             'wolfModel','killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
         restoredWolfModel = restoreVariables(initWolfNNModel, wolfNNModelPath)
