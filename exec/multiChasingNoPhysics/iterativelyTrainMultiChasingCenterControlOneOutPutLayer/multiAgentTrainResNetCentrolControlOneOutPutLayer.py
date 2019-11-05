@@ -158,7 +158,7 @@ def iterateTrainOneCondition(parameters):
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 4#256
+    miniBatchSize = 256#256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -232,7 +232,7 @@ def iterateTrainOneCondition(parameters):
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     restoredIteration = 0
-    numIterations = 100
+    numIterations = 10000
     modelSaveFrequency=250
     modelMemorySize=10
     #serach restroeIteration
@@ -301,7 +301,7 @@ def iterateTrainOneCondition(parameters):
 
 
     
-    modelSaveFrequency=250
+    modelSaveFrequency=50
     modelMemorySize=10
     print ({'iterationIndex': restoredIteration, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
     for iterationIndex in range(restoredIteration + 1, numIterations):
@@ -359,5 +359,5 @@ if __name__ == '__main__':
     # main()
     parameters={}
     parameters['numTrainStepEachIteration'] = 1
-    parameters['numTrajectoriesPerIteration'] = 1
+    parameters['numTrajectoriesPerIteration'] = 16
     iterateTrainOneCondition(parameters)
