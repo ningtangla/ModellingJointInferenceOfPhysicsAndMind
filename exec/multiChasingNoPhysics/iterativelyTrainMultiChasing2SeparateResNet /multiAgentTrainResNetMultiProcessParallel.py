@@ -31,9 +31,6 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 
-
-
-
 class PreprocessTrajectoriesForBuffer:
     def __init__(self, addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory):
         self.addMultiAgentValuesToTrajectory = addMultiAgentValuesToTrajectory
@@ -65,20 +62,6 @@ class TrainOneAgent:
                 NNModel = updatedNNModel
 
         return NNModel
-def main():
-    manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [1,10]
-
-    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
-
-    numCpuCores = os.cpu_count()
-    print(numCpuCores)
-    numCpuToUse = int(0.8*numCpuCores)
-    trainPool = mp.Pool(numCpuToUse)
-    #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
-    trainPool.map(iterateTrainOneCondition, parametersAllCondtion)
 
 
 def iterateTrainOneCondition(parameters):
@@ -90,7 +73,7 @@ def iterateTrainOneCondition(parameters):
     # MDP function
     numOfAgent=3
     agentIds = list(range(numOfAgent))
-    
+
     sheepId = 0
     wolfOneId = 1
     wolfTwoId = 2
@@ -109,7 +92,7 @@ def iterateTrainOneCondition(parameters):
 
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
-    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward,wolfTerminalReward]
+    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
 
     killzoneRadius = 30
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
@@ -121,18 +104,18 @@ def iterateTrainOneCondition(parameters):
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
 
-    rewardMultiAgents = [rewardSheep, rewardWolf,rewardWolf]
-    
+    rewardMultiAgents = [rewardSheep, rewardWolf, rewardWolf]
+
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-    # preyPowerRatio = 3
-    # sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    # predatorPowerRatio = 2
-    # wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-    
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0,0)]
+    preyPowerRatio = 3
+    sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+    predatorPowerRatio = 2
+    wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+
 
 
     # neural network init
@@ -158,8 +141,13 @@ def iterateTrainOneCondition(parameters):
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
 
     # pre-process the trajectory for NNTraining
-    actionToOneHot = ActionToOneHot(actionSpace)
-    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHot, agentId) for agentId in agentIds]
+    # actionToOneHot = ActionToOneHot(actionSpace)
+    sheepActionToOneHot = ActionToOneHot(sheepActionSpace)
+    wolfOneActionToOneHot = ActionToOneHot(wolfActionSpace)
+    wolfTwoActionToOneHot = ActionToOneHot(wolfActionSpace)
+
+    actionToOneHotList=[sheepActionToOneHot,wolfOneActionToOneHot,wolfTwoActionToOneHot]
+    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHotList[agentId], agentId) for agentId in agentIds]
 
     # function to train NN model
     terminalThreshold = 1e-6
@@ -173,6 +161,7 @@ def iterateTrainOneCondition(parameters):
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1
+
 
     trainReporter = TrainReporter(numTrainStepEachIteration, reportInterval)
     learningRateDecay = 1
@@ -198,7 +187,7 @@ def iterateTrainOneCondition(parameters):
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-    
+
     #frequencyVersion: delete used model for disk space
     toDeleteNNModelExtensionList=['.meta','.index','.data-00000-of-00001']
     generatetoDeleteNNModelPathList=[GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParameters) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
@@ -219,16 +208,16 @@ def iterateTrainOneCondition(parameters):
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-    restoredIteration = 100
+    restoredIteration = 0
     numIterations = 10000
     modelSaveFrequency=250
     modelMemorySize=10
     #serach restroeIteration
     # while restoredIteration<numIterations:
-        
+
     #     toRestoreTrajectoryPathParameters = {'iterationIndex': restoredIteration+modelSaveFrequency, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
     #     restoreTrajectoryPath = generateTrajectorySavePath(toRestoreTrajectoryPathParameters)
-        
+
     #     if  not os.path.isfile(restoreTrajectoryPath):
     #         restoredIteration=restoredIteration+modelSaveFrequency
     #         while restoredIteration<numIterations:
@@ -256,8 +245,8 @@ def iterateTrainOneCondition(parameters):
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
-    if restoredIteration == 0:
-        cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
+    # if restoredIteration == 0:
+        # cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
 
     fuzzySearchParameterNames = ['sampleIndex']
@@ -288,8 +277,8 @@ def iterateTrainOneCondition(parameters):
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
 
-    
-    modelSaveFrequency=250
+
+    modelSaveFrequency=50
     modelMemorySize=10
     print ({'iterationIndex': restoredIteration, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
     for iterationIndex in range(restoredIteration + 1, numIterations):
@@ -305,7 +294,7 @@ def iterateTrainOneCondition(parameters):
             cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
 
             trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
-            trajecoriesNum=len(trajectories)        
+            trajecoriesNum=len(trajectories)
             if trajecoriesNum!=numTrajectoriesPerIteration:
                 print('MISSSUBPROCESS,RETRY',trajecoriesNum)
         print('length of traj', len(trajectories))
@@ -342,10 +331,24 @@ def iterateTrainOneCondition(parameters):
     print("Time taken for {} iterations: {} seconds".format(
         numIterations, (endTime - startTime)))
 
+# def main():
+#     manipulatedVariables = OrderedDict()
+#     manipulatedVariables['numTrainStepEachIteration'] = [1]
+#     manipulatedVariables['numTrajectoriesPerIteration'] = [1,10]
+
+#     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+#     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+
+#     numCpuCores = os.cpu_count()
+#     print(numCpuCores)
+#     numCpuToUse = int(0.8*numCpuCores)
+#     trainPool = mp.Pool(numCpuToUse)
+#     #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+#     trainPool.map(iterateTrainOneCondition, parametersAllCondtion)
 
 if __name__ == '__main__':
     # main()
     parameters={}
     parameters['numTrainStepEachIteration'] = 1
-    parameters['numTrajectoriesPerIteration'] = 10
+    parameters['numTrajectoriesPerIteration'] = 16
     iterateTrainOneCondition(parameters)

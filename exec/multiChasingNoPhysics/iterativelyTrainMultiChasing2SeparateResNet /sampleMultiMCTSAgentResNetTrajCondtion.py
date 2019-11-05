@@ -122,7 +122,7 @@ def main():
 
         numOfAgent=3
         agentIds = list(range(numOfAgent))
-        
+
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
@@ -147,7 +147,7 @@ def main():
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         # NNGuidedMCTS init
@@ -188,7 +188,7 @@ def main():
 
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-    
+
         startTime = time.time()
         trainableAgentIds = [sheepId, wolfOneId,wolfTwoId]
 
@@ -205,17 +205,21 @@ def main():
 
         from exec.evaluateNoPhysicsEnvWithRender import Render #SampleTrajectoryWithRender
         import pygame as pg
-        renderOn = False
         from pygame.color import THECOLORS
         screenColor = THECOLORS['black']
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
         circleSize = 10
-        screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+
         saveImage = False
         saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
-        render = Render(numOfAgent, xPosIndex,
+
+        renderOn = False
+        render=None
+        if renderOn:
+            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+            render = Render(numOfAgent, xPosIndex,
                         screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
@@ -263,7 +267,7 @@ class SampleTrajectoryWithRender:
             state = self.reset()
 
         trajectory = []
-        
+
         for runningStep in range(self.maxRunningSteps):
             if self.isTerminal(state):
                 trajectory.append((state, None, None))
@@ -274,7 +278,7 @@ class SampleTrajectoryWithRender:
             action = [choose(action) for choose, action in zip(self.chooseAction, actionDists)]
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
-            
+
             state = nextState
 
 
