@@ -43,8 +43,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,90]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,90]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = [0,40,140]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,40,140]#[-999]+list(range(0,10001,2000))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
     selfId=0
@@ -66,8 +66,8 @@ def main():
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, xPosIndex)
     getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, xPosIndex)
- 
-    
+
+
     trainMaxRunningSteps = 150
     trainNumSimulations = 100
     killzoneRadius = 30
@@ -125,7 +125,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'

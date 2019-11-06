@@ -106,22 +106,23 @@ def main():
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
 
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=1000
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    parametersForTrajectoryPath['iterationIndex']=0
+    # parametersForTrajectoryPath={}
+    # startSampleIndex=0
+    # endSampleIndex=10
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath['iterationIndex']=0
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
 
         numOfAgent=3
+        agentIds = list(range(numOfAgent))
         
         sheepId = 0
         wolvesId =1
@@ -151,7 +152,7 @@ def main():
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
-        transit = TransiteForNoP hysics(stayInBoundaryByReflectVelocity)
+        transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         # NNGuidedMCTS init
         cInit = 1

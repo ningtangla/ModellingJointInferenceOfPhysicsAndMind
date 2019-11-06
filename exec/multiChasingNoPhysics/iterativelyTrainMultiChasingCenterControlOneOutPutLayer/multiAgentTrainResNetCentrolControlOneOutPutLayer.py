@@ -231,7 +231,7 @@ def iterateTrainOneCondition(parameters):
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-    restoredIteration = 0
+    restoredIteration = 92
     numIterations = 10000
     modelSaveFrequency=250
     modelMemorySize=10
@@ -332,7 +332,7 @@ def iterateTrainOneCondition(parameters):
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
 
             #frequencyVersion: delete used model for disk space
-            if iterationIndex % modelSaveFrequency != 0 and iterationIndex>=modelMemorySize:
+            if (iterationIndex+modelMemorySize) % modelSaveFrequency != 0 and iterationIndex>=modelMemorySize:
                 toDeleteNNModelPathParameters={'iterationIndex': iterationIndex-modelMemorySize, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
                 toDeleteModelPathList = [generatetoDeleteNNModelPath(toDeleteNNModelPathParameters) for generatetoDeleteNNModelPath in generatetoDeleteNNModelPathList ]
                 for toDeleteModelPath in toDeleteModelPathList:
