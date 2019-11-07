@@ -24,10 +24,17 @@ def main():
     # parametersForTrajectoryPath = json.loads(sys.argv[1])
     # startSampleIndex = int(sys.argv[2])
     # endSampleIndex = int(sys.argv[3])
+<<<<<<< HEAD
+=======
+
+    # parametersForTrajectoryPath['sampleOneStepPerTraj']=1 #0
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+>>>>>>> origin/multiChasingNoPhyscis
     # trainSteps = int(parametersForTrajectoryPath['trainSteps'])
     # depth=int(parametersForTrajectoryPath['depth'])
     # dataSize=int(parametersForTrajectoryPath['dataSize'])
 
+<<<<<<< HEAD
     # parametersForTrajectoryPath['sampleOneStepPerTraj']=0 #0
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
@@ -43,6 +50,20 @@ def main():
     maxRunningSteps = 150
 
 
+=======
+    parametersForTrajectoryPath = {}
+    startSampleIndex = 0
+    endSampleIndex = 10
+    trainSteps = 50000
+    sampleOneStepPerTraj=1
+    depth = 5
+    dataSize = 5000
+
+
+    killzoneRadius = 30
+    numSimulations = 200
+    maxRunningSteps = 150
+>>>>>>> origin/multiChasingNoPhyscis
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -53,7 +74,7 @@ def main():
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    if not os.path.isfile(trajectorySavePath):
+    if  os.path.isfile(trajectorySavePath):
         numOfAgent = 2
         sheepId = 0
         wolfId = 1
@@ -72,12 +93,19 @@ def main():
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
         circleSize = 10
         screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+<<<<<<< HEAD
         saveImage = False
         saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render = Render(numOfAgent, positionIndex,
                         screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+=======
+        saveImage  = False
+        saveImageDir = ''
+        render = Render(numOfAgent, positionIndex,screen, screenColor, circleColorList, circleSize, saveImage,saveImageDir)
+
+>>>>>>> origin/multiChasingNoPhyscis
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
 
@@ -94,9 +122,17 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numActionSpace = len(actionSpace)
 
+<<<<<<< HEAD
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         sheepActionSpace.append((0,0))
+=======
+
+        preyPowerRatio = 3
+        sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        predatorPowerRatio =2
+        wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+>>>>>>> origin/multiChasingNoPhyscis
 
         predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
@@ -123,8 +159,13 @@ def main():
             dropoutRate = 0.0
             initializationMethod = 'uniform'
             initSheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+<<<<<<< HEAD
             NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsStillAction')
 
+=======
+            NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trainedResNNModelsNoWall')
+        
+>>>>>>> origin/multiChasingNoPhyscis
         elif depth == 4:
             from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 

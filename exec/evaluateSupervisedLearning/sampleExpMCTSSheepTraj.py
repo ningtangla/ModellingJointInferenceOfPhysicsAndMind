@@ -42,12 +42,12 @@ class IsTerminal:
 def main():
     # manipulated variables and other important parameters
     killzoneRadius = 1
-    numSimulations = 199
-    maxRunningSteps = 125
+    numSimulations = 150
+    maxRunningSteps = 250
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo','trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','generateExpDemo', 'trajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
@@ -67,30 +67,31 @@ def main():
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         preyPowerRatio = 0.7
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 1.3
+        predatorPowerRatio = 1.4
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        masterPowerRatio = 0.2
-
+        masterPowerRatio = 0.1
         masterActionSpace = list(map(tuple, np.array(actionSpace) * masterPowerRatio))
-        distractorPowerRatio = 0.7
+        distractorPowerRatio = 0.8
         distractorActionSpace = list(map(tuple, np.array(actionSpace) * distractorPowerRatio))
 
-        trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
+        # parametersForTrajectoryPath['preyPowerRatio'] = preyPowerRatio
+        # parametersForTrajectoryPath['predatorPowerRatio'] = predatorPowerRatio
+        # parametersForTrajectoryPath['masterPowerRatio'] = masterPowerRatio
+        # parametersForTrajectoryPath['distractorPowerRatio'] = distractorPowerRatio
+        # trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
         numActionSpace = len(actionSpace)
 
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'noRopeCollision.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'expLeashed.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         sheepId = 0
         wolfId = 1
-        ropeIds = range(4,13)
         qPosIndex = [0, 1]
         getSheepQPos = GetAgentPosFromState(sheepId, qPosIndex)
         getWolfQPos = GetAgentPosFromState(wolfId, qPosIndex)
-        getRopeQPos = [GetAgentPosFromState(ropeId, qPosIndex) for ropeId in ropeIds]
-        isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos, getRopeQPos)
+        isTerminal = IsTerminal(killzoneRadius, getSheepQPos, getWolfQPos)
 
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
@@ -121,11 +122,9 @@ def main():
         wolfPolicy = ApproximatePolicy(wolfPreTrainModel, wolfActionSpace)
 
 # distractor NN model
-        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
+        distractorPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorAvoidRopeNNModels','agentId=3_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=100000')
         distractorPreTrainModel = restoreVariables(initdistractorNNModel, distractorPreTrainModelPath)
         distractorPolicy = ApproximatePolicy(distractorPreTrainModel, distractorActionSpace)
-
-
 
         transitInSheepMCTSSimulation = \
                 lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[:3])),  chooseGreedyAction(masterPolicy(state[0:3])),
@@ -145,24 +144,23 @@ def main():
 
         aliveBonus = 0.05
         deathPenalty = -1
-        rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
+        
+        # rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
         safeBound = 1.5
         wallDisToCenter = 10
         wallPunishRatio = 1.5
-        # rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getSheepQPos)
+        rewardFunction = RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal, getSheepQPos)
 
         rolloutPolicy = lambda state: sheepActionSpace[np.random.choice(range(numActionSpace))]
         rolloutHeuristicWeight = deathPenalty/10
-        maxRolloutSteps = 10
+        maxRolloutSteps = 7
         rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfQPos, getSheepQPos)
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
                           rolloutHeuristic)
 
         numTrees = 2
         numSimulationsPerTree = 100
-        # mcts = StochasticMCTS(numTrees, numSimulationsPerTree, selectChild, expand, rollout, backup, establishPlainActionDistFromMultipleTrees)
-
-        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
+        mcts = StochasticMCTS(numTrees, numSimulationsPerTree, selectChild, expand, rollout, backup, establishPlainActionDistFromMultipleTrees)
 
         # sample trajectory
         qPosInit = (0, ) * 26

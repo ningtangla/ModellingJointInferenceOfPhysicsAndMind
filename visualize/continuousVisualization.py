@@ -116,9 +116,8 @@ class DrawState:
         self.xIndex, self.yIndex = positionIndex
         self.drawBackGround = drawBackGround
 
-    def __call__(self, state, circleColorList):
+    def __call__(self, numOfAgent, state, circleColorList):
         self.drawBackGround()
-        numOfAgent = len(state)
         for agentIndex in range(numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
             agentColor = circleColorList[agentIndex]
@@ -128,28 +127,22 @@ class DrawState:
 
 
 class ChaseTrialWithTraj:
-    def __init__(self, fps, colorSpace, drawState, saveImage, imageFolderName):
+    def __init__(self, fps, colorSpace, drawState, saveImage):
         self.fps = fps
         self.colorSpace = colorSpace
         self.drawState = drawState
         self.saveImage = saveImage
-        self.imageFolderName = imageFolderName
 
-    def __call__(self, trajectoryData):
+    def __call__(self, numOfAgents, trajectoryData, imagePath):
         fpsClock = pg.time.Clock()
 
         for timeStep in range(len(trajectoryData)):
             state = trajectoryData[timeStep]
             fpsClock.tick(self.fps)
-            screen = self.drawState(state, self.colorSpace)
+            screen = self.drawState(numOfAgents, state, self.colorSpace)
 
             if self.saveImage == True:
-                currentDir = os.getcwd()
-                parentDir = os.path.abspath(os.path.join(currentDir, os.pardir))
-                saveImageDir = os.path.join(os.path.join(parentDir, 'demo'), self.imageFolderName)
-                if not os.path.exists(saveImageDir):
-                    os.makedirs(saveImageDir)
-                pg.image.save(screen, saveImageDir + '/' + format(timeStep, '04') + ".png")
+                pg.image.save(screen, imagePath + '/' + format(timeStep, '04') + ".png")
 
         return
 

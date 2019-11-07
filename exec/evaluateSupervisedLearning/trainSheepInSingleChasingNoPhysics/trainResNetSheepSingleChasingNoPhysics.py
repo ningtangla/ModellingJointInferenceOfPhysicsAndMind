@@ -116,15 +116,25 @@ def trainOneCondition(parameters):
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
     # dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
+<<<<<<< HEAD
     dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesStillAction')
+=======
+    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectories')
+>>>>>>> origin/multiChasingNoPhyscis
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
+<<<<<<< HEAD
     dataSetMaxRunningSteps = 150
     dataSetNumSimulations = 100
     killzoneRadius = 30
+=======
+    dataSetMaxRunningSteps = 150 #80
+    dataSetNumSimulations = 200 #200
+    killzoneRadius = 30 #2
+>>>>>>> origin/multiChasingNoPhyscis
     sheepId=0
     dataSetFixedParameters = {'agentId':sheepId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -190,13 +200,14 @@ def trainOneCondition(parameters):
     print(len(trajectories),parameters)
 
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
-
-
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
 
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
+    trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
+    print(trainDataMeanAccumulatedReward)
 
+    
     # neural network init and save path
     numStateSpace = 4
     numActionSpace = len(actionSpace)
@@ -212,9 +223,6 @@ def trainOneCondition(parameters):
     initializationMethod = 'uniform'
     sheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
-
-    trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
-    print(trainDataMeanAccumulatedReward)
 
     # function to train NN model
     terminalThreshold = 1e-10
@@ -249,7 +257,8 @@ def trainOneCondition(parameters):
     trainIntervelIndexes = list(range(6))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNModel, getTrainNN, getNNModelSavePath)
 
-    trainModelForConditions(manipulatedVariables)
+    # trainModelForConditions(manipulatedVariables)
+
     # train models for all conditions
     # numCpuCores = os.cpu_count()
     # print(numCpuCores)

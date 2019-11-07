@@ -87,6 +87,7 @@ class GetPulledAgentForce:
 
         return pulledAgentForce
 
+
 class GetAgentsForce:
     def __init__(self, getPulledAgentForce, pulledAgentIndex, noPullingAgentIndex, pullingAgentIndex):
         self.getPulledAgentForce = getPulledAgentForce
@@ -106,13 +107,16 @@ class GetAgentsForce:
         agentsForce = rearrangeList(unorderedAgentsForce, agentsIDOrder)
         return agentsForce
 
+
 class Transition:
     def __init__(self, stayWithinBoundary, getAgentsForce):
         self.stayWithinBoundary = stayWithinBoundary
         self.getAgentsForce = getAgentsForce
 
     def __call__(self, actionList, state):
+
         agentsForce = self.getAgentsForce(state)
+
         agentsIntendedState = np.array(state) + np.array(agentsForce) + np.array(actionList)
         agentsNextState = [self.stayWithinBoundary(intendedState) for intendedState in agentsIntendedState]
         return agentsNextState

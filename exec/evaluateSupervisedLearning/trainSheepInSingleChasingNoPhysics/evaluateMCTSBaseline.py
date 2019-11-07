@@ -172,7 +172,7 @@ def generateOneCondition(parameters):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numSimulations'] =  [20,50,100,200]
+    manipulatedVariables['numSimulations'] =  [100,200,400,800]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())

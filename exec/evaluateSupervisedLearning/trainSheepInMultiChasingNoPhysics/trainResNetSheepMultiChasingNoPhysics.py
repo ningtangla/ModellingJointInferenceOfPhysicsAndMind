@@ -1,6 +1,6 @@
 import sys
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..','..'))
 
@@ -17,6 +17,10 @@ from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFu
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/multiChasingNoPhyscis
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -83,16 +87,29 @@ def main():
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
+<<<<<<< HEAD
     dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trajectoriesWithWall')
+=======
+    dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeMultiChasingNoPhysics', 'trajectoriesNoWallPunish')
+>>>>>>> origin/multiChasingNoPhyscis
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
+<<<<<<< HEAD
     dataSetMaxRunningSteps = 150
     dataSetNumSimulations = 100
     killzoneRadius = 15
     agentId = 0
     dataSetFixedParameters = {'agentId': agentId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+=======
+    dataSetMaxRunningSteps = 150 
+    dataSetNumSimulations = 200 
+    killzoneRadius = 30 
+    agentId = 0
+
+    dataSetFixedParameters = {'agentId':agentId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+>>>>>>> origin/multiChasingNoPhyscis
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -126,14 +143,30 @@ def main():
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
+<<<<<<< HEAD
     sheepActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     preyPowerRatio = 3
     actionSpace = list(map(tuple, np.array(sheepActionSpace) * preyPowerRatio))
 
     actionSpace.append((0,0))
     numActionSpace = len(actionSpace)
+=======
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
+                   (-10, 0), (-7, -7), (0, -10), (7, -7)]
+
+
+    preyPowerRatio = 3
+    sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+    sheepActionSpace.append((0,0))
+    numActionSpace = len(sheepActionSpace)
+
+    predatorPowerRatio = 2
+    wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+
+
+>>>>>>> origin/multiChasingNoPhyscis
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(actionSpace)
+    actionToOneHot = ActionToOneHot(sheepActionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
     processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
@@ -153,7 +186,6 @@ def main():
 
     # neural network init and save path
     numStateSpace = 6
-    numActionSpace = len(actionSpace)
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
@@ -204,6 +236,7 @@ def main():
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNmodel, getTrainNN, getNNModelSavePath)
 
     trainModelForConditions(manipulatedVariables)
+
     # train models for all conditions
     # numCpuCores = os.cpu_count()
     # print(numCpuCores)

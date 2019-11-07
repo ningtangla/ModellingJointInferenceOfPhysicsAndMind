@@ -34,23 +34,24 @@ def dictToFileName(parameters):
 
 class GenerateTrainedModel:
 
-    def __init__(self, numTrials, getSavePathForModel, generateModel, generateTrain, generateSampleBatch):
+    def __init__(self, numTrials, getSavePathForModel, generateModel, generateTrain, generateSampleBatch, generateReporter):
         self.numTrials = numTrials
         self.getSavePathForModel = getSavePathForModel
         self.generateTrain = generateTrain
         self.generateModel = generateModel
         self.generateSampleBatch = generateSampleBatch
+        self.generateReporter = generateReporter
 
-    def __call__(self, df, dataSet):
-        trainDataSize = df.index.get_level_values('trainingDataSize')[0]
+    def __call__(self, df, trainData):
         batchSize = df.index.get_level_values('batchSize')[0]
         trainingStep = df.index.get_level_values('trainingStep')[0]
+        trainingDataSize = df.index.get_level_values('trainingDataSize')[0]
         neuronsPerLayer = df.index.get_level_values('neuronsPerLayer')[0]
         sharedLayers = df.index.get_level_values('sharedLayers')[0]
         actionLayers = df.index.get_level_values('actionLayers')[0]
         valueLayers = df.index.get_level_values('valueLayers')[0]
         augment = df.index.get_level_values('augment')[0]
-        trainData = [element[:trainDataSize] for element in dataSet]
+        trainData = [element[0:trainingDataSize] for element in trainData]
         indexLevelNames = df.index.names
         parameters = {
             levelName: df.index.get_level_values(levelName)[0]
@@ -64,7 +65,8 @@ class GenerateTrainedModel:
                                    [neuronsPerLayer] * valueLayers)
         if not os.path.exists(saveModelDir):
             sample = self.generateSampleBatch(augment)
-            train = self.generateTrain(trainingStep, batchSize, sample)
+            reporter = self.generateReporter(trainingStep)
+            train = self.generateTrain(trainingStep, batchSize, sample, reporter)
             trainedModel = train(model, trainData)
             net.saveVariables(trainedModel, modelPath)
         return pd.Series({"train": 'done'})
@@ -96,6 +98,7 @@ def main():
     trajectoryParameter['maxRunningSteps'] = 25
     trajectoryParameter['numSimulations'] = 100
     trajectoryParameter['qPosInitNoise'] = 9.7
+    trajectoryParameter['numTrajectories'] = 6000
     trajectoryParameter['qVelInitNoise'] = 8
     trajectoryParameter['rolloutHeuristicWeight'] = -0.1
     getTrajectorySavePath = GetSavePath(trajectoryDir, ".pickle", trajectoryParameter)
@@ -149,14 +152,14 @@ def main():
     coefficientController = trainTools.CoefficientCotroller(
         initActionCoefficient, initValueCoefficient)
     reportInterval = 1000
-    reporter = trainTools.TrainReporter(reportInterval)
+    generateReporter = lambda trainingStep: trainTools.TrainReporter(reportInterval,trainingStep)
     decayRate = 1
     decayStep = 1
     initLearningRate = 1e-4
     learningRateModifier = trainTools.LearningRateModifier(
         initLearningRate, decayRate, decayStep)
     numOfAgent = 2
-    stateDim = 6
+    stateDim = 4
     symmetries = [
         np.array([1, 1]),
         np.array([0, 1]),
@@ -173,19 +176,19 @@ def main():
     generateSymmetricDistribution = GenerateSymmetricDistribution(actionSpace,createSymmetricVector)
     generateSymmetricData = GenerateSymmetricData(symmetries,generateSymmetricState,generateSymmetricDistribution)
     generateSampleData = lambda augment: SampleDataWithAugmentation(generateSymmetricData, augment)
-    generateTrain = lambda trainingStep, batchSize, sampleData: net.Train(
+    generateTrain = lambda trainingStep, batchSize, sampleData, reporter: net.Train(
         trainingStep, batchSize, sampleData, learningRateModifier,
         trainTerminalController, coefficientController, reporter)
 
     # split
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionLabel']
-    independentVariables['trainingDataSize'] = [1000]
-    independentVariables['batchSize'] = [128]
-    independentVariables['augment'] = [False]
-    independentVariables['trainingStep'] = [1000]
-    independentVariables['neuronsPerLayer'] = [64]
-    independentVariables['sharedLayers'] = [3]
+    independentVariables['trainingDataSize'] = [800, 6000]
+    independentVariables['batchSize'] = [64]
+    independentVariables['augment'] = [True, False]
+    independentVariables['trainingStep'] = [num for num in range(0, 500001, 50000)]
+    independentVariables['neuronsPerLayer'] = [128]
+    independentVariables['sharedLayers'] = [1]
     independentVariables['actionLayers'] = [1]
     independentVariables['valueLayers'] = [1]
 
@@ -203,7 +206,8 @@ def main():
     generateTrainingOutput = GenerateTrainedModel(numTrials,
                                                   getModelSavePath,
                                                   generateModel, generateTrain,
-                                                  generateSampleData)
+                                                  generateSampleData,
+                                                  generateReporter)
     resultDF = toSplitFrame.groupby(levelNames).apply(generateTrainingOutput,
                                                       trainData)
 

@@ -21,10 +21,23 @@ import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
 def main():
+<<<<<<< HEAD
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     agentId = int(parametersForTrajectoryPath['agentId'])
+=======
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    
+
+    parametersForTrajectoryPath={}
+    agentId = 0
+    parametersForTrajectoryPath={}
+    startSampleIndex=0
+    endSampleIndex=100
+>>>>>>> origin/multiChasingNoPhyscis
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     ##test
@@ -93,6 +106,7 @@ def main():
         # isTerminal2 =env.IsTerminal(getPredator2Pos, getPreyPos, killzoneRadius)
 
         # isTerminal=lambda state:isTerminal1(state) or isTerminal1(state)
+
         divideDegree=5
         isTerminal = IsTerminal(getPredatorPos, getPreyPos, killzoneRadius,divideDegree)
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
@@ -101,8 +115,17 @@ def main():
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
+<<<<<<< HEAD
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         sheepActionSpace.append((0,0))
+=======
+        numActionSpace = len(actionSpace)
+
+
+        preyPowerRatio = 3
+        sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        predatorPowerRatio = 2
+>>>>>>> origin/multiChasingNoPhyscis
 
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
