@@ -33,15 +33,16 @@ from exec.preProcessing import AccumulateRewards
 
 def main():
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning',
-                                       'evaluateLeashedTrajectories','mctsSheep')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning','evaluateLeashedTrajectories')
+
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
 
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
-    killzoneRadius = 1
+    killzoneRadius = 2
+
     wolfId = 1
     trajectoryFixedParameters = {'agentId': wolfId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
 
@@ -84,6 +85,7 @@ def main():
         rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
 
         # neural network init and save path
+
         numStateSpace = 18
         numSheepStateSpace = 12
         regularizationFactor = 1e-4
@@ -116,10 +118,11 @@ def main():
         ropeParaIndex = list(range(3, 12))
         maxRopePartLength = 0.25
 
-        evalNumTrials = 3
+        evalNumTrials = 500
         getResetFromTrial = lambda trial: ResetUniformForLeashed(physicsSimulation, qPosInit, qVelInit, numAgent, tiedAgentId, \
                 ropeParaIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise)
-        evalMaxRunningSteps = 60
+        evalMaxRunningSteps = 20
+
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
@@ -136,37 +139,8 @@ def main():
         wolfPolicy = ApproximatePolicy(restoredModel, actionSpace)
 
 
-        transitInSheepMCTSSimulation = \
-                lambda state, sheepSelfAction: transit(state, [sheepSelfAction, chooseGreedyAction(wolfPolicy(state[0:3])), \
-                chooseGreedyAction(stationaryAgentPolicy(state))])
-        # MCTS
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
+        policy = lambda state: [sheepPolicy(state[:2]), wolfPolicy(state), stationaryAgentPolicy(state)]
 
-        getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
-        initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInSheepMCTSSimulation,
-                                                            getUniformActionPrior)
-        expand = Expand(isTerminal, initializeChildrenUniformPrior)
-
-        aliveBonus = 0.05
-        deathPenalty = -1
-        rewardFunction = RewardFunctionCompete(aliveBonus, deathPenalty, isTerminal)
-
-        rolloutPolicy = lambda state: actionSpace[np.random.choice(range(numActionSpace))]
-        rolloutHeuristicWeight = -0.1
-        maxRolloutSteps = 7
-        rolloutHeuristic = HeuristicDistanceToTarget(rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, transitInSheepMCTSSimulation, rewardFunction, isTerminal,
-                          rolloutHeuristic)
-
-        numSimulations = 200
-        mcts = MCTS(numSimulations, selectChild, expand, rollout, backup, establishPlainActionDist)
-
-
-#policy
-        policy = lambda state: [mcts(state), wolfPolicy(state[:3]), stationaryAgentPolicy(state)]
 
         beginTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleTrajectory in allSampleTrajectories[startSampleIndex:endSampleIndex]]

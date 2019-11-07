@@ -31,9 +31,9 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
-    manipulatedVariables['agentId'] = [3]
+    manipulatedVariables['agentId'] = [30]
     manipulatedVariables['maxRunningSteps'] = [125]
-    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['numSimulations'] = [199]
     manipulatedVariables['killzoneRadius'] = [1]
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
@@ -49,7 +49,7 @@ def main():
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 
     trajectoryFixedParameters = {}
-    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'evaluateSupervisedLearning', 'leashedDistractorTrajectories')
+    trajectoryDirectory = os.path.join(DIRNAME, '..', '..', 'data', 'generateExpDemo','trajectories')
 
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
@@ -106,14 +106,14 @@ def main():
         positionIndex = [0, 1]
         tiedAgentId = [1, 2]
 
-        numOfAgent = 4
+        numOfAgent = 3
         ropeColor = THECOLORS['white']
         drawState = DrawState(screen, circleSize, numOfAgent, positionIndex, drawBackground)
         drawStateWithRope = DrawStateWithRope(screen, circleSize, numOfAgent, positionIndex, ropeColor, drawBackground)
 
         # colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue']]
         colorSpace = [THECOLORS['green'], THECOLORS['red'], THECOLORS['blue'], THECOLORS['yellow']]
-
+        colorSpace = colorSpace[:numOfAgent]
         for index in range(numTrajectoryChoose):
             imageFolderName = "{}".format(index)
             saveImageDir = os.path.join(os.path.join(imageSavePath, imageFolderName))

@@ -1,14 +1,16 @@
 import os
 import sys
 DIRNAME = os.path.dirname(__file__)
+dirName = '/Users/zhaominglu/PycharmProjects/ModellingJointInferenceOfPhysicsAndMind/exec/sample3ObjectsTraj.py'
 sys.path.append(os.path.join(DIRNAME, '..'))
 
-from src.constrainedChasingEscapingEnv.envMujoco import Transition3Objects
-from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximateActionPrior
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 from src.constrainedChasingEscapingEnv.envMujoco import ResetUniform
-from src.episode import Sample3ObjectsTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.trajectoriesSaveLoad import saveToPickle
-from src.inferChasing.continuousPolicy import RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy
 
 
 import pandas as pd
@@ -31,9 +33,17 @@ def main():
     physicsSmallMassSimulation.set_constants()
     physicsLargeMassSimulation.set_constants()
 
+    sheepId = 0
+    wolfId = 1
+    xPosIndex = [2, 3]
+    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
+    killzoneRadius = 2
+    isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
+
     numSimulationFrames = 20
-    transitSmallMassAgents = Transition3Objects(physicsSmallMassSimulation, numSimulationFrames)
-    transitLargeMassAgents = Transition3Objects(physicsLargeMassSimulation, numSimulationFrames)
+    transitSmallMassAgents = TransitionFunction(physicsSmallMassSimulation, isTerminal, numSimulationFrames)
+    transitLargeMassAgents = TransitionFunction(physicsLargeMassSimulation, isTerminal, numSimulationFrames)
 
     transit = transitSmallMassAgents
 
@@ -47,7 +57,7 @@ def main():
 
     # sample trajectory
     maxRunningSteps = 20        # max possible length of the trajectory/episode
-    sampleTrajectory = Sample3ObjectsTrajectory(maxRunningSteps, transit, reset, chooseGreedyAction)
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
     # Neural Network
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
@@ -63,24 +73,21 @@ def main():
     wolfModelPath = os.path.join(dirName, '..','NNModels','wolfNNModels', 'killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')
     wolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(wolfNNModel, wolfModelPath)
-    wolfPolicy = ApproximateActionPrior(wolfNNModel, actionSpace) # input state, return action distribution
+    wolfPolicy = ApproximatePolicy(wolfNNModel, actionSpace) # input state, return action distribution
 
     # sheep NN Policy
     sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
     sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(sheepNNModel, sheepModelPath)
-    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace) # input sheepstate, return action distribution
+    sheepPolicy = ApproximatePolicy(sheepNNModel, actionSpace) # input sheepstate, return action distribution
 
     randomPolicy = RandomPolicy(actionSpace)
-
     policy = lambda state: [sheepPolicy(state[:2]), wolfPolicy(state[:2]), randomPolicy(state)]
 
     trajectory = sampleTrajectory(policy)
-    dataIndex = 15
+    dataIndex = 1
     dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
     saveToPickle(trajectory, dataPath)
-
-
 
 
 

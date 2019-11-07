@@ -51,10 +51,10 @@ class WolfPolicy:
         sheepPos = self.getAgentPosition(sheepID, state)
 
         heatSeekingDirection = np.array(sheepPos) - np.array(wolfPos)
-        wolfActionLik = self.heatSeekingPolicy(heatSeekingDirection)
+        wolfActionDist = self.heatSeekingPolicy(heatSeekingDirection)
 
         wolfAction = allAgentsAction[wolfID]
-        wolfActionProb = wolfActionLik[wolfAction]
+        wolfActionProb = wolfActionDist.get(wolfAction, 0)
 
         return wolfActionProb
 
@@ -72,10 +72,10 @@ class SheepPolicy:
         sheepPos = self.getAgentPosition(sheepID, state)
 
         heatSeekingDirection = np.array(sheepPos) - np.array(wolfPos)
-        sheepActionLik = self.heatSeekingPolicy(heatSeekingDirection)
+        sheepActionDist = self.heatSeekingPolicy(heatSeekingDirection)
 
         sheepAction = allAgentsAction[sheepID]
-        sheepActionProb = sheepActionLik[sheepAction]
+        sheepActionProb = sheepActionDist.get(sheepAction, 0)
 
         return sheepActionProb
 
@@ -88,6 +88,15 @@ class MasterPolicy:
         masterID = mind.index('master')
         masterActionLik = self.uniformPolicy(state)
         masterAction = allAgentsAction[masterID]
-        masterActionProb = masterActionLik[masterAction]
+        masterActionProb = masterActionLik.get(masterAction, 0)
 
         return masterActionProb
+
+
+class UniformPolicy:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def __call__(self, state):
+        likelihood = {action: 1/len(self.actionSpace) for action in self.actionSpace}
+        return likelihood

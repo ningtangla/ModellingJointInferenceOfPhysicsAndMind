@@ -32,7 +32,7 @@ class GetSavePath:
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
-        
+
         path = os.path.join(self.dataDirectory, fileName)
 
         return path
@@ -42,6 +42,7 @@ def readParametersFromDf(oneConditionDf):
     indexLevelNames = oneConditionDf.index.names
     parameters = {levelName: oneConditionDf.index.get_level_values(levelName)[0] for levelName in indexLevelNames}
     return parameters
+
 
 def conditionDfFromParametersDict(parametersDict):
     levelNames = list(parametersDict.keys())
@@ -58,9 +59,13 @@ class LoadTrajectories:
         self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters, parametersWithSpecificValues={}):
-        parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
-        productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()])
-        parametersFinal = np.array([dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in productedSpecificValues])
+        parametersWithFuzzy = dict(
+            list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
+        productedSpecificValues = it.product(
+            *[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()])
+        parametersFinal = np.array(
+            [dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in
+             productedSpecificValues])
         genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
         if len(genericSavePath) != 0:
             filesNames = np.concatenate([glob.glob(savePath) for savePath in genericSavePath])
@@ -72,16 +77,19 @@ class LoadTrajectories:
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
 
+
 class GenerateAllSampleIndexSavePaths:
     def __init__(self, getSavePath):
         self.getSavePath = getSavePath
 
     def __call__(self, numSamples, pathParameters):
-        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
+        parametersWithSampleIndex = lambda sampleIndex: dict(
+            list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
         genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
         existingFilesNames = glob.glob(genericSavePath)
         numExistingFiles = len(existingFilesNames)
-        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
+        print("{} FILES ALREADY EXIST".format(numExistingFiles))
+        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex + numExistingFiles) for sampleIndex in
                               range(numSamples)}
         allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
                         allIndexParameters.items()}
@@ -99,7 +107,6 @@ class SaveAllTrajectories:
         allSavePaths = self.generateAllSampleIndexSavePaths(numSamples, pathParameters)
         saveTrajectory = lambda sampleIndex: self.saveData(trajectories[sampleIndex], allSavePaths[sampleIndex])
         [saveTrajectory(sampleIndex) for sampleIndex in range(numSamples)]
-        print("SAVED TRAJECTORIES")
 
         return None
 

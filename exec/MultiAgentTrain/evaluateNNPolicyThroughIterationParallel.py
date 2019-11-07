@@ -44,9 +44,10 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [-1, 2000, 4000, 6000, 8000,10000,12000 ]
-    manipulatedVariables['otherIteration'] = [-1]
-    manipulatedVariables['selfId'] = [1]
+    manipulatedVariables['selfIteration'] = list(range(0,18001,6000))
+    manipulatedVariables['otherIteration'] = list(range(0,18001,6000))
+
+    manipulatedVariables['selfId'] = [0,1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -63,8 +64,7 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    maxRunningSteps = 20
-    sheepAliveBonus = 1 / maxRunningSteps
+    sheepAliveBonus = 0.05
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
@@ -98,9 +98,9 @@ def main():
         saveVariables(multiAgentNNmodel[agentId], modelPath)
 
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectory.py'
-    evalNumTrials = 500
+    evalNumTrials = 1000
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.4*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numCmdList)

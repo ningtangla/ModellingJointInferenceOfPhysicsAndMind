@@ -37,9 +37,7 @@ def main():
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    sheepId = 0
-    wolfId = 1
-    masterId = 2
+    agentId = 10
 
     startTime = time.time()
 
@@ -47,26 +45,21 @@ def main():
 
     # generate and load trajectories before train parallelly
     # sampleTrajectoryFileName = 'sampleMCTSSheepTrajAvoidRope.py'
-    sampleTrajectoryFileName = 'sampleExpMCTSSheepTraj.py'
+    # sampleTrajectoryFileName = 'sampleExpMCTSSheepTraj.py'
+    sampleTrajectoryFileName = 'sampleExpMCTSWolfAndSheepTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.75*numCpuCores)
+    numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
     print("start")
-    trainableAgentIds = [sheepId]
-    for agentId in trainableAgentIds:
-        print("agent {}".format(agentId))
-        pathParameters = {'agentId': agentId}
 
-        cmdList = generateTrajectoriesParallel(pathParameters)
-        # print(cmdList)
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
-        # import ipdb; ipdb.set_trace()
-
+    print("agent {}".format(agentId))
+    pathParameters = {'agentId': agentId}
+    cmdList = generateTrajectoriesParallel(pathParameters)
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
 

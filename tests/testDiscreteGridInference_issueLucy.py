@@ -3,16 +3,15 @@ import os
 import unittest
 from ddt import ddt, data, unpack
 
-sys.path.append(os.path.join('..', 'src', 'inferChasing'))
-sys.path.append(os.path.join('..', 'src', 'constrainedChasingEscapingEnv'))
+sys.path.append(os.path.join('..', 'src'))
 sys.path.append(os.path.join('..', 'visualize'))
 
-from analyticGeometryFunctions import computeAngleBetweenVectors
-from discreteGridPolicy import UniformPolicy, ActHeatSeeking, \
+from constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from inferChasing.discreteGridPolicy import UniformPolicy, ActHeatSeeking, \
     HeatSeekingPolicy, WolfPolicy, SheepPolicy, MasterPolicy
-from discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
+from inferChasing.discreteGridTransition import StayWithinBoundary, PulledForceLikelihood, \
     PulledTransition, NoPullTransition
-from state import GetAgentPosFromState
+from constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 import numpy as np
 

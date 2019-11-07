@@ -47,7 +47,7 @@ class SampleTrajectory:
                 trajectory.append((state, None, None))
                 break
             actionDists = policy(state)
-            action = [self.chooseAction(actionDist) for actionDist in actionDists]
+            action = [choose(actionDist) for choose, actionDist in zip(self.chooseAction, actionDists)]
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
             state = nextState
@@ -113,16 +113,46 @@ def chooseGreedyAction(actionDist):
     selectedIndex = np.random.choice(maxIndices)
     selectedAction = actions[selectedIndex]
     return selectedAction
+class SampleAction():
+    def __init__(self, beta):
+        self.beta = beta
 
+    def __call__(self, actionDist):
+        actions = list(actionDist.keys())
+        probs = list(actionDist.values())
+        newProbs = np.array([np.power(prob, self.beta) for prob in probs])
+        normProbs = newProbs / np.sum(newProbs)
+        selectedIndex = list(np.random.multinomial(1, normProbs)).index(1)
+        selectedAction = actions[selectedIndex]
+        return selectedAction
 
-def sampleAction(actionDist):
-    actions = list(actionDist.keys())
-    probs = list(actionDist.values())
-    normlizedProbs = [prob / sum(probs) for prob in probs]
-    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
-    selectedAction = actions[selectedIndex]
-    return selectedAction
+class SelectSoftmaxAction():
+    def __init__(self, beta):
+        self.beta = beta
 
+    def __call__(self, actionDist):
+        actions = list(actionDist.keys())
+        probs = list(actionDist.values())
+
+        exponent = np.multiply(probs, self.beta)
+        newProbs = np.exp(exponent) / np.sum(np.exp(exponent))
+
+        selectedIndex = list(np.random.multinomial(1, newProbs)).index(1)
+        selectedAction = actions[selectedIndex]
+        return selectedAction
+
+class SampleAction():
+    def __init__(self, beta):
+        self.beta = beta
+
+    def __call__(self, actionDist):
+        actions = list(actionDist.keys())
+        probs = list(actionDist.values())
+        newProbs = np.array([np.power(prob, self.beta) for prob in probs])
+        normProbs = newProbs / np.sum(newProbs)
+        selectedIndex = list(np.random.multinomial(1, normProbs)).index(1)
+        selectedAction = actions[selectedIndex]
+        return selectedAction
 
 def getPairedTrajectory(agentsTrajectory):
     timeStepCount = len(agentsTrajectory[0])

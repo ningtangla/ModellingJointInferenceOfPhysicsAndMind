@@ -25,6 +25,17 @@ def main():
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
+    agentId = int(parametersForTrajectoryPath['agentId'])
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+
+
+    parametersForTrajectoryPath={}
+    agentId = 0
+    parametersForTrajectoryPath={}
+    startSampleIndex=0
+    endSampleIndex=100
 
     agentId = int(parametersForTrajectoryPath['agentId'])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
@@ -39,6 +50,12 @@ def main():
     predatorPowerRatio = 2
     killzoneRadius = 30
 
+<<<<<<< HEAD
+=======
+    # imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
+
+
+>>>>>>> 29cab9810794495ed945f4c6b667f757388a814d
     numSimulations = 200
     maxRunningSteps = 150
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -51,8 +68,9 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
+
+    trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
     # while True:
     if not os.path.isfile(trajectorySavePath):
         numOfAgent = 2
@@ -64,8 +82,12 @@ def main():
         xBoundary = [0, 600]
         yBoundary = [0, 600]
 
+<<<<<<< HEAD
         # prepare render
 
+=======
+        #prepare render
+>>>>>>> 29cab9810794495ed945f4c6b667f757388a814d
         # from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
         # import pygame as pg
         # renderOn = True
@@ -90,8 +112,13 @@ def main():
         # isTerminal2 =env.IsTerminal(getPredator2Pos, getPreyPos, killzoneRadius)
         # isTerminal=lambda state:isTerminal1(state) or isTerminal1(state)
 
+<<<<<<< HEAD
         divideDegree = 5
         isTerminal = IsTerminal(getPredatorPos, getPreyPos, killzoneRadius, divideDegree)
+=======
+        divideDegree=5
+        isTerminal = IsTerminal(getPredatorPos, getPreyPos, killzoneRadius,divideDegree)
+>>>>>>> 29cab9810794495ed945f4c6b667f757388a814d
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         reset = env.Reset(xBoundary, yBoundary, numOfAgent)
@@ -100,7 +127,20 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+<<<<<<< HEAD
         sheepActionSpace.append((0, 0))
+=======
+        sheepActionSpace.append((0,0))
+        numActionSpace = len(actionSpace)
+
+
+        preyPowerRatio = 3
+        sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        predatorPowerRatio = 2
+
+        sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        sheepActionSpace.append((0,0))
+>>>>>>> 29cab9810794495ed945f4c6b667f757388a814d
 
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
@@ -294,7 +334,11 @@ class SampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
+<<<<<<< HEAD
                 self.render(state, runningStep)
+=======
+                self.render(state)
+>>>>>>> 29cab9810794495ed945f4c6b667f757388a814d
             actionDists = policy(state)
             action = [self.chooseAction(actionDist) for actionDist in actionDists]
             trajectory.append((state, action, actionDists))

@@ -13,11 +13,14 @@ from evaluationFunctions import GenerateInitQPosUniform
 from pylab import plt
 from trajectoriesSaveLoad import GetSavePath
 from collections import OrderedDict
+from reward import RewardFunctionCompete
+from preProcessing import AccumulateRewards
 import policyValueNet as net
 import mujoco_py as mujoco
 import state
 import numpy as np
 import pandas as pd
+import pickle
 
 def dictToFileName(parameters):
     sortedParameters = sorted(parameters.items())
@@ -45,13 +48,14 @@ class PreparePolicy:
         return policy
 
 class EvaluateEscaperPerformance:
-    def __init__(self, chaserPolicy, allSampleTrajectory, generateEscaperModel, generateEscaperPolicy, preparePolicy, getModelSavePath):
+    def __init__(self, chaserPolicy, allSampleTrajectory, measure, generateEscaperModel, generateEscaperPolicy, preparePolicy, getModelSavePath):
         self.chaserPolicy = chaserPolicy
         self.allSampleTrajectory = allSampleTrajectory
         self.generateEscaperModel = generateEscaperModel
         self.generateEscaperPolicy = generateEscaperPolicy
         self.preparePolicy = preparePolicy
         self.getModelSavePath = getModelSavePath
+        self.measure = measure
 
     def __call__(self, df):
         neuronsPerLayer = df.index.get_level_values('neuronsPerLayer')[0]
@@ -76,8 +80,8 @@ class EvaluateEscaperPerformance:
         escaperPolicy = self.generateEscaperPolicy(escaperModel)
         policy = self.preparePolicy(self.chaserPolicy, escaperPolicy)
         trajectories = [sampleTraj(policy) for sampleTraj in self.allSampleTrajectory]
-        mean = np.mean([len(trajectory) for trajectory in trajectories])
-        return pd.Series({"mean": mean})
+        reward = np.mean([self.measure(trajectory) for trajectory in trajectories])
+        return pd.Series({"mean": reward})
 
 
 def main():
@@ -121,7 +125,7 @@ def main():
     numAgent = 2
     getResetFromInitQPosDummy = lambda qPosInit: ResetUniform(physicsSimulation,qPosInit,(0, 0, 0, 0),numAgent)
     generateQPosInit = GenerateInitQPosUniform(-9.7, 9.7, isTerminal,getResetFromInitQPosDummy)
-    numTrials = 100
+    numTrials = 1000
     allQPosInit = [generateQPosInit() for _ in range(numTrials)]
     allQVelInit = np.random.uniform(-8, 8, (numTrials, 4))
     getResetFromSampleIndex = lambda sampleIndex: ResetUniform(
@@ -136,15 +140,23 @@ def main():
     allSampleTrajectory = [getSampleTrajectory(sampleIndex) for sampleIndex in
                            range(numTrials)]
 
+    # statistic reward function
+    alivePenalty = 0.05
+    deathBonus = -1
+    rewardFunction = RewardFunctionCompete(alivePenalty, deathBonus, isTerminal)
+    decay = 1
+    accumulateRewards = AccumulateRewards(decay, rewardFunction)
+    measure = lambda trajectory: accumulateRewards(trajectory)[0]
+
     # split
     independentVariables = OrderedDict()
     independentVariables['trainingDataType'] = ['actionLabel']
-    independentVariables['trainingDataSize'] = [1000]
-    independentVariables['batchSize'] = [128]
-    independentVariables['augment'] = [True, False]
-    independentVariables['trainingStep'] = [1000]
-    independentVariables['neuronsPerLayer'] = [64]
-    independentVariables['sharedLayers'] = [3]
+    independentVariables['trainingDataSize'] = [800, 6000]
+    independentVariables['batchSize'] = [64]
+    independentVariables['augment'] = [False, True]
+    independentVariables['trainingStep'] = [num for num in range(0, 500001, 50000)]
+    independentVariables['neuronsPerLayer'] = [128]
+    independentVariables['sharedLayers'] = [1]
     independentVariables['actionLayers'] = [1]
     independentVariables['valueLayers'] = [1]
 
@@ -158,18 +170,18 @@ def main():
     getModelSavePath = GetSavePath(trainedModelDir, "")
     escaperNumStateSpace = 8
     generateEscaperModel = net.GenerateModel(escaperNumStateSpace, numActionSpace, regularizationFactor)
-    generateEscaperPolicy = lambda model: net.ApproximateActionPrior(model, actionSpace)
+    generateEscaperPolicy = lambda model: net.ApproximatePolicy(model, actionSpace)
     qPosIndex = [0, 1]
     modifyEscaperInputState = ModifyEscaperInputState(qPosIndex)
     preparePolicy = PreparePolicy(modifyEscaperInputState)
-    evaluate = EvaluateEscaperPerformance(chaserPolicy, allSampleTrajectory, generateEscaperModel, generateEscaperPolicy, preparePolicy, getModelSavePath)
+    evaluate = EvaluateEscaperPerformance(chaserPolicy, allSampleTrajectory, measure, generateEscaperModel, generateEscaperPolicy, preparePolicy, getModelSavePath)
     statDF = toSplitFrame.groupby(levelNames).apply(evaluate)
 
-    # plot
+    # plotbatchSize
     xStatistic = "trainingDataSize"
     yStatistic = "mean"
     lineStatistic = "augment"
-    subplotStatistic = "batchSize"
+    subplotStatistic = "trainingStep"
     figsize = (12, 10)
     figure = plt.figure(figsize=figsize)
     subplotNum = len(statDF.groupby(subplotStatistic))

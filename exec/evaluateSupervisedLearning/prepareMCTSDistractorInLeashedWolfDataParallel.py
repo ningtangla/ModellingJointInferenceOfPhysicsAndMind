@@ -40,19 +40,24 @@ def main():
     distractorId = 3
     startTime = time.time()
 
+<<<<<<< HEAD
 
     numTrajectories = 16
+=======
+    numTrajectories = 4000
+>>>>>>> iterativeTrainSheepAndWolf
     # generate and load trajectories before train parallelly
-    # sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
-    sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
+    sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
+    # sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.75*numCpuCores)
+    numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
+<<<<<<< HEAD
     killzoneRadius = 1
 
     maxRunningSteps = 125
@@ -62,6 +67,8 @@ def main():
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+=======
+>>>>>>> iterativeTrainSheepAndWolf
 
     print("start")
     trainableAgentIds = [distractorId]
@@ -70,9 +77,7 @@ def main():
         pathParameters = {'agentId': agentId}
 
         cmdList = generateTrajectoriesParallel(pathParameters)
-        # print(cmdList)
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
-        # import ipdb; ipdb.set_trace()
+
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
