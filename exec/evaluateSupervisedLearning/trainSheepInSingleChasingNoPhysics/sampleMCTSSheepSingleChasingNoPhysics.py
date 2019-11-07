@@ -1,24 +1,25 @@
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..','..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import numpy as np
 import pickle
 import random
 import json
 from collections import OrderedDict
 
-from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild,  backup, InitializeChildren#Expand, RollOut
+from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild, backup, InitializeChildren  # Expand, RollOut
 import src.constrainedChasingEscapingEnv.envNoPhysics as env
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
-from src.episode import chooseGreedyAction#SampleTrajectory
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset#IsTerminal
+from src.episode import chooseGreedyAction  # SampleTrajectory
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset  # IsTerminal
 
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
+
 
 def main():
     parametersForTrajectoryPath = json.loads(sys.argv[1])
@@ -28,19 +29,15 @@ def main():
     agentId = int(parametersForTrajectoryPath['agentId'])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    ##test
+    # test
     # parametersForTrajectoryPath={}
     # startSampleIndex=0
     # endSampleIndex=5
-    ##test
+    # test
 
     preyPowerRatio = 3
     predatorPowerRatio = 2
     killzoneRadius = 30
-
-
-    # imageFolderName = 'preyPowerRatio='+ str(preyPowerRatio) + '_predatorPowerRatio=' + str(predatorPowerRatio) +'_killzoneRadius=' + str(killzoneRadius)
-
 
     numSimulations = 200
     maxRunningSteps = 150
@@ -48,7 +45,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
 
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesStillAction')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trajectoriesStillAction')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
@@ -57,17 +54,17 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     # while True:
-    if  not os.path.isfile(trajectorySavePath):
+    if not os.path.isfile(trajectorySavePath):
         numOfAgent = 2
         sheepId = 0
         wolfId = 1
         # wolf2Id = 2
         positionIndex = [0, 1]
 
-        xBoundary = [0,600]
-        yBoundary = [0,600]
+        xBoundary = [0, 600]
+        yBoundary = [0, 600]
 
-        #prepare render
+        # prepare render
 
         # from exec.evaluateNoPhysicsEnvWithRender import Render, SampleTrajectoryWithRender
         # import pygame as pg
@@ -84,19 +81,17 @@ def main():
         # render = Render(numOfAgent, positionIndex,
         #                 screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
-
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorPos = GetAgentPosFromState(wolfId, positionIndex)
         # getPredator2Pos=GetAgentPosFromState(wolf2Id, positionIndex)
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
-
         # isTerminal1 = env.IsTerminal(getPredatorPos, getPreyPos, killzoneRadius)
         # isTerminal2 =env.IsTerminal(getPredator2Pos, getPreyPos, killzoneRadius)
-
         # isTerminal=lambda state:isTerminal1(state) or isTerminal1(state)
-        divideDegree=5
-        isTerminal = IsTerminal(getPredatorPos, getPreyPos, killzoneRadius,divideDegree)
+
+        divideDegree = 5
+        isTerminal = IsTerminal(getPredatorPos, getPreyPos, killzoneRadius, divideDegree)
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         reset = env.Reset(xBoundary, yBoundary, numOfAgent)
@@ -105,18 +100,15 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        sheepActionSpace.append((0,0))
+        sheepActionSpace.append((0, 0))
 
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         numActionSpace = len(sheepActionSpace)
 
-
         wolf1Policy = HeatSeekingDiscreteDeterministicPolicy(
             wolfActionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors)
 
-        # wolf2Policy=HeatSeekingDiscreteDeterministicPolicy(
-            # wolfActionSpace, getPredator2Pos, getPreyPos, computeAngleBetweenVectors)
         # select child
         cInit = 1
         cBase = 100
@@ -129,25 +121,14 @@ def main():
     # load chase nn policy
         def sheepTransit(state, action): return transitionFunction(
             state, [action, chooseGreedyAction(wolf1Policy(state))])
-        # def sheepTransit(state, action): return transitionFunction(
-        #     state, [action, chooseGreedyAction(wolf1Policy(state)), chooseGreedyAction(wolf2Policy(state))])
 
         # reward function
-
         aliveBonus = 1 / maxRunningSteps
         deathPenalty = -1
         rewardFunction = RewardFunctionCompete(
             aliveBonus, deathPenalty, isTerminal)
 
-        # reward function with wall
-        # safeBound = 80
-        # wallDisToCenter = xBoundary[-1]/2
-        # wallPunishRatio = 3
-        # rewardFunction = reward.RewardFunctionWithWall(aliveBonus, deathPenalty, safeBound, wallDisToCenter, wallPunishRatio, isTerminal,getPreyPos)
-
         # initialize children; expand
-
-
         initializeChildren = InitializeChildren(
             sheepActionSpace, sheepTransit, getActionPrior)
         expand = Expand(isTerminal, initializeChildren)
@@ -155,7 +136,6 @@ def main():
         # random rollout policy
         def rolloutPolicy(
             state): return sheepActionSpace[np.random.choice(range(numActionSpace))]
-
         # rollout
         rolloutHeuristicWeight = 0
         rolloutHeuristic = reward.HeuristicDistanceToTarget(
@@ -166,25 +146,21 @@ def main():
                           rewardFunction, isTerminal, rolloutHeuristic)
 
         sheepPolicy = MCTS(numSimulations, selectChild, expand,
-                    rollout, backup, establishSoftmaxActionDist)
+                           rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
+        policy = lambda state: [sheepPolicy(state), wolf1Policy(state)]
 
-        policy = lambda state:[sheepPolicy(state),wolf1Policy(state)]
-        # policy = lambda state:[sheepPolicy(state),wolf1Policy(state),wolf2Policy(state)]
-
-
-        sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
-
-        # sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction,render,renderOn)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
 
         startTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
         finshedTime = time.time() - startTime
 
-        print('lenght:',len(trajectories[0]))
-        print('timeTaken:',finshedTime)
+        print('lenght:', len(trajectories[0]))
+        print('timeTaken:', finshedTime)
+
 
 class RollOut:
     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
@@ -200,47 +176,50 @@ class RollOut:
         totalRewardForRollout = 0
 
         if leafNode.is_root:
-            lastState=currentState
+            lastState = currentState
         else:
-            lastState=list(leafNode.parent.id.values())[0]
+            lastState = list(leafNode.parent.id.values())[0]
 
         for rolloutStep in range(self.maxRolloutStep):
             action = self.rolloutPolicy(currentState)
-            totalRewardForRollout += self.rewardFunction(lastState,currentState, action)
-            if self.isTerminal(lastState,currentState):
+            totalRewardForRollout += self.rewardFunction(lastState, currentState, action)
+            if self.isTerminal(lastState, currentState):
                 break
             nextState = self.transitionFunction(currentState, action)
-            lastState=currentState
+            lastState = currentState
             currentState = nextState
 
         heuristicReward = 0
-        if not self.isTerminal(lastState,currentState):
+        if not self.isTerminal(lastState, currentState):
             heuristicReward = self.rolloutHeuristic(currentState)
         totalRewardForRollout += heuristicReward
 
         return totalRewardForRollout
 
+
 class IsTerminal():
-    def __init__(self, getPredatorPos, getPreyPos, minDistance,divideDegree):
+    def __init__(self, getPredatorPos, getPreyPos, minDistance, divideDegree):
         self.getPredatorPos = getPredatorPos
         self.getPreyPos = getPreyPos
         self.minDistance = minDistance
-        self.divideDegree=divideDegree
-    def __call__(self, lastState,currentState):
+        self.divideDegree = divideDegree
+
+    def __call__(self, lastState, currentState):
         terminal = False
 
-        getPositionList=lambda getPos,lastState,currentState:np.linspace(getPos(lastState),getPos(currentState),self.divideDegree,endpoint=True)
+        getPositionList = lambda getPos, lastState, currentState: np.linspace(getPos(lastState), getPos(currentState), self.divideDegree, endpoint=True)
 
-        getL2Normdistance= lambda preyPosition,predatorPosition :np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
+        getL2Normdistance = lambda preyPosition, predatorPosition: np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
 
-        preyPositionList =getPositionList(self.getPreyPos,lastState,currentState)
-        predatorPositionList  = getPositionList(self.getPredatorPos,lastState,currentState)
+        preyPositionList = getPositionList(self.getPreyPos, lastState, currentState)
+        predatorPositionList = getPositionList(self.getPredatorPos, lastState, currentState)
 
-        L2NormdistanceList =[getL2Normdistance(preyPosition,predatorPosition) for (preyPosition,predatorPosition) in zip(preyPositionList,predatorPositionList) ]
+        L2NormdistanceList = [getL2Normdistance(preyPosition, predatorPosition) for (preyPosition, predatorPosition) in zip(preyPositionList, predatorPositionList)]
 
         if np.any(np.array(L2NormdistanceList) <= self.minDistance):
             terminal = True
         return terminal
+
 
 class Expand:
     def __init__(self, isTerminal, initializeChildren):
@@ -250,14 +229,15 @@ class Expand:
     def __call__(self, leafNode):
         currentState = list(leafNode.id.values())[0]
         if leafNode.is_root:
-            lastState=currentState
+            lastState = currentState
         else:
-            lastState=list(leafNode.parent.id.values())[0]
-        if not self.isTerminal(lastState,currentState):
+            lastState = list(leafNode.parent.id.values())[0]
+        if not self.isTerminal(lastState, currentState):
             leafNode.isExpanded = True
             leafNode = self.initializeChildren(leafNode)
 
         return leafNode
+
 
 class SampleTrajectory:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
@@ -270,25 +250,26 @@ class SampleTrajectory:
     def __call__(self, policy):
         state = self.reset()
 
-        while self.isTerminal(state,state):
+        while self.isTerminal(state, state):
             state = self.reset()
             print(L2NormdistanceList)
             print(np.array(L2NormdistanceList) <= self.minDistance)
 
         trajectory = []
-        lastState=state
+        lastState = state
         for runningStep in range(self.maxRunningSteps):
-            if self.isTerminal(lastState,state):
+            if self.isTerminal(lastState, state):
                 trajectory.append((state, None, None))
                 break
             actionDists = policy(state)
             action = [self.chooseAction(actionDist) for actionDist in actionDists]
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
-            lastState=state
+            lastState = state
             state = nextState
 
         return trajectory
+
 
 class SampleTrajectoryWithRender:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
@@ -303,26 +284,26 @@ class SampleTrajectoryWithRender:
     def __call__(self, policy):
         state = self.reset()
 
-        while self.isTerminal(state,state):
+        while self.isTerminal(state, state):
             state = self.reset()
 
         trajectory = []
-        lastState=state
+        lastState = state
         for runningStep in range(self.maxRunningSteps):
-            if self.isTerminal(lastState,state):
+            if self.isTerminal(lastState, state):
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
-                self.render(state,runningStep)
+                self.render(state, runningStep)
             actionDists = policy(state)
             action = [self.chooseAction(actionDist) for actionDist in actionDists]
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
-            lastState=state
+            lastState = state
             state = nextState
 
-
         return trajectory
+
 
 class RewardFunctionCompete():
     def __init__(self, aliveBonus, deathPenalty, isTerminal):
@@ -330,11 +311,13 @@ class RewardFunctionCompete():
         self.deathPenalty = deathPenalty
         self.isTerminal = isTerminal
 
-    def __call__(self, lastState,currentState, action):
+    def __call__(self, lastState, currentState, action):
         reward = self.aliveBonus
-        if self.isTerminal(lastState,currentState):
+        if self.isTerminal(lastState, currentState):
             reward += self.deathPenalty
 
         return reward
+
+
 if __name__ == "__main__":
     main()

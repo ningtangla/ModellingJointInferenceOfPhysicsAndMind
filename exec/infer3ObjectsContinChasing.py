@@ -3,7 +3,7 @@ import os
 
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..'))
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 from src.inferChasing.continuousPolicy import ThreeAgentsPolicy, RandomPolicy
 from src.inferChasing.continuousTransition import TransitTwoMassPhysics
@@ -68,10 +68,10 @@ def main():
     wolfPolicy = ApproximateActionPrior(wolfNNModel, actionSpace)  # input state, return action distribution
 
     # sheep NN Policy
-    sheepModelPath = os.path.join(dirName, '..','NNModels','sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
+    sheepModelPath = os.path.join(dirName, '..', 'NNModels', 'sheepNNModels', 'killzoneRadius=2_maxRunningSteps=25_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=8_rolloutHeuristicWeight=0.1_trainSteps=99999')
     sheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
     restoreVariables(sheepNNModel, sheepModelPath)
-    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace) # input sheepstate, return action distribution
+    sheepPolicy = ApproximateActionPrior(sheepNNModel, actionSpace)  # input sheepstate, return action distribution
 
     randomPolicy = RandomPolicy(actionSpace)
 
@@ -81,7 +81,7 @@ def main():
         policy(mind, state, allAgentsActions) * transition(physics, state, allAgentsActions, nextState)
 
     dataIndex = 14
-    dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory'+ str(dataIndex) + '.pickle')
+    dataPath = os.path.join(dirName, '..', 'trainedData', 'trajectory' + str(dataIndex) + '.pickle')
     trajectory = loadFromPickle(dataPath)
     stateIndex = 0
     observe = Observe(stateIndex, trajectory)
@@ -93,7 +93,7 @@ def main():
     actionHypo = list(it.product(actionSpace, repeat=numOfAgents))
     iterables = [chasingSpace, pullingSpace, actionHypo]
     inferenceIndex = pd.MultiIndex.from_product(iterables, names=['mind', 'physics', 'action'])
-
+    print(inferenceIndex)
 
 # visualization
     fullScreen = False
@@ -133,7 +133,7 @@ def main():
     rawYRange = [-10, 10]
     scaledXRange = [210, 590]
     scaledYRange = [210, 590]
-    scaleState = ScaleState(positionIndex, rawXRange,rawYRange, scaledXRange, scaledYRange)
+    scaleState = ScaleState(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
     oldFPS = 5
     FPS = 60
@@ -142,7 +142,7 @@ def main():
     imageFolderName = '3ObjectsInfDemo' + str(dataIndex)
     saveImage = SaveImage(imageFolderName)
     drawInferenceResult = DrawContinuousInferenceResultNoPull(inferenceIndex,
-                drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
+                                                              drawState, scaleState, colorChasingPoints, adjustFPS, saveImage)
 
     thresholdPosterior = 1.5
     mindPhysicsName = ['mind', 'physics']
@@ -165,7 +165,6 @@ def main():
     plotPhysicsInferenceProb(posteriorDf, dataIndex)
 #
 
+
 if __name__ == '__main__':
     main()
-
-

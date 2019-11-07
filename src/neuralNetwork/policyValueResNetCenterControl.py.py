@@ -26,9 +26,11 @@ class GenerateModel:
                 tf.add_to_collection("inputs", states_)
 
             with tf.name_scope("groundTruths"):
-                groundTruthAction_ = tf.placeholder(tf.int32, [None, self.numActionSpace], name="action")
+                groundTruthAction_ = tf.placeholder(tf.int32, [None, self.numActionSpace[0]], name="action")
+                groundTruthAction_2 = tf.placeholder(tf.int32, [None, self.numActionSpace[1]], name="action")
                 groundTruthValue_ = tf.placeholder(tf.float32, [None, 1], name="value")
                 tf.add_to_collection("groundTruths", groundTruthAction_)
+                tf.add_to_collection("groundTruths", groundTruthAction_2)
                 tf.add_to_collection("groundTruths", groundTruthValue_)
 
             with tf.name_scope("trainingParams"):
@@ -58,10 +60,10 @@ class GenerateModel:
                     blockTails = set([i + resBlockSize - 1 for i in blockHeads])
                 else:
                     blockHeads, blockTails = set(), set()
-                for i in range(2, len(sharedWidths) + 1):
-                    if i in blockHeads:
+                for i in range(2, len(sblockHeadsharedWidths) + 1):
+                    if i in:
                         resBlockInput_ = activation_
-                    fcLayer = tf.layers.Dense(units=sharedWidths[i-1], activation=None, kernel_initializer=initWeight,
+                    fcLayer = tf.layers.Dense(units=sharedWidths[i - 1], activation=None, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i))
                     preActivation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     activation_ = tf.nn.relu(preActivation_ + resBlockInput_) if i in blockTails \
@@ -75,12 +77,12 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(actionLayerWidths)):
                     fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fc{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i + 1))
                     activation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
                     tf.add_to_collections(["activations", f"activation/{activation_.name}"], activation_)
-                outputFCLayer = tf.layers.Dense(units=self.numActionSpace, activation=None, kernel_initializer=initWeight, bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
+                outputFCLayer = tf.layers.Dense(units=self.numActionSpace[0], activation=None, kernel_initializer=initWeight, bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
                 actionOutputLayerActivation_ = outputFCLayer(activation_)
                 tf.add_to_collections(["weights", f"weight/{outputFCLayer.kernel.name}"], outputFCLayer.kernel)
                 tf.add_to_collections(["biases", f"bias/{outputFCLayer.bias.name}"], outputFCLayer.bias)
@@ -93,11 +95,33 @@ class GenerateModel:
                 tf.add_to_collection("actionDistributions", actionDistributions_)
                 tf.add_to_collection("actionIndices", actionIndices_)
 
+            with tf.variable_scope("action2"):
+                activation_2 = sharedOutput_
+                for i in range(len(actionLayerWidths)):
+                    fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
+                                              bias_initializer=initBias, name="fc{}".format(i + 1))
+                    activation_2 = tf.nn.dropout(fcLayer(activation_2), rate=dropoutRate)
+                    tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
+                    tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
+                    tf.add_to_collections(["activations", f"activation/{activation_2.name}"], activation_2)
+                outputFCLayer = tf.layers.Dense(units=self.numActionSpace[1], activation=None, kernel_initializer=initWeight, bias_initializer=initBias, name="fc{}".format(len(actionLayerWidths) + 1))
+                actionOutputLayerActivation_2 = outputFCLayer(activation_2)
+                tf.add_to_collections(["weights", f"weight/{outputFCLayer.kernel.name}"], outputFCLayer.kernel)
+                tf.add_to_collections(["biases", f"bias/{outputFCLayer.bias.name}"], outputFCLayer.bias)
+                tf.add_to_collections(["activations", f"activation/{actionOutputLayerActivation_2.name}"],
+                                      actionOutputLayerActivation_2)
+
+            with tf.name_scope("actionOutputs2"):
+                actionDistributions_2 = tf.nn.softmax(actionOutputLayerActivation_2, name="distributions")
+                actionIndices_2 = tf.argmax(actionDistributions_2, axis=1, name="indices")
+                tf.add_to_collection("actionDistributions", actionDistributions_2)
+                tf.add_to_collection("actionIndices", actionIndices_2)
+
             with tf.variable_scope("value"):
                 activation_ = sharedOutput_
                 for i in range(len(valueLayerWidths)):
                     fcLayer = tf.layers.Dense(units=valueLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fc{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i + 1))
                     activation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
@@ -127,6 +151,17 @@ class GenerateModel:
                     tf.add_to_collection("actionAccuracy", actionAccuracy_)
                     actionAccuracySummary = tf.summary.scalar("actionAccuracy", actionAccuracy_)
 
+                with tf.name_scope("action2"):
+                    crossEntropy_2 = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionOutputLayerActivation_2, labels=groundTruthAction_2)
+                    actionLoss_2 = tf.reduce_mean(crossEntropy_2, name='loss')
+                    tf.add_to_collection("actionLoss2", actionLoss_2)
+                    actionLossSummary = tf.summary.scalar("actionLoss2", actionLoss_2)
+
+                    groundTruthActionIndices_2 = tf.argmax(groundTruthAction_2, axis=1)
+                    actionAccuracy_2 = tf.reduce_mean(tf.cast(tf.equal(actionIndices_, groundTruthActionIndices_2), tf.float32), name="accuracy")
+                    tf.add_to_collection("actionAccuracy", actionAccuracy_2)
+                    actionAccuracySummary = tf.summary.scalar("actionAccuracy2", actionAccuracy_2)
+
                 with tf.name_scope("value"):
                     valueLoss_ = tf.losses.mean_squared_error(groundTruthValue_, values_)
                     tf.add_to_collection("valueLoss", valueLoss_)
@@ -148,7 +183,7 @@ class GenerateModel:
                         name="l2RegLoss")
                     tf.summary.scalar("l2RegLoss", l2RegularizationLoss_)
 
-                loss_ = tf.add_n([actionLossCoef_*actionLoss_, valueLossCoef_*valueLoss_, l2RegularizationLoss_], name="loss")
+                loss_ = tf.add_n([actionLossCoef_ * actionLoss_, actionLossCoef_ * actionLoss_2, valueLossCoef_ * valueLoss_, l2RegularizationLoss_], name="loss")
                 tf.add_to_collection("loss", loss_)
                 lossSummary = tf.summary.scalar("loss", loss_)
 
@@ -203,7 +238,7 @@ class Train:
         print("ENTER TRAIN")
         graph = model.graph
         state_ = graph.get_collection_ref("inputs")[0]
-        groundTruthAction_, groundTruthValue_ = graph.get_collection_ref("groundTruths")
+        groundTruthAction_, groundTruthAction_2, groundTruthValue_ = graph.get_collection_ref("groundTruths")
         learningRate_ = graph.get_collection_ref("learningRate")[0]
         actionLossCoef_, valueLossCoef_ = graph.get_collection_ref("lossCoefs")
         loss_ = graph.get_collection_ref("loss")[0]
@@ -211,8 +246,7 @@ class Train:
         valueLoss_ = graph.get_collection_ref("valueLoss")[0]
         actionAccuracy_ = graph.get_collection_ref("actionAccuracy")[0]
         valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
-        evaluations_ = {"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_,
-                        "valueAcc": valueAccuracy_}
+        evaluations_ = {"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "actionLoss2": actionLoss_2, "actionAcc2": actionAccuracy_2, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_}
         trainOp = graph.get_collection_ref("trainOp")[0]
         fullSummaryOp = graph.get_collection_ref('summaryOps')[0]
         trainWriter = graph.get_collection_ref('writers')[0]
@@ -223,13 +257,12 @@ class Train:
 
         for stepNum in range(self.maxStepNum):
             if self.batchSize == 0:
-                stateBatch, actionBatch, valueBatch = trainingData
+                stateBatch, actionBatch, actionBatch2, valueBatch = trainingData
             else:
-                stateBatch, actionBatch, valueBatch = self.sampleData(trainingDataList, self.batchSize)
+                stateBatch, actionBatch, actionBatch2, valueBatch = self.sampleData(trainingDataList, self.batchSize)
             learningRate = self.learningRateModifier(stepNum)
             actionLossCoef, valueLossCoef = self.coefficientController(evalDict)
-            feedDict = {state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch,
-                        learningRate_: learningRate, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
+            feedDict = {state_: stateBatch, groundTruthAction_: actionBatch, groundTruthAction_2: actionBatch2, groundTruthValue_: valueBatch, learningRate_: learningRate, actionLossCoef_: actionLossCoef, valueLossCoef_: valueLossCoef}
             evalDict, _, summary = model.run(fetches, feed_dict=feedDict)
 
             self.reporter(evalDict, stepNum, trainWriter, summary)
@@ -295,9 +328,7 @@ def evaluate(model, testData, summaryOn=False, stepNum=None):
     valueAccuracy_ = graph.get_collection_ref("valueAccuracy")[0]
     evalSummaryOp = graph.get_collection_ref('summaryOps')[1]
     testWriter = graph.get_collection_ref('writers')[1]
-    fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "valueLoss": valueLoss_,
-                "valueAcc": valueAccuracy_},
-               evalSummaryOp]
+    fetches = [{"loss": loss_, "actionLoss": actionLoss_, "actionAcc": actionAccuracy_, "actionLoss2": actionLoss_2, "actionAcc2": actionAccuracy_2, "valueLoss": valueLoss_, "valueAcc": valueAccuracy_}, evalSummaryOp]
 
     stateBatch, actionBatch, valueBatch = testData
     evalDict, summary = model.run(fetches, feed_dict={state_: stateBatch, groundTruthAction_: actionBatch, groundTruthValue_: valueBatch})
@@ -327,7 +358,7 @@ def restoreVariables(model, path):
 
 
 class ApproximatePolicy:
-    def __init__ (self, policyValueNet, actionSpace):
+    def __init__(self, policyValueNet, actionSpace):
         self.policyValueNet = policyValueNet
         self.actionSpace = actionSpace
 
@@ -341,9 +372,12 @@ class ApproximatePolicy:
         graph = self.policyValueNet.graph
         state_ = graph.get_collection_ref("inputs")[0]
         actionDist_ = graph.get_collection_ref("actionDistributions")[0]
+        actionDist_2 = graph.get_collection_ref("actionDistributions2")[0]
         actionProbs = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
-        actionDist = {action: prob for action, prob in zip(self.actionSpace, actionProbs)}
-        return actionDist
+        actionProbs2 = self.policyValueNet.run(actionDist_, feed_dict={state_: stateBatch})[0]
+        actionDist = {action: prob for action, prob in zip(self.actionSpace[0], actionProbs)}
+        actionDist2 = {action: prob for action, prob in zip(self.actionSpace[1], actionProbs2)}
+        return actionDist, actionDist2
 
 
 class ApproximateValue:

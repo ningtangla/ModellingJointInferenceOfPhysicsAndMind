@@ -29,33 +29,6 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 
 
-class ProcessTrajectoryForPolicyValueNetSampleSteps:
-    def __init__(self, actionToOneHot, agentId, sampleOneStepPerTraj):
-        self.actionToOneHot = actionToOneHot
-        self.agentId = agentId
-        self.sampleOneStepPerTraj = sampleOneStepPerTraj
-
-    def __call__(self, trajectory):
-        processTuple = lambda state, actions, actionDist, value: \
-            (np.asarray(state).flatten(), self.actionToOneHot(actions[self.agentId]), value)
-
-        processedTrajectory = [processTuple(*triple) for triple in trajectory]
-
-        if self.sampleOneStepPerTraj:
-            choosenIndex = random.choice(range(len(processedTrajectory)))
-            choosenStep = [processedTrajectory[choosenIndex]]
-            return choosenStep
-        else:
-            return processedTrajectory
-
-
-def drawPerformanceLine(dataDf, axForDraw, deth):
-    for learningRate, grp in dataDf.groupby('learningRate'):
-        grp.index = grp.index.droplevel('learningRate')
-        grp.plot(ax=axForDraw, label='learningRate={}'.format(learningRate), y='actionLoss',
-                 marker='o', logx=False)
-
-
 class TrainModelForConditions:
     def __init__(self, trainIntervelIndexes, trainStepsIntervel, trainData, NNModel, getTrain, getModelSavePath):
         self.trainIntervelIndexes = trainIntervelIndexes
@@ -87,37 +60,13 @@ class TrainModelForConditions:
             model = trainedModel
 
 
-def main():
-    manipulatedVariables = OrderedDict()
-    manipulatedVariables['dataSize'] = [5000]
-    manipulatedVariables['depth'] = [5]
-    manipulatedVariables['sampleOneStepPerTraj'] = [0]
+def trainOneCondition(manipulatedVariables):
+    depth = int(manipulatedVariables['depth'])
+    dataSize = int(manipulatedVariables['dataSize'])
 
-    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
-
-    numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.75 * numCpuCores)
-    trainPool = mp.Pool(numCpuToUse)
-    trainPool.map(trainOneCondition, parametersAllCondtion)
-
-
-def trainOneCondition(parameters):
-    manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = 256
-    manipulatedVariables['learningRate'] = 1e-4
-
-    depth = int(parameters['depth'])
-    dataSize = int(parameters['dataSize'])
-    sampleOneStepPerTraj = int(parameters['sampleOneStepPerTraj'])
-
-    manipulatedVariables['depth'] = depth
-    manipulatedVariables['dataSize'] = dataSize
-    manipulatedVariables['sampleOneStepPerTraj'] = sampleOneStepPerTraj
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    # dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectoriesNoWallPunish')
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trajectoriesStillAction')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'trajectoriesWithStillAction')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -143,18 +92,11 @@ def trainOneCondition(parameters):
 
     playAliveBonus = 1 / dataSetMaxRunningSteps
     playDeathPenalty = -1
-    playKillzoneRadius = killzoneRadius  # 2
+    playKillzoneRadius = killzoneRadius
 
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolf1Pos)
 
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
-
-    # xBoundary = [0,600]
-    # yBoundary = [0,600]
-    # safeBound = 80
-    # wallDisToCenter = xBoundary[-1]/2
-    # wallPunishRatio = 3
-    # playReward = RewardFunctionWithWall(playAliveBonus, playDeathPenalty, safeBound, wallDisToCenter, wallPunishRatio, playIsTerminal,getSheepPos)
 
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
@@ -173,24 +115,17 @@ def trainOneCondition(parameters):
     actionToOneHot = ActionToOneHot(actionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    # processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNetSampleSteps(actionToOneHot, sheepId, sampleOneStepPerTraj)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
 
-    loadedTrajectories = loadTrajectories(parameters={})[:dataSize]
-
-    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])  # !!? magic
-    trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
-    print(len(trajectories), parameters)
-
+    trajectories = loadTrajectories(parameters={})[:dataSize]
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
 
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
-
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
     # neural network init and save path
@@ -222,7 +157,6 @@ def trainOneCondition(parameters):
     afterActionCoeff = 1
     afterValueCoeff = 0
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    # terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     terminalController = lambda evalDict, numSteps: False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 10000
@@ -243,17 +177,26 @@ def trainOneCondition(parameters):
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(6))
+    numOfTrainStepsIntervel = 6
+    trainIntervelIndexes = list(range(numOfTrainStepsIntervel))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNModel, getTrainNN, getNNModelSavePath)
-
     trainModelForConditions(manipulatedVariables)
-    # train models for all conditions
-    # numCpuCores = os.cpu_count()
-    # print(numCpuCores)
-    # numCpuToUse = int(0.8*numCpuCores)
-    # trainPool = mp.Pool(numCpuToUse)
-    # #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
-    # trainPool.map(trainModelForConditions, parametersAllCondtion)
+
+
+def main():
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['dataSize'] = [5000]
+    manipulatedVariables['depth'] = [5]
+    manipulatedVariables['miniBatchSize'] = [256]
+    manipulatedVariables['learningRate'] = [1e-4]
+
+    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+
+    numCpuCores = os.cpu_count()
+    numCpuToUse = int(0.75 * numCpuCores)
+    trainPool = mp.Pool(numCpuToUse)
+    trainPool.map(trainOneCondition, parametersAllCondtion)
 
 
 if __name__ == '__main__':
