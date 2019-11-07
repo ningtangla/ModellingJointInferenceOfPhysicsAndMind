@@ -21,10 +21,8 @@ def main():
     startTime = time.time()
     numTrajectories = 6000
 
-<<<<<<< HEAD:exec/evaluateSupervisedLearning/trainSheepInSingleChasingNoPhysics/prepareMCTSSheepSingleChasingNoPhysics.py
-=======
     numTrajectories = 5000
->>>>>>> origin/multiChasingNoPhyscis:exec/multiChasingNoPhysics/trainSheepInSingleChasingNoPhysics/prepareMCTSSheepSingleChasingNoPhysics.py
+
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSSheepSingleChasingNoPhysics.py'
 
