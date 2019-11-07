@@ -182,7 +182,7 @@ def main():
 
         print('timeTaken:',finshedTime)
 
-class RollOut:
+class RollOutWithInterpolationTerminal:
     def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
         self.transitionFunction = transitionFunction
         self.rewardFunction = rewardFunction
@@ -216,7 +216,7 @@ class RollOut:
 
         return totalRewardForRollout
 
-class IsTerminal():
+class IsTerminalWithInterpolation():
     def __init__(self, getPredatorPos, getPreyPos, minDistance,divideDegree):
         self.getPredatorPos = getPredatorPos
         self.getPreyPos = getPreyPos
@@ -238,7 +238,7 @@ class IsTerminal():
             terminal = True
         return terminal
 
-class Expand:
+class ExpandWithInterpolationTerminal:
     def __init__(self, isTerminal, initializeChildren):
         self.isTerminal = isTerminal
         self.initializeChildren = initializeChildren
@@ -286,7 +286,7 @@ class SampleTrajectory:
 
         return trajectory
 
-class SampleTrajectoryWithRender:
+class SampleTrajectoryWithRenderWithInterpolationTerminal:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
@@ -320,7 +320,7 @@ class SampleTrajectoryWithRender:
 
         return trajectory
 
-class RewardFunctionCompete():
+class RewardFunctionCompeteWithInterpolationTerminal():
     def __init__(self, aliveBonus, deathPenalty, isTerminal):
         self.aliveBonus = aliveBonus
         self.deathPenalty = deathPenalty
