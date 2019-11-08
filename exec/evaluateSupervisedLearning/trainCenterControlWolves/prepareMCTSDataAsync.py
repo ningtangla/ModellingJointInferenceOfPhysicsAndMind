@@ -22,6 +22,7 @@ class GenerateTrajectoriesParallel:
         parametersString = dict([(key, str(value)) for key, value in parameters.items()])
         parametersStringJS = json.dumps(parametersString)
         cmdList = [['python3', self.codeFileName, parametersStringJS, str(startSampleIndex), str(endSampleIndex)] for startSampleIndex, endSampleIndex in startEndIndexesPair]
+        print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
             proc.communicate()
@@ -35,7 +36,7 @@ def main():
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
-    numTrajectories = 100
+    numTrajectories = 1000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSCenterControlWovles.py'
 
@@ -46,16 +47,15 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
-    numTrajPerSteps = numCmdList * 5
+    numTrajPerSteps = numCmdList * 2
     startSampleIndexes = np.arange(0, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 
     print("start")
     for i in range(math.ceil(numTrajectories / numTrajPerSteps)):
-        startEndIndexesPair = startEndIndexesPairs[numCpuCores * i:numCpuCores * i + numCmdList]
+        startEndIndexesPair = startEndIndexesPairs[numCpuCores * i : numCpuCores * i + numCmdList]
         cmdList = generateTrajectoriesParallel(startEndIndexesPair, pathParameters)
-        print(cmdList)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
