@@ -9,7 +9,7 @@ import json
 import numpy as np
 from collections import OrderedDict
 import pandas as pd
-from itertools import product 
+from itertools import product
 
 # from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 
@@ -100,13 +100,13 @@ def main():
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-        
+
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
 
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
@@ -120,7 +120,7 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        
+
 
         predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
@@ -158,7 +158,7 @@ def main():
 
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-    
+
         startTime = time.time()
         trainableAgentIds = [sheepId, wolvesId]
 
@@ -190,7 +190,7 @@ def main():
 
 
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
-        
+
 
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state),]
 
@@ -200,7 +200,7 @@ def main():
         # sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
 
         from exec.evaluateNoPhysicsEnvWithRender import Render #SampleTrajectoryWithRender
-        import pygame as pg 
+        import pygame as pg
         from pygame.color import THECOLORS
         screenColor = THECOLORS['black']
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
@@ -239,7 +239,7 @@ class SampleTrajectoryWithRender:
             state = self.reset()
 
         trajectory = []
-        
+
         for runningStep in range(self.maxRunningSteps):
             if self.isTerminal(state):
                 trajectory.append((state, None, None))
@@ -251,7 +251,7 @@ class SampleTrajectoryWithRender:
             trajectory.append((state, action, actionDists))
             actionFortransit=[action[0],action[1][0],action[1][1]]
             nextState = self.transit(state, actionFortransit)
-            
+
             state = nextState
 
 

@@ -60,28 +60,34 @@ class TransiteForNoPhysics():
         newState, newAction = list(zip(*checkedNewStateAndVelocities))
         return newState
 
+
 class UnpackCenterControlAction:
     def __init__(self, centerControlIndexList):
         self.centerControlIndexList = centerControlIndexList
-    def __call__(self,centerControlAction):
-        upackedAction=[]
-        for index,action in enumerate(centerControlAction) :
+
+    def __call__(self, centerControlAction):
+        upackedAction = []
+        for index, action in enumerate(centerControlAction):
             if index in self.centerControlIndexList:
-                [upackedAction.append(subaction) for subaction in action]
+                [upackedAction.append(subAction) for subAction in action]
             else:
                 upackedAction.append(action)
         return np.array(upackedAction)
-class TransiteCenterControlActionForNoPhysics():
-    def __init__(self, stayInBoundaryByReflectVelocity,unpackCenterControlAction):
+
+
+class TransiteCenterControlActionWithNoPhysics():
+    def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
-        self.unpackCenterControlAction=unpackCenterControlAction
+        self.unpackCenterControlAction = unpackCenterControlAction
+
     def __call__(self, state, action):
-        actionFortansit=self.unpackCenterControlAction(action)
+        actionFortansit = self.unpackCenterControlAction(action)
         newState = state + np.array(actionFortansit)
         checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, actionFortansit)]
         newState, newAction = list(zip(*checkedNewStateAndVelocities))
         return newState
+
 
 class IsTerminal():
     def __init__(self, getPredatorPos, getPreyPos, minDistance):
@@ -98,27 +104,30 @@ class IsTerminal():
             terminal = True
         return terminal
 
+
 class IsTerminalWithInterpolation():
-    def __init__(self, getPredatorPos, getPreyPos, minDistance,divideDegree):
+    def __init__(self, getPredatorPos, getPreyPos, minDistance, divideDegree):
         self.getPredatorPos = getPredatorPos
         self.getPreyPos = getPreyPos
         self.minDistance = minDistance
-        self.divideDegree=divideDegree
-    def __call__(self, lastState,currentState):
+        self.divideDegree = divideDegree
+
+    def __call__(self, lastState, currentState):
         terminal = False
 
-        getPositionList=lambda getPos,lastState,currentState:np.linspace(getPos(lastState),getPos(currentState),self.divideDegree,endpoint=True)
+        getPositionList = lambda getPos, lastState, currentState: np.linspace(getPos(lastState), getPos(currentState), self.divideDegree, endpoint=True)
 
-        getL2Normdistance= lambda preyPosition,predatorPosition :np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
+        getL2Normdistance = lambda preyPosition, predatorPosition: np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
 
-        preyPositionList =getPositionList(self.getPreyPos,lastState,currentState)
-        predatorPositionList  = getPositionList(self.getPredatorPos,lastState,currentState)
+        preyPositionList = getPositionList(self.getPreyPos, lastState, currentState)
+        predatorPositionList = getPositionList(self.getPredatorPos, lastState, currentState)
 
-        L2NormdistanceList =[getL2Normdistance(preyPosition,predatorPosition) for (preyPosition,predatorPosition) in zip(preyPositionList,predatorPositionList) ]
+        L2NormdistanceList = [getL2Normdistance(preyPosition, predatorPosition) for (preyPosition, predatorPosition) in zip(preyPositionList, predatorPositionList)]
 
         if np.any(np.array(L2NormdistanceList) <= self.minDistance):
             terminal = True
         return terminal
+
 
 class StayInBoundaryByReflectVelocity():
     def __init__(self, xBoundary, yBoundary):
