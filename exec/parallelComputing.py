@@ -21,8 +21,7 @@ class GenerateTrajectoriesParallel:
         print(cmdList)
         processList = [Popen(cmd, stdout=PIPE, stderr=PIPE) for cmd in cmdList]
         for proc in processList:
-            # proc.wait()3
-            3
+            # proc.wait()
             proc.communicate()
         return cmdList
 

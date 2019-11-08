@@ -75,7 +75,7 @@ class UnpackCenterControlAction:
         return np.array(upackedAction)
 
 
-class TransiteCenterControlActionWithNoPhysics():
+class TransiteForNoPhysicsWithCenterControlAction():
     def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
         self.unpackCenterControlAction = unpackCenterControlAction

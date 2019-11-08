@@ -13,7 +13,7 @@ from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteCenterControlActionWithNoPhysics, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction
 
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 
@@ -147,7 +147,7 @@ def main():
         centerControlIndexList = [wolvesId]
         unpackAction = UnpackCenterControlAction(centerControlIndexList)
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-        transit = TransiteCenterControlActionWithNoPhysics(stayInBoundaryByReflectVelocity, unpackAction)
+        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackAction)
 
         # NNGuidedMCTS init
         cInit = 1
