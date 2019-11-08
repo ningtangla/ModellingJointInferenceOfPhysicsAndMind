@@ -36,29 +36,31 @@ def main():
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
-    numTrajectories = 1000
+    numTrajectories = 2000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSCenterControlWovles.py'
 
     numCpuCores = os.cpu_count()
-    print(numCpuCores)
     numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
+    print('numCpuToUse',numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
     numTrajPerSteps = numCmdList * 2
-    startSampleIndexes = np.arange(0, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
+    startSampleIndexes = np.arange(250, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 
     print("start")
     for i in range(math.ceil(numTrajectories / numTrajPerSteps)):
+        startTime = time.time()
+
         startEndIndexesPair = startEndIndexesPairs[numCpuCores * i : numCpuCores * i + numCmdList]
         cmdList = generateTrajectoriesParallel(startEndIndexesPair, pathParameters)
 
-    endTime = time.time()
-    print("Time taken {} seconds".format((endTime - startTime)))
+        endTime = time.time()
+        print("Time taken {} seconds".format((endTime - startTime)))
 
 
 if __name__ == '__main__':
