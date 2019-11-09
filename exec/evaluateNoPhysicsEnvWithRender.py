@@ -46,7 +46,6 @@ class Render():
                 pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
 
 
-
 class SampleTrajectoryWithRender:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
         self.maxRunningSteps = maxRunningSteps

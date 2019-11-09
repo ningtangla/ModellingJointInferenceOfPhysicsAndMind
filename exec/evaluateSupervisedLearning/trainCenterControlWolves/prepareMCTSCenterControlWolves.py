@@ -4,8 +4,6 @@ import os
 DIRNAME = os.path.dirname(__file__)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
-# import ipdb
-
 import numpy as np
 from collections import OrderedDict
 
@@ -24,11 +22,10 @@ def main():
 
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.75*numCpuCores)
+    numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
-
 
     print("start")
     trainableAgentIds = [wolfId]
@@ -38,8 +35,6 @@ def main():
 
         cmdList = generateTrajectoriesParallel(pathParameters)
         print(cmdList)
-        # trajectories = loadTrajectoriesForParallel(pathParameters)
-        # import ipdb; ipdb.set_trace()
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))
