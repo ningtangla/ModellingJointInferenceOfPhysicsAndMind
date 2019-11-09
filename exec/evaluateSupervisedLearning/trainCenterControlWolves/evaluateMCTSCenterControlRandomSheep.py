@@ -64,7 +64,7 @@ class SampleTrajectoryFixRet:
 
 def generateOneCondition(parameters):
     print(parameters)
-    numTrials = 50
+    numTrials = 30
     numSimulations = int(parameters['numSimulations'])
 
     killzoneRadius = 30
@@ -230,7 +230,7 @@ def main():
     trajectoryExtension = '.pickle'
 
 
-    numTrials = 50
+    numTrials = 30
     killzoneRadius = 30
     maxRunningSteps = 100
 
