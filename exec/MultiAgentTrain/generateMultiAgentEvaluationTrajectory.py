@@ -126,8 +126,8 @@ def main():
 
         # function to prepare policy
         selfApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        # otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
-        otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
+        otherApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
+        # otherApproximatePolicy = lambda NNModel: stationaryAgentPolicy
         preparePolicy = PreparePolicy(selfApproximatePolicy, otherApproximatePolicy)
 
         # generate a set of starting conditions to maintain consistency across all the conditions

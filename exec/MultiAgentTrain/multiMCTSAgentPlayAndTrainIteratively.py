@@ -298,7 +298,7 @@ def main():
 # initRreplayBuffer
     replayBuffer = []
 
-    restoredIteration = 0
+    restoredIteration = 12150
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)

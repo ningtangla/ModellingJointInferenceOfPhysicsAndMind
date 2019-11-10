@@ -44,9 +44,11 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
+
     manipulatedVariables['selfIteration'] = [0, 6500]#list(range(0,6001,6000))
     manipulatedVariables['otherIteration'] = [0, 6500]#list(range(0,6001,6000))
     manipulatedVariables['selfId'] = [0]
+
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -100,6 +102,7 @@ def main():
 
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryObstacle.py'
     evalNumTrials = 18
+
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
@@ -108,7 +111,7 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)

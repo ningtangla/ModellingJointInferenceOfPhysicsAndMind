@@ -71,16 +71,16 @@ class TrainModelForConditions:
 
 def main():
     # important parameters
-    wolfId = 1
+    sheepId = 0
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = [64, 128, 256]
     manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4]
-    manipulatedVariables['depth'] = [2 ,4, 6]
+    manipulatedVariables['depth'] = [2, 4, 6]
 
-    # productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    # parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
@@ -94,7 +94,7 @@ def main():
     dataSetNumSimulations = 200
     killzoneRadius = 2
 
-    dataSetFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+    dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -105,8 +105,8 @@ def main():
     xPosIndex = [0, 1]
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
-    playAliveBonus = -0.05
-    playDeathPenalty = 1
+    playAliveBonus = 0.05
+    playDeathPenalty = -1
     playKillzoneRadius = 2
     playIsTerminal = IsTerminal(playKillzoneRadius, getSheepPos, getWolfPos)
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
@@ -123,7 +123,7 @@ def main():
     actionToOneHot = ActionToOneHot(actionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolfId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
     fuzzySearchParameterNames = ['sampleIndex']
@@ -147,7 +147,7 @@ def main():
     getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
-
+    import ipdb;ipdb.set_trace()
     # function to train NN model
     terminalThreshold = 1e-10
     lossHistorySize = 10
