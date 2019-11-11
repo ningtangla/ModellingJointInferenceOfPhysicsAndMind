@@ -11,7 +11,7 @@ from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, \
     LoadTrajectories, SaveAllTrajectories, \
@@ -28,9 +28,16 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
     establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, sampleAction, chooseGreedyAction
+from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
+def sampleAction(actionDist):
+    actions = list(actionDist.keys())
+    probs = list(actionDist.values())
+    normlizedProbs = [prob / sum(probs) for prob in probs]
+    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
+    selectedAction = actions[selectedIndex]
+    return selectedAction
 
 def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
     multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
@@ -121,7 +128,36 @@ class TrainOneAgent:
 
         return NNModel
 
+class ResetUniform:
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
+        self.simulation = simulation
+        self.qPosInit = np.asarray(qPosInit)
+        self.qVelInit = np.asarray(qVelInit)
+        self.numAgent = self.simulation.model.nsite
+        self.qPosInitNoise = qPosInitNoise
+        self.qVelInitNoise = qVelInitNoise
+        self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
 
+    def __call__(self):
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
+
+        self.simulation.data.qpos[:] = qPos
+        self.simulation.data.qvel[:] = qVel
+        self.simulation.forward()
+
+        xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
+
+        agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+        agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+        agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+        agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
+        startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
+
+        return startState
 def main():
     # Mujoco environment
     dirName = os.path.dirname(__file__)
@@ -178,7 +214,9 @@ def main():
     getStateFromNode = lambda node: list(node.id.values())[0]
 
     # sample trajectory
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
+    chooseGreedyActionList=[chooseGreedyAction,chooseGreedyAction]
+
+    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyActionList)
 
     # neural network init
     numStateSpace = 12
@@ -291,7 +329,7 @@ def main():
     # initRreplayBuffer
     replayBuffer = []
 
-    restoredIteration = 6000
+    restoredIteration = 0
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
