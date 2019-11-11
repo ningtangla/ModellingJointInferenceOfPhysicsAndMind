@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 class ComputeStatistics:
     def __init__(self, getTrajectories, measurementFunction):
         self.getTrajectories = getTrajectories
@@ -11,6 +12,7 @@ class ComputeStatistics:
         allMeasurements = np.array([self.measurementFunction(trajectory) for trajectory in allTrajectories])
         measurementMean = np.mean(allMeasurements, axis = 0)
         measurementStd = np.std(allMeasurements, axis = 0)
+
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
 
 
@@ -32,4 +34,10 @@ class GenerateInitQPosUniform:
         return qPosInit
 
 
+def conditionDfFromParametersDict(parametersDict):
+    levelNames = list(parametersDict.keys())
+    levelValues = list(parametersDict.values())
+    modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    conditionDf = pd.DataFrame(index=modelIndex)
 
+    return conditionDf

@@ -20,8 +20,8 @@ class TestAnalyticGeometryFunctions(unittest.TestCase):
     @data((0, 2, [1,2,3,4], [1,2]), (1, 2, [1,2,3,4], [3, 4]))
     @unpack
     def testGetAgentStateFromDataSetState(self, agentID, agentStateDim, dataSetState, groundTruth):
-        getAgentStateFromDataSetState = GetAgentStateFromDataSetState(agentID, agentStateDim)
-        self.assertTrue((np.array(getAgentStateFromDataSetState(dataSetState)) == np.array(groundTruth)).all())
+        getAgentStateFromDataSetState = GetAgentStateFromDataSetState(agentStateDim)
+        self.assertTrue((np.array(getAgentStateFromDataSetState(dataSetState, agentID)) == np.array(groundTruth)).all())
 
     @data(([0, 10], 5, True), ([0, 10], 11, False))
     @unpack

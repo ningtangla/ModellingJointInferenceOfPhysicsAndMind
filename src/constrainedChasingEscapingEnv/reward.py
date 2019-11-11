@@ -13,7 +13,18 @@ class RewardFunctionCompete():
             reward += self.deathPenalty
 
         return reward
+class RewardFunctionCompeteWithInterpolationTerminal():
+    def __init__(self, aliveBonus, deathPenalty, isTerminal):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.isTerminal = isTerminal
 
+    def __call__(self, lastState,currentState, action):
+        reward = self.aliveBonus
+        if self.isTerminal(lastState,currentState):
+            reward += self.deathPenalty
+
+        return reward
 
 class IsCollided:
     def __init__(self, minXDis, getSelfPos, getOtherPos):

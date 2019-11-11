@@ -125,7 +125,7 @@ def main():
         modelPath = getNNModelSavePath(manipulatedVariables)
         restoredModel = restoreVariables(initNNModel, modelPath)
         sheepPolicy = ApproximatePolicy(restoredModel, actionSpace)
-
+        
         # initWolfNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
         # wolfNNModelPath= os.path.join(dirName, '..', '..', 'data', 'evaluateSupervisedLearning',
         #                                     'wolfModel','killzoneRadius=0.5_maxRunningSteps=10_numSimulations=100_qPosInitNoise=9.7_qVelInitNoise=5_rolloutHeuristicWeight=0.1_trainSteps=99999')

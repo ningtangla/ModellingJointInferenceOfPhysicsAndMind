@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 class ResetUniform:
     def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise):
         self.simulation = simulation
@@ -9,7 +10,7 @@ class ResetUniform:
         self.numAgent = self.simulation.model.nsite
         self.qPosInitNoise = qPosInitNoise
         self.qVelInitNoise = qVelInitNoise
-        self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
+        self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
 
     def __call__(self):
         qPos = self.qPosInit + np.concatenate([np.random.uniform(low=-np.array(self.qPosInitNoise), high=np.array(self.qPosInitNoise)) for agentId in range(self.numAgent)])
@@ -21,16 +22,22 @@ class ResetUniform:
 
         xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
 
-        agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-        agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-        agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-        agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
+        agentQPos = lambda agentIndex: qPos[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentXPos = lambda agentIndex: xPos[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentQVel = lambda agentIndex: qVel[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentState = lambda agentIndex: np.concatenate(
+            [agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
 
         return startState
 
+
 class ResetUniformForLeashed:
-    def __init__(self, simulation, qPosInit, qVelInit, numAgent, tiedAgentIndex, ropePartIndex, maxRopePartLength, qPosInitNoise=0, qVelInitNoise=0):
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, tiedAgentIndex, ropePartIndex, maxRopePartLength,
+                 qPosInitNoise=0, qVelInitNoise=0):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
@@ -71,6 +78,7 @@ class ResetUniformForLeashed:
 
         return startState
 
+
 class TransitionFunction:
     def __init__(self, simulation, isTerminal, numSimulationFrames):
         self.simulation = simulation
@@ -98,9 +106,12 @@ class TransitionFunction:
             newQPos, newQVel = self.simulation.data.qpos, self.simulation.data.qvel
             newXPos = np.concatenate(self.simulation.data.site_xpos[:numAgent, :self.numJointEachSite])
 
-            agentNewQPos = lambda agentIndex: newQPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-            agentNewXPos = lambda agentIndex: newXPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-            agentNewQVel = lambda agentIndex: newQVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+            agentNewQPos = lambda agentIndex: newQPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                        agentIndex + 1)]
+            agentNewXPos = lambda agentIndex: newXPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                        agentIndex + 1)]
+            agentNewQVel = lambda agentIndex: newQVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                        agentIndex + 1)]
             agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewXPos(agentIndex),
                                                                agentNewQVel(agentIndex)])
             newState = np.asarray([agentNewState(agentIndex) for agentIndex in range(numAgent)])
@@ -110,6 +121,7 @@ class TransitionFunction:
 
         return newState
 
+
 class ResetUniformWithoutXPos:
     def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise):
         self.simulation = simulation
@@ -118,7 +130,7 @@ class ResetUniformWithoutXPos:
         self.numAgent = self.simulation.model.nsite
         self.qPosInitNoise = qPosInitNoise
         self.qVelInitNoise = qVelInitNoise
-        self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
+        self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
 
     def __call__(self):
         qPos = self.qPosInit + np.concatenate([np.random.uniform(low=-np.array(self.qPosInitNoise), high=np.array(self.qPosInitNoise)) for agentId in range(self.numAgent)])
@@ -128,15 +140,19 @@ class ResetUniformWithoutXPos:
         self.simulation.data.qvel[:] = qVel
         self.simulation.forward()
 
-        agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-        agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+        agentQPos = lambda agentIndex: qPos[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentQVel = lambda agentIndex: qVel[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentQVel(agentIndex)])
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
 
         return startState
 
+
 class ResetUniformWithoutXPosForLeashed:
-    def __init__(self, simulation, qPosInit, qVelInit, numAgent, tiedAgentIndex, ropePartIndex, maxRopePartLength, qPosInitNoise, qVelInitNoise):
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, tiedAgentIndex, ropePartIndex, maxRopePartLength,
+                 qPosInitNoise=0, qVelInitNoise=0):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
@@ -167,12 +183,15 @@ class ResetUniformWithoutXPosForLeashed:
         self.simulation.data.qvel[:] = qVel
         self.simulation.forward()
 
-        agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-        agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+        agentQPos = lambda agentIndex: qPos[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentQVel = lambda agentIndex: qVel[
+                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate([agentQPos(agentIndex), agentQVel(agentIndex)])
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
 
         return startState
+
 
 class TransitionFunctionWithoutXPos:
     def __init__(self, simulation, isTerminal, numSimulationFrames):
@@ -199,8 +218,10 @@ class TransitionFunctionWithoutXPos:
 
             newQPos, newQVel = self.simulation.data.qpos, self.simulation.data.qvel
 
-            agentNewQPos = lambda agentIndex: newQPos[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
-            agentNewQVel = lambda agentIndex: newQVel[self.numJointEachSite * agentIndex : self.numJointEachSite * (agentIndex + 1)]
+            agentNewQPos = lambda agentIndex: newQPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                        agentIndex + 1)]
+            agentNewQVel = lambda agentIndex: newQVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                        agentIndex + 1)]
             agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewQVel(agentIndex)])
             newState = np.asarray([agentNewState(agentIndex) for agentIndex in range(numAgent)])
 
@@ -214,7 +235,7 @@ class Transition3Objects:
     def __init__(self, simulation, numSimulationFrames):
         self.simulation = simulation
         self.numSimulationFrames = numSimulationFrames
-        self.numJointEachSite = self.simulation.model.njnt/self.simulation.model.nsite
+        self.numJointEachSite = self.simulation.model.njnt / self.simulation.model.nsite
 
     def __call__(self, state, actions):
         state = np.asarray(state)
@@ -237,11 +258,14 @@ class Transition3Objects:
             newXPos = np.concatenate(self.simulation.data.body_xpos[-numAgent:, :self.numJointEachSite])
 
             agentNewQPos = lambda agentIndex: newQPos[
-                                              self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+                                              self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                                                          agentIndex + 1)]
             agentNewXPos = lambda agentIndex: newXPos[
-                                              self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+                                              self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                                                          agentIndex + 1)]
             agentNewQVel = lambda agentIndex: newQVel[
-                                              self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+                                              self.numJointEachSite * agentIndex: self.numJointEachSite * (
+                                                          agentIndex + 1)]
             agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewXPos(agentIndex),
                                                                agentNewQVel(agentIndex)])
             newState = np.asarray([agentNewState(agentIndex) for agentIndex in range(numAgent)])
@@ -274,8 +298,9 @@ class WithinBounds:
         qPos = np.asarray(qPos)
         self.numJointEachSite = len(self.minQPos)
         numQPos = len(qPos)
-        numAgents = int(numQPos/self.numJointEachSite)
-        getAgentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        numAgents = int(numQPos / self.numJointEachSite)
+        getAgentQPos = lambda agentIndex: qPos[
+                                          self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentWithinBounds = lambda agentIndex: np.all(np.less_equal(getAgentQPos(agentIndex), self.maxQPos)) and \
                                                np.all(np.greater_equal(getAgentQPos(agentIndex), self.minQPos))
         allAgentsWithinbounds = all(agentWithinBounds(agentIndex) for agentIndex in range(numAgents))

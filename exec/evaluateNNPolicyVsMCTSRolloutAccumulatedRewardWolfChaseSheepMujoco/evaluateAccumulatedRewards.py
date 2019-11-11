@@ -2,6 +2,7 @@ import sys
 import os
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 from collections import OrderedDict
 import mujoco_py as mujoco
@@ -72,11 +73,13 @@ class GenerateTrajectories:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['policy'] = ['NNMaxRunningSteps=20', 'heatSeeking']
-    manipulatedVariables['evaluationMaxRunningSteps'] = [20]#[10, 100]
-    manipulatedVariables['trainSteps'] = list(range(0, 10000, 1000)) + list(range(10000, 100000, 10000)) + [100000-1]
-    killzoneRadius = 2
-    evalNumSamples = 250
+
+    manipulatedVariables['policy'] = ['NNMaxRunningSteps=10', 'heatSeeking']
+    manipulatedVariables['evaluationMaxRunningSteps'] = [100]
+    manipulatedVariables['trainSteps'] = list(range(0, 100000, 10000)) + [100000-1]
+    killzoneRadius = 0.5
+    evalNumSamples = 100
+
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
 
@@ -246,4 +249,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

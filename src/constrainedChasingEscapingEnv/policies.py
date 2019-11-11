@@ -14,6 +14,16 @@ class RandomPolicy:
         likelihood = {action: 1 / len(self.actionSpace) for action in self.actionSpace}
         return likelihood
 
+
+class RandomPolicyChooseAction:
+    def __init__(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def __call__(self, state):
+        action = random.choice(self.actionSpace)
+        return action
+
+
 class HeatSeekingDiscreteDeterministicPolicy:
     def __init__(self, actionSpace, getPredatorPos, getPreyPos, computeAngleBetweenVectors):
         self.actionSpace = actionSpace

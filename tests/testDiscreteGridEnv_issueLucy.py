@@ -79,10 +79,10 @@ class TestEnvironment(unittest.TestCase):
             self.assertAlmostEqual(truePulledForceCount[force], pulledForceList.count(force), delta=200)
 
     @data(
-        ((3, 4), 4),
-        ((1, 1), 2),
-        ((1, 3), 3),
-        ((0, 1), 2)
+        ((3, 4), 3),
+        ((1, 1), 1),
+        ((1, 3), 2),
+        ((0, 1), 1)
     )
     @unpack
     def testPullingForce(self, pullersRelativeLocation, trueForce):
@@ -216,9 +216,9 @@ class TestEnvironmentRandomizedCase(unittest.TestCase):
 
     @data(
         ([(5, 2), (2, 3), (3, 1)], {(-2, 0): 0.5, (0, 2): 0.5}),
-        ([(2, 1), (2, 3), (3, 3)], {(-2, 0): 1}),
+        ([(2, 1), (2, 3), (3, 3)], {(-1, 0): 1}),
         ([(5, 5), (1, 1), (4, 4)], {(-3, 0): 0.5, (0, -3): 0.5}),
-        ([(6, 3), (2, 4), (8, 8)], {(-5, 0): 0.5, (0, -5): 0.5})
+        ([(6, 3), (2, 4), (8, 8)], {(-4, 0): 0.5, (0, -4): 0.5})
     )
     @unpack
     def testPulledAgentForce(self, state, truePulledForceProb):
@@ -233,7 +233,7 @@ class TestEnvironmentRandomizedCase(unittest.TestCase):
 
 
     @data(
-        ([(2, 3), (3, 1), (2, 2)], {(2, 0): 0.5, (0, -2): 0.5}, {(0, 0): 1}, {(-2, 0): 0.5, (0, 2): 0.5}),
+        ([(2, 3), (3, 1), (2, 2)], {(1, 0): 0.5, (0, -1): 0.5}, {(0, 0): 1}, {(-1, 0): 0.5, (0, 1): 0.5}),
         ([(2, 3), (3, 3), (2, 1)], {(2, 0): 0.5, (0, 2): 0.5}, {(0, 0): 1}, {(-2, 0): 0.5, (0, -2): 0.5})
     )
     @unpack
@@ -267,9 +267,9 @@ class TestEnvironmentRandomizedCase(unittest.TestCase):
         ([(1, 1), (1, 1), (1, 1)], [(5, 2), (2, 3), (3, 1)],
          {(2, 2): 0.5, (4, 4): 0.5}),
         ([(1, 1), (1, 1), (1, 1)], [(2, 1), (2, 3), (3, 3)],
-         {(2,4): 1}),
+         {(3, 4): 1}),
         ([(0, -1), (1, 0), (-1, 0)],[(6, 3), (2, 4), (8, 8)],
-         {(2,8): 0.5, (7,3): 0.5})
+         {(3,8): 0.5, (7,4): 0.5})
     )
     @unpack
     def testTransition(self, allActions, state, truePulledAgentNextStateProb):
@@ -283,7 +283,6 @@ class TestEnvironmentRandomizedCase(unittest.TestCase):
 
         for nextState in pulledTrueNextState.keys():
             self.assertAlmostEqual(pulledTrueNextState[nextState], pulledNextStateList.count(nextState), delta=200)
-
 
     def tearDown(self):
         pass

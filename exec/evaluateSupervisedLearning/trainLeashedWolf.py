@@ -75,12 +75,12 @@ def main():
 
     # manipulated variables
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['miniBatchSize'] = 256 #[64, 128, 256, 512]
-    manipulatedVariables['learningRate'] =  1e-4#[1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = 6 #[2 ,4, 6, 8]
+    manipulatedVariables['miniBatchSize'] = [64, 128, 256, 512]
+    manipulatedVariables['learningRate'] =  [1e-2, 1e-3, 1e-4, 1e-5]
+    manipulatedVariables['depth'] = [2 ,4, 6, 8]
 
-    # productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
-    # parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+    parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
@@ -183,6 +183,15 @@ def main():
     trainIntervelIndexes = list(range(11))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
+<<<<<<< HEAD
+    # train models for all conditions
+    numCpuCores = os.cpu_count()
+    print(numCpuCores)
+    numCpuToUse = int(0.8*numCpuCores)
+    trainPool = mp.Pool(numCpuToUse)
+    #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
+    trainPool.map(trainModelForConditions, parametersAllCondtion)
+=======
     trainModelForConditions(manipulatedVariables)
     # train models for all conditions
     # numCpuCores = os.cpu_count()
@@ -191,6 +200,7 @@ def main():
     # trainPool = mp.Pool(numCpuToUse)
     # #trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     # trainPool.map(trainModelForConditions, parametersAllCondtion)
+>>>>>>> d99a65a4fec828ef40eb95b2dec94e99a812f707
 
 if __name__ == '__main__':
     main()

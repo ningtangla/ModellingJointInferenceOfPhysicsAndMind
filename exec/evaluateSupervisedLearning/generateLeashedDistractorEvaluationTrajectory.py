@@ -69,7 +69,7 @@ def main():
     trajectoryExtension = '.pickle'
     trainMaxRunningSteps = 25
     trainNumSimulations = 200
-    killzoneRadius = 1
+    killzoneRadius = 2
     distractorId = 3
 
     trajectoryFixedParameters = {'agentId': distractorId, 'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations}
@@ -177,14 +177,12 @@ def main():
         getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal, getResetFromTrial(trial), chooseGreedyAction)
         allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
+        numStateSpaceForPreTrainAgent = 18
+        generateModelForPreTrainAgent = GenerateModel(numStateSpaceForPreTrainAgent, numActionSpace, regularizationFactor)
+        initSheepNNModel = generateModelForPreTrainAgent(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initWolfNNModel = generateModelForPreTrainAgent(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
+        initMasterNNModel = generateModelForPreTrainAgent(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
-        generateSheepModel = GenerateModel(18, numActionSpace, regularizationFactor)
-        generateWolfModel = GenerateModel(18, numActionSpace, regularizationFactor)
-        generateMasterModel = GenerateModel(18, numActionSpace, regularizationFactor)
-
-        initSheepNNModel = generateSheepModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initWolfNNModel = generateWolfModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
-        initMasterNNModel = generateMasterModel(sharedWidths * 4, actionLayerWidths, valueLayerWidths)
 
 # sheep NN model
         sheepPreTrainModelPath = os.path.join('..', '..', 'data', 'evaluateSupervisedLearning', 'sheepAvoidRopeModel','agentId=0_depth=4_learningRate=0.0001_maxRunningSteps=25_miniBatchSize=256_numSimulations=200_trainSteps=20000')

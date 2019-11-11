@@ -45,9 +45,11 @@ def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
 
+
     manipulatedVariables['selfIteration'] = [0, 6500]#list(range(0,6001,6000))
     manipulatedVariables['otherIteration'] = [0, 6500]#list(range(0,6001,6000))
     manipulatedVariables['selfId'] = [0]
+
 
 
     levelNames = list(manipulatedVariables.keys())
@@ -65,9 +67,11 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
+
     maxRunningSteps = 150
 
     sheepAliveBonus = 1 / maxRunningSteps
+
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
@@ -104,14 +108,14 @@ def main():
     evalNumTrials = 18
 
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.4*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials,
             numCmdList)
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)

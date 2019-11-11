@@ -1,5 +1,6 @@
 import sys
 import os
+
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..'))
 
@@ -38,10 +39,12 @@ class GenerateTrajectories:
 def main():
     # manipulated variables and other important parameters
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['maxRunningSteps'] = [20]
+
+    manipulatedVariables['maxRunningSteps'] = [10]
     numSimulations = 100
-    numSamplesForCondition = {20: 1000}
-    killzoneRadius = 2
+    numSamplesForCondition = {10: 1000}
+    killzoneRadius = 0.5
+
 
     toSplitFrame = conditionDfFromParametersDict(manipulatedVariables)
 
@@ -73,7 +76,7 @@ def main():
     calculateScore = ScoreChild(cInit, cBase)
     selectChild = SelectChild(calculateScore)
 
-    getUniformActionPrior = lambda state: {action: 1/numActionSpace for action in actionSpace}
+    getUniformActionPrior = lambda state: {action: 1 / numActionSpace for action in actionSpace}
     initializeChildrenUniformPrior = InitializeChildren(actionSpace, transitInWolfMCTSSimulation,
                                                         getUniformActionPrior)
     expand = Expand(isTerminal, initializeChildrenUniformPrior)
@@ -133,3 +136,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

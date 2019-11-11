@@ -33,20 +33,26 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
+<<<<<<< HEAD
+    manipulatedVariables['agentId'] = [0]
+    manipulatedVariables['maxRunningSteps'] = [50]
+
+    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['killzoneRadius'] = [1]
+
+=======
     manipulatedVariables['agentId'] = [310]
     manipulatedVariables['maxRunningSteps'] = [250]
     manipulatedVariables['numSimulations'] = [300]
     manipulatedVariables['killzoneRadius'] = [0.5]
+>>>>>>> iterativeTrainSheepAndWolf
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
-    # manipulatedVariables['miniBatchSize'] = [256]#[64, 128, 256, 512]
-    # manipulatedVariables['learningRate'] =  [1e-4]#[1e-2, 1e-3, 1e-4, 1e-5]
-    # manipulatedVariables['depth'] = [4]#[2,4, 6, 8]
-    # manipulatedVariables['trainSteps'] = [20000]#list(range(0,100001, 20000))
 
     # manipulatedVariables['safeBound'] = [1.5]
     # manipulatedVariables['preyPowerRatio'] =[0.7]
     # manipulatedVariables['wallPunishRatio'] = [0.6]
+
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     conditionParametersAll = [dict(list(i)) for i in productedValues]
 

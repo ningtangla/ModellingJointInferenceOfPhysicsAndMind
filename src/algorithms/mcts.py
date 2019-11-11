@@ -196,6 +196,60 @@ class StochasticMCTS:
         actionDistribution = self.outputDistribution(roots)
         return actionDistribution
 
+class ExpandWithInterpolationTerminal:
+    def __init__(self, isTerminal, initializeChildren):
+        self.isTerminal = isTerminal
+        self.initializeChildren = initializeChildren
+
+    def __call__(self, leafNode):
+        currentState = list(leafNode.id.values())[0]
+        if leafNode.is_root:
+            lastState=currentState
+        else:
+            lastState=list(leafNode.parent.id.values())[0]
+        if not self.isTerminal(lastState,currentState):
+            leafNode.isExpanded = True
+            leafNode = self.initializeChildren(leafNode)
+
+        return leafNode
+
+
+class RollOutWithInterpolationTerminal:
+    def __init__(self, rolloutPolicy, maxRolloutStep, transitionFunction, rewardFunction, isTerminal, rolloutHeuristic):
+        self.transitionFunction = transitionFunction
+        self.rewardFunction = rewardFunction
+        self.maxRolloutStep = maxRolloutStep
+        self.rolloutPolicy = rolloutPolicy
+        self.isTerminal = isTerminal
+        self.rolloutHeuristic = rolloutHeuristic
+
+    def __call__(self, leafNode):
+        currentState = list(leafNode.id.values())[0]
+        totalRewardForRollout = 0
+
+        if leafNode.is_root:
+            lastState=currentState
+        else:
+            lastState=list(leafNode.parent.id.values())[0]
+
+        for rolloutStep in range(self.maxRolloutStep):
+            action = self.rolloutPolicy(currentState)
+            totalRewardForRollout += self.rewardFunction(lastState,currentState, action)
+            if self.isTerminal(lastState,currentState):
+                break
+            nextState = self.transitionFunction(currentState, action)
+            lastState=currentState
+            currentState = nextState
+
+        heuristicReward = 0
+        if not self.isTerminal(lastState,currentState):
+            heuristicReward = self.rolloutHeuristic(currentState)
+        totalRewardForRollout += heuristicReward
+
+        return totalRewardForRollout
+
+
+
 
 def main():
     pass

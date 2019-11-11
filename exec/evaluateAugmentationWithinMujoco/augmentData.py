@@ -53,8 +53,8 @@ class GenerateSymmetricState:
         ]
         symmetricState = []
         for state in groupedState:
-            state[self.xPosIndex] = self.calibrateState(createSymmetricVector(symmetry, state[self.xPosIndex]))
-            state[self.velIndex] = self.calibrateState(createSymmetricVector(symmetry, state[self.velIndex]))
+            state[self.xPosIndex] = np.round(createSymmetricVector(symmetry, state[self.xPosIndex]), 10)
+            state[self.velIndex] = np.round(createSymmetricVector(symmetry, state[self.velIndex]), 10)
             symmetricState.append(state)
         flattenedState = np.concatenate(symmetricState)
         return flattenedState
