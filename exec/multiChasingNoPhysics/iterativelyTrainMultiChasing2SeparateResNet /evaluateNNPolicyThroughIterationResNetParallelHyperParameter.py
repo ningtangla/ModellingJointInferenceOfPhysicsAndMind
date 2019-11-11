@@ -43,11 +43,12 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,200,350]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,200,350]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = [0,40,390,590]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,40,390,590]#[-999]+list(range(0,10001,2000))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
     selfId=0
+    # manipulatedVariables['selfId'] = [0]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -65,11 +66,12 @@ def main():
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, xPosIndex)
     getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, xPosIndex)
- 
-    
+
+
     trainMaxRunningSteps = 150
     trainNumSimulations = 100
     killzoneRadius = 30
+    # isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
     isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
@@ -82,9 +84,33 @@ def main():
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
+    # playReward = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
+    # actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    # numActionSpace = len(actionSpace)
+    # numStateSpace = 12
+    # regularizationFactor = 1e-4
+    # sharedWidths = [256]
+    # actionLayerWidths = [256]
+    # valueLayerWidths = [256]
+    # generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
+
+    # NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
-   
+    # NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data',
+    #                                     'multiAgentTrain', 'multiMCTSAgentResNet', 'NNModelRes')
+    # NNModelSaveExtension = ''
+    # getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNFixedParameters)
+
+    # depth = 17
+    # resBlockSize = 2
+    # dropoutRate = 0.0
+    # initializationMethod = 'uniform'
+    # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in range(numAgents)]
+
+    # for agentId  in range(numAgents):
+    #     modelPath = getNNModelSavePath({'iterationIndex':-1,'agentId':agentId})
+    #     saveVariables(multiAgentNNmodel[agentId], modelPath)
 
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
@@ -99,7 +125,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -117,10 +143,13 @@ def main():
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
 
-   
+    # accumulateRewards = AccumulateRewards(decay, playReward)
+    # measurementFunction = lambda trajectory: accumulateRewards(trajectory)[0]
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     print(statisticsDf)
+  # plot the results
+
 
     # plot the results
     fig = plt.figure()
@@ -140,13 +169,14 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
 
-            axForDraw.set_ylim(-1, 1.5)
+            axForDraw.set_ylim(-1, 1)
+            # plt.ylabel('Accumulated rewards')
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 
 
 
-    plt.suptitle('SheepNNResnet')
+    plt.suptitle('2SeperateMCTSResNetWolf')
     plt.legend(loc='best')
     plt.show()
 

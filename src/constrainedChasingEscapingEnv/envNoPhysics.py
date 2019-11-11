@@ -61,6 +61,34 @@ class TransiteForNoPhysics():
         return newState
 
 
+class UnpackCenterControlAction:
+    def __init__(self, centerControlIndexList):
+        self.centerControlIndexList = centerControlIndexList
+
+    def __call__(self, centerControlAction):
+        upackedAction = []
+        for index, action in enumerate(centerControlAction):
+            if index in self.centerControlIndexList:
+                [upackedAction.append(subAction) for subAction in action]
+            else:
+                upackedAction.append(action)
+        return np.array(upackedAction)
+
+
+class TransiteForNoPhysicsWithCenterControlAction():
+    def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
+        self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
+        self.unpackCenterControlAction = unpackCenterControlAction
+
+    def __call__(self, state, action):
+        actionFortansit = self.unpackCenterControlAction(action)
+        newState = state + np.array(actionFortansit)
+        checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
+            position, velocity) for position, velocity in zip(newState, actionFortansit)]
+        newState, newAction = list(zip(*checkedNewStateAndVelocities))
+        return newState
+
+
 class IsTerminal():
     def __init__(self, getPredatorPos, getPreyPos, minDistance):
         self.getPredatorPos = getPredatorPos
@@ -73,6 +101,30 @@ class IsTerminal():
         predatorPosition = self.getPredatorPos(state)
         L2Normdistance = np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
         if L2Normdistance <= self.minDistance:
+            terminal = True
+        return terminal
+
+
+class IsTerminalWithInterpolation():
+    def __init__(self, getPredatorPos, getPreyPos, minDistance, divideDegree):
+        self.getPredatorPos = getPredatorPos
+        self.getPreyPos = getPreyPos
+        self.minDistance = minDistance
+        self.divideDegree = divideDegree
+
+    def __call__(self, lastState, currentState):
+        terminal = False
+
+        getPositionList = lambda getPos, lastState, currentState: np.linspace(getPos(lastState), getPos(currentState), self.divideDegree, endpoint=True)
+
+        getL2Normdistance = lambda preyPosition, predatorPosition: np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2)
+
+        preyPositionList = getPositionList(self.getPreyPos, lastState, currentState)
+        predatorPositionList = getPositionList(self.getPredatorPos, lastState, currentState)
+
+        L2NormdistanceList = [getL2Normdistance(preyPosition, predatorPosition) for (preyPosition, predatorPosition) in zip(preyPositionList, predatorPositionList)]
+
+        if np.any(np.array(L2NormdistanceList) <= self.minDistance):
             terminal = True
         return terminal
 
