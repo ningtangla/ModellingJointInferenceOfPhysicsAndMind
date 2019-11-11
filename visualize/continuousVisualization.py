@@ -170,6 +170,5 @@ class ChaseTrialWithTraj:
             if self.saveImage == True:
                 pg.image.save(screen, imagePath + '/' + format(timeStep, '04') + ".png")
 
-
         return
 
