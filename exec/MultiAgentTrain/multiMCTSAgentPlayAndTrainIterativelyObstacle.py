@@ -28,7 +28,7 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
     establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, chooseGreedyAction,SampleAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 def sampleAction(actionDist):

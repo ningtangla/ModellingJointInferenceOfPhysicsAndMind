@@ -14,7 +14,7 @@ def main():
     physicsDynamicsPath = os.path.join(dirName, 'testEnv', 'twoAgentsTwoObstaclesDemo.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
-
+    print(physicsSimulation.model.nsite)
     # physicsSimulation.model.body_mass[8] = 30
     physicsSimulation.model.geom_friction[:,0] = 0.15
     physicsSimulation.set_constants()

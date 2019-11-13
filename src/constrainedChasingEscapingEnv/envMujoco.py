@@ -3,7 +3,7 @@ import math
 
 
 class ResetUniform:
-    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise):
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
@@ -13,8 +13,11 @@ class ResetUniform:
         self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
 
     def __call__(self):
-        qPos = self.qPosInit + np.concatenate([np.random.uniform(low=-np.array(self.qPosInitNoise), high=np.array(self.qPosInitNoise)) for agentId in range(self.numAgent)])
-        qVel = self.qVelInit + np.concatenate([np.random.uniform(low=-np.array(self.qVelInitNoise), high=np.array(self.qVelInitNoise)) for agentId in range(self.numAgent)])
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
@@ -22,12 +25,9 @@ class ResetUniform:
 
         xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
 
-        agentQPos = lambda agentIndex: qPos[
-                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
-        agentXPos = lambda agentIndex: xPos[
-                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
-        agentQVel = lambda agentIndex: qVel[
-                                       self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate(
             [agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
@@ -50,19 +50,23 @@ class ResetUniformForLeashed:
         self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
 
     def __call__(self):
-        qPos = self.qPosInit + np.concatenate([np.random.uniform(low=-np.array(self.qPosInitNoise), high=np.array(self.qPosInitNoise)) for agentId in range(self.numAgent)])
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
         tiedBasePos = qPos[self.numJointEachSite * self.tiedBasePosAgentIndex: self.numJointEachSite * (self.tiedBasePosAgentIndex + 1)]
         sampledRopeLength = np.random.uniform(low = 0, high = self.numRopePart * self.maxRopePartLength)
         sampledPartLength = np.arange(sampledRopeLength/(self.numRopePart + 1), sampledRopeLength, sampledRopeLength/(self.numRopePart + 1))[:self.numRopePart]
         theta = np.random.uniform(low = 0, high = math.pi)
 
-        tiedFollowPosAgentPos = tiedBasePos + np.array([sampledRopeLength * np.cos(theta), sampledRopeLength * np.sin(theta), 0])
+        tiedFollowPosAgentPos = tiedBasePos + np.array([sampledRopeLength * np.cos(theta), sampledRopeLength * np.sin(theta)])
         qPos[self.numJointEachSite * self.tiedFollowPosAgentIndex : self.numJointEachSite * (self.tiedFollowPosAgentIndex + 1)] = tiedFollowPosAgentPos
-        ropePartPos = np.array(list(zip(sampledPartLength * np.cos(theta), sampledPartLength * np.sin(theta), 0*sampledPartLength))) + tiedBasePos
+        ropePartPos = np.array(list(zip(sampledPartLength * np.cos(theta), sampledPartLength * np.sin(theta)))) + tiedBasePos
         qPos[-self.numJointEachSite * self.numRopePart : ] = np.concatenate(ropePartPos)
 
-        qVel = self.qVelInit + np.concatenate([np.random.uniform(low=-np.array(self.qVelInitNoise), high=np.array(self.qVelInitNoise)) for agentId in range(self.numAgent)])
-        qVel[-self.numJointEachSite * self.numRopePart : ] = 0
+        qVelSampled = np.concatenate([np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel - self.numRopePart * self.numJointEachSite),\
+                                      np.zeros(self.numRopePart * self.numJointEachSite)])
+        qVel = self.qVelInit + qVelSampled
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
@@ -123,7 +127,7 @@ class TransitionFunction:
 
 
 class ResetUniformWithoutXPos:
-    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise):
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise=0, qVelInitNoise=0):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
@@ -133,8 +137,11 @@ class ResetUniformWithoutXPos:
         self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
 
     def __call__(self):
-        qPos = self.qPosInit + np.concatenate([np.random.uniform(low=-np.array(self.qPosInitNoise), high=np.array(self.qPosInitNoise)) for agentId in range(self.numAgent)])
-        qVel = self.qVelInit + np.concatenate([np.random.uniform(low=-np.array(self.qVelInitNoise), high=np.array(self.qVelInitNoise)) for agentId in range(self.numAgent)])
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
@@ -165,19 +172,23 @@ class ResetUniformWithoutXPosForLeashed:
         self.numJointEachSite = int(self.simulation.model.njnt/self.simulation.model.nsite)
 
     def __call__(self):
-        qPos = self.qPosInit + np.concatenate([np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise) for agentId in range(self.numAgent)])
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
         tiedBasePos = qPos[self.numJointEachSite * self.tiedBasePosAgentIndex: self.numJointEachSite * (self.tiedBasePosAgentIndex + 1)]
         sampledRopeLength = np.random.uniform(low = 0, high = self.numRopePart * self.maxRopePartLength)
         sampledPartLength = np.arange(sampledRopeLength/(self.numRopePart + 1), sampledRopeLength, sampledRopeLength/(self.numRopePart + 1))[:self.numRopePart]
         theta = np.random.uniform(low = 0, high = math.pi)
 
-        tiedFollowPosAgentPos = tiedBasePos + np.array([sampledRopeLength * np.cos(theta), sampledRopeLength * np.sin(theta), 0])
+        tiedFollowPosAgentPos = tiedBasePos + np.array([sampledRopeLength * np.cos(theta), sampledRopeLength * np.sin(theta)])
         qPos[self.numJointEachSite * self.tiedFollowPosAgentIndex : self.numJointEachSite * (self.tiedFollowPosAgentIndex + 1)] = tiedFollowPosAgentPos
-        ropePartPos = np.array(list(zip(sampledPartLength * np.cos(theta), sampledPartLength * np.sin(theta), 0*sampledPartLength))) + tiedBasePos
+        ropePartPos = np.array(list(zip(sampledPartLength * np.cos(theta), sampledPartLength * np.sin(theta)))) + tiedBasePos
         qPos[-self.numJointEachSite * self.numRopePart : ] = np.concatenate(ropePartPos)
 
-        qVel = self.qVelInit + np.concatenate([np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise) for agentId in range(self.numAgent)])
-        qVel[-self.numJointEachSite * self.numRopePart : ] = 0
+        qVelSampled = np.concatenate([np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel - self.numRopePart * self.numJointEachSite),\
+                                      np.zeros(self.numRopePart * self.numJointEachSite)])
+        qVel = self.qVelInit + qVelSampled
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel

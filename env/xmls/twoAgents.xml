@@ -4,7 +4,7 @@
     <geom rgba="0 0 0 1"/>
 </default>
     <worldbody>
- 	<light diffuse=".2 .2 .2" pos="0 0 20" dir="0 0 -1" mode="track"/> 
+ 	<light diffuse=".2 .2 .2" pos="0 0 20" dir="0 0 -1" mode="track"/>
 	<body>
 	  <geom name='floor' pos='0 0 -0.4' size='10 10 .1' mass="10000" type='box' condim='3' rgba=".9 .9 .9 1"/>
 		<camera name="center" mode="fixed" pos="0 0 30" />
@@ -15,10 +15,10 @@
 	<body>
 	  <geom name='wall2' pos='10.1 0 -0.2' size='.1 10.1 .5' mass="10000" type='box' condim='3'/>
 	</body>
-	<body> 
+	<body>
 	  <geom name='wall3' pos='0 -10.1 -0.2' size='10 .1 .5' mass="10000" type='box' condim='3'/>
 	</body>
-	<body>  
+	<body>
 	  <geom name='wall4' pos='0 10.1 -0.2' size='10 .1 .5' mass="10000" type='box' condim='3'/>
 	</body>
  	<body name="prey" pos="0 0 0">
@@ -37,12 +37,12 @@
     </worldbody>
 
     <actuator>
-     
+
 
         <motor gear="10" joint="prey0"/>
         <motor gear="10" joint="prey1"/>
 
-   	<motor gear="10" joint="predator0"/>
+   	    <motor gear="10" joint="predator0"/>
         <motor gear="10" joint="predator1"/>
 
     </actuator>
