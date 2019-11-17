@@ -1,32 +1,28 @@
-import time
-import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
-
-import json
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..','..'))
 import numpy as np
+import pickle
+import random
+import json
 from collections import OrderedDict
-import pandas as pd
-from itertools import product
-import mujoco_py as mujoco
-
+import itertools as it
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.envMujoco import  IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,HeuristicDistanceToTarget
-from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
-    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.constrainedChasingEscapingEnv.policies import RandomPolicy
+import mujoco_py as mujoco
+import src.constrainedChasingEscapingEnv.reward as reward
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, RandomPolicy,HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
-from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
-from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
-    ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand,RollOut,establishSoftmaxActionDist
-from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
-from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+
+from src.episode import chooseGreedyAction,SampleTrajectory
+
+
+
+
+import time
+from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
+
 class CheckAngentStackInWall:
     def __init__(self, wallList,agentMaxSize):
         self.wallList=wallList
@@ -37,9 +33,33 @@ class CheckAngentStackInWall:
         posList=qPosList.reshape(-1,2)
         isOverlapList=[np.all(np.abs(np.add(pos,-center))<diag)  for (center,diag) in zip (wallCenterList,wallExpandHalfDiagonalList) for pos in posList]
         return np.any(isOverlapList)
-
-class ResetUniformInEnvWithObstacles:
-    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,checkAngentStackInWall):
+class SamplePositionInObstaclesEnv:
+    def __init__(self,simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,checkAngentStackInWall,isResetOnTerminal):
+        self.simulation = simulation
+        self.qPosInit = np.asarray(qPosInit)
+        self.qVelInit = np.asarray(qVelInit)
+        self.numAgent = numAgent
+        self.qPosInitNoise = qPosInitNoise
+        self.qVelInitNoise = qVelInitNoise
+        self.isResetOnTerminal=isResetOnTerminal
+        self.checkAngentStackInWall=checkAngentStackInWall
+    def __call__(self):
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        while self.checkAngentStackInWall(qPos) or self.isResetOnTerminal(qPos) :
+            qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
+        return [qPos,qVel]
+class IsResetOnTerminal:
+    def __init__(self,killZoneRaius):
+        self.killZoneRaius=killZoneRaius
+    def __call__(self,qPos):
+        pointList=qPos.reshape(-1,2)
+        isTerminalList=[np.linalg.norm((pos0 - pos1), ord=2)<self.killZoneRaius  for pos0,pos1 in it.combinations(pointList,2)]
+        return np.any(isTerminalList)
+class FixResetUniformInEnvWithObstacles:
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,resetList):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
@@ -47,17 +67,10 @@ class ResetUniformInEnvWithObstacles:
         self.qPosInitNoise = qPosInitNoise
         self.qVelInitNoise = qVelInitNoise
         self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
-        self.checkAngentStackInWall=checkAngentStackInWall
-    def __call__(self):
-        numQPos = len(self.simulation.data.qpos)
-        numQVel = len(self.simulation.data.qvel)
+        self.resetList=resetList
+    def __call__(self,trailIndex):
 
-
-        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
-
-        while self.checkAngentStackInWall(qPos):
-            qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
-        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
+        qPos,qVel =self.resetList[trailIndex]
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
@@ -73,7 +86,8 @@ class ResetUniformInEnvWithObstacles:
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
 
         return startState
-class SampleTrajectoryWithRender:
+
+class FixSampleTrajectoryWithRender:
     def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
         self.maxRunningSteps = maxRunningSteps
         self.transit = transit
@@ -83,11 +97,12 @@ class SampleTrajectoryWithRender:
         self.render = render
         self.renderOn = renderOn
 
-    def __call__(self, policy):
-        state = self.reset()
+    def __call__(self, policy,trailIndex):
+        state = self.reset(trailIndex)
 
-        while self.isTerminal(state):
-            state = self.reset()
+        # while self.isTerminal(state):
+        #     state = self.reset(trailIndex)
+        #     print('isTerminal')
 
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
@@ -105,33 +120,42 @@ class SampleTrajectoryWithRender:
         return trajectory
 
 
+
 def main():
-    # check file exists or not
-    dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
-    if not os.path.exists(trajectoriesSaveDirectory):
-        os.makedirs(trajectoriesSaveDirectory)
-
-    trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 30
-    numSimulations = 200
-    killzoneRadius = 2
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':20}
-
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
+
+    # parametersForTrajectoryPath['sampleOneStepPerTraj']=1 #0
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    # parametersForTrajectoryPath={}
-    # startSampleIndex=0
-    # endSampleIndex=12
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    trainSteps = int(parametersForTrajectoryPath['trainSteps'])
+    depth=int(parametersForTrajectoryPath['depth'])
+    dataSize=int(parametersForTrajectoryPath['dataSize'])
+
+
+
+    # parametersForTrajectoryPath = {}
+    # depth = 5
+    # dataSize = 5000
+    # trainSteps = 50000
+    # startSampleIndex = 0
+    # endSampleIndex = 100
+
+
+    killzoneRadius = 2
+    numSimulations = 200
+    maxRunningSteps = 30
+
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    trajectorySaveExtension = '.pickle'
+    dirName = os.path.dirname(__file__)
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle','evaluateTrajectories')
+    if not os.path.exists(trajectoriesSaveDirectory):
+        os.makedirs(trajectoriesSaveDirectory)
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
@@ -149,8 +173,12 @@ def main():
         numAgents = 2
         qVelInitNoise = 8
         qPosInitNoise = 9.7
-
-        reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
+        numTrials=endSampleIndex-startSampleIndex
+        np.random.seed(startSampleIndex*endSampleIndex)
+        isResetOnTerminal=IsResetOnTerminal(killzoneRadius)
+        samplePositionInObstaclesEnv=SamplePositionInObstaclesEnv(physicsSimulation,qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall,isResetOnTerminal)
+        initPositionList = [samplePositionInObstaclesEnv() for i in range(numTrials)]
+        reset = FixResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,initPositionList)
 
         agentIds = list(range(numAgents))
         sheepId = 0
@@ -158,109 +186,64 @@ def main():
         xPosIndex = [2, 3]
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-
-        sheepAliveBonus = 1 / maxRunningSteps
-        wolfAlivePenalty = -sheepAliveBonus
-
-        sheepTerminalPenalty = -1
-        wolfTerminalReward = 1
-        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
-        rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-        rewardMultiAgents = [rewardSheep, rewardWolf]
-
-        decay = 1
-        accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
-
-        # NNGuidedMCTS init
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
-
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
+        numactionSpace=len(actionSpace)
+        # neural network init
+        numStateSpace = 12
+        regularizationFactor = 1e-4
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
+        resBlockSize = 2
+        dropoutRate = 0.0
+        initializationMethod = 'uniform'
+        generateWolvesModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
+        initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trainedResNNModels')
+
+        wolfId = 1
+        NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
+        NNModelSaveExtension=' '
+        getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParametersWolves)
+        wolvesTrainedModelPath = getNNModelSavePath({'trainSteps':trainSteps,'depth':depth,'dataSize':dataSize})
+        wolvesTrainedModel = restoreVariables(initWolvesNNModel, wolvesTrainedModelPath)
+        wolfPolicy = ApproximatePolicy(wolvesTrainedModel, actionSpace)
 
         randomSheepPolicy=RandomPolicy(actionSpace)
         sheepPolicy=randomSheepPolicy
 
 
-
         renderOn = False
         render=None
         if renderOn:
+
             from exec.evaluateNoPhysicsEnvWithRender import Render
             import pygame as pg
             from pygame.color import THECOLORS
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
             circleSize = 10
+
             saveImage = False
             saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
+
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
-
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
-
-
-        # select child
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
-
-        # prior
-        getActionPrior = lambda state: {action: 1 / len(actionSpace) for action in actionSpace}
-
-    # load chase nn policy
-
-        def wolvesTransit(state, action):
-             return transit(
-            state, [chooseGreedyAction(sheepPolicy(state)),action])
-
-        # reward function
-        aliveBonus = -1 / maxRunningSteps
-        deathPenalty = 1
-        rewardFunction = RewardFunctionCompete(
-            aliveBonus, deathPenalty, isTerminal)
-
-        # initialize children; expand
-        initializeChildren = InitializeChildren(
-            actionSpace, wolvesTransit, getActionPrior)
-        expand = Expand(isTerminal, initializeChildren)
-
-        # random rollout policy
-        numWolfActionSpace=len(actionSpace)
-        def rolloutPolicy(
-            state): return actionSpace[np.random.choice(range(numWolfActionSpace))]
-
-        # rollout
-        rolloutHeuristicWeight = 0.0
-        rolloutHeuristic = HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
-
-
-        maxRolloutSteps = 20
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit,rewardFunction, isTerminal, rolloutHeuristic)
-
-        wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
-
+        sampleTrajectory = FixSampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
         # All agents' policies
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
+        trajectories = [sampleTrajectory(policy,sampleIndex-startSampleIndex) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
-        trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
-        print([len(traj) for traj in trajectories])
         saveToPickle(trajectories, trajectorySavePath)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

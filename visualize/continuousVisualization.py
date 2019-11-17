@@ -144,6 +144,8 @@ class DrawState:
 
     def __call__(self, numOfAgent, state, circleColorList):
         self.drawBackGround()
+        print (state)
+
         for agentIndex in range(numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
             agentColor = circleColorList[agentIndex]

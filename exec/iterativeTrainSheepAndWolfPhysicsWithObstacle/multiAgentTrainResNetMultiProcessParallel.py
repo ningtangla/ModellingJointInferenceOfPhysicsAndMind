@@ -170,7 +170,7 @@ def iterateTrainOneCondition(parameters):
     numTrainStepEachIteration = int(parameters['numTrainStepEachIteration'])
     numTrajectoriesPerIteration = int(parameters['numTrajectoriesPerIteration'])
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgents.xml')
+    physicsDynamicsPath = physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles2.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -182,7 +182,7 @@ def iterateTrainOneCondition(parameters):
     qPosInitNoise = 9.7
 
     agentMaxSize=0
-    wallList=[[0,0,4,4],[8,8,1,1]]
+    wallList=[[0,2,0.5,1.75],[0,-2,0.5,1.75]]
     checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
     reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
@@ -322,7 +322,7 @@ def iterateTrainOneCondition(parameters):
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
     # restore modelrestoredIteration
-    restoredIteration=240#0
+    restoredIteration=0#0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId,  'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -391,7 +391,7 @@ def main():
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     #Sample Trajectory Before Train to fill Buffer
-    miniBatchSize = 16
+    miniBatchSize = 256
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
@@ -400,7 +400,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = False
+    prepareBefortrainData = True
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
