@@ -43,9 +43,9 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,200,350]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,200,350]#[-999]+list(range(0,10001,2000)),
-    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['selfIteration'] = [0,50,100,150,200,250]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,50,100,150,200,250]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['numTrainStepEachIteration'] = [4]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
     selfId=0
 
@@ -65,8 +65,8 @@ def main():
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, xPosIndex)
     getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, xPosIndex)
- 
-    
+
+
     trainMaxRunningSteps = 150
     trainNumSimulations = 100
     killzoneRadius = 30
@@ -84,7 +84,7 @@ def main():
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
     dirName = os.path.dirname(__file__)
-   
+
 
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
@@ -117,7 +117,7 @@ def main():
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
 
-   
+
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     print(statisticsDf)

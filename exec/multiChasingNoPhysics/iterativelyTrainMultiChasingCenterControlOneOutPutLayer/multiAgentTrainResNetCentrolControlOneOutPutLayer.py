@@ -195,7 +195,7 @@ def iterateTrainOneCondition(parameterOneCondition):
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-    restoredIteration = 125
+    restoredIteration = 255
 
     for agentId in trainableAgentIds:
         # creat step 0 for evaluate
