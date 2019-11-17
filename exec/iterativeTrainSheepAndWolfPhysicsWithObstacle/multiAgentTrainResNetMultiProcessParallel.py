@@ -393,7 +393,7 @@ def main():
     #Sample Trajectory Before Train to fill Buffer
     miniBatchSize = 256
     numTrajectoriesToStartTrain = 4 * miniBatchSize
-    sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
+    sampleTrajectoryFileName = 'prepareMultiMCTSAgentTrajectoryObstacle.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
