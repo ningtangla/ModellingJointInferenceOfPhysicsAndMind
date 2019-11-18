@@ -116,8 +116,7 @@ class TransitionFunction:
                         agentIndex + 1)]
             agentNewQVel = lambda agentIndex: newQVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (
                         agentIndex + 1)]
-            agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewXPos(agentIndex),
-                                                               agentNewQVel(agentIndex)])
+            agentNewState = lambda agentIndex: np.concatenate([agentNewQPos(agentIndex), agentNewXPos(agentIndex),agentNewQVel(agentIndex)])
             newState = np.asarray([agentNewState(agentIndex) for agentIndex in range(numAgent)])
 
             if self.isTerminal(newState):

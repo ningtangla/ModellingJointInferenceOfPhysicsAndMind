@@ -25,11 +25,11 @@ def main():
     # del trajectory[-1]
     # print(trajectorygg.pop())
     maxRunningSteps = 30
-    numSimulations = 200
+    numSimulations = 50
     killzoneRadius = 2
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
-    numTrials=7
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'numTrials':numTrials}
+    numTrials=6
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'numTrials':numTrials,'maxRolloutSteps':20}
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
     trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
     trajectoryExtension = '.pickle'
@@ -58,9 +58,9 @@ def main():
             lineWidth = 3
             xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
             yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
-            obstacle1Pos = [390.5, 289.8, 19, 106]
-            obstacle2Pos = [390.5, 403.8, 19, 106]
-            allObstaclePos = [obstacle1Pos, obstacle2Pos]
+            rescaleObstacle1Pos = [390.5, 328.5, 19, 66.5]
+            rescaleObstacle2Pos = [390.5, 404.75, 19, 66.5]
+            allObstaclePos = [rescaleObstacle1Pos, rescaleObstacle2Pos]
             screenColor = THECOLORS['black']
             lineColor = THECOLORS['white']
 
