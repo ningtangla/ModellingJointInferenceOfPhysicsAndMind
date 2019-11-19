@@ -11,28 +11,23 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 def main():
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles2.xml')
+    physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles3.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
     # physicsSimulation.model.body_mass[8] = 30
+
     physicsSimulation.model.geom_friction[:,0] = 0.15
+
     physicsSimulation.set_constants()
     physicsSimulation.forward()
 
     # physicsSimulation.data.qpos[:] = np.array(init).flatten()
-    #physicsSimulation.step()
 
 
-    # baselinePhysicsDynamicsPath = os.path.join(dirName,  'testEnv', 'chase10.xml')
-    # baselinePhysicsModel = mujoco.load_model_from_path(baselinePhysicsDynamicsPath)
-    # #baselinePhysicsModel.body_pos[-12: , :2] = init
-    # baselinePhysicsSimulation = mujoco.MjSim(baselinePhysicsModel)
-    # #baselinePhysicsSimulation.set_constants()
-
-    # baselinePhysicsSimulation.forward()
-
-    #__import__('ipdb').set_trace()
+    qPos=np.array([-5.5, -5, 5, 0]).flatten()
+    physicsSimulation.data.qpos[:] = qPos
+    physicsSimulation.step()
 
 
     physicsViewer = mujoco.MjViewer(physicsSimulation)
@@ -47,11 +42,11 @@ def main():
             print(physicsSimulation.data.qvel, '!!!')
             print(physicsSimulation.data.qpos, '~~~')
             print(physicsSimulation.data.body_xpos, '...')
-        if frameIndex % 20 == 0 and frameIndex > 200:
-            action = np.array([10,10, 0, 0])
+        if frameIndex % 20 ==   0 and frameIndex > 200:
+            action = np.array([7,7, -10, 0])
             physicsSimulation.data.ctrl[:] = action
-        if frameIndex % 20 == 0 and frameIndex > 500:
-            action = np.array([-10, 0, -10,-10])
+        if frameIndex % 1 == 0 and frameIndex > 500:
+            action = np.array([7, 7, -10,0])
             physicsSimulation.data.ctrl[:] = action
 
             physicsSimulation.data.ctrl[:] = action

@@ -24,23 +24,23 @@ def main():
     # trajectorygg = trajectory.copy()
     # del trajectory[-1]
     # print(trajectorygg.pop())
-    maxRunningSteps = 30
-    numSimulations = 50
-    killzoneRadius = 2
+    maxRunningSteps = 50
+    numSimulations = 200
+    killzoneRadius = 1
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     numTrials=6
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'numTrials':numTrials,'maxRolloutSteps':20}
-    # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':30,'agentId':1}
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
+    # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    fuzzySearchParameterNames = []
+    fuzzySearchParameterNames = ['sampleIndex']
     # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     para = {'numSimulations':numSimulations }
     allTrajectories = loadTrajectories(para)
-    print(allTrajectories)
+    print(len(allTrajectories))
     for dataIndex in range(len(allTrajectories)):
         trajectory = allTrajectories[dataIndex]
         del trajectory[-1]
@@ -65,7 +65,7 @@ def main():
             lineColor = THECOLORS['white']
 
             drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
-            circleSize = 4
+            circleSize = 8#4
             positionIndex = [0, 1]
             drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
 

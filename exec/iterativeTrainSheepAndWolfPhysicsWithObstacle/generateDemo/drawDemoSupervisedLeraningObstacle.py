@@ -251,7 +251,7 @@ def main():
             lineColor = THECOLORS['white']
             drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
 
-            circleSizeList=[4,6]
+            circleSizeList=[6,9]
             drawState = DrawState(screen, circleSizeList,circleColorList, positionIndex,drawBackground)
 
             saveImage = False

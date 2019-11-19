@@ -36,7 +36,7 @@ def main():
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
-    numTrajectories = 5000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSWolfInPhysicsWithObstacle.py'
 
