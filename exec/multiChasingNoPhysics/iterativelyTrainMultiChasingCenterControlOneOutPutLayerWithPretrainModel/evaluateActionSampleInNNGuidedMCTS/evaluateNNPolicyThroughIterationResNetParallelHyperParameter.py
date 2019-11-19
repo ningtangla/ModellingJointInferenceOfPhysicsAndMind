@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..', '..'))
 
 from subprocess import Popen, PIPE
 import json
@@ -43,12 +43,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,50,100,150]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,50,100,150]#[-999]+list(range(0,10001,2000)),
-    manipulatedVariables['numTrainStepEachIteration'] = [4]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
-    
-
+    manipulatedVariables['isImagedSampleActionGreedy']=[0,1]
+    manipulatedVariables['isTansitSampleActionGreedy']=[0,1]
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
@@ -84,9 +80,7 @@ def main():
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
-   
-
-    generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
+    generateTrajectoriesCodeName = 'generateEvaluateTrajForSampleAction.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
@@ -99,11 +93,11 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..','..', '..', '..', 'data','multiAgentTrain', 'evaluateCeterControlNNGuidedMCTSSampleAction', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName,'..', '..', '..', '..', 'data','multiAgentTrain', 'evaluateCeterControlNNGuidedMCTSSampleAction', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
-    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius,'isPureMCTS':0}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     # compute statistics on the trajectories
@@ -118,24 +112,26 @@ def main():
     computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     print(statisticsDf)
-
-    # plot the results
+    # manipulatedVariables = OrderedDict()
+    # manipulatedVariables['isImagedSampleActionGreedy']=[0,1]
+    # manipulatedVariables['isTansitSampleActionGreedy']=[0,1]
+    # # plot the results
     fig = plt.figure()
-    numRows = len(manipulatedVariables['numTrainStepEachIteration'])
-    numColumns = len(manipulatedVariables['numTrajectoriesPerIteration'])
+    numRows = len(manipulatedVariables['isImagedSampleActionGreedy'])
+    numColumns = len(manipulatedVariables['isTansitSampleActionGreedy'])
     plotCounter = 1
 
-    for numTrainStepEachIteration, grp in statisticsDf.groupby('numTrainStepEachIteration'):
-        grp.index = grp.index.droplevel('numTrainStepEachIteration')
+    for isImagedSampleActionGreedy, grp in statisticsDf.groupby('isImagedSampleActionGreedy'):
+        grp.index = grp.index.droplevel('isImagedSampleActionGreedy')
 
-        for numTrajectoriesPerIteration, group in grp.groupby('numTrajectoriesPerIteration'):
-            group.index = group.index.droplevel('numTrajectoriesPerIteration')
+        for isTansitSampleActionGreedy, group in grp.groupby('isTansitSampleActionGreedy'):
+            group.index = group.index.droplevel('isTansitSampleActionGreedy')
 
             axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
             if (plotCounter % numColumns == 1) or numColumns==1:
-                axForDraw.set_ylabel('numTrainStepEachIteration: {}'.format(numTrainStepEachIteration))
+                axForDraw.set_ylabel('isImagedSampleActionGreedy: {}'.format(isImagedSampleActionGreedy))
             if plotCounter <= numColumns:
-                axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
+                axForDraw.set_title('isTansitSampleActionGreedy: {}'.format(isTansitSampleActionGreedy))
 
             axForDraw.set_ylim(-1, 1.5)
             drawPerformanceLine(group, axForDraw, selfId)

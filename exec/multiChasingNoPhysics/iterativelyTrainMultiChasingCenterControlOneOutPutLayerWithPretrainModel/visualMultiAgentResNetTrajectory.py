@@ -34,11 +34,19 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 def main():
     #input by subprocess
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    parametersForTrajectoryPath={}
+    startSampleIndex=1
+    endSampleIndex=100
+    parametersForTrajectoryPath['numTrajectoriesPerIteration']=16
+    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']=4
+    parametersForTrajectoryPath['selfIteration']=0
+    parametersForTrajectoryPath['otherIteration']=0
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    
+
     numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
     numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
     selfIteration = int(parametersForTrajectoryPath['selfIteration'])
@@ -83,9 +91,9 @@ def main():
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-        playKillzoneRadius = 25
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
+
+        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         centerControlIndexList=[wolvesId]
@@ -122,7 +130,7 @@ def main():
         generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
         generateWolvesModel=GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         generateModelList=[generateSheepModel,generateWolvesModel]
-
+        
         sheepDepth = 5
         wolfDepth=9
         depthList=[sheepDepth,wolfDepth]
@@ -134,6 +142,7 @@ def main():
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
         
 
+
         # load Model save dir
         NNModelSaveExtension = ''
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'NNModelRes')
@@ -143,31 +152,34 @@ def main():
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
         #wolves policy
+        sheepPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+
         if otherIteration == -999:
             #Heat Seeking policy
             wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionOneSpace, getWolfOneXPos, getSheepXPos, computeAngleBetweenVectors)
             wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionTwoSpace, getWolfTwoXPos, getSheepXPos, computeAngleBetweenVectors)
             wolfPolicy=lambda state:{(chooseGreedyAction(wolfOnePolicy(state)),chooseGreedyAction(wolfTwoPolicy(state))):1}
         else:
-            wolfModelPath = generateNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolvesId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+            # wolfModelPath = generateNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolvesId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+            wolfModelPath=os.path.join(dirName,'preTrainModel','agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
             restoredNNModel = restoreVariables(multiAgentNNmodel[wolvesId], wolfModelPath)
             multiAgentNNmodel[wolvesId] = restoredNNModel
             wolfPolicy = ApproximatePolicy(multiAgentNNmodel[wolvesId], wolvesActionSpace)
         
         #sheep policy
         sheepModelPath = generateNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+        sheepModelPath=os.path.join(dirName,'preTrainModel','agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
         sheepTrainedModel=restoreVariables(multiAgentNNmodel[sheepId], sheepModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
         
         # sample and save trajectories
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
+
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
-        renderOn = False 
+        renderOn = True 
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
