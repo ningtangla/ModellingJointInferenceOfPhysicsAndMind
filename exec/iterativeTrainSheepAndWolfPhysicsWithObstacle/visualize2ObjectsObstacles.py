@@ -24,21 +24,25 @@ def main():
     # trajectorygg = trajectory.copy()
     # del trajectory[-1]
     # print(trajectorygg.pop())
-    maxRunningSteps = 50
+    maxRunningSteps = 30
     numSimulations = 200
-    killzoneRadius = 1
+    killzoneRadius = 2
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     numTrials=6
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':30,'agentId':1}
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':30,'agentId':1}
+    # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'numTrainStepEachIteration':4,'numTrajectoriesPerIteration':16}
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
     # fuzzySearchParameterNames = []
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
-    para = {'numSimulations':numSimulations }
+    # para = {'numSimulations':numSimulations }
+    iterationIndex=100
+    para = {'iterationIndex':iterationIndex }
     allTrajectories = loadTrajectories(para)
     print(len(allTrajectories))
     for dataIndex in range(len(allTrajectories)):

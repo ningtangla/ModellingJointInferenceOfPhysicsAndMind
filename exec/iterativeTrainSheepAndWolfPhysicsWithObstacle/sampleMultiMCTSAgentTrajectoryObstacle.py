@@ -164,13 +164,13 @@ def main():
 
         # Mujoco environment
         # physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
-        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles2.xml')
+        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         # MDP function
         agentMaxSize=0
-        wallList=[[0,2,0.5,1.75],[0,-2,0.5,1.75]]
+        wallList=[[0,2,0.5,1.45],[0,-2,0.5,1.45]]
         checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
         qPosInit = (0, 0, 0, 0)

@@ -170,7 +170,7 @@ def iterateTrainOneCondition(parameters):
     numTrainStepEachIteration = int(parameters['numTrainStepEachIteration'])
     numTrajectoriesPerIteration = int(parameters['numTrajectoriesPerIteration'])
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles2.xml')
+    physicsDynamicsPath = physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -181,7 +181,7 @@ def iterateTrainOneCondition(parameters):
     qVelInitNoise = 8
     qPosInitNoise = 9.7
 
-    agentMaxSize=0
+    agentMaxSize=0.6
     wallList=[[0,2,0.5,1.75],[0,-2,0.5,1.75]]
     checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
