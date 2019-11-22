@@ -167,13 +167,13 @@ def main():
 
         # Mujoco environment
         # physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
-        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
+        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles4.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         # MDP function
         agentMaxSize=0.6
-        wallList=[[0,2,0.5,1.45],[0,-2,0.5,1.45]]
+        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
         checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
         qPosInit = (0, 0, 0, 0)
@@ -216,7 +216,7 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
         getApproximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
         getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
 
@@ -238,12 +238,9 @@ def main():
 
         startTime = time.time()
 
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
-
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
 
-        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
+        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseGreedyAction)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,selectChild, isTerminal, transit, getStateFromNode,getApproximatePolicy, getApproximateValue,composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy,trainableAgentIds)
 
@@ -251,7 +248,7 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample trajectory
-        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
         sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
