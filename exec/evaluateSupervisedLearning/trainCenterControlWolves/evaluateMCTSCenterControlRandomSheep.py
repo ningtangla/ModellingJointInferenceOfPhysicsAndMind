@@ -199,7 +199,7 @@ def generateOneCondition(parameters):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numSimulations'] = [50, 100, 200, 400, 800]
+    manipulatedVariables['numSimulations'] = [50,100, 200, 400]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -212,11 +212,15 @@ def main():
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
     trainPool = mp.Pool(numCpuToUse)
-    trainPool.map(generateOneCondition, parametersAllCondtion)
+    # trainPool.map(generateOneCondition, parametersAllCondtion)
 
     # load data
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'evaluateMCTSTBaseLineTajectories')
+    # trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeSingleChasingNoPhysics', 'evaluateMCTSTBaseLineTajectories')
+
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+
+
     trajectoryExtension = '.pickle'
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -226,7 +230,8 @@ def main():
     killzoneRadius = 30
     maxRunningSteps = 100
 
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius, 'numTrials': numTrials}
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius, 'numTrials': numTrials}
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
@@ -256,7 +261,7 @@ def main():
     accumulateRewards = AccumulateRewards(decay, playReward)
 
     # compute statistics on the trajectories
-    fuzzySearchParameterNames = []
+    fuzzySearchParameterNames = ['sampleIndex','agentId']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
 
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))

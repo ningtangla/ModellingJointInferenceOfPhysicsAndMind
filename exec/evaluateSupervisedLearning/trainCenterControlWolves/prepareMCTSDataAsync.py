@@ -32,7 +32,7 @@ class GenerateTrajectoriesParallel:
 def main():
     dirName = os.path.dirname(__file__)
 
-    wolfId = 1
+    wolfId = 50
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
@@ -48,7 +48,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
     numTrajPerSteps = numCmdList * 2
-    startSampleIndexes = np.arange(250, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
+    startSampleIndexes = np.arange(0, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 
