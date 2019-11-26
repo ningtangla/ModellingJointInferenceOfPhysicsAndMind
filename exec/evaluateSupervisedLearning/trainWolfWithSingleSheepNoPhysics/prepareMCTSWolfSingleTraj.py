@@ -32,13 +32,13 @@ class GenerateTrajectoriesParallel:
 def main():
     dirName = os.path.dirname(__file__)
 
-    wolfId = 50
+    wolfId = 1
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
-    numTrajectories = 2000
-    # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSCenterControlWovles.py'
+    numTrajectories = 3000
+
+    sampleTrajectoryFileName = 'sampleMCTSWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
@@ -53,7 +53,7 @@ def main():
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 
     print("start")
-    for i in range(math.ceil(numTrajectories / numTrajPerSteps)):
+    for i in range(1,math.ceil(numTrajectories / numTrajPerSteps)):
         startTime = time.time()
 
         startEndIndexesPair = startEndIndexesPairs[numCmdList * i : numCmdList * i + numCmdList]
