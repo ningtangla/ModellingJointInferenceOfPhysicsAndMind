@@ -65,29 +65,28 @@ def trainOneCondition(manipulatedVariables):
     dataSize = int(manipulatedVariables['dataSize'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 30
+    dataSetMaxRunningSteps = 50
+    maxRolloutSteps=30
     dataSetNumSimulations = 200
     killzoneRadius = 2
-    agentId = 1
-    dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
+    agentId = 0
+    dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'maxRolloutSteps':maxRolloutSteps}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
-    numOfAgent=3
 
     sheepId = 0
     wolfId =1
 
-    wolfOneId = 1
-    wolfTwoId = 2
+
     xPosIndex = [0, 1]
     xBoundary = [0,600]
     yBoundary = [0,600]
@@ -98,8 +97,8 @@ def trainOneCondition(manipulatedVariables):
     playIsTerminal = IsTerminal(killzoneRadius,getWolfXPos, getSheepXPos )
 
 
-    playAliveBonus = -1 / dataSetMaxRunningSteps
-    playDeathPenalty = 1
+    playAliveBonus = 1 / dataSetMaxRunningSteps
+    playDeathPenalty = -1
     playKillzoneRadius = killzoneRadius
 
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
@@ -110,7 +109,7 @@ def trainOneCondition(manipulatedVariables):
 
     # pre-process the trajectories
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
 
 
 
@@ -179,7 +178,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -195,7 +194,7 @@ def trainOneCondition(manipulatedVariables):
 def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['depth'] = [5,9]
-    manipulatedVariables['dataSize'] = [1000,2000,3000]
+    manipulatedVariables['dataSize'] = [1000,2000]
     manipulatedVariables['miniBatchSize'] = [256]
     manipulatedVariables['learningRate'] = [1e-4]
 

@@ -156,7 +156,7 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
 
 

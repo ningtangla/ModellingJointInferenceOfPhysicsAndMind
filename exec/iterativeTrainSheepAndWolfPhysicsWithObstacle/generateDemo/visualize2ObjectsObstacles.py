@@ -2,7 +2,7 @@ import sys
 import os
 
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
@@ -24,7 +24,7 @@ def main():
     # trajectorygg = trajectory.copy()
     # del trajectory[-1]
     # print(trajectorygg.pop())
-    maxRunningSteps = 30
+    maxRunningSteps = 50
     numSimulations = 200
     killzoneRadius = 2
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -32,8 +32,10 @@ def main():
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':30,'agentId':1}
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'numTrainStepEachIteration':4,'numTrajectoriesPerIteration':16}
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'numTrainStepEachIteration':4,'numTrajectoriesPerIteration':16}
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius}
+    # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+    trajectoryDirectory= os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action', 'trajectories')
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
@@ -42,7 +44,8 @@ def main():
 
     # para = {'numSimulations':numSimulations }
     iterationIndex=100
-    para = {'iterationIndex':iterationIndex }
+    # para = {'iterationIndex':iterationIndex }
+    para={'maxRolloutSteps':30,'agentId':1}
     allTrajectories = loadTrajectories(para)
     print(len(allTrajectories))
     for dataIndex in range(len(allTrajectories)):
