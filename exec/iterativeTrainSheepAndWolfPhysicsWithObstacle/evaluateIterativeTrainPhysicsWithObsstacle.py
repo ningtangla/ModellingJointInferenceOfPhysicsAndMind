@@ -36,8 +36,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,250,450]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,250,450]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = [0,250,600]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,250,600]#[-999]+list(range(0,10001,2000)),
     manipulatedVariables['numTrainStepEachIteration'] = [4]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
     selfId=1
@@ -46,16 +46,16 @@ def main():
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
-    
+
     trainMaxRunningSteps = 30
     trainNumSimulations = 200
     killzoneRadius = 2
-    
+
     numAgents = 2
     sheepId = 0
     wolfId = 1
     posIndex = [2, 3]
- 
+
 
     getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, posIndex)
@@ -72,7 +72,7 @@ def main():
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
-   
+
 
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryObstacle.py'
     evalNumTrials = 500
@@ -84,7 +84,7 @@ def main():
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
     toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
-# 
+#
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName,  '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentObstacle', 'evaluateTrajectories')
@@ -98,7 +98,7 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
-    
+
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
@@ -125,7 +125,7 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
 
-            axForDraw.set_ylim(-1, 1.5)
+            # axForDraw.set_ylim(-1, 1.5)
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 

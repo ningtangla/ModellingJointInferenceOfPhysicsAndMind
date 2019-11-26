@@ -2,7 +2,7 @@ import sys
 import os
 
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
@@ -33,7 +33,7 @@ def main():
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'numTrainStepEachIteration':4,'numTrajectoriesPerIteration':16}
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
@@ -41,7 +41,7 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     # para = {'numSimulations':numSimulations }
-    iterationIndex=100
+    iterationIndex=400
     para = {'iterationIndex':iterationIndex }
     allTrajectories = loadTrajectories(para)
     print(len(allTrajectories))
@@ -77,7 +77,7 @@ def main():
 
             FPS = 60
 
-            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=False,)
+            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=False)
 
             rawXRange = [-10, 10]
             rawYRange = [-10, 10]

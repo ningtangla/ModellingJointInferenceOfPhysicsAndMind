@@ -322,7 +322,7 @@ def iterateTrainOneCondition(parameters):
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
     # restore modelrestoredIteration
-    restoredIteration=0#0
+    restoredIteration=620#0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId,  'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
