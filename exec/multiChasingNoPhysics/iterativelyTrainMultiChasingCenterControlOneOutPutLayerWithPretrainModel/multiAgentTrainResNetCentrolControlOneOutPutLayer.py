@@ -121,6 +121,14 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
     generateModelList = [generateSheepModel, generateWolvesModel]
 
+    sheepDepth = 5
+    wolfDepth=9
+    depthList=[sheepDepth,wolfDepth]
+    resBlockSize = 2
+    dropoutRate = 0.0
+    initializationMethod = 'uniform'
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
+
     # replay buffer
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
@@ -149,6 +157,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     afterActionCoeff = 1
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
+
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 1
@@ -179,7 +188,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
     startTime = time.time()
-    trainableAgentIds = [sheepId, wolvesId]
+
 
     sheepDepth = 5
     wolfDepth=9
@@ -197,8 +206,11 @@ def iterateTrainOneCondition(parameterOneCondition):
 
     #restorePretrainModel
     sheepPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    # wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_dataSize=3000_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
     wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
     pretrainModelPathList=[sheepPreTrainModelPath,wolvesPreTrainModelPath]
+
+    trainableAgentIds = [sheepId, wolvesId]
 
     for agentId in trainableAgentIds:
 
@@ -227,11 +239,11 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration = 0
-    for agentId in trainableAgentIds:
-        modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
-        restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
-        multiAgentNNmodel[agentId] = restoredNNModel
+    restoredIteration =0 #161
+    # for agentId in trainableAgentIds:
+    #     modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
+    #     restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
+    #     multiAgentNNmodel[agentId] = restoredNNModel
 
     restoredIterationIndexRange = range(restoredIteration)
     restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
@@ -244,7 +256,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
-
+        break
         numCpuToUseWhileTrain = int(16)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
