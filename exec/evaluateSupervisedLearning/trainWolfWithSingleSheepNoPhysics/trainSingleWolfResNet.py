@@ -71,7 +71,7 @@ def trainOneCondition(manipulatedVariables):
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 100
-    dataSetNumSimulations = 150
+    dataSetNumSimulations = 50
     killzoneRadius = 30
     agentId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius': killzoneRadius}
@@ -165,10 +165,10 @@ def trainOneCondition(manipulatedVariables):
     terminalThreshold = 1e-10
     lossHistorySize = 10
     initActionCoeff = 1
-    initValueCoeff = 1
+    initValueCoeff = 0
     initCoeff = (initActionCoeff, initValueCoeff)
     afterActionCoeff = 1
-    afterValueCoeff = 1
+    afterValueCoeff = 0
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = lambda evalDict, numSteps: False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
@@ -198,7 +198,7 @@ def trainOneCondition(manipulatedVariables):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['depth'] = [9]
+    manipulatedVariables['depth'] = [5]
     manipulatedVariables['miniBatchSize'] = [256]
     manipulatedVariables['learningRate'] = [1e-4]
 

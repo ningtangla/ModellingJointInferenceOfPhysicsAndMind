@@ -218,10 +218,26 @@ def main():
 
         wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
-        wolfPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionOneSpace, getWolfOneXPos, getSheepXPos, computeAngleBetweenVectors)
+        # neural network init
+        numStateSpace = 4
+        numSheepActionSpace=len(sheepActionSpace)
+        numWolfActionSpace=len(wolfActionOneSpace)
+
+        regularizationFactor = 1e-4
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
+        generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
+        generateWolfModel = GenerateModel(numStateSpace, numWolfActionSpace, regularizationFactor)
+
+        initWolfNNModel = generateWolfModel(sharedWidths * 5, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+        wolfTrainedModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'trainWolfWithSingleSheepNoPhysics', 'trainedResNNModels','agentId=1_depth=5_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=50_trainSteps=50000')
+        wolfTrainedModel = restoreVariables(initWolfNNModel, wolfTrainedModelPath)
+        wolf2Policy = ApproximatePolicy(wolfTrainedModel, wolfActionOneSpace)
+
 
         # All agents' policies
-        policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
+        policy = lambda state:[sheepPolicy(state),wolfPolicy(state), wolf2Policy(state)]
 
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         print([len(traj) for traj in trajectories])
