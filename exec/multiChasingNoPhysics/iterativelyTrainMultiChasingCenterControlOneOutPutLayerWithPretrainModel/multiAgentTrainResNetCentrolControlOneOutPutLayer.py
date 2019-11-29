@@ -133,7 +133,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 1000  # 256
+    miniBatchSize = 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -162,7 +162,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
 
     reportInterval = 10000
-    trainStepsIntervel = 10000
+    trainStepsIntervel = 1 #10000
 
     trainReporter = TrainReporter(numTrainStepEachIteration, reportInterval)
     learningRateDecay = 1
@@ -170,9 +170,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
 
-    trainNN = Train(trainStepsIntervel, miniBatchSize, sampleData,
-                    learningRateModifier, terminalController, coefficientController,
-                    trainReporter)
+    trainNN = Train(trainStepsIntervel, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController,trainReporter)
 
     # load save dir
     numSimulations = 200
@@ -193,7 +191,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     startTime = time.time()
 
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
-    numTrajectoriesToStartTrain =  1000 # 4 * miniBatchSize
+    numTrajectoriesToStartTrain =  4 * miniBatchSize
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
@@ -233,7 +231,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration =0 #161
+    restoredIteration = 31 #161
     # for agentId in trainableAgentIds:
     #     modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
     #     restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -250,6 +248,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
+        print('iterationIndex: ', iterationIndex)
 
         numCpuToUseWhileTrain = int(16)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)

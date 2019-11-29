@@ -30,7 +30,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import Render,SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
+from src.episode import Render,SampleTrajectoryWithRender, SampleAction, chooseGreedyAction,SelectSoftmaxAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -99,8 +99,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 100
+    maxRunningSteps = 100
+    numSimulations = 200
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -122,7 +122,7 @@ def main():
 
         numOfAgent=3
         agentIds = list(range(numOfAgent))
-        
+
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
@@ -147,7 +147,7 @@ def main():
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         # NNGuidedMCTS init
@@ -187,18 +187,20 @@ def main():
 
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-    
         startTime = time.time()
-        trainableAgentIds = [sheepId, wolfOneId,wolfTwoId]
+        trainableAgentIds = [sheepId, wolfOneId, wolfTwoId]
 
-        depth = 5
+        depth = 9
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
 
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
+        # temperatureInMCTS = 1
+        # chooseActionInMCTS = SampleAction(temperatureInMCTS)
+
+        softMaxBetaInMCTS = 5
+        chooseActionInMCTS = SelectSoftmaxAction(softMaxBetaInMCTS)
         chooseActionList = [chooseActionInMCTS, chooseActionInMCTS,chooseActionInMCTS]
 
         otherAgentApproximatePolicy = [lambda NNmodel,: ApproximatePolicy(NNmodel, sheepActionSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionOneSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionTwoSpace)]
@@ -209,14 +211,13 @@ def main():
 
 
         for agentId in trainableAgentIds:
- 
             modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex-1, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
             restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
             multiAgentNNmodel[agentId] = restoredNNModel
 
         # sample and save trajectories
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
-        
+
         render=None
         renderOn = False
         if renderOn:

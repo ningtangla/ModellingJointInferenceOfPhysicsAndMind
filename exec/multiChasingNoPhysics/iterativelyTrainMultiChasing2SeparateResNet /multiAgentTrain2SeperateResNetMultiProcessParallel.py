@@ -26,9 +26,6 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 
-
-
-
 class PreprocessTrajectoriesForBuffer:
     def __init__(self, addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory):
         self.addMultiAgentValuesToTrajectory = addMultiAgentValuesToTrajectory
@@ -67,9 +64,9 @@ def iterateTrainOneCondition(manipulatedVariable):
     dirName = os.path.dirname(__file__)
 
 
-    numOfAgent=3
+    numOfAgent = 3
     agentIds = list(range(numOfAgent))
-    
+
     sheepId = 0
     wolfOneId = 1
     wolfTwoId = 2
@@ -79,10 +76,10 @@ def iterateTrainOneCondition(manipulatedVariable):
 
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-    getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
+    getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
 
-    maxRunningSteps = 150
+    maxRunningSteps = 100
     sheepAliveBonus = 1/maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
@@ -96,33 +93,43 @@ def iterateTrainOneCondition(manipulatedVariable):
     isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
 
-
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
 
     rewardMultiAgents = [rewardSheep, rewardWolf,rewardWolf]
-    
+
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
-
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+    preyPowerRatio = 3
+    sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+    predatorPowerRatio = 2
+    wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+    wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+    actionSpaceList=[sheepActionSpace,wolfActionOneSpace,wolfActionTwoSpace]
 
 
     # neural network init
     numStateSpace = 6
-    numActionSpace = len(actionSpace)
+    numSheepActionSpace = len(sheepActionSpace)
+    numWolfOneActionSpace = len(wolfActionOneSpace)
+    numWolfTwoActionSpace = len(wolfActionTwoSpace)
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
     valueLayerWidths = [128]
-    generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
+    generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
+    generateWolfOneModel = GenerateModel(numStateSpace, numWolfOneActionSpace, regularizationFactor)
+    generateWolfTwoModel = GenerateModel(numStateSpace, numWolfTwoActionSpace, regularizationFactor)
+
+    generateModelList =[generateSheepModel,generateWolfOneModel,generateWolfTwoModel]
     # replay buffer
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256#256
+    miniBatchSize = 256 #256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -153,12 +160,10 @@ def iterateTrainOneCondition(manipulatedVariable):
     learningRateDecayStep = 1
     learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    trainNN = Train(numTrainStepEachIteration, miniBatchSize, sampleData,
-                    learningRateModifier, terminalController, coefficientController,
-                    trainReporter)
+    trainNN = Train(numTrainStepEachIteration, miniBatchSize, sampleData,learningRateModifier, terminalController, coefficientController,trainReporter)
 
     # load save dir
-    numSimulations = 100
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
@@ -172,23 +177,21 @@ def iterateTrainOneCondition(manipulatedVariable):
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-    
+
 
     startTime = time.time()
-    trainableAgentIds = [sheepId, wolfOneId,wolfTwoId]
+    trainableAgentIds = [sheepId, wolfOneId, wolfTwoId]
 
-    depth = 5
+    depth = 9
     resBlockSize = 2
     dropoutRate = 0.0
     initializationMethod = 'uniform'
-    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
-
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for generateModel in generateModelList]
 
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
     numTrajectoriesToStartTrain = 4 * miniBatchSize
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
-
 
     for agentId in trainableAgentIds:
         #creat step 0 for evaluate
@@ -204,12 +207,14 @@ def iterateTrainOneCondition(manipulatedVariable):
 
 # initRreplayBuffer
     replayBuffer = []
+    trajectoryBeforeTrainIndex = 0
+    trajectoryBeforeTrainPathParamters = {'iterationIndex': trajectoryBeforeTrainIndex}
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
     preProcessedTrajectoriesBeforeTrain = preprocessMultiAgentTrajectories(trajectoriesBeforeTrain)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
 # restore model
-    restoredIteration = 100
+    restoredIteration = 0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId,  'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -228,10 +233,12 @@ def iterateTrainOneCondition(manipulatedVariable):
     modelSaveFrequency=50
     deleteUsedModel=DeleteUsedModel(modelMemorySize,modelSaveFrequency,generatetoDeleteNNModelPathList)
 
-    sampleTrajectoryFileName='multiAgentTrain2SeperateResNetMultiProcessParallel.py'.py'
+    sampleTrajectoryFileName='sampleMultiMCTSAgent2SeperateResNetTrajCondtion.py'
     print ({'iterationIndex': restoredIteration, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
     numIterations = 10000
+
     for iterationIndex in range(restoredIteration + 1, numIterations):
+        print('iterationIndex: ', iterationIndex)
 
         numCpuToUseWhileTrain = int(16)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
@@ -245,7 +252,7 @@ def iterateTrainOneCondition(manipulatedVariable):
             cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
 
             trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
-            trajecoriesNum=len(trajectories)        
+            trajecoriesNum=len(trajectories)
             if trajecoriesNum!=numTrajectoriesPerIteration:
                 print('MISSSUBPROCESS,RETRY',trajecoriesNum)
         print('length of traj', len(trajectories))
@@ -274,7 +281,7 @@ def iterateTrainOneCondition(manipulatedVariable):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['numTrainStepEachIteration'] = [4]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -284,13 +291,13 @@ def main():
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     sampleTrajectoryFileName = 'prepareMultiMCTSAgent2SeperateResNetTraj.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8*numCpuCores)
+    numCpuToUse = int(0.75*numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex=0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
 
-    prepareBefortrainData=False
+    prepareBefortrainData=True
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trainPool = mp.Pool(numCpuToUse)
@@ -298,8 +305,8 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    parameters={}
-    parameters['numTrainStepEachIteration'] = 1
-    parameters['numTrajectoriesPerIteration'] = 10
-    iterateTrainOneCondition(parameters)
+    main()
+    # parameters={}
+    # parameters['numTrainStepEachIteration'] = 1
+    # parameters['numTrajectoriesPerIteration'] = 10
+    # iterateTrainOneCondition(parameters)

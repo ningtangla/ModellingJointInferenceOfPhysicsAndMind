@@ -113,6 +113,7 @@ def chooseGreedyAction(actionDist):
     selectedIndex = np.random.choice(maxIndices)
     selectedAction = actions[selectedIndex]
     return selectedAction
+
 class SampleAction():
     def __init__(self, beta):
         self.beta = beta

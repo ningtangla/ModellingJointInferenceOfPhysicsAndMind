@@ -12,12 +12,8 @@ import pandas as pd
 import pygame as pg
 from pygame.color import THECOLORS
 
-
-
 from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryByReflectVelocity
-
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -30,7 +26,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import Render,SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
+from src.episode import Render,SampleTrajectoryWithRender, SampleAction, chooseGreedyAction,SelectSoftmaxAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -67,8 +63,7 @@ class ComposeSingleAgentGuidedMCTS():
         terminalReward = self.terminalRewardList[agentId]
         approximateValue = self.getApproximateValue[agentId](selfNNModel)
         estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
+        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand, estimateValue, backup, establishPlainActionDist)
 
         return guidedMCTSPolicy
 
@@ -99,8 +94,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 100
+    maxRunningSteps = 100
+    numSimulations = 200
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -118,9 +113,9 @@ def main():
 
     if not os.path.isfile(trajectorySavePath):
 
-        numOfAgent=3
+        numOfAgent = 3
         agentIds = list(range(numOfAgent))
-        
+
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
@@ -130,7 +125,7 @@ def main():
 
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
@@ -145,7 +140,7 @@ def main():
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         # NNGuidedMCTS init
@@ -177,20 +172,21 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-        generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-
-    
         startTime = time.time()
         trainableAgentIds = [sheepId, wolfOneId,wolfTwoId]
 
-        depth = 5
+        depth = 9
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
 
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
+        # temperatureInMCTS = 1
+        # chooseActionInMCTS = SampleAction(temperatureInMCTS)
+
+        softMaxBetaInMCTS = 5
+        chooseActionInMCTS = SelectSoftmaxAction(softMaxBetaInMCTS)
+
         chooseActionList = [chooseActionInMCTS, chooseActionInMCTS,chooseActionInMCTS]
 
         otherAgentApproximatePolicy = [lambda NNmodel,: ApproximatePolicy(NNmodel, sheepActionSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionOneSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionTwoSpace)]
@@ -202,7 +198,7 @@ def main():
 
         # sample and save trajectories
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
-        
+
         render=None
         renderOn = False
         if renderOn:
