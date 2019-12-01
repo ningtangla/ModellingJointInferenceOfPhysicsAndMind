@@ -44,8 +44,8 @@ def main():
     endSampleIndex=100
     parametersForTrajectoryPath['numTrajectoriesPerIteration']=16
     numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']=3
-    parametersForTrajectoryPath['selfIteration']=33
-    parametersForTrajectoryPath['otherIteration']=33
+    parametersForTrajectoryPath['selfIteration']=34
+    parametersForTrajectoryPath['otherIteration']=34
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
@@ -70,7 +70,6 @@ def main():
 
     # if not os.path.isfile(trajectorySavePath):
     while True:
-        pass
         #Init NoPhysics Env
         numOfAgent=3
         sheepId = 0

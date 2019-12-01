@@ -11,10 +11,10 @@ import pandas as pd
 import pathos.multiprocessing as mp
 import itertools as it
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import  IsTerminal
+from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
-    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle,DeleteUsedModel
+    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle, DeleteUsedModel
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
     ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -23,7 +23,6 @@ from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet, ProcessTrajectoryForPolicyValueNetMultiAgentReward
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
 
 
 class PreprocessTrajectoriesForBuffer:
@@ -58,11 +57,11 @@ class TrainOneAgent:
 
         return NNModel
 
+
 def iterateTrainOneCondition(manipulatedVariable):
     numTrainStepEachIteration = int(manipulatedVariable['numTrainStepEachIteration'])
     numTrajectoriesPerIteration = int(manipulatedVariable['numTrajectoriesPerIteration'])
     dirName = os.path.dirname(__file__)
-
 
     numOfAgent = 3
     agentIds = list(range(numOfAgent))
@@ -71,44 +70,42 @@ def iterateTrainOneCondition(manipulatedVariable):
     wolfOneId = 1
     wolfTwoId = 2
     xPosIndex = [0, 1]
-    xBoundary = [0,600]
-    yBoundary = [0,600]
+    xBoundary = [0, 600]
+    yBoundary = [0, 600]
 
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-
     maxRunningSteps = 100
-    sheepAliveBonus = 1/maxRunningSteps
+    sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
-    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward,wolfTerminalReward]
+    terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
 
     killzoneRadius = 30
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
+    def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
 
-    rewardMultiAgents = [rewardSheep, rewardWolf,rewardWolf]
+    rewardMultiAgents = [rewardSheep, rewardWolf, rewardWolf]
 
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
     preyPowerRatio = 3
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
     predatorPowerRatio = 2
     wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-    actionSpaceList=[sheepActionSpace,wolfActionOneSpace,wolfActionTwoSpace]
-
+    actionSpaceList = [sheepActionSpace, wolfActionOneSpace, wolfActionTwoSpace]
 
     # neural network init
     numStateSpace = 6
@@ -124,23 +121,29 @@ def iterateTrainOneCondition(manipulatedVariable):
     generateWolfOneModel = GenerateModel(numStateSpace, numWolfOneActionSpace, regularizationFactor)
     generateWolfTwoModel = GenerateModel(numStateSpace, numWolfTwoActionSpace, regularizationFactor)
 
-    generateModelList =[generateSheepModel,generateWolfOneModel,generateWolfTwoModel]
+    generateModelList = [generateSheepModel, generateWolfOneModel, generateWolfTwoModel]
     # replay buffer
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
-    getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256 #256
+
+    def getUniformSamplingProbabilities(buffer): return [(1 / len(buffer)) for _ in buffer]
+    miniBatchSize = 1000  # 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
     addMultiAgentValuesToTrajectory = AddValuesToTrajectory(accumulateMultiAgentRewards)
     actionIndex = 1
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+
+    def getTerminalActionFromTrajectory(trajectory): return trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
 
     # pre-process the trajectory for NNTraining
-    actionToOneHot = ActionToOneHot(actionSpace)
-    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHot, agentId) for agentId in agentIds]
+    sheepActionToOneHot = ActionToOneHot(sheepActionSpace)
+    wolfOneActionToOneHot = ActionToOneHot(wolfActionOneSpace)
+    wolfTwoActionToOneHot = ActionToOneHot(wolfActionTwoSpace)
+
+    actionToOneHotList = [sheepActionToOneHot, wolfOneActionToOneHot, wolfTwoActionToOneHot]
+    processTrajectoryForPolicyValueNets = [ProcessTrajectoryForPolicyValueNetMultiAgentReward(actionToOneHotList[agentId], agentId) for agentId in agentIds]
 
     # function to train NN model
     terminalThreshold = 1e-6
@@ -153,31 +156,31 @@ def iterateTrainOneCondition(manipulatedVariable):
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 1
+    reportInterval = 10000
+    trainStepsIntervel = 10000  # 1
 
     trainReporter = TrainReporter(numTrainStepEachIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    trainNN = Train(numTrainStepEachIteration, miniBatchSize, sampleData,learningRateModifier, terminalController, coefficientController,trainReporter)
+    trainNN = Train(trainStepsIntervel, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController, trainReporter)
 
     # load save dir
     numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'NNModelRes')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'NNModelRes')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-
 
     startTime = time.time()
     trainableAgentIds = [sheepId, wolfOneId, wolfTwoId]
@@ -189,13 +192,13 @@ def iterateTrainOneCondition(manipulatedVariable):
     multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for generateModel in generateModelList]
 
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
-    numTrajectoriesToStartTrain = 4 * miniBatchSize
+    numTrajectoriesToStartTrain = 1000   # 4 * miniBatchSize
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     for agentId in trainableAgentIds:
-        #creat step 0 for evaluate
-        NNModelPathParameters = {'iterationIndex': 0, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
+        # creat step 0 for evaluate
+        NNModelPathParameters = {'iterationIndex': 0, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
         NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
         saveVariables(multiAgentNNmodel[agentId], NNModelSavePath)
 
@@ -216,7 +219,7 @@ def iterateTrainOneCondition(manipulatedVariable):
 # restore model
     restoredIteration = 0
     for agentId in trainableAgentIds:
-        modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId,  'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+        modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
         multiAgentNNmodel[agentId] = restoredNNModel
 
@@ -225,16 +228,16 @@ def iterateTrainOneCondition(manipulatedVariable):
     preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
-    #delete used model for disk space
-    fixedParametersForDelete = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
-    toDeleteNNModelExtensionList=['.meta','.index','.data-00000-of-00001']
-    generatetoDeleteNNModelPathList=[GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
-    modelMemorySize=5
-    modelSaveFrequency=50
-    deleteUsedModel=DeleteUsedModel(modelMemorySize,modelSaveFrequency,generatetoDeleteNNModelPathList)
+    # delete used model for disk space
+    fixedParametersForDelete = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
+    toDeleteNNModelExtensionList = ['.meta', '.index', '.data-00000-of-00001']
+    generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
+    modelMemorySize = 5
+    modelSaveFrequency = 50
+    deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
 
-    sampleTrajectoryFileName='sampleMultiMCTSAgent2SeperateResNetTrajCondtion.py'
-    print ({'iterationIndex': restoredIteration, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+    sampleTrajectoryFileName = 'sampleMultiMCTSAgent2SeperateResNetTrajCondtion.py'
+    print ({'iterationIndex': restoredIteration, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
     numIterations = 10000
 
     for iterationIndex in range(restoredIteration + 1, numIterations):
@@ -244,17 +247,17 @@ def iterateTrainOneCondition(manipulatedVariable):
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
 
-        trajectoryPathParameters = {'iterationIndex': iterationIndex, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
+        trajectoryPathParameters = {'iterationIndex': iterationIndex, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
 
-        trajecoriesNum=0
+        trajecoriesNum = 0
         # prevent subprocess crack
-        while trajecoriesNum!=numTrajectoriesPerIteration:
+        while trajecoriesNum != numTrajectoriesPerIteration:
             cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
 
             trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
-            trajecoriesNum=len(trajectories)
-            if trajecoriesNum!=numTrajectoriesPerIteration:
-                print('MISSSUBPROCESS,RETRY',trajecoriesNum)
+            trajecoriesNum = len(trajectories)
+            if trajecoriesNum != numTrajectoriesPerIteration:
+                print('MISSSUBPROCESS,RETRY', trajecoriesNum)
         print('length of traj', len(trajectories))
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
@@ -264,13 +267,12 @@ def iterateTrainOneCondition(manipulatedVariable):
 
         for agentId in trainableAgentIds:
 
-            deleteUsedModel(iterationIndex,agentId)
+            deleteUsedModel(iterationIndex, agentId)
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
-            NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration}
+            NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
             NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
             saveVariables(updatedAgentNNModel, NNModelSavePath)
-
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
             replayBuffer = updatedReplayBuffer
@@ -278,6 +280,7 @@ def iterateTrainOneCondition(manipulatedVariable):
     endTime = time.time()
     print("Time taken for {} iterations: {} seconds".format(
         numIterations, (endTime - startTime)))
+
 
 def main():
     manipulatedVariables = OrderedDict()
@@ -291,13 +294,13 @@ def main():
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     sampleTrajectoryFileName = 'prepareMultiMCTSAgent2SeperateResNetTraj.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.75*numCpuCores)
+    numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
-    iterationBeforeTrainIndex=0
+    iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
 
-    prepareBefortrainData=True
+    prepareBefortrainData = False
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trainPool = mp.Pool(numCpuToUse)
