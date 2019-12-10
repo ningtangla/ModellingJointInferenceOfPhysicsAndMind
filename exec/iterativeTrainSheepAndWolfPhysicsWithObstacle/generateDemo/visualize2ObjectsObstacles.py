@@ -42,7 +42,7 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     # para = {'numSimulations':numSimulations }
-    iterationIndex=2093
+    iterationIndex=1895
     para = {'iterationIndex':iterationIndex }
     allTrajectories = loadTrajectories(para)
     print(len(allTrajectories))
@@ -92,7 +92,11 @@ def main():
             getTrajectory = lambda rawTrajectory: scaleTrajectory(adjustFPS(rawTrajectory))
             positionList = [observe(index) for index in range(len(trajectory))]
             positionListToDraw = getTrajectory(positionList)
-            chaseTrial(2,positionListToDraw, '2ObjectsObstaclesNNGuideMCTS_selfIteration=6500_otherIteration=6500/' + str(dataIndex))
+            demoDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'demo')
+
+            if not os.path.exists(demoDirectory):
+                os.makedirs(demoDirectory)
+            chaseTrial(2,positionListToDraw, os.path.join(demoDirectory,str(iterationIndex)))
 
 class DrawState:
     def __init__(self, screen, circleSize, positionIndex, drawBackGround):
@@ -117,13 +121,16 @@ class ChaseTrialWithTraj:
         self.drawState = drawState
         self.saveImage = saveImage
     def __call__(self, numOfAgents, trajectoryData, imagePath):
+        if not os.path.exists(imagePath):
+            os.makedirs(imagePath)
         fpsClock = pg.time.Clock()
         for timeStep in range(len(trajectoryData)):
             state = trajectoryData[timeStep]
             fpsClock.tick(self.fps)
             screen = self.drawState(numOfAgents, state, self.colorSpace)
             if self.saveImage == True:
-                pg.image.save(screen, imagePath + '/' + format(timeStep, '04') + ".png")
+                filename='Obstacle'+format(timeStep, '04') + ".png"
+                pg.image.save(screen, os.path.join(imagePath,filename ))
         return
 
 if __name__ == '__main__':
