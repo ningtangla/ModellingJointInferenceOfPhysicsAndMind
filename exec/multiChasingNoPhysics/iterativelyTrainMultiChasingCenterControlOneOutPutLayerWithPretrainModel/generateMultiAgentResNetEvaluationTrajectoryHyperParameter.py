@@ -38,12 +38,12 @@ def main():
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    
+
     numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
     numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
     selfIteration = int(parametersForTrajectoryPath['selfIteration'])
     otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-    
+
     # check file exists or not
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'evaluateTrajectories')
@@ -56,9 +56,9 @@ def main():
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)   
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    
+
     if not os.path.isfile(trajectorySavePath):
 
         #Init NoPhysics Env
@@ -83,14 +83,14 @@ def main():
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-        playKillzoneRadius = 25
+        playKillzoneRadius = killzoneRadius
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         centerControlIndexList=[wolvesId]
         unpackAction=UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit=TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity,unpackAction)
 
         rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
@@ -109,7 +109,7 @@ def main():
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
         actionSpaceList=[sheepActionSpace,wolvesActionSpace]
-       
+
 
         # neural network init
         numStateSpace = 6
@@ -132,7 +132,7 @@ def main():
         trainableAgentIds = [sheepId, wolvesId]
 
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
-        
+
 
         # load Model save dir
         NNModelSaveExtension = ''
@@ -153,21 +153,21 @@ def main():
             restoredNNModel = restoreVariables(multiAgentNNmodel[wolvesId], wolfModelPath)
             multiAgentNNmodel[wolvesId] = restoredNNModel
             wolfPolicy = ApproximatePolicy(multiAgentNNmodel[wolvesId], wolvesActionSpace)
-        
+
         #sheep policy
         sheepModelPath = generateNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
         sheepTrainedModel=restoreVariables(multiAgentNNmodel[sheepId], sheepModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
-        
+
         # sample and save trajectories
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
-        renderOn = False 
+        renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]

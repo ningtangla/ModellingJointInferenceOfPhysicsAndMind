@@ -1,7 +1,7 @@
 import time
 import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 import json
@@ -123,7 +123,7 @@ def iterateTrainOneCondition(manipulatedVariable):
 
     generateModelList = [generateSheepModel, generateWolfOneModel, generateWolfTwoModel]
     # replay buffer
-    bufferSize = 2000
+    bufferSize = 4000
     saveToBuffer = SaveToBuffer(bufferSize)
 
     def getUniformSamplingProbabilities(buffer): return [(1 / len(buffer)) for _ in buffer]
@@ -192,7 +192,7 @@ def iterateTrainOneCondition(manipulatedVariable):
     multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for generateModel in generateModelList]
 
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
-    numTrajectoriesToStartTrain = 1000   # 4 * miniBatchSize
+    numTrajectoriesToStartTrain = 1000  # 4 * miniBatchSize
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
@@ -300,7 +300,7 @@ def main():
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
 
-    prepareBefortrainData = False
+    prepareBefortrainData = True
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trainPool = mp.Pool(numCpuToUse)

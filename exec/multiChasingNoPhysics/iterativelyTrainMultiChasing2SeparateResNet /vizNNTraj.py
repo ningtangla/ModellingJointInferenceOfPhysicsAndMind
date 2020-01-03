@@ -45,8 +45,8 @@ def main():
     endSampleIndex = 100
     parametersForTrajectoryPath['numTrajectoriesPerIteration'] = 16
     numTrainStepEachIteration = parametersForTrajectoryPath['numTrainStepEachIteration'] = 4
-    parametersForTrajectoryPath['selfIteration'] = 1
-    parametersForTrajectoryPath['otherIteration'] = 1
+    parametersForTrajectoryPath['selfIteration'] = 9
+    parametersForTrajectoryPath['otherIteration'] = 9
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     numTrajectoriesPerIteration = parametersForTrajectoryPath['numTrajectoriesPerIteration']
