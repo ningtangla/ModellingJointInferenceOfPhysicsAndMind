@@ -27,7 +27,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand,RollOut,establishSoftmaxActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
+from src.episode import  SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 class SampleTrajectoryWithRender:
@@ -66,14 +66,14 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 100
-    numSimulations = 50
-    killzoneRadius = 30
+    numSimulations = 200
+    killzoneRadius = 25
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -85,7 +85,7 @@ def main():
 
     # parametersForTrajectoryPath={}
     # startSampleIndex=0
-    # endSampleIndex=1
+    # endSampleIndex=100
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -105,7 +105,7 @@ def main():
 
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
@@ -129,8 +129,10 @@ def main():
 
 
         predatorPowerRatio = 2
+
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+        actionSpaceTwo = [(10, 0), (-10, 0), (0,0)]
+        wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
 
         actionSpaceList=[sheepActionSpace,wolvesActionSpace]
@@ -179,12 +181,14 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         renderOn = False
-        render=None
+        render = None
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
-        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
+        temperatureInMCTS = 1
+        chooseActionInMCTS = SampleAction(temperatureInMCTS)
+        chooseActionList = [chooseActionInMCTS,chooseActionInMCTS]
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
 

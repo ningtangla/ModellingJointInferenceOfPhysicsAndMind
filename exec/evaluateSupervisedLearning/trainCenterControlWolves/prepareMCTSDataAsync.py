@@ -32,11 +32,11 @@ class GenerateTrajectoriesParallel:
 def main():
     dirName = os.path.dirname(__file__)
 
-    wolfId = 50
+    wolfId = 32
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
-    numTrajectories = 2000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSCenterControlWovles.py'
 

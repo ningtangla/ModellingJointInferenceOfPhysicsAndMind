@@ -62,10 +62,9 @@ class TrainModelForConditions:
 
 def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
-    dataSize = int(manipulatedVariables['dataSize'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -75,7 +74,7 @@ def trainOneCondition(manipulatedVariables):
     dataSetNumSimulations = 200
     killzoneRadius = 25
     agentId = 1
-    dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
+    dataSetFixedParameters = {'agentId': 32, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius':killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -122,8 +121,11 @@ def trainOneCondition(manipulatedVariables):
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 2
-    wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-    wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+    actionSpaceOne = [(10, 0), (-10, 0)]
+    wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))
+
+    actionSpaceTwo = [(10, 0), (-10, 0), (0,0)]
+    wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
     wolvesActionSpace =list(it.product(wolfActionOneSpace,wolfActionTwoSpace))
 
 
@@ -137,9 +139,9 @@ def trainOneCondition(manipulatedVariables):
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
-    fuzzySearchParameterNames = ['sampleIndex','killzoneRadius']
+    fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
-    loadedTrajectories = loadTrajectories(parameters={})[:dataSize]
+    loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
     filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])  # !!? magic
@@ -192,7 +194,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -207,8 +209,7 @@ def trainOneCondition(manipulatedVariables):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['depth'] = [5,9]
-    manipulatedVariables['dataSize'] = [1000,2000,3000]
+    manipulatedVariables['depth'] = [9]
     manipulatedVariables['miniBatchSize'] = [256]
     manipulatedVariables['learningRate'] = [1e-4]
 
