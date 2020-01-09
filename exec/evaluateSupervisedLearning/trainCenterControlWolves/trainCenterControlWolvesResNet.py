@@ -64,7 +64,7 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace55', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -73,8 +73,9 @@ def trainOneCondition(manipulatedVariables):
     dataSetMaxRunningSteps = 100
     dataSetNumSimulations = 200
     killzoneRadius = 25
-    agentId = 1
-    dataSetFixedParameters = {'agentId': 32, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius':killzoneRadius}
+    agentId = 55
+    wolvesId = 1
+    dataSetFixedParameters = {'agentId': 55, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius':killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -135,7 +136,7 @@ def trainOneCondition(manipulatedVariables):
     actionToOneHot = ActionToOneHot(wolvesActionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, agentId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolvesId)
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
@@ -194,7 +195,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace55', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

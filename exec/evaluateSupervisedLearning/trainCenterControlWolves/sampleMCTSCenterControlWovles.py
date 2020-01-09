@@ -66,7 +66,7 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace55', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -123,7 +123,9 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        # actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0,0)]
+
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
@@ -131,8 +133,7 @@ def main():
         predatorPowerRatio = 2
 
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        actionSpaceTwo = [(10, 0), (-10, 0), (0,0)]
-        wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
+        wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
 
         actionSpaceList=[sheepActionSpace,wolvesActionSpace]
