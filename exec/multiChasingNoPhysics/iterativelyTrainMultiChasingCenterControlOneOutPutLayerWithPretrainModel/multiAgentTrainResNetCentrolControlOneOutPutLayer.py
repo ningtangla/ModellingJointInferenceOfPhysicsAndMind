@@ -233,7 +233,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration = 1610  # 161
+    restoredIteration = 1873  # 161
     # for agentId in trainableAgentIds:
     #     modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
     #     restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
