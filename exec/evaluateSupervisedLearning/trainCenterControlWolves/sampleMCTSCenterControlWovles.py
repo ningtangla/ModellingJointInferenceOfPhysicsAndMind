@@ -123,8 +123,8 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        # actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        actionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0,0)]
 
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
@@ -132,8 +132,8 @@ def main():
 
         predatorPowerRatio = 2
 
-        wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+        wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
+        wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
 
         actionSpaceList=[sheepActionSpace,wolvesActionSpace]
