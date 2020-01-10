@@ -44,8 +44,9 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     # para = {'numSimulations':numSimulations }
-    iterationIndex=9000
-    saveImage=True
+
+    iterationIndex=1895
+
     para = {'iterationIndex':iterationIndex }
     # para = {'selfIteration':iterationIndex ,'otherIteration':iterationIndex}
     allTrajectories = loadTrajectories(para)
@@ -100,11 +101,14 @@ def main():
             getTrajectory = lambda rawTrajectory: scaleTrajectory(adjustFPS(rawTrajectory))
             positionList = [observe(index) for index in range(len(trajectory))]
             positionListToDraw = getTrajectory(positionList)
-            demoDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetObstacle', 'evaDemo')
+
+            demoDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'demo')
+
 
             if not os.path.exists(demoDirectory):
                 os.makedirs(demoDirectory)
             chaseTrial(2,positionListToDraw, os.path.join(demoDirectory,str(iterationIndex)))
+
 class TransferWallToRescalePosForDraw:
     def __init__(self,rawXRange,rawYRange,scaledXRange,scaledYRange):
         self.rawXMin, self.rawXMax = rawXRange
@@ -122,6 +126,7 @@ class TransferWallToRescalePosForDraw:
         wallForDarwList=[self.tranferWallForDraw(wall) for wall in wallList]
         allObstaclePos=[ self.rescaleWall(wallForDraw) for wallForDraw in wallForDarwList]
         return allObstaclePos
+
 class DrawState:
     def __init__(self, screen, circleSize, positionIndex, drawBackGround):
         self.screen = screen
