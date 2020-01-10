@@ -34,16 +34,20 @@ def main():
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius}
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetObstacle', 'trajectories')
+
+    # trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetObstacle','evaluateTrajectories')
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-    fuzzySearchParameterNames = []
-    # fuzzySearchParameterNames = []
+    # fuzzySearchParameterNames = ['numTrainStepEachIteration','numTrajectoriesPerIteration','sampleIndex']
+    fuzzySearchParameterNames =[]# ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     # para = {'numSimulations':numSimulations }
-    iterationIndex=2093
+    iterationIndex=9000
+    saveImage=True
     para = {'iterationIndex':iterationIndex }
+    # para = {'selfIteration':iterationIndex ,'otherIteration':iterationIndex}
     allTrajectories = loadTrajectories(para)
     print(len(allTrajectories))
     for dataIndex in range(len(allTrajectories)):
@@ -63,14 +67,22 @@ def main():
             lineWidth = 3
             xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
             yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
-            rescaleObstacle1Pos = [390.5, 328.5, 19, 66.5]
-            rescaleObstacle2Pos = [390.5, 404.75, 19, 66.5]
-            allObstaclePos = [rescaleObstacle1Pos, rescaleObstacle2Pos]
+
             screenColor = THECOLORS['black']
             lineColor = THECOLORS['white']
+            agentMaxSize=0.6
+            wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
+            positionIndex = [2, 3]
+            rawXRange = [-10, 10]
+            rawYRange = [-10, 10]
+            scaledXRange = [210, 590]
+            scaledYRange = [210, 590]
+
+            transferWallToRescalePosForDraw=TransferWallToRescalePosForDraw(rawXRange,rawYRange,scaledXRange,scaledYRange)
+            allObstaclePos = transferWallToRescalePosForDraw(wallList)
 
             drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
-            circleSize = 8#4
+            circleSize = [8,11]#4
             positionIndex = [0, 1]
             drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
 
@@ -78,12 +90,8 @@ def main():
 
             FPS = 60
 
-            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=False,)
+            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=saveImage,)
 
-            rawXRange = [-10, 10]
-            rawYRange = [-10, 10]
-            scaledXRange = [210, 590]
-            scaledYRange = [210, 590]
             scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
 
             oldFPS = 5
@@ -92,8 +100,28 @@ def main():
             getTrajectory = lambda rawTrajectory: scaleTrajectory(adjustFPS(rawTrajectory))
             positionList = [observe(index) for index in range(len(trajectory))]
             positionListToDraw = getTrajectory(positionList)
-            chaseTrial(2,positionListToDraw, '2ObjectsObstaclesNNGuideMCTS_selfIteration=6500_otherIteration=6500/' + str(dataIndex))
+            demoDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetObstacle', 'evaDemo')
 
+            if not os.path.exists(demoDirectory):
+                os.makedirs(demoDirectory)
+            chaseTrial(2,positionListToDraw, os.path.join(demoDirectory,str(iterationIndex)))
+class TransferWallToRescalePosForDraw:
+    def __init__(self,rawXRange,rawYRange,scaledXRange,scaledYRange):
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (self.rawYMax-rawY) * yScale + self.scaledYMin
+        self.rescaleWall=lambda wallForDraw :[adjustX(wallForDraw[0]),adjustY(wallForDraw[1]),wallForDraw[2]*xScale,wallForDraw[3]*yScale]
+        self.tranferWallForDraw=lambda wall:[wall[0]-wall[2],wall[1]+wall[3],2*wall[2],2*wall[3]]
+    def __call__(self,wallList):
+
+        wallForDarwList=[self.tranferWallForDraw(wall) for wall in wallList]
+        allObstaclePos=[ self.rescaleWall(wallForDraw) for wallForDraw in wallForDarwList]
+        return allObstaclePos
 class DrawState:
     def __init__(self, screen, circleSize, positionIndex, drawBackGround):
         self.screen = screen
@@ -103,11 +131,11 @@ class DrawState:
 
     def __call__(self,numOfAgent, state, circleColorList):
         self.drawBackGround()
-        
+
         for agentIndex in range(numOfAgent):
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
             agentColor = circleColorList[agentIndex]
-            pg.draw.circle(self.screen, agentColor, agentPos, self.circleSize)
+            pg.draw.circle(self.screen, agentColor, agentPos, self.circleSize[agentIndex])
         pg.display.flip()
         return self.screen
 class ChaseTrialWithTraj:
@@ -117,13 +145,16 @@ class ChaseTrialWithTraj:
         self.drawState = drawState
         self.saveImage = saveImage
     def __call__(self, numOfAgents, trajectoryData, imagePath):
+        if not os.path.exists(imagePath):
+            os.makedirs(imagePath)
         fpsClock = pg.time.Clock()
         for timeStep in range(len(trajectoryData)):
             state = trajectoryData[timeStep]
             fpsClock.tick(self.fps)
             screen = self.drawState(numOfAgents, state, self.colorSpace)
             if self.saveImage == True:
-                pg.image.save(screen, imagePath + '/' + format(timeStep, '04') + ".png")
+                filename='Obstacle'+format(timeStep, '04') + ".png"
+                pg.image.save(screen, os.path.join(imagePath,filename ))
         return
 
 if __name__ == '__main__':

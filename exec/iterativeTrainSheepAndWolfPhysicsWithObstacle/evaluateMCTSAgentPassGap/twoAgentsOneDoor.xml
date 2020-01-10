@@ -1,5 +1,5 @@
 <mujoco>
-    <option gravity="0 0 0" timestep="0.01"/>
+    <option gravity="0 0 0" timestep="0.005"/>
 <default>
     <geom rgba="0 0 0 1"/>
 </default>
@@ -37,7 +37,7 @@
             <joint axis="1 0 0" damping="0" name="predator0" pos="0 0 0" type="slide"/>
             <joint axis="0 1 0" damping="0" name="predator1" pos="0 0 0" type="slide"/>
       <!--      <joint axis="0 0 1" damping="0" name="predator2" pos="0 0 0" type="slide"/> -->
-            <geom type="sphere" size="0.6" mass="10" rgba="1 0 0 1"/>
+            <geom type="sphere" size="0.4" mass="10" rgba="1 0 0 1"/>
     	    <site name="predator" pos="0 0 0" type="sphere" size="0.01"/>
 	</body>
 

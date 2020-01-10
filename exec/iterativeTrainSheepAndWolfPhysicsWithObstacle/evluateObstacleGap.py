@@ -2,21 +2,80 @@ import sys
 import os
 import mujoco_py as mujoco
 import numpy as np
-
+# from xml.dom.minidom import parse
+from collections import OrderedDict
+import xmltodict
 DIRNAME = os.path.dirname(__file__)
 sys.path.append(os.path.join(DIRNAME, '..','..'))
-
+# import xmltodict
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+def parse_file(xml_path):
+    '''
+    Reads xml from xml_path, consolidates all includes in xml, and returns
+    a normalized xml dictionary.  See preprocess()
+    '''
+    # TODO: use XSS or DTD checking to verify XML structure
+    with open(xml_path) as f:
+        xml_string = f.read()
 
+    xml_doc_dict = xmltodict.parse(xml_string.strip())
+
+    return xml_doc_dict
+
+def transferNumberListToStr(numList):
+    strList=[str(num) for num in numList]
+    return ' '.join(strList)
+def changeWallProperty(envDict,wallPropertyDict):
+    for number,propertyDict in wallPropertyDict.items():
+        for name,value in propertyDict.items():
+            envDict['mujoco']['worldbody']['body'][number]['geom'][name]=value
+
+    return envDict
 def main():
     dirName = os.path.dirname(__file__)
     physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles4.xml')
+    xml_dict=parse_file(physicsDynamicsPath)
 
-    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+    with open(physicsDynamicsPath) as f:
+        xml_string = f.read()
+    xml_doc_dict = xmltodict.parse(xml_string.strip())
+
+    wallPropertyDict={}
+    wall1Id=5
+    wall2Id=6
+    gapLenth=1.65
+    wall1Pos=[0,(9.95+gapLenth/2)/2,-0.2]
+    wall1Size=[0.9,(9.95+gapLenth/2)/2-gapLenth/2,1.5]
+    wall2Pos=[0,-(9.95+gapLenth/2)/2,-0.2]
+    wall2Size=[0.9,(9.95+gapLenth/2)/2-gapLenth/2,1.5]
+
+    wallPropertyDict[wall1Id]={'@pos':transferNumberListToStr(wall1Pos),'@size':transferNumberListToStr(wall1Size)}
+    wallPropertyDict[wall2Id]={'@pos':transferNumberListToStr(wall2Pos),'@size':transferNumberListToStr(wall2Size)}
+
+    xml_doc_dict=changeWallProperty(xml_doc_dict,wallPropertyDict)
+    # xml_doc_dict['mujoco']['worldbody']['body'][5]['geom']['@pos']='0 3 -0.2'
+    # xml_doc_dict['mujoco']['worldbody']['body'][5]['geom']['@size']='0.9 2 1.5'
+    # xml_doc_dict['mujoco']['worldbody']['body'][5]['geom']
+
+
+    # print(physicsModelXml)
+    # name='obstacle11'
+    # rootNode=physicsModelXml.documentElement
+    # wall=rootNode.getElementsByTagName('body')
+    xml=xmltodict.unparse(xml_doc_dict)
+    print(xml_doc_dict['mujoco']['worldbody']['body'][5]['geom'])
+    print(xml_doc_dict['mujoco']['worldbody']['body'][6]['geom'])
+    # print(xml)
+    # print(wall[6].toxml())
+    # wall[6].childNodes[1]=geom condim="3" mass="10000" name="obstacle2" pos="0 -2 -0.2" size="0.5 1.75 1.5" type="box"
+    # wall[6].childNodes[1]=,.
+    # print(wall[6].childNodes[1].toxml())
+    # print(wall[6].childNodes[1])
+    physicsModel = mujoco.load_model_from_xml(xml)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
-    # physicsSimulation.model.body_mass[8] = 30
+    physicsSimulation.model.body_mass[8] = 30
 
     physicsSimulation.model.geom_friction[:,0] = 0.15
 

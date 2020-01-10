@@ -164,22 +164,23 @@ def main():
 
         # Mujoco environment
         # physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
-        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles4.xml')
+        physicsDynamicsPath = physicsDynamicsPath=os.path.join(dirName,'..', '..', 'env','xmls','twoAgents.xml')
+        # physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles4.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         # MDP function
-        agentMaxSize=0
-        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
-        checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
+        # agentMaxSize=0
+        # wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
+        # checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
         qPosInit = (0, 0, 0, 0)
         qVelInit = [0, 0, 0, 0]
         numAgents = 2
         qVelInitNoise = 8
         qPosInitNoise = 9.7
-
-        reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
+        reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+        # reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
 
         agentIds = list(range(numAgents))
         sheepId = 0

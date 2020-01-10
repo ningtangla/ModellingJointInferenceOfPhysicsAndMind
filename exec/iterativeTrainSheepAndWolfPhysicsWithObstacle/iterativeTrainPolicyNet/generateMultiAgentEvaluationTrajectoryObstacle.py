@@ -1,13 +1,13 @@
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__),  '..','..'))
+sys.path.append(os.path.join(os.path.dirname(__file__),  '..',  '..','..'))
 import numpy as np
 import pickle
 import random
 import json
 from collections import OrderedDict
 import itertools as it
-from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.envMujoco import  IsTerminal, TransitionFunction, ResetUniform
 import mujoco_py as mujoco
 import src.constrainedChasingEscapingEnv.reward as reward
@@ -129,8 +129,7 @@ def main():
     # parametersForTrajectoryPath['sampleOneStepPerTraj']=1 #0
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
+
     selfIteration = int(parametersForTrajectoryPath['selfIteration'])
     otherIteration = int(parametersForTrajectoryPath['otherIteration'])
 
@@ -141,7 +140,7 @@ def main():
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentObstacle','evaluateTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentPolicyNetObstacle','evaluateTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -150,8 +149,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        # physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
-        physicsDynamicsPath = physicsDynamicsPath=os.path.join(dirName,'..', '..', 'env','xmls','twoAgents.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..','twoAgentsTwoObstacles4.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -183,32 +181,39 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
-        numactionSpace=len(actionSpace)
+        numActionSpace=len(actionSpace)
         # neural network init
         numStateSpace = 12
         regularizationFactor = 1e-4
-        sharedWidths = [128]
+        sharedWidths = [128, 128, 128, 128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        resBlockSize = 2
-        dropoutRate = 0.0
-        depth=9
-        initializationMethod = 'uniform'
-        generateModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
-        initWolfNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'NNModelRes')
+        generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
+        initWolfNNModel=generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+        # numStateSpace = 12
+        # regularizationFactor = 1e-4
+        # sharedWidths = [128]
+        # actionLayerWidths = [128]
+        # valueLayerWidths = [128]
+        # resBlockSize = 2
+        # dropoutRate = 0.0
+        # depth=9
+        # initializationMethod = 'uniform'
+        # generateModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
+        # initWolfNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentPolicyNetObstacle', 'NNModel')
 
         NNModelSaveExtension=' '
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-        wolfModelPath = getNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolfId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+        wolfModelPath = getNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolfId})
         restoreWolfNNModel = restoreVariables(initWolfNNModel, wolfModelPath)
 
         wolfPolicy = ApproximatePolicy(restoreWolfNNModel, actionSpace)
 
-        initSheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        sheepModelPath = getNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+        initSheepNNModel = generateModel(sharedWidths, actionLayerWidths, valueLayerWidths)
+        sheepModelPath = getNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId})
         restoreSheepNNModel=restoreVariables(initSheepNNModel, sheepModelPath)
         sheepPolicy = ApproximatePolicy(restoreSheepNNModel, actionSpace)
 
@@ -223,7 +228,7 @@ def main():
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
             circleSize = 10
             saveImage = False
-            saveImageDir = os.path.join(dirName, '..', '..', 'data','demoImg')
+            saveImageDir = os.path.join(dirName, '..', '..', '..', 'data','demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])

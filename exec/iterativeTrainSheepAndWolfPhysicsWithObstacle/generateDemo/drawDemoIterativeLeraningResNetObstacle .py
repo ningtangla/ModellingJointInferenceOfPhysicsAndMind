@@ -1,12 +1,15 @@
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__),  '..','..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..','..'))
 import numpy as np
 import pickle
 import random
 import json
 from collections import OrderedDict
 import itertools as it
+import pygame as pg
+from pygame.color import THECOLORS
+
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.envMujoco import  IsTerminal, TransitionFunction, ResetUniform
 import mujoco_py as mujoco
@@ -15,10 +18,7 @@ from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeter
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
-from src.episode import chooseGreedyAction,SampleTrajectory
-
-
-
+from src.episode import chooseGreedyAction,SampleTrajectory,SampleAction
 
 import time
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
@@ -76,15 +76,15 @@ class FixResetUniformInEnvWithObstacles:
         self.simulation.data.qvel[:] = qVel
         self.simulation.forward()
 
-        xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
-
+        # xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
+        xPos=qPos
         agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
         agentState = lambda agentIndex: np.concatenate(
             [agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
-
+        print(startState)
         return startState
 
 class FixSampleTrajectoryWithRender:
@@ -96,7 +96,7 @@ class FixSampleTrajectoryWithRender:
         self.chooseAction = chooseAction
         self.render = render
         self.renderOn = renderOn
-
+        self.runningStep=0
     def __call__(self, policy,trailIndex):
         state = self.reset(trailIndex)
 
@@ -110,29 +110,36 @@ class FixSampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
-                self.render(state,runningStep)
+                self.render(state,self.runningStep)
+            self.runningStep=self.runningStep+1
             actionDists = policy(state)
             action = [choose(action) for choose, action in zip(self.chooseAction, actionDists)]
             trajectory.append((state, action, actionDists))
             nextState = self.transit(state, action)
-
+            # print(nextState)
             state = nextState
         return trajectory
 
 
 
 def main():
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    # parametersForTrajectoryPath['sampleOneStepPerTraj']=1 #0
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # trainSteps = int(parametersForTrajectoryPath['trainSteps'])
+    # depth=int(parametersForTrajectoryPath['depth'])
+    # dataSize=int(parametersForTrajectoryPath['dataSize'])
 
-    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
-    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+    parametersForTrajectoryPath = {}
+
+
+    startSampleIndex = 0
+    endSampleIndex = 100
+
+    sheepIteration=2000
+    wolfIteration=2000
 
     killzoneRadius = 2
     numSimulations = 200
@@ -141,7 +148,7 @@ def main():
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentObstacle','evaluateTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetObstacle','demoTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -150,8 +157,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        # physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
-        physicsDynamicsPath = physicsDynamicsPath=os.path.join(dirName,'..', '..', 'env','xmls','twoAgents.xml')
+        physicsDynamicsPath=os.path.join(dirName,'..','twoAgentsTwoObstacles4.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -163,7 +169,7 @@ def main():
         qPosInit = (0, 0, 0, 0)
         qVelInit = [0, 0, 0, 0]
         numAgents = 2
-        qVelInitNoise = 8
+        qVelInitNoise = 0
         qPosInitNoise = 9.7
         numTrials=endSampleIndex-startSampleIndex
         np.random.seed(startSampleIndex*endSampleIndex)
@@ -183,7 +189,7 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
         numactionSpace=len(actionSpace)
         # neural network init
@@ -194,43 +200,72 @@ def main():
         valueLayerWidths = [128]
         resBlockSize = 2
         dropoutRate = 0.0
-        depth=9
+        depth =9
         initializationMethod = 'uniform'
         generateModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
-        initWolfNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'NNModelRes')
 
+        initWolfNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetObstacle', 'NNModel')
         NNModelSaveExtension=' '
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-        wolfModelPath = getNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolfId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
-        restoreWolfNNModel = restoreVariables(initWolfNNModel, wolfModelPath)
 
-        wolfPolicy = ApproximatePolicy(restoreWolfNNModel, actionSpace)
+        wolfModelPath = getNNModelSavePath({'iterationIndex': wolfIteration, 'agentId': wolfId})
+        wolvesTrainedModel = restoreVariables(initWolfNNModel, wolfModelPath)
+        wolfPolicy = ApproximatePolicy(wolvesTrainedModel, actionSpace)
 
         initSheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        sheepModelPath = getNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
+        sheepModelPath = getNNModelSavePath({'iterationIndex': sheepIteration, 'agentId': sheepId})
         restoreSheepNNModel=restoreVariables(initSheepNNModel, sheepModelPath)
         sheepPolicy = ApproximatePolicy(restoreSheepNNModel, actionSpace)
 
-        policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
-
-
-        renderOn = False
+        renderOn = True
         render=None
         if renderOn:
+            from visualize.continuousVisualization import DrawBackgroundWithObstacles
+            fullScreen = False
+            screenWidth = 800
+            screenHeight = 800
+            screen = pg.display.set_mode([screenWidth, screenHeight])
 
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
-            circleSize = 10
-            saveImage = False
-            saveImageDir = os.path.join(dirName, '..', '..', 'data','demoImg')
-            if not os.path.exists(saveImageDir):
-                os.makedirs(saveImageDir)
-            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, posIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+            circleColorList = [THECOLORS['green'], THECOLORS['red']]
 
+
+            leaveEdgeSpace = 200
+            lineWidth = 3
+            xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
+            yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+
+            positionIndex = [2, 3]
+            rawXRange = [-10, 10]
+            rawYRange = [-10, 10]
+            scaledXRange = [210, 590]
+            scaledYRange = [210, 590]
+            scaleState = ScaleState(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+            transferWallToRescalePosForDraw=TransferWallToRescalePosForDraw(rawXRange,rawYRange,scaledXRange,scaledYRange)
+
+            allObstaclePos = transferWallToRescalePosForDraw(wallList)
+
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
+
+            circleSizeList=[8,11]
+            drawState = DrawState(screen, circleSizeList,circleColorList, positionIndex,drawBackground)
+
+            saveImage = True
+            demoDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetObstacle', 'NNdemo',str(sheepIteration))
+
+            if not os.path.exists(demoDirectory):
+                os.makedirs(demoDirectory)
+            numOfAgent=2
+            render = RenderInObstacle(numOfAgent, positionIndex,screen, circleColorList, saveImage, demoDirectory,scaleState,drawState)
+
+        beta=1
+        sampleAction=SampleAction(beta)
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        playMaxRunningSteps=50
+        chooseActionList=[sampleAction,sampleAction]
+        playMaxRunningSteps=100
         sampleTrajectory = FixSampleTrajectoryWithRender(playMaxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
         # All agents' policies
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
@@ -238,5 +273,87 @@ def main():
 
         saveToPickle(trajectories, trajectorySavePath)
 
+class TransferWallToRescalePosForDraw:
+    def __init__(self,rawXRange,rawYRange,scaledXRange,scaledYRange):
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (self.rawYMax-rawY) * yScale + self.scaledYMin
+        self.rescaleWall=lambda wallForDraw :[adjustX(wallForDraw[0]),adjustY(wallForDraw[1]),wallForDraw[2]*xScale,wallForDraw[3]*yScale]
+        self.tranferWallForDraw=lambda wall:[wall[0]-wall[2],wall[1]+wall[3],2*wall[2],2*wall[3]]
+    def __call__(self,wallList):
+
+        wallForDarwList=[self.tranferWallForDraw(wall) for wall in wallList]
+        allObstaclePos=[ self.rescaleWall(wallForDraw) for wallForDraw in wallForDarwList]
+        return allObstaclePos
+
+class RenderInObstacle():
+    def __init__(self, numOfAgent, posIndex, screen, circleColorList,saveImage, saveImageDir,scaleState,drawState):
+        self.numOfAgent = numOfAgent
+        self.posIndex = posIndex
+        self.screen = screen
+        self.circleColorList = circleColorList
+        self.saveImage  = saveImage
+        self.saveImageDir = saveImageDir
+        self.scaleState=scaleState
+        self.drawState=drawState
+    def __call__(self, state, timeStep):
+        for j in range(1):
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+
+            rescaleState=self.scaleState(state)
+            # print(state,rescaleState)
+            screen = self.drawState(self.numOfAgent,rescaleState)
+            pg.time.wait(100)
+
+            if self.saveImage == True:
+                if not os.path.exists(self.saveImageDir):
+                    os.makedirs(self.saveImageDir)
+                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
+class DrawState:
+    def __init__(self, screen, circleSizeList,circleColorList, positionIndex, drawBackGround):
+        self.screen = screen
+        self.circleSizeList = circleSizeList
+        self.xIndex, self.yIndex = positionIndex
+        self.drawBackGround = drawBackGround
+        self.circleColorList=circleColorList
+    def __call__(self, numOfAgent, state):
+
+        self.drawBackGround()
+
+        for agentIndex in range(numOfAgent):
+            agentPos =[np.int(pos) for pos in state[agentIndex]]
+            agentColor = self.circleColorList[agentIndex]
+            pg.draw.circle(self.screen, agentColor, agentPos, self.circleSizeList[agentIndex])
+        pg.display.flip()
+        return self.screen
+
+class ScaleState:
+    def __init__(self, positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange):
+        self.xIndex, self.yIndex = positionIndex
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+
+    def __call__(self, originalState):
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (self.rawYMax-rawY) * yScale + self.scaledYMin
+
+        adjustState = lambda state: [adjustX(state[self.xIndex]), adjustY(state[self.yIndex])]
+
+        newState = [adjustState(agentState) for agentState in originalState]
+
+        return newState
 if __name__ == "__main__":
     main()
