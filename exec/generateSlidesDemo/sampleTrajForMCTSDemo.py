@@ -188,7 +188,6 @@ class DrawState:
             agentColor = circleColorList[agentIndex]
             pg.draw.circle(self.screen, agentColor, agentPos, self.circleSize)
 
-        pg.draw.circle(self.screen, circleColorList[2], [np.int(state[2][self.xIndex]), np.int(state[2][self.yIndex])], self.circleSize)
         pg.display.flip()
         return self.screen
 
