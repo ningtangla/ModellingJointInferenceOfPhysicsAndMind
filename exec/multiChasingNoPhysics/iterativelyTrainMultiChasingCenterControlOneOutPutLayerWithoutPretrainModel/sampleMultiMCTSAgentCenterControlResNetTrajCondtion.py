@@ -13,7 +13,7 @@ from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryAndOutObstacleByReflectVelocity, UnpackCenterControlAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -126,7 +126,11 @@ def main():
         numOfAgent = 3
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-        reset = Reset(xBoundary, yBoundary, numOfAgent)
+        xObstacle = [300, 400]
+        yObstacle = [300, 400]
+        isLegle = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
+                and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]))
+        reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
         sheepAliveBonus = 1 / maxRunningSteps
         wolfAlivePenalty = -sheepAliveBonus
@@ -141,8 +145,8 @@ def main():
         wolvesId = 1
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackCenterControlAction)
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacle, yObstacle)
+        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
         #action
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]

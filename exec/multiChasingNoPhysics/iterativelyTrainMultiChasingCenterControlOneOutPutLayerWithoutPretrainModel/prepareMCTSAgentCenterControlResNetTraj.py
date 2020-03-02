@@ -13,7 +13,7 @@ from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysicsWithCenterControlAction, Reset,IsTerminal,StayInBoundaryByReflectVelocity,UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysicsWithCenterControlAction, Reset,IsTerminal,StayInBoundaryAndOutObstacleBoundaryByReflectVelocity,UnpackCenterControlAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -125,7 +125,12 @@ def main():
         numOfAgent=3
         xBoundary = [0,600]
         yBoundary = [0,600]
-        reset = Reset(xBoundary, yBoundary, numOfAgent)
+        xObstacle = [300, 400]
+        yObstacle = [300, 400]
+        isLegle = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
+                and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]))
+        reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
+
 
         sheepAliveBonus = 1/maxRunningSteps
         wolfAlivePenalty = -sheepAliveBonus
@@ -140,8 +145,8 @@ def main():
         wolvesId =1
         centerControlIndexList=[wolvesId]
         unpackAction=UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
-        transit=TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity,unpackAction)
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacle, yObstacle)
+        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
         #product wolves action space 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
@@ -214,7 +219,7 @@ def main():
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
-        print([len(traj) for traj in trajectories])
+        print([len(traj) for traj in trajectories], '#########################')
         saveToPickle(trajectories, trajectorySavePath)
 
 

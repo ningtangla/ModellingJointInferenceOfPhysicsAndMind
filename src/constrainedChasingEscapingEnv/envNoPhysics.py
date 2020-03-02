@@ -2,10 +2,11 @@ import numpy as np
 
 
 class Reset():
-    def __init__(self, xBoundary, yBoundary, numOfAgent):
+    def __init__(self, xBoundary, yBoundary, numOfAgent, isLegal = lambda state: True):
         self.xBoundary = xBoundary
         self.yBoundary = yBoundary
         self.numOfAgnet = numOfAgent
+        self.isLegal = isLegal
 
     def __call__(self):
         xMin, xMax = self.xBoundary
@@ -13,6 +14,10 @@ class Reset():
         initState = [[np.random.uniform(xMin, xMax),
                       np.random.uniform(yMin, yMax)]
                      for _ in range(self.numOfAgnet)]
+        while np.all([self.isLegal(state) for state in initState]) is False:
+            initState = [[np.random.uniform(xMin, xMax),
+                          np.random.uniform(yMin, yMax)]
+                         for _ in range(self.numOfAgnet)] 
         return np.array(initState)
 
 
@@ -153,6 +158,44 @@ class StayInBoundaryByReflectVelocity():
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])
         return checkedPosition, checkedVelocity
 
+class StayInBoundaryAndOutObstacleByReflectVelocity():
+    def __init__(self, xBoundary, yBoundary, xObstacle, yObstacle):
+        self.xMin, self.xMax = xBoundary
+        self.yMin, self.yMax = yBoundary
+        self.xBoundaryMin, self.xBoundaryMax = xObstacle
+        self.yBoundaryMin, self.yBoundaryMax = yObstacle
+    def __call__(self, position, velocity):
+        adjustedX, adjustedY = position
+        adjustedVelX, adjustedVelY = velocity
+        if position[0] >= self.xMax:
+            adjustedX = 2 * self.xMax - position[0]
+            adjustedVelX = -velocity[0]
+        if position[0] <= self.xMin:
+            adjustedX = 2 * self.xMin - position[0]
+            adjustedVelX = -velocity[0]
+        if position[1] >= self.yMax:
+            adjustedY = 2 * self.yMax - position[1]
+            adjustedVelY = -velocity[1]
+        if position[1] <= self.yMin:
+            adjustedY = 2 * self.yMin - position[1]
+            adjustedVelY = -velocity[1]
+        if position[0] >= self.xBoundaryMin and position[0]<=self.xBoundaryMax and position[1]>=self.yBoundaryMin and position[1]<=self.yBoundaryMax:
+            if position[0]-velocity[0]<=self.xBoundaryMin:
+                adjustedVelX=-velocity[0]
+                adjustedX=2*self.xBoundaryMin-position[0]
+            if position[0]-velocity[0]>=self.xBoundaryMax:
+                adjustedVelX=-velocity[0]
+                adjustedX=2*self.xBoundaryMax-position[0]
+            if position[1]-velocity[1]<=self.yBoundaryMin:
+                adjustedVelY=-velocity[1]
+                adjustedY=2*self.yBoundaryMin-position[1]
+            if position[1]-velocity[1]>=self.yBoundaryMax:
+                adjustedVelY=-velocity[1]
+                adjustedY=2*self.xBoundaryMax-position[1]
+
+        checkedPosition = np.array([adjustedX, adjustedY])
+        checkedVelocity = np.array([adjustedVelX, adjustedVelY])
+        return checkedPosition, checkedVelocity
 
 class CheckBoundary():
     def __init__(self, xBoundary, yBoundary):

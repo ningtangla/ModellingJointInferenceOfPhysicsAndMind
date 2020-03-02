@@ -122,7 +122,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateModelList = [generateSheepModel, generateWolvesModel]
 
     # replay buffer
-    bufferSize = 2000
+    bufferSize = 1000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
     miniBatchSize = 256  # 256
@@ -217,7 +217,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration = 125
+    restoredIteration = 0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -235,9 +235,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
 
-        numCpuToUseWhileTrain = int(16)
+        numCpuToUseWhileTrain = int(4)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
-    sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
+        sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
         
         generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
         trajectoryPathParameters = {'iterationIndex': iterationIndex, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
@@ -270,7 +270,7 @@ def iterateTrainOneCondition(parameterOneCondition):
 def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [4]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
