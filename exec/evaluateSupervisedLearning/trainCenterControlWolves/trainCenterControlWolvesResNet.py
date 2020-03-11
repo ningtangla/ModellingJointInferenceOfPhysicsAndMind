@@ -64,17 +64,18 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace22', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 100
-    dataSetNumSimulations = 200
+    dataSetNumSimulations = 150
     killzoneRadius = 25
-    agentId = 1
-    dataSetFixedParameters = {'agentId': 32, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius':killzoneRadius}
+    agentId = 22
+    wolvesId = 1
+    dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius':killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -121,9 +122,11 @@ def trainOneCondition(manipulatedVariables):
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 2
-    wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
-    actionSpaceTwo = [(10, 0), (-10, 0), (0,0)]
+    actionSpaceOne = [(10, 0),  (-10, 0)]
+    wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))
+
+    actionSpaceTwo = [(10, 0),  (-10, 0)]
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
     wolvesActionSpace =list(it.product(wolfActionOneSpace,wolfActionTwoSpace))
 
@@ -134,7 +137,7 @@ def trainOneCondition(manipulatedVariables):
     actionToOneHot = ActionToOneHot(wolvesActionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, agentId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolvesId)
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
@@ -193,7 +196,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlThreeActionSpace', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace22', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

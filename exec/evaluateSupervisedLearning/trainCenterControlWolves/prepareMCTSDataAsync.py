@@ -32,7 +32,7 @@ class GenerateTrajectoriesParallel:
 def main():
     dirName = os.path.dirname(__file__)
 
-    wolfId = 32
+    wolfId = 22
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
