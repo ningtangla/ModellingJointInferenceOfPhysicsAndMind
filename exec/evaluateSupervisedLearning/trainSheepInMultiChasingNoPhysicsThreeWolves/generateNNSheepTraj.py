@@ -26,17 +26,17 @@ from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
 
 def main():
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    agentId = int(parametersForTrajectoryPath['agentId'])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # agentId = int(parametersForTrajectoryPath['agentId'])
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    # test
-    # parametersForTrajectoryPath = {}
-    # startSampleIndex = 0
-    # endSampleIndex = 1
-    # test
+    #test
+    parametersForTrajectoryPath = {}
+    startSampleIndex = 0
+    endSampleIndex = 10
+    #test
 
     killzoneRadius = 30
     numSimulations = 100
@@ -51,8 +51,8 @@ def main():
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
-    # while True:
-    if not os.path.isfile(trajectorySavePath):
+    while True:
+    # if not os.path.isfile(trajectorySavePath):
         numOfAgent = 4
         sheepId = 0
         wolfOneId = 1
@@ -65,8 +65,8 @@ def main():
 
         # prepare render
         import pygame as pg
-        renderOn = False
-        render = None
+        renderOn = True
+        render = True
         if renderOn:
             from pygame.color import THECOLORS
             screenColor = THECOLORS['black']
@@ -115,7 +115,7 @@ def main():
         # neural network init
         numStateSpace = 8
         numSheepActionSpace = len(sheepActionSpace)
-        numWolvesActionSpace = len(wolvesActionSpace)
+        numWolvesActionSpace = len(wolfActionSpace)
 
         regularizationFactor = 1e-4
         sharedWidths = [128]

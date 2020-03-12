@@ -1,6 +1,6 @@
 import numpy as np
 import random
-
+import pygame as pg
 
 class MultiAgentSampleTrajectory:
     def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
