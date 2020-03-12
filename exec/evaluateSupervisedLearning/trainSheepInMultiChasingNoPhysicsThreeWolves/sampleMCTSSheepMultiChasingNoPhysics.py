@@ -64,16 +64,18 @@ def main():
 
         # prepare render
         import pygame as pg
-        renderOn = True
-        from pygame.color import THECOLORS
-        screenColor = THECOLORS['black']
-        circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
-        circleSize = 10
-        screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-        saveImage = False
-        saveImageDir = None
-        render = Render(numOfAgent, positionIndex,
-                        screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+        renderOn = False
+        render = None
+        if renderOn:
+            from pygame.color import THECOLORS
+            screenColor = THECOLORS['black']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
+            circleSize = 10
+            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+            saveImage = False
+            saveImageDir = None
+            render = Render(numOfAgent, positionIndex,
+                            screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorOnePos = GetAgentPosFromState(wolfOneId, positionIndex)
@@ -153,8 +155,8 @@ def main():
         policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state), wolfThreePolicy(state)]
 
         # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
-
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction, render, renderOn)
+        chooseActionList = [chooseGreedyAction,chooseGreedyAction,chooseGreedyAction,chooseGreedyAction]
+        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseActionList, render, renderOn)
 
         startTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]

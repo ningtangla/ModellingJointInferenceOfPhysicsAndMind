@@ -10,7 +10,6 @@ import pickle
 from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
-from mujoco_py import load_model_from_path, MjSim
 import itertools as it
 import pathos.multiprocessing as mp
 
@@ -78,7 +77,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['miniBatchSize'] = 256  # [64, 128, 256, 512]
     manipulatedVariables['learningRate'] = 1e-4  # [1e-2, 1e-3, 1e-4, 1e-5]
-    manipulatedVariables['depth'] = 17  # [2 ,4, 6, 8]
+    manipulatedVariables['depth'] = 9  # [2 ,4, 6, 8]
 
     # productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     # parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -93,8 +92,9 @@ def main():
     dataSetMaxRunningSteps = 100
     dataSetNumSimulations = 100
     killzoneRadius = 30
+    sheepId = 0
 
-    dataSetFixedParameters = {'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+    dataSetFixedParameters = {'agentId': sheepId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
@@ -104,7 +104,7 @@ def main():
     sheepId = 0
     wolf1Id = 1
     wolf2Id = 2
-    wolfThreeId = 3
+    wolf3Id = 3
     xPosIndex = [0, 1]
 
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
