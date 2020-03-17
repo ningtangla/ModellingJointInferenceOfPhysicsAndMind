@@ -187,7 +187,7 @@ class DrawState:
             agentPos = [np.int(state[agentIndex][self.xIndex]), np.int(state[agentIndex][self.yIndex])]
             agentColor = circleColorList[agentIndex]
             pg.draw.circle(self.screen, agentColor, agentPos, self.circleSize)
-
+            pg.draw.circle(self.screen, [255, 255, 255], agentPos, self.circleSize, 3)
         pg.display.flip()
         return self.screen
 
@@ -234,7 +234,7 @@ class MCTSRender():
         if backgroundScreen == None:
             backgroundScreen = self.drawState(poses, self.circleColorList)
             if self.saveImage == True:
-                for numStaticImage in range(120):
+                for numStaticImage in range(60):
                     filenameList = os.listdir(self.saveImageDir)
                     pg.image.save(self.screen, self.saveImageDir + '/' + str(len(filenameList)) + '.png')
 
@@ -287,7 +287,7 @@ def main():
     # get traj save path
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 100
-    numSimulations = 100
+    numSimulations = 173
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
