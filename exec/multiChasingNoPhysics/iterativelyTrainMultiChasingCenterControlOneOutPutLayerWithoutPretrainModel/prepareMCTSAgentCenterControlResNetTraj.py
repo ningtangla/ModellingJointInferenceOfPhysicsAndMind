@@ -13,7 +13,7 @@ from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysicsWithCenterControlAction, Reset,IsTerminal,StayInBoundaryAndOutObstacleBoundaryByReflectVelocity,UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysicsWithCenterControlAction, Reset,IsTerminal,StayInBoundaryAndOutObstacleByReflectVelocity,UnpackCenterControlAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -98,13 +98,13 @@ def main():
     
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     #get traj save path
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
+    maxRunningSteps = 60
     numSimulations = 100
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -122,15 +122,13 @@ def main():
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, posIndex)
         getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, posIndex)
 
-        numOfAgent=3
+        numOfAgent = 3
         xBoundary = [0,600]
         yBoundary = [0,600]
-        xObstacle = [300, 400]
-        yObstacle = [300, 400]
-        isLegle = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
-                and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]))
+        xObstacles = [[100, 200], [400, 500]]
+        yObstacles = [[100, 200], [400, 500]]
+        isLegal = lambda state: not(np.any([(xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
-
 
         sheepAliveBonus = 1/maxRunningSteps
         wolfAlivePenalty = -sheepAliveBonus
@@ -144,8 +142,8 @@ def main():
         
         wolvesId =1
         centerControlIndexList=[wolvesId]
-        unpackAction=UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacle, yObstacle)
+        unpackCenterControlAction=UnpackCenterControlAction(centerControlIndexList)
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
         transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
         #product wolves action space 
@@ -212,9 +210,10 @@ def main():
         renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
             circleSize = 10
             screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
+            xPosIndex = [0, 1]
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 

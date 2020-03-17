@@ -78,7 +78,7 @@ def main():
         yBoundary = [0,600]
         xObstacle = [300, 400]
         yObstacle = [300, 400]
-        isLegle = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
+        isLegal = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
                 and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 

@@ -159,11 +159,11 @@ class StayInBoundaryByReflectVelocity():
         return checkedPosition, checkedVelocity
 
 class StayInBoundaryAndOutObstacleByReflectVelocity():
-    def __init__(self, xBoundary, yBoundary, xObstacle, yObstacle):
+    def __init__(self, xBoundary, yBoundary, xObstacles, yObstacles):
         self.xMin, self.xMax = xBoundary
         self.yMin, self.yMax = yBoundary
-        self.xBoundaryMin, self.xBoundaryMax = xObstacle
-        self.yBoundaryMin, self.yBoundaryMax = yObstacle
+        self.xObstacles = xObstacles
+        self.yObstacles = yObstacles
     def __call__(self, position, velocity):
         adjustedX, adjustedY = position
         adjustedVelX, adjustedVelY = velocity
@@ -179,19 +179,23 @@ class StayInBoundaryAndOutObstacleByReflectVelocity():
         if position[1] <= self.yMin:
             adjustedY = 2 * self.yMin - position[1]
             adjustedVelY = -velocity[1]
-        if position[0] >= self.xBoundaryMin and position[0]<=self.xBoundaryMax and position[1]>=self.yBoundaryMin and position[1]<=self.yBoundaryMax:
-            if position[0]-velocity[0]<=self.xBoundaryMin:
-                adjustedVelX=-velocity[0]
-                adjustedX=2*self.xBoundaryMin-position[0]
-            if position[0]-velocity[0]>=self.xBoundaryMax:
-                adjustedVelX=-velocity[0]
-                adjustedX=2*self.xBoundaryMax-position[0]
-            if position[1]-velocity[1]<=self.yBoundaryMin:
-                adjustedVelY=-velocity[1]
-                adjustedY=2*self.yBoundaryMin-position[1]
-            if position[1]-velocity[1]>=self.yBoundaryMax:
-                adjustedVelY=-velocity[1]
-                adjustedY=2*self.xBoundaryMax-position[1]
+	
+        for xObstacle, yObstacle in zip(self.xObstacles, self.yObstacles):
+            xObstacleMin, xObstacleMax = xObstacle
+            yObstacleMin, yObstacleMax = yObstacle
+            if position[0] >= xObstacleMin and position[0] <= xObstacleMax and position[1] >= yObstacleMin and position[1] <= yObstacleMax:
+                if position[0]-velocity[0]<=xObstacleMin:
+                    adjustedVelX=-velocity[0]
+                    adjustedX=2*xObstacleMin-position[0]
+                if position[0]-velocity[0]>=xObstacleMax:
+                    adjustedVelX=-velocity[0]
+                    adjustedX=2*xObstacleMax-position[0]
+                if position[1]-velocity[1]<=yObstacleMin:
+                    adjustedVelY=-velocity[1]
+                    adjustedY=2*yObstacleMin-position[1]
+                if position[1]-velocity[1]>=yObstacleMax:
+                    adjustedVelY=-velocity[1]
+                    adjustedY=2*yObstacleMax-position[1]
 
         checkedPosition = np.array([adjustedX, adjustedY])
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])

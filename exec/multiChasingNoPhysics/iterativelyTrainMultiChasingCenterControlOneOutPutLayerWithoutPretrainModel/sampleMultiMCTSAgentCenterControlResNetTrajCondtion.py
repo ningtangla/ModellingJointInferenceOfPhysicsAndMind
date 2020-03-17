@@ -100,12 +100,12 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
+    maxRunningSteps = 60
     numSimulations = 100
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -126,10 +126,9 @@ def main():
         numOfAgent = 3
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-        xObstacle = [300, 400]
-        yObstacle = [300, 400]
-        isLegle = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
-                and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]))
+        xObstacles = [[100, 200], [400, 500]]
+        yObstacles = [[100, 200], [400, 500]]
+        isLegal = lambda state: not(np.any([(xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
         sheepAliveBonus = 1 / maxRunningSteps
@@ -145,7 +144,7 @@ def main():
         wolvesId = 1
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacle, yObstacle)
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
         transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
         #action
@@ -199,7 +198,7 @@ def main():
 
         # load model 
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'NNModelRes')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -219,20 +218,20 @@ def main():
         renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
             saveImage = False
             saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
             screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
+            xPosIndex = [0, 1]
             render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)
-
 
 if __name__ == '__main__':
     main()

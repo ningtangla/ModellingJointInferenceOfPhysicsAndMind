@@ -80,7 +80,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, xPosIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoIndex, xPosIndex)
 
-    maxRunningSteps = 150
+    maxRunningSteps = 60
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
@@ -167,11 +167,11 @@ def iterateTrainOneCondition(parameterOneCondition):
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'NNModelRes')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'NNModelRes')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
@@ -230,12 +230,12 @@ def iterateTrainOneCondition(parameterOneCondition):
 
 
     modelMemorySize = 5
-    modelSaveFrequency = 50
+    modelSaveFrequency = 100
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
 
-        numCpuToUseWhileTrain = int(4)
+        numCpuToUseWhileTrain = int(3)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
         
@@ -270,7 +270,7 @@ def iterateTrainOneCondition(parameterOneCondition):
 def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [4]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [3]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
@@ -280,11 +280,12 @@ def main():
     sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)
+    print(numCpuToUse)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = False
+    prepareBefortrainData = True
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
