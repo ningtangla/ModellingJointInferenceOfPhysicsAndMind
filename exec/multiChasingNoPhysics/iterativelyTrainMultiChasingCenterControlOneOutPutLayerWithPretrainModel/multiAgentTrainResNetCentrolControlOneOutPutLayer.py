@@ -91,7 +91,8 @@ def iterateTrainOneCondition(parameterOneCondition):
     killzoneRadius = 30
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+    def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
@@ -122,24 +123,30 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateModelList = [generateSheepModel, generateWolvesModel]
 
     sheepDepth = 5
-    wolfDepth=9
-    depthList=[sheepDepth,wolfDepth]
+    wolfDepth = 9
+    depthList = [sheepDepth, wolfDepth]
     resBlockSize = 2
     dropoutRate = 0.0
     initializationMethod = 'uniform'
+<<<<<<< HEAD
     multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
+=======
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
 
     # replay buffer
-    bufferSize = 2000
+    bufferSize = 20000
     saveToBuffer = SaveToBuffer(bufferSize)
-    getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 256  # 256
+
+    def getUniformSamplingProbabilities(buffer): return [(1 / len(buffer)) for _ in buffer]
+    miniBatchSize = 1000
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
     addMultiAgentValuesToTrajectory = AddValuesToTrajectory(accumulateMultiAgentRewards)
     actionIndex = 1
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+
+    def getTerminalActionFromTrajectory(trajectory): return trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
 
     # pre-process the trajectory for NNTraining
@@ -160,16 +167,17 @@ def iterateTrainOneCondition(parameterOneCondition):
 
     terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 1
+
+    reportInterval = 10000
+    trainStepsIntervel = 1  # 10000
 
     trainReporter = TrainReporter(numTrainStepEachIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    trainNN = Train(numTrainStepEachIteration, miniBatchSize, sampleData,
-                    learningRateModifier, terminalController, coefficientController,
-                    trainReporter)
+
+    trainNN = Train(trainStepsIntervel, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController, trainReporter)
 
     # load save dir
     numSimulations = 100
@@ -203,12 +211,16 @@ def iterateTrainOneCondition(parameterOneCondition):
 
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
-
-    #restorePretrainModel
-    sheepPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    # restorePretrainModel
+    sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
     # wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_dataSize=3000_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+<<<<<<< HEAD
     wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
     pretrainModelPathList=[sheepPreTrainModelPath,wolvesPreTrainModelPath]
+=======
+    wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
 
     trainableAgentIds = [sheepId, wolvesId]
 
@@ -239,24 +251,25 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration =0 #161
+    restoredIteration = 1873  # 161
     # for agentId in trainableAgentIds:
     #     modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
     #     restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
     #     multiAgentNNmodel[agentId] = restoredNNModel
-
+    bufferTrajectoryPathParameters = {'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
     restoredIterationIndexRange = range(restoredIteration)
-    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
+    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters=bufferTrajectoryPathParameters, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
     preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
+    print(len(preProcessedRestoredTrajectories))
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
-
     modelMemorySize = 5
-    modelSaveFrequency = 50
+    modelSaveFrequency = 100
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
-        break
+        print('iterationIndex: ', iterationIndex)
+
         numCpuToUseWhileTrain = int(16)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
@@ -291,12 +304,12 @@ def iterateTrainOneCondition(parameterOneCondition):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrainStepEachIteration'] = [4]
+    manipulatedVariables['numTrainStepEachIteration'] = [3]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
-    #Sample Trajectory Before Train to fill Buffer
+    # Sample Trajectory Before Train to fill Buffer
     miniBatchSize = 256
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     sampleTrajectoryFileName = 'preparePretrainedNNMCTSAgentCenterControlResNetTraj.py'
@@ -310,7 +323,11 @@ def main():
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
+<<<<<<< HEAD
     #parallel train
+=======
+    # parallel train
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
     trainPool = mp.Pool(numCpuToUse)
     trainPool.map(iterateTrainOneCondition, parametersAllCondtion)
 

@@ -1,38 +1,31 @@
 import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
+dirName = os.path.dirname(__file__)
+sys.path.append(os.path.join(dirName, '..','..'))
 
-from subprocess import Popen, PIPE
-import json
-import math
-from collections import OrderedDict
-import pickle
-import pandas as pd
-import time
-from matplotlib import pyplot as plt
+import random
 import numpy as np
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryByReflectVelocity
+import pickle
+from collections import OrderedDict
+import pandas as pd
+from matplotlib import pyplot as plt
 
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
-    establishPlainActionDist, RollOut
-from src.episode import SampleTrajectory, chooseGreedyAction
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy, \
-    HeatSeekingContinuesDeterministicPolicy
-from exec.trajectoriesSaveLoad import GetSavePath, LoadTrajectories, readParametersFromDf, loadFromPickle, GenerateAllSampleIndexSavePaths, SaveAllTrajectories, saveToPickle
-from exec.evaluationFunctions import ComputeStatistics, GenerateInitQPosUniform
-from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, ApproximatePolicy, restoreVariables
-from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOptimalNextPosition, \
-    ComputeOptimalNextPos, GetAgentPosFromTrajectory, GetStateFromTrajectory
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,IsCollided
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
+    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
+
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
+from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
+from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, ActionToOneHot, ProcessTrajectoryForPolicyValueNet, PreProcessTrajectories,AccumulateMultiAgentRewards
+
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
-from exec.preProcessing import AccumulateRewards, AccumulateMultiAgentRewards
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
+from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
-
+from exec.evaluationFunctions import ComputeStatistics
 def drawPerformanceLine(dataDf, axForDraw, agentId):
     for key, grp in dataDf.groupby('otherIteration'):
         grp.index = grp.index.droplevel('otherIteration')
@@ -43,38 +36,34 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,200]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,200]#[-999]+list(range(0,10001,2000)),
-    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['selfIteration'] = [0,250,450]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,250,450]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['numTrainStepEachIteration'] = [4]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
-    
+    selfId=1
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
     
-    trainMaxRunningSteps = 150
-    trainNumSimulations = 100
-    killzoneRadius = 30
+    trainMaxRunningSteps = 30
+    trainNumSimulations = 200
+    killzoneRadius = 2
     
     numAgents = 2
     sheepId = 0
     wolfId = 1
-    posIndex = [0, 1]
-    selfId=sheepId
-
-    wolfOnePosIndex = 1
-    wolfTwoIndex = 2
-    getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
-    getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
-    getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, posIndex)
+    posIndex = [2, 3]
  
-    isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-    isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
-    sheepAliveBonus = 1/trainMaxRunningSteps
+    getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, posIndex)
+
+    isTerminal = IsTerminal(killzoneRadius,getWolfXPos, getSheepXPos)
+
+    playMaxRunningSteps=50
+    sheepAliveBonus = 1/playMaxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
@@ -85,7 +74,7 @@ def main():
 
    
 
-    generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
+    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryObstacle.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
@@ -95,10 +84,10 @@ def main():
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
     toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
-
+# 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName,  '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentObstacle', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -142,7 +131,7 @@ def main():
 
 
 
-    plt.suptitle('SheepNNResnet')
+    plt.suptitle('IterativeWolfPhysicsWithObstacle')
     plt.legend(loc='best')
     plt.show()
 

@@ -9,7 +9,7 @@ import json
 import numpy as np
 from collections import OrderedDict
 import pandas as pd
-from itertools import product 
+from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
@@ -89,13 +89,13 @@ class PrepareMultiAgentPolicy:
 
 
 def main():
- 
+
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     iterationIndex=parametersForTrajectoryPath['iterationIndex']
-    
+
     # check file exists or not
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'trajectories')
@@ -136,14 +136,14 @@ def main():
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
-        
+
         wolvesId =1
         centerControlIndexList=[wolvesId]
         unpackAction=UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit=TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity,unpackAction)
 
-        #product wolves action space 
+        #product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
@@ -165,7 +165,7 @@ def main():
         generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
         generateWolvesModel=GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         generateModelList=[generateSheepModel,generateWolvesModel]
-        
+
         sheepDepth = 5
         wolfDepth=9
         depthList=[sheepDepth,wolfDepth]
@@ -175,12 +175,12 @@ def main():
         trainableAgentIds = [sheepId, wolvesId]
 
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
-        
+
         #restorePretrainModel
         sheepPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
         wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
         pretrainModelPathList=[sheepPreTrainModelPath,wolvesPreTrainModelPath]
-        
+
         for agentId in trainableAgentIds:
 
             restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], pretrainModelPathList[agentId])
@@ -200,23 +200,23 @@ def main():
 
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
-        
-        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
+
+        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseGreedyAction)
 
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
-        
+
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample and save trajectories
-        chooseActionList = [chooseActionInMCTS,chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
 
         saveImage = False
         saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = True
+        renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]

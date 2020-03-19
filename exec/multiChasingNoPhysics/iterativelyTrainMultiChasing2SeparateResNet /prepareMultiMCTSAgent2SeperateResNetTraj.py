@@ -12,12 +12,8 @@ import pandas as pd
 import pygame as pg
 from pygame.color import THECOLORS
 
-
-
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryByReflectVelocity
-
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset, IsTerminal, StayInBoundaryByReflectVelocity
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -27,10 +23,10 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import Render,SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
+from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction, SelectSoftmaxAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -60,15 +56,15 @@ class ComposeSingleAgentGuidedMCTS():
 
     def __call__(self, agentId, selfNNModel, othersPolicy):
         approximateActionPrior = self.getApproximatePolicy[agentId](selfNNModel)
-        transitInMCTS = lambda state, selfAction: self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
+
+        def transitInMCTS(state, selfAction): return self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
         initializeChildren = InitializeChildren(self.actionSpaceList[agentId], transitInMCTS, approximateActionPrior)
         expand = Expand(self.isTerminal, initializeChildren)
 
         terminalReward = self.terminalRewardList[agentId]
         approximateValue = self.getApproximateValue[agentId](selfNNModel)
         estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
+        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand, estimateValue, backup, establishPlainActionDist)
 
         return guidedMCTSPolicy
 
@@ -80,27 +76,28 @@ class PrepareMultiAgentPolicy:
         self.MCTSAgentIds = MCTSAgentIds
 
     def __call__(self, multiAgentNNModel):
-        multiAgentApproximatePolicy = np.array([approximatePolicy(NNModel) for approximatePolicy, NNModel in zip( self.approximatePolicy,multiAgentNNModel)])
+        multiAgentApproximatePolicy = np.array([approximatePolicy(NNModel) for approximatePolicy, NNModel in zip(self.approximatePolicy, multiAgentNNModel)])
         otherAgentPolicyForMCTSAgents = np.array([np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]]) for agentId in self.MCTSAgentIds])
         MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
         MCTSAgentsPolicy = np.array([self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy)
                                      for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
         multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
+
+        def policy(state): return [agentPolicy(state) for agentPolicy in multiAgentPolicy]
         return policy
 
 
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsTwoWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 100
+    maxRunningSteps = 100
+    numSimulations = 200
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -118,34 +115,34 @@ def main():
 
     if not os.path.isfile(trajectorySavePath):
 
-        numOfAgent=3
+        numOfAgent = 3
         agentIds = list(range(numOfAgent))
-        
+
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
         xPosIndex = [0, 1]
-        xBoundary = [0,600]
-        yBoundary = [0,600]
+        xBoundary = [0, 600]
+        yBoundary = [0, 600]
 
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
-
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
 
-        sheepAliveBonus = 1/maxRunningSteps
+        sheepAliveBonus = 1 / maxRunningSteps
         wolfAlivePenalty = -sheepAliveBonus
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
-        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward,wolfTerminalReward]
+        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-        isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
+
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         # NNGuidedMCTS init
@@ -154,19 +151,19 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        actionSpaceList=[sheepActionSpace,wolfActionOneSpace,wolfActionTwoSpace]
+        actionSpaceList = [sheepActionSpace, wolfActionOneSpace, wolfActionTwoSpace]
 
-        getApproximatePolicy =[lambda NNmodel,: ApproximatePolicy(NNmodel, sheepActionSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionOneSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionTwoSpace)]
+        getApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolfActionOneSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolfActionTwoSpace)]
 
-        getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel),lambda NNmodel: ApproximateValue(NNmodel),lambda NNmodel: ApproximateValue(NNmodel)]
+        getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel), lambda NNmodel: ApproximateValue(NNmodel), lambda NNmodel: ApproximateValue(NNmodel)]
 
-        getStateFromNode = lambda node: list(node.id.values())[0]
+        def getStateFromNode(node): return list(node.id.values())[0]
 
         # neural network init
         numStateSpace = 6
@@ -177,41 +174,41 @@ def main():
         valueLayerWidths = [128]
         generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
 
-        generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-
-    
         startTime = time.time()
-        trainableAgentIds = [sheepId, wolfOneId,wolfTwoId]
+        trainableAgentIds = [sheepId, wolfOneId, wolfTwoId]
 
-        depth = 5
+        depth = 9
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for agentId in agentIds]
 
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
-        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS,chooseActionInMCTS]
+        # temperatureInMCTS = 1
+        # chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
-        otherAgentApproximatePolicy = [lambda NNmodel,: ApproximatePolicy(NNmodel, sheepActionSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionOneSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolfActionTwoSpace)]
+        softMaxBetaInMCTS = 5
+        chooseActionInMCTS = SelectSoftmaxAction(softMaxBetaInMCTS)
+
+        otherAgentApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolfActionOneSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolfActionTwoSpace)]
 
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
 
-
         # sample and save trajectories
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
-        
-        render=None
+
+        render = None
         renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['orange']]
             circleSize = 10
             screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
-            render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
+        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         print([len(traj) for traj in trajectories])

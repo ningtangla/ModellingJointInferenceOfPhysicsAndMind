@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import pygame as pg
-
+import os
 class MultiAgentSampleTrajectory:
     def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
         self.agentNames = agentNames
@@ -113,6 +113,7 @@ def chooseGreedyAction(actionDist):
     selectedIndex = np.random.choice(maxIndices)
     selectedAction = actions[selectedIndex]
     return selectedAction
+
 class SampleAction():
     def __init__(self, beta):
         self.beta = beta
@@ -186,7 +187,7 @@ class Render():
             if self.saveImage == True:
                 if not os.path.exists(self.saveImageDir):
                     os.makedirs(self.saveImageDir)
-                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
+                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '05') + ".png")
 
 
 
@@ -199,7 +200,7 @@ class SampleTrajectoryWithRender:
         self.chooseAction = chooseAction
         self.render = render
         self.renderOn = renderOn
-
+        self.runningStep=0
     def __call__(self, policy):
         state = self.reset()
 
@@ -212,7 +213,8 @@ class SampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
-                self.render(state, runningStep)
+                self.render(state, self.runningStep)
+                self.runningStep=self.runningStep+1
             actionDists = policy(state)
             action = [choose(action) for choose, action in zip(self.chooseAction, actionDists)]
             trajectory.append((state, action, actionDists))

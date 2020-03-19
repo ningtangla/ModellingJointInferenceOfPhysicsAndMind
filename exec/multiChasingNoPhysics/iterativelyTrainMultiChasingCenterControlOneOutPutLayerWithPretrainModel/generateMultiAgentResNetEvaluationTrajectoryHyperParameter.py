@@ -85,9 +85,13 @@ def main():
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
+<<<<<<< HEAD
 
         playKillzoneRadius = 25
 
+=======
+        playKillzoneRadius = killzoneRadius
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
@@ -136,6 +140,10 @@ def main():
         trainableAgentIds = [sheepId, wolvesId]
 
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
+<<<<<<< HEAD
+=======
+
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
 
         # load Model save dir
         NNModelSaveExtension = ''
@@ -170,9 +178,13 @@ def main():
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
+<<<<<<< HEAD
 
         renderOn = False
 
+=======
+        renderOn = False
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]

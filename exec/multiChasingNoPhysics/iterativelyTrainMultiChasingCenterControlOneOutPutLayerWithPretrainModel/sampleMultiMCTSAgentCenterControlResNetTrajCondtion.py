@@ -27,7 +27,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
+from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction,SelectSoftmaxAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -105,8 +105,13 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
+<<<<<<< HEAD
     maxRunningSteps = 70#100
     numSimulations = 100
+=======
+    maxRunningSteps = 100
+    numSimulations = 200
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -189,8 +194,8 @@ def main():
         getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel), lambda NNmodel: ApproximateValue(NNmodel)]
         getStateFromNode = lambda node: list(node.id.values())[0]
 
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
+        softMaxBetaInMCTS = 5
+        chooseActionInMCTS = SelectSoftmaxAction(softMaxBetaInMCTS)
 
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
@@ -212,7 +217,7 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample and save trajectories
-        chooseActionList = [chooseGreedyAction, chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render = None
         renderOn = False
