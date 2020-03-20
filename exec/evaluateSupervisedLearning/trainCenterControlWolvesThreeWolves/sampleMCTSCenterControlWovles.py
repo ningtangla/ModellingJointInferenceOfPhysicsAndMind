@@ -40,7 +40,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 100
-    numSimulations = 100
+    numSimulations = 200
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -175,7 +175,7 @@ def main():
     # load chase nn policy
 
         def wolvesTransit(state, action): return transit(
-            state, [chooseActionInMCTS(sheepPolicy(state)), action[0], action[1], action[2]])
+            state, [chooseGreedyAction(sheepPolicy(state)), action])
 
         # reward function
         aliveBonus = -1 / maxRunningSteps
