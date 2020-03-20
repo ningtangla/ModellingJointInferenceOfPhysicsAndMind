@@ -65,6 +65,8 @@ class DrawBackground:
         self.screen.fill(self.screenColor)
         rectPos = [self.xBoundary[0], self.yBoundary[0], self.xBoundary[1], self.yBoundary[1]]
         pg.draw.rect(self.screen, self.lineColor, rectPos, self.lineWidth)
+        pg.draw.rect(self.screen, self.lineColor, [100, 100, 100, 100])
+        pg.draw.rect(self.screen, self.lineColor, [400, 400, 100, 100])
         return
 
 
