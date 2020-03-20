@@ -162,8 +162,6 @@ def main():
 
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
-        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS]
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
         # select child
         cInit = 1
@@ -177,7 +175,7 @@ def main():
     # load chase nn policy
 
         def wolvesTransit(state, action): return transit(
-            state, [chooseGreedyAction(sheepPolicy(state)), action[0], action[1], action[2]])
+            state, [chooseActionInMCTS(sheepPolicy(state)), action[0], action[1], action[2]])
 
         # reward function
         aliveBonus = -1 / maxRunningSteps
@@ -195,7 +193,7 @@ def main():
             state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 0.1
+        rolloutHeuristicWeight = 1e-4
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
@@ -213,6 +211,8 @@ def main():
         # All agents' policies
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
 
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
+        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         print([len(traj) for traj in trajectories])
         saveToPickle(trajectories, trajectorySavePath)
