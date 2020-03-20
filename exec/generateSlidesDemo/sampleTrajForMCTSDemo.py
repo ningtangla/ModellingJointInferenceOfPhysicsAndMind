@@ -330,9 +330,9 @@ def main():
 
         # product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
@@ -428,7 +428,7 @@ def main():
         mctsRenders = [MCTSRender(numOfAgent, MCTSAgentId, screen, screenWidth, screenHeight, screenColor, circleColorList, mctsLineColor, circleSizeForMCTS, saveImage, saveImageDir, drawStateWithRope, scalePos) for MCTSAgentId in range(numAgent)]
         mctsRenderOn = True
 
-        maxRolloutSteps = 10
+        maxRolloutSteps = 5
         rewardFunctions = [RewardFunctionCompete(-terminalReward, terminalReward, isTerminal) for terminalReward in terminalRewardList]
 
         def rolloutHeuristic(rolloutHeuristicWeight):
