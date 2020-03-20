@@ -234,7 +234,7 @@ class MCTSRender():
         if backgroundScreen == None:
             backgroundScreen = self.drawState(poses, self.circleColorList)
             if self.saveImage == True:
-                for numStaticImage in range(60):
+                for numStaticImage in range(30):
                     filenameList = os.listdir(self.saveImageDir)
                     pg.image.save(self.screen, self.saveImageDir + '/' + str(len(filenameList)) + '.png')
 
@@ -286,8 +286,8 @@ def main():
 
     # get traj save path
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 100
-    numSimulations = 173
+    maxRunningSteps = 40
+    numSimulations = 200
     killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -330,9 +330,9 @@ def main():
 
         # product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
@@ -384,11 +384,6 @@ def main():
         # sample and save trajectories
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
-        saveImage = False
-        saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
-        if not os.path.exists(saveImageDir):
-            os.makedirs(saveImageDir)
-
         betaInMCTS = 1
         chooseActionInMCTS = SampleAction(betaInMCTS)
 
@@ -399,12 +394,12 @@ def main():
 
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS, reasonMindList)
 
-        screenWidth = 800
-        screenHeight = 800
+        screenWidth = 600
+        screenHeight = 600
         fullScreen = False
         initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
         screen = initializeScreen()
-        leaveEdgeSpace = 195
+        leaveEdgeSpace = 0
         lineWidth = 4
         circleSize = 10
         xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
@@ -415,21 +410,21 @@ def main():
         drawBackground = DrawBackground(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth)
         drawStateWithRope = DrawState(screen, circleSize, numOfAgent, posIndex, drawBackground)
 
-        rawXRange = [0, 800]
-        rawYRange = [0, 800]
-        scaledXRange = [200, 600]
-        scaledYRange = [200, 600]
-        scalePos = ScalePos(posIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
-
+        rawXRange = [0, 600]
+        rawYRange = [0, 600]
+        scaledXRange = [0, 600]
+        scaledYRange = [0, 600]
+        #scalePos = ScalePos(posIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+        scalePos = lambda pos: pos
         circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
 
         mctsLineColor = np.array([240, 240, 240, 180])
         circleSizeForMCTS = int(0.6 * circleSize)
+        
         saveImage = True
-        saveImageDir = os.path.join(mctsDemoSavePath, "image")
+        saveImageDir = os.path.join(dirName, '..', '..', 'data', 'demoImg')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
-
         mctsRenders = [MCTSRender(numOfAgent, MCTSAgentId, screen, screenWidth, screenHeight, screenColor, circleColorList, mctsLineColor, circleSizeForMCTS, saveImage, saveImageDir, drawStateWithRope, scalePos) for MCTSAgentId in range(numAgent)]
         mctsRenderOn = True
 
@@ -443,7 +438,7 @@ def main():
                 rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos)
             return lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
-        rolloutHeuristicWeight = [-0.1, 0.1]
+        rolloutHeuristicWeight = [-1e-4, 1e-4]
         rolloutHeuristics = [rolloutHeuristic(weight) for weight in rolloutHeuristicWeight]
         composeSingleAgentMCTS = ComposeSingleAgentMCTS(numSimulations, actionSpaceList, maxRolloutSteps, rewardFunctions, rolloutHeuristics, selectChild, isTerminal, transit, getApproximatePolicy, composeMultiAgentTransitInSingleAgentMCTS, mctsRenders, mctsRenderOn)
 
@@ -456,7 +451,7 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
         beta = 1
         selectSoftmaxAction = SelectSoftmaxAction(beta)
-        chooseActionList = [chooseGreedyAction, selectSoftmaxAction]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
         sampleTrajectory = SampleTrajectoryForMCTSDemo(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
 
         numTrials = 10
