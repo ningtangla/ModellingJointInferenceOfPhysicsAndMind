@@ -89,7 +89,7 @@ def main():
     killzoneRadius = 80
     sheepId = 0
 
-    dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
+    dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     dataSetExtension = '.pickle'
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
@@ -106,7 +106,7 @@ def main():
     getWolf1Pos = GetAgentPosFromState(wolf1Id, xPosIndex)
     getWolf2Pos = GetAgentPosFromState(wolf2Id, xPosIndex)
 
-    playAliveBonus = 1 / dataSetMaxRunningSteps
+    playAliveBonus = 1 / maxRunningSteps
     playDeathPenalty = -1
     playKillzoneRadius = killzoneRadius
 
@@ -195,7 +195,7 @@ def main():
     getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
 
     # get path to save trained models
-    NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
+    NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):

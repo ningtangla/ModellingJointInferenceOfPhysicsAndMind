@@ -34,7 +34,7 @@ class GetSavePath:
         fileName = fileName.replace(" ", "")
 
         path = os.path.join(self.dataDirectory, fileName)
-
+        print(path)
         return path
 
 
