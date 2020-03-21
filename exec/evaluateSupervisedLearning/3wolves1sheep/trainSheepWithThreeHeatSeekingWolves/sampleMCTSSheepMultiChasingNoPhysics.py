@@ -42,7 +42,7 @@ def main():
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)

@@ -44,7 +44,7 @@ def main():
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -125,7 +125,7 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeThreeWolves', 'trainedResNNModels')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', 'evaluateEscapeThreeWolves', 'trainedResNNModels')
         NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 100, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
