@@ -36,12 +36,13 @@ def main():
     parametersForTrajectoryPath = {}
     startSampleIndex = 0
     endSampleIndex = 10
+    agentId = 0
     # test
 
-    killzoneRadius = 30
+    killzoneRadius = 80
     numSimulations = 100
-    maxRunningSteps = 100
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    maxRunningSteps = 50
+    fixedParameters = {'agentId':agentId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
@@ -98,9 +99,9 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
@@ -125,8 +126,8 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', 'evaluateEscapeThreeWolves', 'trainedResNNModels')
-        NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 100, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trainedResNNModels')
+        NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
         if not os.path.exists(NNModelSaveDirectory):
