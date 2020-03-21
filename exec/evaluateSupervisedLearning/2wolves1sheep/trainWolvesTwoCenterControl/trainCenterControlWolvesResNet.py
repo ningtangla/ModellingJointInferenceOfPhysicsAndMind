@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 import itertools as it
 import pathos.multiprocessing as mp
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryByReflectVelocity
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset, IsTerminal, StayInBoundaryByReflectVelocity
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -64,7 +64,7 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace22', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControlActionSpace22', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -73,24 +73,24 @@ def trainOneCondition(manipulatedVariables):
     dataSetMaxRunningSteps = 100
     dataSetNumSimulations = 150
     killzoneRadius = 25
-    agentId = 22
+    agentId = 1
     wolvesId = 1
-    dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations,'killzoneRadius':killzoneRadius}
+    dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
-    numOfAgent=3
+    numOfAgent = 3
 
     sheepId = 0
-    wolvesId =1
+    wolvesId = 1
 
     wolfOneId = 1
     wolfTwoId = 2
     xPosIndex = [0, 1]
-    xBoundary = [0,600]
-    yBoundary = [0,600]
+    xBoundary = [0, 600]
+    yBoundary = [0, 600]
 
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
@@ -100,7 +100,7 @@ def trainOneCondition(manipulatedVariables):
 
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    playIsTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
+    playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
     stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
     transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
@@ -117,19 +117,18 @@ def trainOneCondition(manipulatedVariables):
 
     # pre-process the trajectories
 
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0,0)]
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
     preyPowerRatio = 3
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 2
 
-    actionSpaceOne = [(10, 0),  (-10, 0)]
+    actionSpaceOne = [(10, 0), (-10, 0)]
     wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))
 
-    actionSpaceTwo = [(10, 0),  (-10, 0)]
+    actionSpaceTwo = [(10, 0), (-10, 0)]
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
-    wolvesActionSpace =list(it.product(wolfActionOneSpace,wolfActionTwoSpace))
-
+    wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
     numActionSpace = len(wolvesActionSpace)
 

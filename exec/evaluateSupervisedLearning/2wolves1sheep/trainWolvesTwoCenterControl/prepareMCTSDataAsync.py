@@ -32,7 +32,7 @@ class GenerateTrajectoriesParallel:
 def main():
     dirName = os.path.dirname(__file__)
 
-    wolfId = 22
+    wolfId = 1
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
@@ -43,7 +43,7 @@ def main():
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
-    print('numCpuToUse',numCpuToUse)
+    print('numCpuToUse', numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
@@ -56,7 +56,7 @@ def main():
     for i in range(math.ceil(numTrajectories / numTrajPerSteps)):
         startTime = time.time()
 
-        startEndIndexesPair = startEndIndexesPairs[numCmdList * i : numCmdList * i + numCmdList]
+        startEndIndexesPair = startEndIndexesPairs[numCmdList * i: numCmdList * i + numCmdList]
         cmdList = generateTrajectoriesParallel(startEndIndexesPair, pathParameters)
 
         endTime = time.time()
