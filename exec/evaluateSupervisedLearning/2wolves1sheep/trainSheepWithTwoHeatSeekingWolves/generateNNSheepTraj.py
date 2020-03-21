@@ -36,6 +36,7 @@ def main():
     parametersForTrajectoryPath = {}
     startSampleIndex = 0
     endSampleIndex = 10
+    agentId = 0
     # test
 
     killzoneRadius = 80
