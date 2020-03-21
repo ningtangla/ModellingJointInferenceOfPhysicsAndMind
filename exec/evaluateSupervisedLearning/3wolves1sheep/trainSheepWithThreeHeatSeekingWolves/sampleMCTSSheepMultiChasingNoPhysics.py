@@ -1,10 +1,12 @@
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 import numpy as np
 import pickle
 import random
 import json
+import time
+
 from collections import OrderedDict
 
 from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild, Expand, RollOut, backup, InitializeChildren
@@ -13,37 +15,34 @@ import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-
-
-from src.episode import chooseGreedyAction, SampleTrajectory, Render, SampleTrajectoryWithRender
-
-
 from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset
-
-import time
+from src.episode import SampleTrajectory, Render, SampleTrajectoryWithRender, chooseGreedyAction, SampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
 
 def main():
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    agentId = int(parametersForTrajectoryPath['agentId'])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    DEBUG = 0
+    renderOn = 0
+    if DEBUG:
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 0
+        endSampleIndex = 10
+        agentId = 0
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    else:
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        agentId = int(parametersForTrajectoryPath['agentId'])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    # test
-    # parametersForTrajectoryPath = {}
-    # startSampleIndex = 0
-    # endSampleIndex = 1
-    # test
-
-    killzoneRadius = 30
     numSimulations = 100
-    maxRunningSteps = 100
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    maxRunningSteps = 50
+    killzoneRadius = 80
+    fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeThreeWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -62,29 +61,14 @@ def main():
         xBoundary = [0, 600]
         yBoundary = [0, 600]
 
-        # prepare render
-        import pygame as pg
-        renderOn = False
-        render = None
-        if renderOn:
-            from pygame.color import THECOLORS
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
-            circleSize = 10
-            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            saveImage = False
-            saveImageDir = None
-            render = Render(numOfAgent, positionIndex,
-                            screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+        getSheepPos = GetAgentPosFromState(sheepId, positionIndex)
+        getWolfOnePos = GetAgentPosFromState(wolfOneId, positionIndex)
+        getWolfTwoPos = GetAgentPosFromState(wolfTwoId, positionIndex)
+        getWolfThreePos = GetAgentPosFromState(wolfThreeId, positionIndex)
 
-        getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
-        getPredatorOnePos = GetAgentPosFromState(wolfOneId, positionIndex)
-        getPredatorTwoPos = GetAgentPosFromState(wolfTwoId, positionIndex)
-        getPredatorThreePos = GetAgentPosFromState(wolfThreeId, positionIndex)
-
-        isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, killzoneRadius)
-        isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, killzoneRadius)
-        isTerminalThree = env.IsTerminal(getPredatorThreePos, getPreyPos, killzoneRadius)
+        isTerminalOne = env.IsTerminal(getWolfOnePos, getSheepPos, killzoneRadius)
+        isTerminalTwo = env.IsTerminal(getWolfTwoPos, getSheepPos, killzoneRadius)
+        isTerminalThree = env.IsTerminal(getWolfThreePos, getSheepPos, killzoneRadius)
 
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
 
@@ -97,19 +81,19 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
-            wolfActionSpace, getPredatorOnePos, getPreyPos, computeAngleBetweenVectors)
+            wolfActionSpace, getWolfOnePos, getSheepPos, computeAngleBetweenVectors)
 
         wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(
-            wolfActionSpace, getPredatorTwoPos, getPreyPos, computeAngleBetweenVectors)
+            wolfActionSpace, getWolfTwoPos, getSheepPos, computeAngleBetweenVectors)
 
         wolfThreePolicy = HeatSeekingDiscreteDeterministicPolicy(
-            wolfActionSpace, getPredatorThreePos, getPreyPos, computeAngleBetweenVectors)
+            wolfActionSpace, getWolfThreePos, getSheepPos, computeAngleBetweenVectors)
         # select child
         cInit = 1
         cBase = 100
@@ -120,18 +104,18 @@ def main():
         getActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
 
     # load chase nn policy
+        temperatureInMCTS = 1
+        chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
         def sheepTransit(state, action): return transitionFunction(
-            state, [action, chooseGreedyAction(wolfOnePolicy(state)), chooseGreedyAction(wolfTwoPolicy(state)), chooseGreedyAction(wolfThreePolicy(state))])
+            state, [action, chooseActionInMCTS(wolfOnePolicy(state)), chooseActionInMCTS(wolfTwoPolicy(state)), chooseActionInMCTS(wolfThreePolicy(state))])
 
         # reward function
-
         aliveBonus = 1 / maxRunningSteps
         deathPenalty = -1
         rewardFunction = reward.RewardFunctionCompete(
             aliveBonus, deathPenalty, isTerminal)
 
-        # initialize children; expand
         initializeChildren = InitializeChildren(
             sheepActionSpace, sheepTransit, getActionPrior)
         expand = Expand(isTerminal, initializeChildren)
@@ -142,8 +126,15 @@ def main():
 
         # rollout
         rolloutHeuristicWeight = 0
-        rolloutHeuristic = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getPredatorOnePos, getPreyPos)
+        rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
+            rolloutHeuristicWeight, getWolfOnePos, getSheepPos)
+        rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
+            rolloutHeuristicWeight, getWolfTwoPos, getSheepPos)
+        rolloutHeuristic3 = reward.HeuristicDistanceToTarget(
+            rolloutHeuristicWeight, getWolfThreePos, getSheepPos)
+
+        rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state) + rolloutHeuristic3(state)) / 3
+
         maxRolloutSteps = 10
 
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
@@ -154,8 +145,22 @@ def main():
         # All agents' policies
         policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state), wolfThreePolicy(state)]
 
-        # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
-        chooseActionList = [chooseGreedyAction,chooseGreedyAction,chooseGreedyAction,chooseGreedyAction]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
+
+        # prepare render
+        render = None
+        if renderOn:
+            import pygame as pg
+            from pygame.color import THECOLORS
+            screenColor = THECOLORS['black']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
+            circleSize = 10
+            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+            saveImage = False
+            saveImageDir = None
+            render = Render(numOfAgent, positionIndex,
+                            screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseActionList, render, renderOn)
 
         startTime = time.time()
@@ -164,7 +169,6 @@ def main():
         finshedTime = time.time() - startTime
 
         print('lenght:', len(trajectories[0]))
-
         print('timeTaken:', finshedTime)
 
 

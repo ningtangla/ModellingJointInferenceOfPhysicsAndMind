@@ -3,7 +3,7 @@ import sys
 import os
 DIRNAME = os.path.dirname(__file__)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..','..', '..', '..'))
 # import ipdb
 
 import numpy as np
@@ -16,10 +16,9 @@ def main():
     dirName = os.path.dirname(__file__)
 
     sheepId = 0
-    wolfId = 1
 
     startTime = time.time()
-    numTrajectories = 5000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSSheepMultiChasingNoPhysics.py'
 

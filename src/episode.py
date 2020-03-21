@@ -2,6 +2,7 @@ import numpy as np
 import random
 import pygame as pg
 
+
 class MultiAgentSampleTrajectory:
     def __init__(self, agentNames, iterationNumber, isTerminal, reset, currentState=None):
         self.agentNames = agentNames
@@ -204,20 +205,6 @@ class SelectSoftmaxAction():
         newProbs = np.exp(exponent) / np.sum(np.exp(exponent))
 
         selectedIndex = list(np.random.multinomial(1, newProbs)).index(1)
-        selectedAction = actions[selectedIndex]
-        return selectedAction
-
-
-class SampleAction():
-    def __init__(self, beta):
-        self.beta = beta
-
-    def __call__(self, actionDist):
-        actions = list(actionDist.keys())
-        probs = list(actionDist.values())
-        newProbs = np.array([np.power(prob, self.beta) for prob in probs])
-        normProbs = newProbs / np.sum(newProbs)
-        selectedIndex = list(np.random.multinomial(1, normProbs)).index(1)
         selectedAction = actions[selectedIndex]
         return selectedAction
 

@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 import numpy as np
 import pickle
 import random
@@ -32,19 +32,19 @@ def main():
     # agentId = int(parametersForTrajectoryPath['agentId'])
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    #test
+    # test
     parametersForTrajectoryPath = {}
     startSampleIndex = 0
     endSampleIndex = 10
-    #test
+    # test
 
-    killzoneRadius = 30
+    killzoneRadius = 80
     numSimulations = 100
-    maxRunningSteps = 100
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    maxRunningSteps = 50
+    fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeThreeWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -52,42 +52,24 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     while True:
-    # if not os.path.isfile(trajectorySavePath):
-        numOfAgent = 4
+        # if not os.path.isfile(trajectorySavePath):
+        numOfAgent = 3
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
-        wolfThreeId = 3
         positionIndex = [0, 1]
 
         xBoundary = [0, 600]
         yBoundary = [0, 600]
 
-        # prepare render
-        import pygame as pg
-        renderOn = True
-        render = True
-        if renderOn:
-            from pygame.color import THECOLORS
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
-            circleSize = 10
-            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            saveImage = False
-            saveImageDir = None
-            render = Render(numOfAgent, positionIndex,
-                            screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
-
         getPreyPos = GetAgentPosFromState(sheepId, positionIndex)
         getPredatorOnePos = GetAgentPosFromState(wolfOneId, positionIndex)
         getPredatorTwoPos = GetAgentPosFromState(wolfTwoId, positionIndex)
-        getPredatorThreePos = GetAgentPosFromState(wolfThreeId, positionIndex)
 
         isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, killzoneRadius)
         isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, killzoneRadius)
-        isTerminalThree = env.IsTerminal(getPredatorThreePos, getPreyPos, killzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
+        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
@@ -98,9 +80,9 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
@@ -109,11 +91,8 @@ def main():
         wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(
             wolfActionSpace, getPredatorTwoPos, getPreyPos, computeAngleBetweenVectors)
 
-        wolfThreePolicy = HeatSeekingDiscreteDeterministicPolicy(
-            wolfActionSpace, getPredatorThreePos, getPreyPos, computeAngleBetweenVectors)
-
         # neural network init
-        numStateSpace = 8
+        numStateSpace = 6
         numSheepActionSpace = len(sheepActionSpace)
         numWolvesActionSpace = len(wolfActionSpace)
 
@@ -125,8 +104,8 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateEscapeThreeWolves', 'trainedResNNModels')
-        NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 100, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
         if not os.path.exists(NNModelSaveDirectory):
@@ -143,10 +122,25 @@ def main():
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
         # All agents' policies
-        policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state), wolfThreePolicy(state)]
+        policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
 
-        # sampleTrajectory=SampleTrajectory(maxRunningSteps, transitionFunction, isTerminal, reset, chooseGreedyAction)
-        chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
+
+        # prepare render
+        import pygame as pg
+        renderOn = True
+        render = True
+        if renderOn:
+            from pygame.color import THECOLORS
+            screenColor = THECOLORS['black']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
+            circleSize = 10
+            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+            saveImage = False
+            saveImageDir = None
+            render = Render(numOfAgent, positionIndex,
+                            screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseActionList, render, renderOn)
 
         startTime = time.time()
@@ -155,7 +149,6 @@ def main():
         finshedTime = time.time() - startTime
 
         print('lenght:', len(trajectories[0]))
-
         print('timeTaken:', finshedTime)
 
 
