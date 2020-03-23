@@ -43,21 +43,21 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,200]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,200]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = list(range(0,201,50))
+    manipulatedVariables['otherIteration'] = list(range(0,201,50))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
-    
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
+
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
-    
-    trainMaxRunningSteps = 150
-    trainNumSimulations = 100
+
+    trainMaxRunningSteps = 100
+    trainNumSimulations = 150
     killzoneRadius = 30
-    
+
     numAgents = 2
     sheepId = 0
     wolfId = 1
@@ -66,13 +66,10 @@ def main():
 
     wolfOnePosIndex = 1
     wolfTwoIndex = 2
-    getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
-    getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
-    getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, posIndex)
- 
-    isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-    isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
+    getSheepPos = GetAgentPosFromState(sheepId, posIndex)
+    getWolfPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
+
+    isTerminal = IsTerminal(getWolfPos, getSheepPos, killzoneRadius)
 
     sheepAliveBonus = 1/trainMaxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
@@ -83,7 +80,7 @@ def main():
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
-   
+
 
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
@@ -94,11 +91,11 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    #toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','iterativelyTrainSingleChasingNoPhysics', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -109,7 +106,7 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
-    
+
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]
@@ -136,10 +133,9 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
 
-            axForDraw.set_ylim(-1, 1.5)
+            axForDraw.set_ylim(-1, 1)
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
-
 
 
     plt.suptitle('SheepNNResnet')
