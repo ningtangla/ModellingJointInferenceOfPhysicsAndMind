@@ -112,9 +112,9 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 100
-    numSimulations = 150
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 200
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -145,9 +145,9 @@ def main():
 
         # product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         actionSpaceList = [sheepActionSpace, wolfActionSpace]
 
@@ -166,7 +166,6 @@ def main():
 
         depth = 4
         trainableAgentIds = [sheepId, wolfId]
-
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for generateModel in generateModelList]
 
         otherAgentApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolfActionSpace)]

@@ -77,7 +77,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfPos = GetAgentPosFromState(wolfId, xPosIndex)
 
-    maxRunningSteps = 100
+    maxRunningSteps = 50
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
@@ -85,7 +85,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     wolfTerminalReward = 1
     terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
 
-    killzoneRadius = 30
+    killzoneRadius = 80
     isTerminal = IsTerminal(getWolfPos, getSheepPos, killzoneRadius)
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
@@ -95,9 +95,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 3
+    preyPowerRatio = 9
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    predatorPowerRatio = 2
+    predatorPowerRatio = 6
     wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     actionSpaceList = [sheepActionSpace, wolfActionSpace]
 
@@ -156,7 +156,7 @@ def iterateTrainOneCondition(parameterOneCondition):
                     trainReporter)
 
     # load save dir
-    numSimulations = 150
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''

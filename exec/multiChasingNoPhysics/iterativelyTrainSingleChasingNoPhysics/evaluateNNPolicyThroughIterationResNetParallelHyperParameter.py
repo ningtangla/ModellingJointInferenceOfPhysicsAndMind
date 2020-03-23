@@ -64,10 +64,8 @@ def main():
     posIndex = [0, 1]
     selfId=sheepId
 
-    wolfOnePosIndex = 1
-    wolfTwoIndex = 2
     getSheepPos = GetAgentPosFromState(sheepId, posIndex)
-    getWolfPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
+    getWolfPos = GetAgentPosFromState(wolfId, posIndex)
 
     isTerminal = IsTerminal(getWolfPos, getSheepPos, killzoneRadius)
 
@@ -91,7 +89,7 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    #toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
