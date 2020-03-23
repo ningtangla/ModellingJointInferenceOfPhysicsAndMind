@@ -3,7 +3,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME,'..', '..', '..', '..'))
 
 import json
 import numpy as np
@@ -68,14 +68,14 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
+    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'evaTraj')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 100
+    maxRunningSteps = 50
     numSimulations = 200
-    killzoneRadius = 25
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -96,7 +96,7 @@ def main():
     # while  True:
     if not os.path.isfile(trajectorySavePath):
 
-        numOfAgent=3
+        numOfAgent = 3
         sheepId = 0
         wolvesId = 1
 
@@ -110,8 +110,9 @@ def main():
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
         getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
+        playKillzoneRadius = 30
+        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
@@ -139,32 +140,32 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', 'data', 'evaluateEscapeMultiChasingNoPhysics', 'trainedResNNModelsMultiStillAction')
-        NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 150, 'numSimulations': 200,'miniBatchSize':256,'learningRate':0.0001}
-        getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100,'miniBatchSize':256,'learningRate':0.0001}
+        getSheepNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
-        depth = 5
+        depth = 9
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
         initSheepNNModel = generateSheepModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
-        sheepTrainedModelPath = getNNModelSavePath({'trainSteps':50000,'depth':depth})
+        sheepTrainedModelPath = getSheepNNModelSavePath({'trainSteps':50000,'depth':depth})
         sheepTrainedModel = restoreVariables(initSheepNNModel, sheepTrainedModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
 
         generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trainedResNNModels')
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
         wolfId = 1
         NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
 
-        getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParametersWolves)
-        wolvesTrainedModelPath = getNNModelSavePath({'trainSteps':50000,'depth':5})
+        getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParametersWolves)
+        wolvesTrainedModelPath = getWolfNNModelSavePath({'trainSteps':50000,'depth':depth})
         wolvesTrainedModel = restoreVariables(initWolvesNNModel, wolvesTrainedModelPath)
         wolfPolicy = ApproximatePolicy(wolvesTrainedModel, wolvesActionSpace)
 
@@ -172,10 +173,10 @@ def main():
         import pygame as pg
         from pygame.color import THECOLORS
         screenColor = THECOLORS['black']
-        circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+        circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
         circleSize = 10
-        saveImage = True
-        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','img')
+        saveImage = False
+        saveImageDir = os.path.join(dirName, '..','..','..', '..', 'data','img')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None

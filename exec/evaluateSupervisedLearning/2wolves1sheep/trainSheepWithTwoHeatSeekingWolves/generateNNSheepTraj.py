@@ -67,8 +67,9 @@ def main():
         getPredatorOnePos = GetAgentPosFromState(wolfOneId, positionIndex)
         getPredatorTwoPos = GetAgentPosFromState(wolfTwoId, positionIndex)
 
-        isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, killzoneRadius)
-        isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, killzoneRadius)
+        playKillzoneRadius = 30
+        isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, playKillzoneRadius)
+        isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, playKillzoneRadius)
 
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
@@ -81,9 +82,9 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
