@@ -88,12 +88,12 @@ def main():
 ## test
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=11
+    endSampleIndex=499
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    # while  True:
+    #while  True:
     if not os.path.isfile(trajectorySavePath):
 
         numOfAgent = 3
@@ -110,7 +110,7 @@ def main():
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
         getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        playKillzoneRadius = 30
+        playKillzoneRadius = 80
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
@@ -119,10 +119,10 @@ def main():
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
@@ -180,7 +180,7 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = True
+        renderOn = False
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
@@ -193,9 +193,11 @@ def main():
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
-        saveToPickle(trajectories, trajectorySavePath)
+        #saveToPickle(trajectories, trajectorySavePath)
 
-        print([len(traj) for traj in trajectories])
+        trajLen = [len(traj) for traj in trajectories]
+        print(trajLen)
+        print(np.mean(trajLen))
 
 
 if __name__ == '__main__':

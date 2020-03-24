@@ -125,7 +125,7 @@ def trainOneCondition(manipulatedVariables):
 
     predatorPowerRatio = 6
 
-    actionSpaceOne = actionSpace  # [(10, 0), (-10, 0)]
+    actionSpaceOne = wolfActionSpace  # [(10, 0), (-10, 0)]
     wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))
 
     actionSpaceTwo = wolfActionSpace  # [(10, 0), (-10, 0)]
