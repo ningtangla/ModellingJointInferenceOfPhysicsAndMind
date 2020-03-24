@@ -34,27 +34,27 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 def main():
     #input by subprocess
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
-    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+    # numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
+    # numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
+    # selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+    # otherIteration = int(parametersForTrajectoryPath['otherIteration'])
 
 
 ##test
-    # parametersForTrajectoryPath = {}
-    # startSampleIndex = 1
-    # endSampleIndex = 11
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    parametersForTrajectoryPath = {}
+    startSampleIndex = 1
+    endSampleIndex = 11
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    # numTrajectoriesPerIteration=1
-    # numTrainStepEachIteration=1
-    # selfIteration = 1000
-    # otherIteration = 1000
+    numTrajectoriesPerIteration=1
+    numTrainStepEachIteration=1
+    selfIteration = 1000
+    otherIteration = 1000
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
@@ -159,7 +159,7 @@ def main():
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
-        renderOn = 0
+        renderOn = 1
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red']]

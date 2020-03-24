@@ -263,7 +263,7 @@ def main():
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     # Sample Trajectory Before Train to fill Buffer
-    numTrajectoriesToStartTrain = 3000
+    numTrajectoriesToStartTrain = 2000
     sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)
@@ -271,7 +271,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = True
+    prepareBefortrainData = False
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 

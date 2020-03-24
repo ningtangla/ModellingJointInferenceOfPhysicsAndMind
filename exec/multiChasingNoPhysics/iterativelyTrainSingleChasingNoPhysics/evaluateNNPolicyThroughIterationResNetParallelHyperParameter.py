@@ -43,8 +43,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0,201,50))
-    manipulatedVariables['otherIteration'] = list(range(0,201,50))
+    manipulatedVariables['selfIteration'] = list(range(0,1001,200))
+    manipulatedVariables['otherIteration'] = [-999]+list(range(0,1001,200))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
     manipulatedVariables['numTrajectoriesPerIteration'] = [1]
 
@@ -54,9 +54,9 @@ def main():
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
-    trainMaxRunningSteps = 100
-    trainNumSimulations = 150
-    killzoneRadius = 30
+    trainMaxRunningSteps = 50
+    trainNumSimulations = 200
+    killzoneRadius = 80
 
     numAgents = 2
     sheepId = 0
