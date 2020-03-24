@@ -136,7 +136,7 @@ class SampleTrajectoryWithRender:
 
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
-            print(state)
+            # print(state)
             if self.isTerminal(state):
                 trajectory.append((state, None, None))
                 break
@@ -154,12 +154,12 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateMCTSAgentPassGap',  'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateMCTSAgentPassGapSheep',  'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 50
+    maxRunningSteps = 30
     numSimulations = 50
     killzoneRadius = 2
     maxRolloutSteps = 30
@@ -167,15 +167,16 @@ def main():
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
 
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=2
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    parametersForTrajectoryPath['gapLength']=1.6
+    np.random.seed(startSampleIndex*endSampleIndex)
+    # parametersForTrajectoryPath={}
+    # startSampleIndex=0
+    # endSampleIndex=2
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath['gapLength']=1.6
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
@@ -190,7 +191,7 @@ def main():
         wallPropertyDict={}
         wall1Id=5
         wall2Id=6
-        gapLength=parametersForTrajectoryPath['gapLength']
+        gapLength=float(parametersForTrajectoryPath['gapLength'])
         wall1Pos=[0,(9.95+gapLength/2)/2,-0.2]
         wall1Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
         wall2Pos=[0,-(9.95+gapLength/2)/2,-0.2]
@@ -306,7 +307,7 @@ def main():
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
 
 
-        renderOn = True
+        renderOn = False
         render=None
         if renderOn:
             from visualize.continuousVisualization import DrawBackgroundWithObstacles

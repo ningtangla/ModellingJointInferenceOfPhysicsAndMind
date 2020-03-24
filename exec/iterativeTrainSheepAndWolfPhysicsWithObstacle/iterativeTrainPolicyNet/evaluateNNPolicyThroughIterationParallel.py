@@ -46,8 +46,8 @@ def main():
     manipulatedVariables = OrderedDict()
     # manipulatedVariables['selfIteration'] = [0,50,100]#list(range(0,6001,6000))
     # manipulatedVariables['otherIteration'] = [0,50,100]#list(range(0,6001,6000))
-    manipulatedVariables['selfIteration'] = [0, 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,11000]#list(range(0,6001,6000))
-    manipulatedVariables['otherIteration'] = [0, 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,11000]#list(range(0,6001,6000))
+    manipulatedVariables['selfIteration'] = [0, 4000,8000,12000,16000,20000]#list(range(0,6001,6000))
+    manipulatedVariables['otherIteration'] = [0,4000,8000,12000,16000,20000]#list(range(0,6001,6000))
     manipulatedVariables['selfId'] = [0]
 
     levelNames = list(manipulatedVariables.keys())
@@ -90,7 +90,7 @@ def main():
     NNFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     dirName = os.path.dirname(__file__)
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentPolicyNetObstacle', 'NNModel')
+                                        'multiAgentTrain', 'multiMCTSAgentObstacle', 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectoryNNModelSaveDirectory)
     NNModelSaveExtension = ''
@@ -117,7 +117,7 @@ def main():
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data',
-                                        'multiAgentTrain', 'multiMCTSAgentPolicyNetObstacle', 'evaluateTrajectories')
+                                        'multiAgentTrain', 'multiMCTSAgentObstacle', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
