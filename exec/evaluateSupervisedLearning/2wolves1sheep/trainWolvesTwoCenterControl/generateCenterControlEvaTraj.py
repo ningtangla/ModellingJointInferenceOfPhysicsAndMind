@@ -110,7 +110,7 @@ def main():
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
         getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        playKillzoneRadius = 80
+        playKillzoneRadius = 30
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
@@ -119,10 +119,10 @@ def main():
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
@@ -187,7 +187,9 @@ def main():
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
+
+        playRunningSteps = 150
+        sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
         # All agents' policies
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]

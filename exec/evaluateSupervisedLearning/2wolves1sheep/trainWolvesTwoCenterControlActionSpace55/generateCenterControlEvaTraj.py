@@ -88,7 +88,7 @@ def main():
 ## test
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=498
+    endSampleIndex=501
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
@@ -189,13 +189,14 @@ def main():
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
+        playRunningSteps = 150
+        sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
         # All agents' policies
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
-        saveToPickle(trajectories, trajectorySavePath)
+        #saveToPickle(trajectories, trajectorySavePath)
 
         trajLen = [len(traj) for traj in trajectories]
         print(trajLen)
