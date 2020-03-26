@@ -105,9 +105,9 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 60
-    numSimulations = 100
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 200
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -149,9 +149,9 @@ def main():
 
         #action
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
@@ -212,7 +212,7 @@ def main():
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample and save trajectories
-        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render = None
         renderOn = False

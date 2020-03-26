@@ -43,10 +43,10 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,200]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,200]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = list(range(0,151,50))
+    manipulatedVariables['otherIteration'] = [-999]+list(range(0,151,50))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [4]
     
 
     levelNames = list(manipulatedVariables.keys())
@@ -54,9 +54,9 @@ def main():
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
     
-    trainMaxRunningSteps = 150
-    trainNumSimulations = 100
-    killzoneRadius = 30
+    trainMaxRunningSteps = 50
+    trainNumSimulations = 200
+    killzoneRadius = 80
     
     numAgents = 2
     sheepId = 0
@@ -98,7 +98,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'

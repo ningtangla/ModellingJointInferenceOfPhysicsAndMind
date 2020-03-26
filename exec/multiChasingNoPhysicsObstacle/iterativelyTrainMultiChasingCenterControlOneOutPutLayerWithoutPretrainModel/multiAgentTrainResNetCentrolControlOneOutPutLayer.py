@@ -80,7 +80,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, xPosIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoIndex, xPosIndex)
 
-    maxRunningSteps = 60
+    maxRunningSteps = 50
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
@@ -88,7 +88,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     wolfTerminalReward = 1
     terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
 
-    killzoneRadius = 30
+    killzoneRadius = 80
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
     isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
@@ -100,9 +100,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 3
+    preyPowerRatio = 9
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    predatorPowerRatio = 2
+    predatorPowerRatio = 6
     wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
@@ -122,7 +122,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateModelList = [generateSheepModel, generateWolvesModel]
 
     # replay buffer
-    bufferSize = 1000
+    bufferSize = 3000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
     miniBatchSize = 256  # 256
@@ -163,7 +163,7 @@ def iterateTrainOneCondition(parameterOneCondition):
                     trainReporter)
 
     # load save dir
-    numSimulations = 100
+    numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
@@ -230,7 +230,7 @@ def iterateTrainOneCondition(parameterOneCondition):
 
 
     modelMemorySize = 5
-    modelSaveFrequency = 100
+    modelSaveFrequency = 50
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
@@ -270,13 +270,12 @@ def iterateTrainOneCondition(parameterOneCondition):
 def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [3]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [4]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     #Sample Trajectory Before Train to fill Buffer
-    miniBatchSize = 256
-    numTrajectoriesToStartTrain = 4 * miniBatchSize
+    numTrajectoriesToStartTrain = 1024
     sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)

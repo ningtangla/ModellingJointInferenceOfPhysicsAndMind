@@ -46,14 +46,14 @@ def main():
     
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'evaluateTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'evaluateTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 100
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 200
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)   
@@ -76,10 +76,9 @@ def main():
 
         xBoundary = [0,600]
         yBoundary = [0,600]
-        xObstacle = [300, 400]
-        yObstacle = [300, 400]
-        isLegal = lambda state: not((xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) 
-                and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]))
+        xObstacles = [[100, 200], [400, 500]]
+        yObstacles = [[100, 200], [400, 500]]
+        isLegal = lambda state: not(np.any([(xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
         sheepAliveBonus = 1/maxRunningSteps
@@ -93,8 +92,8 @@ def main():
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         centerControlIndexList=[wolvesId]
-        unpackAction=UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacle, yObstacle)
+        unpackCenterControlAction=UnpackCenterControlAction(centerControlIndexList)
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
         transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
         rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
@@ -106,9 +105,9 @@ def main():
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
@@ -135,7 +134,7 @@ def main():
 
         # load Model save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'NNModelRes')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -163,13 +162,13 @@ def main():
         # sample and save trajectories
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
-        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
         renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
             circleSize = 10
             saveImage = False
             saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
