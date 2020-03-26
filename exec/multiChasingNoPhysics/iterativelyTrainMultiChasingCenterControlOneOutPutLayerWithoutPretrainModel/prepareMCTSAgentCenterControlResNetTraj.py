@@ -9,7 +9,7 @@ import json
 import numpy as np
 from collections import OrderedDict
 import pandas as pd
-from itertools import product 
+from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
@@ -89,13 +89,13 @@ class PrepareMultiAgentPolicy:
 
 
 def main():
- 
+
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     iterationIndex=parametersForTrajectoryPath['iterationIndex']
-    
+
     # check file exists or not
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'trajectories')
@@ -104,9 +104,9 @@ def main():
 
     #get traj save path
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 100
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 200
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -136,18 +136,18 @@ def main():
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
-        
+
         wolvesId =1
         centerControlIndexList=[wolvesId]
         unpackAction=UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary) 
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transit=TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity,unpackAction)
 
-        #product wolves action space 
+        #product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
@@ -165,7 +165,7 @@ def main():
         generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
         generateWolvesModel=GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         generateModelList=[generateSheepModel,generateWolvesModel]
-        
+
         depth = 5
         resBlockSize = 2
         dropoutRate = 0.0
@@ -173,7 +173,7 @@ def main():
         trainableAgentIds = [sheepId, wolvesId]
 
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for generateModel in generateModelList]
-        
+
         otherAgentApproximatePolicy = [lambda NNmodel,: ApproximatePolicy(NNmodel, sheepActionSpace),lambda NNmodel,: ApproximatePolicy(NNmodel, wolvesActionSpace)]
 
         # NNGuidedMCTS init
@@ -188,16 +188,16 @@ def main():
 
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
-        
+
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
 
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
-        
+
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample and save trajectories
-        chooseActionList = [chooseActionInMCTS,chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
 
         saveImage = False
         saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
@@ -207,7 +207,7 @@ def main():
         renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
             circleSize = 10
             screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)

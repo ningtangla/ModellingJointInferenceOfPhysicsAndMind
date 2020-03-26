@@ -43,21 +43,21 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,200]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,200]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = list(range(0,201,50))
+    manipulatedVariables['otherIteration'] = [-999]+list(range(0,201,50))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
-    
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
+
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
-    
-    trainMaxRunningSteps = 150
-    trainNumSimulations = 100
-    killzoneRadius = 30
-    
+
+    trainMaxRunningSteps = 50
+    trainNumSimulations = 200
+    killzoneRadius = 80
+
     numAgents = 2
     sheepId = 0
     wolfId = 1
@@ -69,7 +69,7 @@ def main():
     getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
     getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, posIndex)
- 
+
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
     isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
@@ -83,7 +83,7 @@ def main():
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
-   
+
 
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
@@ -109,7 +109,7 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
-    
+
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
     measurementFunction = lambda trajectory: accumulateMultiAgentRewards(trajectory)[0]

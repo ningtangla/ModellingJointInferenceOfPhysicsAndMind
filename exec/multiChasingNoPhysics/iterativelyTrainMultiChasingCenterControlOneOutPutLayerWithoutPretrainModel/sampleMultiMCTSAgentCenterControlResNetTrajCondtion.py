@@ -105,24 +105,24 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 100
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 200
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
         #No physics env
-        sheepId = 0        
+        sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
         posIndex = [0, 1]
-  
+
         getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, posIndex)
         getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, posIndex)
-        
+
         numOfAgent = 3
         xBoundary = [0, 600]
         yBoundary = [0, 600]
@@ -137,7 +137,7 @@ def main():
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
-        
+
         wolvesId = 1
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
@@ -146,9 +146,9 @@ def main():
 
         #action
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 9
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 6
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
@@ -166,7 +166,7 @@ def main():
         generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
         generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         generateModelList = [generateSheepModel, generateWolvesModel]
-       
+
         depth = 5
         resBlockSize = 2
         dropoutRate = 0.0
@@ -193,7 +193,7 @@ def main():
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
 
-        # load model 
+        # load model
         NNModelSaveExtension = ''
         NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControl', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
@@ -205,17 +205,17 @@ def main():
             modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex - 1, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
             restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
             multiAgentNNmodel[agentId] = restoredNNModel
-        
+
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample and save trajectories
-        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render = None
         renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
             saveImage = False
             saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
