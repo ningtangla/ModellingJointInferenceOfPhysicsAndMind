@@ -170,6 +170,8 @@ def main():
         generateModelList = [generateSheepModel, generateWolvesModel]
 
         depth = 4
+        trainableAgentIds = [sheepId, wolvesId]
+
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for generateModel in generateModelList]
 
         otherAgentApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolvesActionSpace)]
