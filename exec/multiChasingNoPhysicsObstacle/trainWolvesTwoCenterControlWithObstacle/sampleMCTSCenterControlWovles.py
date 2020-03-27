@@ -49,7 +49,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -174,7 +174,7 @@ def main():
             state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 1e-4
+        rolloutHeuristicWeight = 0
         rolloutHeuristic1 = HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos)
         rolloutHeuristic2 = HeuristicDistanceToTarget(
@@ -200,7 +200,7 @@ def main():
             circleSize = 10
 
             saveImage = False
-            saveImageDir = os.path.join(dirName, '..', '..', '..', '..', 'data', 'demoImg')
+            saveImageDir = os.path.join(dirName,  '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
 

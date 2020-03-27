@@ -36,7 +36,7 @@ def main():
     pathParameters = {'agentId': wolfId}
 
     startTime = time.time()
-    numTrajectories = 3000
+    numTrajectories = 5000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSCenterControlWovles.py'
 
