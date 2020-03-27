@@ -14,7 +14,7 @@ import pygame as pg
 from pygame.color import THECOLORS
 
 from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryAndOutObstacleByReflectVelocity, UnpackCenterControlAction
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,HeuristicDistanceToTarget
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -24,7 +24,7 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand,RollOut,establishSoftmaxActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
@@ -128,7 +128,7 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        sheepNNModelSaveDirectory = os.path.join(dirName,  '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
         sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getSheepNNModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
@@ -161,7 +161,7 @@ def main():
         # reward function
         aliveBonus = -1 / maxRunningSteps
         deathPenalty = 1
-        rewardFunction = reward.RewardFunctionCompete(
+        rewardFunction = RewardFunctionCompete(
             aliveBonus, deathPenalty, isTerminal)
 
         # initialize children; expand
@@ -175,9 +175,9 @@ def main():
 
         # rollout
         rolloutHeuristicWeight = 1e-4
-        rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
+        rolloutHeuristic1 = HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos)
-        rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
+        rolloutHeuristic2 = HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos)
 
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
