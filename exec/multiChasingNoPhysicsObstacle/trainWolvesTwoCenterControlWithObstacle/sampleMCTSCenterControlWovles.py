@@ -104,10 +104,10 @@ def main():
         wolfActionSpace = actionSpace
         # wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
 
-        preyPowerRatio = 12
+        preyPowerRatio = 13
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 8
+        predatorPowerRatio = 10
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
