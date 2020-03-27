@@ -88,12 +88,12 @@ def main():
 ## test
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=11
+    endSampleIndex=499
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    # while  True:
+    #while  True:
     if not os.path.isfile(trajectorySavePath):
 
         numOfAgent = 3
@@ -180,22 +180,26 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = True
+        renderOn = False
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
+
+        playRunningSteps = 150
+        sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
         # All agents' policies
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
-        saveToPickle(trajectories, trajectorySavePath)
+        #saveToPickle(trajectories, trajectorySavePath)
 
-        print([len(traj) for traj in trajectories])
+        trajLen = [len(traj) for traj in trajectories]
+        print(trajLen)
+        print(np.mean(trajLen))
 
 
 if __name__ == '__main__':
