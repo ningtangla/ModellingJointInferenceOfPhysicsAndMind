@@ -64,7 +64,7 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    dataSetDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainWolvesTwoCenterControl', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -191,7 +191,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
