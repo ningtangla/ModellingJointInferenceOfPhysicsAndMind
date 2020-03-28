@@ -36,9 +36,9 @@ def main():
         agentId = int(parametersForTrajectoryPath['agentId'])
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    numSimulations = 100
+    numSimulations = 150
     maxRunningSteps = 50
-    killzoneRadius = 80
+    killzoneRadius = 30  # 80
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
@@ -67,7 +67,7 @@ def main():
         isTerminalOne = env.IsTerminal(getWolfOnePos, getSheepPos, killzoneRadius)
         isTerminalTwo = env.IsTerminal(getWolfTwoPos, getSheepPos, killzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
@@ -78,9 +78,9 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
@@ -96,7 +96,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         # prior
-        getActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
+        def getActionPrior(state): return {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
 
     # load chase nn policy
         temperatureInMCTS = 1
@@ -121,13 +121,13 @@ def main():
             state): return sheepActionSpace[np.random.choice(range(numActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 0
+        rolloutHeuristicWeight = 0.1
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfOnePos, getSheepPos)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfTwoPos, getSheepPos)
 
-        rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
+        def rolloutHeuristic(state): return (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
         maxRolloutSteps = 10
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
@@ -136,7 +136,7 @@ def main():
                            rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
-        policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
+        def policy(state): return [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
 
         chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
 

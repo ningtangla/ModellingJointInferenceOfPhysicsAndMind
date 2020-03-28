@@ -39,13 +39,13 @@ def main():
     agentId = 0
     # test
 
-    killzoneRadius = 80
-    numSimulations = 100
+    killzoneRadius = 30
+    numSimulations = 150
     maxRunningSteps = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -71,7 +71,7 @@ def main():
         isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, playKillzoneRadius)
         isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, playKillzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
@@ -106,7 +106,7 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..','..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
         NNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
@@ -124,7 +124,7 @@ def main():
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
         # All agents' policies
-        policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
+        def policy(state): return [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
 
         chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
 

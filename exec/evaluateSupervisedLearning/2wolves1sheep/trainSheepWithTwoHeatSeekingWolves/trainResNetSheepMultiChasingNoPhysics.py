@@ -84,9 +84,9 @@ def main():
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
-    numSimulations = 100
+    numSimulations = 150  # 100
     maxRunningSteps = 50
-    killzoneRadius = 80
+    killzoneRadius = 30  # 80
     sheepId = 0
 
     dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -113,7 +113,7 @@ def main():
     playIsTerminalByWolf1 = IsTerminal(playKillzoneRadius, getSheepPos, getWolf1Pos)
     playIsTerminalByWolf2 = IsTerminal(playKillzoneRadius, getSheepPos, getWolf2Pos)
 
-    playIsTerminal = lambda state: playIsTerminalByWolf1(state) or playIsTerminalByWolf2(state)
+    def playIsTerminal(state): return playIsTerminalByWolf1(state) or playIsTerminalByWolf2(state)
 
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
 
@@ -130,16 +130,17 @@ def main():
 
     # pre-process the trajectories
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 9
+    preyPowerRatio = 3
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    predatorPowerRatio = 6
+    predatorPowerRatio = 2
     wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
     numActionSpace = len(sheepActionSpace)
     actionToOneHot = ActionToOneHot(sheepActionSpace)
 
     actionIndex = 1
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+
+    def getTerminalActionFromTrajectory(trajectory): return trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
     processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
@@ -148,7 +149,8 @@ def main():
     loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
     loadedTrajectories = loadTrajectories(parameters={})
     print(len(loadedTrajectories))
-    filterState = lambda timeStep: (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])
+
+    def filterState(timeStep): return (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
 
     preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
@@ -170,7 +172,7 @@ def main():
     initializationMethod = 'uniform'
     sheepNNmodel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
-    getNNModel = lambda depth: generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
+    def getNNModel(depth): return generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths)
     trainDataMeanAccumulatedReward = np.mean([tra[0][3] for tra in valuedTrajectories])
     print(trainDataMeanAccumulatedReward)
 
@@ -184,15 +186,18 @@ def main():
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     # terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
-    terminalController = lambda evalDict, numSteps: False
+
+    def terminalController(evalDict, numSteps): return False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 10000
     trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
+
+    def learningRateModifier(learningRate): return LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
+
+    def getTrainNN(batchSize, learningRate): return Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
 
     # get path to save trained models
     NNModelFixedParameters = {'agentId': sheepId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations}
