@@ -80,16 +80,17 @@ class RewardFunctionAvoidCollisionAndWall():
         return reward + wallPunish + velPunish
 
 class HeuristicDistanceToTarget:
-    def __init__(self, weight, getPredatorPosition, getPreyPosition):
+    def __init__(self, weight, getPredatorPosition, getPreyPosition, minDistance = 0):
         self.weight = weight
         self.getPredatorPosition = getPredatorPosition
         self.getPreyPosition = getPreyPosition
+        self.minDistance = minDistance
 
     def __call__(self, state):
         predatorPos = self.getPredatorPosition(state)
         preyPos = self.getPreyPosition(state)
 
         distance = np.linalg.norm(predatorPos - preyPos, ord = 2)
-        reward = -self.weight * distance
+        reward = -self.weight * max(0, distance - self.minDistance)
 
         return reward
