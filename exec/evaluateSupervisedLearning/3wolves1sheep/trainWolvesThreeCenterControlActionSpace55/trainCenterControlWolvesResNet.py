@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..', '..', '..'))
+sys.path.append(os.path.join(dirName, '..','..', '..', '..'))
 import time
 import random
 import numpy as np
@@ -64,14 +64,14 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace55', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 300
+    dataSetNumSimulations = 400
     killzoneRadius = 80
     agentId = 1
     wolvesId = 1
@@ -81,13 +81,14 @@ def trainOneCondition(manipulatedVariables):
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
-    numOfAgent = 3
+    numOfAgent = 4
 
     sheepId = 0
     wolvesId = 1
 
     wolfOneId = 1
     wolfTwoId = 2
+    wolfThreeId = 3
     xPosIndex = [0, 1]
     xBoundary = [0, 600]
     yBoundary = [0, 600]
@@ -95,15 +96,15 @@ def trainOneCondition(manipulatedVariables):
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
+    getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
 
     reset = Reset(xBoundary, yBoundary, numOfAgent)
 
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+    isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, killzoneRadius)
 
-    stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+    playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
 
     playAliveBonus = -1 / dataSetMaxRunningSteps
     playDeathPenalty = 1
@@ -118,19 +119,17 @@ def trainOneCondition(manipulatedVariables):
     # pre-process the trajectories
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
-
     preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 8
+    wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
 
-    actionSpaceOne = wolfActionSpace  # [(10, 0), (-10, 0)]
-    wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))
+    wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
+    wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
+    wolfActionThreeSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
-    actionSpaceTwo = wolfActionSpace  # [(10, 0), (-10, 0)]
-    wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
-    wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
+    wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace, wolfActionThreeSpace))
 
     numActionSpace = len(wolvesActionSpace)
 
@@ -147,7 +146,7 @@ def trainOneCondition(manipulatedVariables):
     loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
-    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])  # !!? magic
+    filterState = lambda timeStep: (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])  # !!? magic
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 
@@ -157,7 +156,7 @@ def trainOneCondition(manipulatedVariables):
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
     # neural network init and save path
-    numStateSpace = 6
+    numStateSpace = 8
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
@@ -197,7 +196,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace55', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
