@@ -43,10 +43,10 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0,151,50))
-    manipulatedVariables['otherIteration'] = [-999]+list(range(0,151,50))
+    manipulatedVariables['selfIteration'] = list(range(0,450,100))
+    manipulatedVariables['otherIteration'] = [-999]+list(range(0,450,100))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [4]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
 
 
     levelNames = list(manipulatedVariables.keys())
@@ -85,7 +85,7 @@ def main():
 
 
 
-    generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
+    generateTrajectoriesCodeName = 'generateMultiAgentNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
@@ -142,7 +142,7 @@ def main():
 
 
 
-    plt.suptitle('SheepNNResnet')
+    plt.suptitle('SheepNN policyValueNet')
     plt.legend(loc='best')
     plt.show()
 
