@@ -52,11 +52,15 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex * self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            if not os.path.isfile(modelSavePath + '.index'):
-                trainedModel = train(model, self.trainData)
-                saveVariables(trainedModel, modelSavePath)
-            else:
-                trainedModel = restoreVariables(model, modelSavePath)
+
+            trainedModel = train(model, self.trainData)
+            saveVariables(trainedModel, modelSavePath)
+
+            # if not os.path.isfile(modelSavePath + '.index'):
+            #     trainedModel = train(model, self.trainData)
+            #     saveVariables(trainedModel, modelSavePath)
+            # else:
+            #     trainedModel = restoreVariables(model, modelSavePath)
             model = trainedModel
 
 
@@ -70,9 +74,9 @@ def trainOneCondition(manipulatedVariables):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 50
+    dataSetMaxRunningSteps = 150
     dataSetNumSimulations = 200
-    killzoneRadius = 80
+    killzoneRadius = 30
     agentId = 1
     wolvesId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -120,10 +124,10 @@ def trainOneCondition(manipulatedVariables):
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
     wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
-    preyPowerRatio = 9
+    preyPowerRatio = 3
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-    predatorPowerRatio = 6
+    predatorPowerRatio = 2
 
     actionSpaceOne = wolfActionSpace  # [(10, 0), (-10, 0)]
     wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))

@@ -40,8 +40,8 @@ def main():
     # test
 
     killzoneRadius = 30
-    numSimulations = 150
-    maxRunningSteps = 50
+    numSimulations = 100
+    maxRunningSteps = 150
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)

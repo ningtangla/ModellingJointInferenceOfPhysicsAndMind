@@ -45,9 +45,9 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 50
+    maxRunningSteps = 150
     numSimulations = 200
-    killzoneRadius = 80
+    killzoneRadius = 30
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -93,10 +93,10 @@ def main():
         # wolfActionSpace = actionSpace
         wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
@@ -163,11 +163,12 @@ def main():
             state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 1e-4
+        rolloutHeuristicWeight = 0.1
+        minDistance = 0
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos)
+            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, minDistance)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos)
+            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, minDistance)
 
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 

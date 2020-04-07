@@ -71,7 +71,7 @@ def trainOneCondition(manipulatedVariables):
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 200
+    dataSetNumSimulations = 300
     killzoneRadius = 80
     agentId = 1
     wolvesId = 1
@@ -118,10 +118,10 @@ def trainOneCondition(manipulatedVariables):
     # pre-process the trajectories
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 9
+    preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-    predatorPowerRatio = 6
+    predatorPowerRatio = 8
 
     actionSpaceOne = [(10, 0), (-10, 0)]
     wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))

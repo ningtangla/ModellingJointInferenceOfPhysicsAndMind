@@ -36,8 +36,8 @@ def main():
         agentId = int(parametersForTrajectoryPath['agentId'])
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    numSimulations = 150
-    maxRunningSteps = 50
+    numSimulations = 100
+    maxRunningSteps = 150
     killzoneRadius = 30  # 80
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
@@ -121,7 +121,7 @@ def main():
             state): return sheepActionSpace[np.random.choice(range(numActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 0.1
+        rolloutHeuristicWeight = 0
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfOnePos, getSheepPos)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(

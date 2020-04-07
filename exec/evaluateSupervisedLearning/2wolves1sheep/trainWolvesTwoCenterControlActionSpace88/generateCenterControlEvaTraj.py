@@ -68,14 +68,14 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace55', 'evaTraj')
+    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace88', 'evaTraj')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 50
+    maxRunningSteps = 150
     numSimulations = 200
-    killzoneRadius = 80
+    killzoneRadius = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -119,7 +119,7 @@ def main():
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
+        wolfActionSpace =  [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
@@ -162,7 +162,7 @@ def main():
 
         generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace55', 'trainedResNNModels')
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace88', 'trainedResNNModels')
         wolfId = 1
         NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
 
@@ -182,7 +182,7 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = False
+        renderOn = 1
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)

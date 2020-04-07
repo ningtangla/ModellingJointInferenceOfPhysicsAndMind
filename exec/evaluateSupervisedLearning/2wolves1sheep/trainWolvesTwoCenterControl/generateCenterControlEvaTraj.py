@@ -74,7 +74,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 200
+    numSimulations = 300
     killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -86,9 +86,10 @@ def main():
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 ## test
+    renderOn = 0
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=499
+    endSampleIndex=500
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
@@ -180,7 +181,6 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = 1
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)

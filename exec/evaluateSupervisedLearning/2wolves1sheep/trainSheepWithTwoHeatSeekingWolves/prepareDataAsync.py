@@ -36,7 +36,7 @@ def main():
     pathParameters = {'agentId': sheepId}
 
     startTime = time.time()
-    numTrajectories = 5000
+    numTrajectories = 3000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSSheepMultiChasingNoPhysics.py'
 
@@ -48,7 +48,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
     numTrajPerSteps = numCmdList * 2
-    startSampleIndexes = np.arange(3000, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
+    startSampleIndexes = np.arange(0, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 

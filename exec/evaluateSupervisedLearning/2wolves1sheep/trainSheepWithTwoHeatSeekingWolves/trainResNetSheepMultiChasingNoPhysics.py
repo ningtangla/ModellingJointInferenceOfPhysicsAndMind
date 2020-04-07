@@ -84,8 +84,8 @@ def main():
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
-    numSimulations = 150  # 100
-    maxRunningSteps = 50
+    numSimulations = 100
+    maxRunningSteps = 150
     killzoneRadius = 30  # 80
     sheepId = 0
 
