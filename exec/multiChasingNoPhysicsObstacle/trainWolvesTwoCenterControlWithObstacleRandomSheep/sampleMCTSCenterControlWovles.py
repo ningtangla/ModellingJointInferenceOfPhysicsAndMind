@@ -55,7 +55,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 200
+    numSimulations = 300
     killzoneRadius = 80
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -104,10 +104,10 @@ def main():
         wolfActionSpace = actionSpace
         # wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
 
-        preyPowerRatio = 13
+        preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 10
+        predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
@@ -162,15 +162,16 @@ def main():
             state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 0
+        rolloutHeuristicWeight = 1e-2
+        minDistance = 400
         rolloutHeuristic1 = HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos)
+            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, 400)
         rolloutHeuristic2 = HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos)
+            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, 400)
 
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
-        maxRolloutSteps = 10
+        maxRolloutSteps = 5
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
         wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)

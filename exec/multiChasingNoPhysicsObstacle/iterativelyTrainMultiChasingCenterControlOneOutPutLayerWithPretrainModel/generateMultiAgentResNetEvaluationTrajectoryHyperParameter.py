@@ -34,15 +34,27 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 def main():
     #input by subprocess
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
-    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+    # numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
+    # numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
+    # selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+    # otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+
+#demo
+    parametersForTrajectoryPath = {}
+    startSampleIndex = 0
+    endSampleIndex = 55
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    
+    numTrajectoriesPerIteration=1
+    numTrainStepEachIteration=1
+    selfIteration = 9000
+    otherIteration = 9000
+
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
@@ -83,7 +95,7 @@ def main():
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-        playKillzoneRadius = killzoneRadius
+        playKillzoneRadius = 30
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
@@ -136,7 +148,7 @@ def main():
 
         # load Model save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'NNModelRes')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -167,10 +179,10 @@ def main():
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
-        renderOn = False
+        renderOn = 1
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
             circleSize = 10
             saveImage = False
             saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')

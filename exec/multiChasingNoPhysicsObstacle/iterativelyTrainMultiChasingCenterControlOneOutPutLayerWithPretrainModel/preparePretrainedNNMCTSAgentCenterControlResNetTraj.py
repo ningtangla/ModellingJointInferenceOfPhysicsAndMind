@@ -104,9 +104,9 @@ def main():
 
     #get traj save path
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 100
-    numSimulations = 200
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 300
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -145,9 +145,9 @@ def main():
 
         #product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 3
+        preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 2
+        predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
@@ -166,7 +166,7 @@ def main():
         generateWolvesModel=GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         generateModelList=[generateSheepModel,generateWolvesModel]
 
-        sheepDepth = 5
+        sheepDepth = 9
         wolfDepth=9
         depthList=[sheepDepth,wolfDepth]
         resBlockSize = 2

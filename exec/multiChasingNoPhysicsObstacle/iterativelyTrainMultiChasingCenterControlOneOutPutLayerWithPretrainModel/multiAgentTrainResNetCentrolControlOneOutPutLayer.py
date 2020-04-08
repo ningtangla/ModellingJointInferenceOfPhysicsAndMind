@@ -199,15 +199,16 @@ def iterateTrainOneCondition(parameterOneCondition):
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     # restorePretrainModel
-    sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    sheepPreTrainModelPath = os.path.join(dirName,  '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels','agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=100_trainSteps=50000')
     # wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_dataSize=3000_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
-    wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    #wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    wolvesPreTrainModelPath = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=300_trainSteps=50000')
+    
     pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
 
     trainableAgentIds = [sheepId, wolvesId]
 
     for agentId in trainableAgentIds:
-
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], pretrainModelPathList[agentId])
         multiAgentNNmodel[agentId] = restoredNNModel
 
@@ -233,7 +234,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration = 1873  # 161
+    restoredIteration = 0  # 161
     # for agentId in trainableAgentIds:
     #     modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
     #     restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -286,8 +287,8 @@ def iterateTrainOneCondition(parameterOneCondition):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numTrainStepEachIteration'] = [3]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
