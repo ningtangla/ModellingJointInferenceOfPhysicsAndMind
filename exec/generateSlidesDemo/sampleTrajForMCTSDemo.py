@@ -425,7 +425,7 @@ def main():
 
         mctsLineColor = np.array([240, 240, 240, 180])
         circleSizeForMCTS = int(0.6 * circleSize)
-        saveImage = True
+        saveImage = False
         saveImageDir = os.path.join(mctsDemoSavePath, "image")
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)

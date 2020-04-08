@@ -14,7 +14,7 @@ import pygame as pg
 from pygame.color import THECOLORS
 
 from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryAndOutObstacleByReflectVelocity, UnpackCenterControlAction
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,HeuristicDistanceToTarget
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -24,11 +24,12 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand,RollOut,establishSoftmaxActionDist
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy,RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy, RandomPolicy
 from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
@@ -49,7 +50,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainSheepWithPretrainedWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -74,8 +75,8 @@ def main():
         xPosIndex = [0, 1]
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-        xObstacles = [[200, 200], [400, 480]]
-        yObstacles = [[200, 200], [400, 480]]
+        xObstacles = [[120, 220], [380, 480]]
+        yObstacles = [[120, 220], [380, 480]]
         isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
@@ -124,11 +125,23 @@ def main():
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
+        generateWolfModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
 
         # load save dir
+        NNModelSaveExtension = ''
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
+        wolfNNModelFixedParameters = {'agentId': 1, 'maxRunningSteps': 50, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, wolfNNModelFixedParameters)
 
-        sheepPolicy = RandomPolicy(sheepActionSpace)
+        depth = 9
+        resBlockSize = 2
+        dropoutRate = 0.0
+        initializationMethod = 'uniform'
+        initWolfNNModel = generateWolfModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+
+        wolfTrainedModelPath = getWolfNNModelSavePath({'trainSteps': 50000, 'depth': depth})
+        wolfTrainedModel = restoreVariables(initWolfNNModel, wolfTrainedModelPath)
+        wolfPolicy = ApproximatePolicy(wolfTrainedModel, wolvesActionSpace)
 
     # MCTS
         cInit = 1
@@ -137,29 +150,29 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         # prior
-        getActionPrior = lambda state: {action: 1 / len(wolvesActionSpace) for action in wolvesActionSpace}
+        getActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
 
     # load chase nn policy
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
-        def wolvesTransit(state, action): return transit(
-            state, [chooseActionInMCTS(sheepPolicy(state)), action])
+        def sheepTransit(state, action): return transit(
+            state, [chooseActionInMCTS(wolfPolicy(state)), action])
 
         # reward function
-        aliveBonus = -1 / maxRunningSteps
-        deathPenalty = 1
+        aliveBonus = 1 / maxRunningSteps
+        deathPenalty = -1
         rewardFunction = RewardFunctionCompete(
             aliveBonus, deathPenalty, isTerminal)
 
         # initialize children; expand
         initializeChildren = InitializeChildren(
-            wolvesActionSpace, wolvesTransit, getActionPrior)
+            sheepActionSpace, sheepTransit, getActionPrior)
         expand = Expand(isTerminal, initializeChildren)
 
         # random rollout policy
         def rolloutPolicy(
-            state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
+            state): return sheepActionSpace[np.random.choice(range(numSheepActionSpace))]
 
         # rollout
         rolloutHeuristicWeight = 0
@@ -171,9 +184,9 @@ def main():
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
         maxRolloutSteps = 10
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
+        rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
-        wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
+        sheepPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
@@ -183,17 +196,22 @@ def main():
         if renderOn:
             import pygame as pg
             from pygame.color import THECOLORS
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
-            circleSize = 10
 
             saveImage = False
             saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
 
+            circleSize = 10
+            lineWidth = 4
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            obstacleColor = THECOLORS['white']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
+            drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
