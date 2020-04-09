@@ -29,6 +29,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy, RandomPolicy
 from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
@@ -74,8 +75,8 @@ def main():
         xPosIndex = [0, 1]
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-        xObstacles = [[200, 200], [400, 480]]
-        yObstacles = [[200, 200], [400, 480]]
+        xObstacles = [[120, 220], [380, 480]]
+        yObstacles = [[120, 220], [380, 480]]
         isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
@@ -140,7 +141,7 @@ def main():
 
         wolfTrainedModelPath = getWolfNNModelSavePath({'trainSteps': 50000, 'depth': depth})
         wolfTrainedModel = restoreVariables(initWolfNNModel, wolfTrainedModelPath)
-        sheepPolicy = ApproximatePolicy(wolfTrainedModel, wolvesActionSpace)
+        wolfPolicy = ApproximatePolicy(wolfTrainedModel, wolvesActionSpace)
 
     # MCTS
         cInit = 1
@@ -195,17 +196,22 @@ def main():
         if renderOn:
             import pygame as pg
             from pygame.color import THECOLORS
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
-            circleSize = 10
 
             saveImage = False
             saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
 
+            circleSize = 10
+            lineWidth = 4
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            obstacleColor = THECOLORS['white']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
+            drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]

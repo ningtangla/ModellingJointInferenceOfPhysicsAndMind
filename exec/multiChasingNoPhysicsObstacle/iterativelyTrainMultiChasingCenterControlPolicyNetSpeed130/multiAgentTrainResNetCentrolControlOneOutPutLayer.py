@@ -91,7 +91,8 @@ def iterateTrainOneCondition(parameterOneCondition):
     killzoneRadius = 80
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+    def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
@@ -124,14 +125,16 @@ def iterateTrainOneCondition(parameterOneCondition):
     # replay buffer
     bufferSize = 3000
     saveToBuffer = SaveToBuffer(bufferSize)
-    getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
+
+    def getUniformSamplingProbabilities(buffer): return [(1 / len(buffer)) for _ in buffer]
     miniBatchSize = 256  # 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
     addMultiAgentValuesToTrajectory = AddValuesToTrajectory(accumulateMultiAgentRewards)
     actionIndex = 1
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+
+    def getTerminalActionFromTrajectory(trajectory): return trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
 
     # pre-process the trajectory for NNTraining
@@ -216,14 +219,15 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     # restore model
-    restoredIteration = 0
+    restoredIteration = 1778
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
         multiAgentNNmodel[agentId] = restoredNNModel
 
+    bufferTrajectoryPathParameters = {'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration}
     restoredIterationIndexRange = range(restoredIteration)
-    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
+    restoredTrajectories = loadTrajectoriesForTrainBreak(bufferTrajectoryPathParameters, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
     preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
@@ -233,7 +237,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
 
-        numCpuToUseWhileTrain = int(3)
+        numCpuToUseWhileTrain = int(4)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
 
@@ -282,7 +286,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = True
+    prepareBefortrainData = 0
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 

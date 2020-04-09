@@ -109,6 +109,35 @@ class DrawBackground:
         return
 
 
+class DrawBackgroundWithObstacle:
+    def __init__(self, screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor):
+        self.screen = screen
+        self.screenColor = screenColor
+        self.xBoundary = xBoundary
+        self.yBoundary = yBoundary
+        self.lineColor = lineColor
+        self.lineWidth = lineWidth
+        self.xObstacles = xObstacles
+        self.yObstacles = yObstacles
+        self.obstacleColor = obstacleColor
+
+    def __call__(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    exit()
+        self.screen.fill(self.screenColor)
+
+        for xObstacle, yObstacle in zip(self.xObstacles, self.yObstacles):
+            rectPos = [xObstacle[0], yObstacle[0], xObstacle[1] - xObstacle[0], yObstacle[1] - yObstacle[0]]
+            pg.draw.rect(self.screen, self.lineColor, rectPos)
+
+        pg.draw.rect(self.screen, self.lineColor, rectPos)
+        return
+
+
 class DrawState:
     def __init__(self, screen, circleSize, positionIndex, drawBackGround):
         self.screen = screen
@@ -145,4 +174,3 @@ class ChaseTrialWithTraj:
                 pg.image.save(screen, imagePath + '/' + format(timeStep, '04') + ".png")
 
         return
-

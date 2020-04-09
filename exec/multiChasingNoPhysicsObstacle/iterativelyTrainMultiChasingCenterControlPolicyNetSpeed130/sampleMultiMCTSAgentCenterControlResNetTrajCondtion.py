@@ -57,7 +57,8 @@ class ComposeSingleAgentGuidedMCTS():
 
     def __call__(self, agentId, selfNNModel, othersPolicy):
         approximateActionPrior = self.getApproximatePolicy[agentId](selfNNModel)
-        transitInMCTS = lambda state, selfAction: self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
+
+        def transitInMCTS(state, selfAction): return self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
         initializeChildren = InitializeChildren(self.actionSpaceList[agentId], transitInMCTS, approximateActionPrior)
         expand = Expand(self.isTerminal, initializeChildren)
 
@@ -84,7 +85,8 @@ class PrepareMultiAgentPolicy:
                                      for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
         multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
+
+        def policy(state): return [agentPolicy(state) for agentPolicy in multiAgentPolicy]
         return policy
 
 
@@ -128,7 +130,8 @@ def main():
         yBoundary = [0, 600]
         xObstacles = [[150, 200], [400, 450]]
         yObstacles = [[150, 200], [400, 450]]
-        isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
+
+        def isLegal(state): return not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
         sheepAliveBonus = 1 / maxRunningSteps
@@ -139,7 +142,8 @@ def main():
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
         wolvesId = 1
         centerControlIndexList = [wolvesId]
@@ -187,7 +191,8 @@ def main():
 
         getApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolvesActionSpace)]
         getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel), lambda NNmodel: ApproximateValue(NNmodel)]
-        getStateFromNode = lambda node: list(node.id.values())[0]
+
+        def getStateFromNode(node): return list(node.id.values())[0]
 
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
