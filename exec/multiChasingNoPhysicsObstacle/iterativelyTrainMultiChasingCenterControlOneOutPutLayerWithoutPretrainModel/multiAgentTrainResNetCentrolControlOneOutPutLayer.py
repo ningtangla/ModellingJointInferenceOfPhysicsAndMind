@@ -167,11 +167,11 @@ def iterateTrainOneCondition(parameterOneCondition):
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithoutPretrainModel', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'NNModelRes')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithoutPretrainModel', 'NNModelRes')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
 
@@ -181,7 +181,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     startTime = time.time()
     trainableAgentIds = [sheepId, wolvesId]
 
-    depth = 5
+    depth = 9
     resBlockSize = 2
     dropoutRate = 0.0
     initializationMethod = 'uniform'
@@ -270,7 +270,7 @@ def iterateTrainOneCondition(parameterOneCondition):
 def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['numTrainStepEachIteration'] = [1]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [4]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
@@ -278,7 +278,7 @@ def main():
     numTrajectoriesToStartTrain = 1024
     sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8 * numCpuCores)
+    numCpuToUse = int(0.75 * numCpuCores)
     print(numCpuToUse)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
