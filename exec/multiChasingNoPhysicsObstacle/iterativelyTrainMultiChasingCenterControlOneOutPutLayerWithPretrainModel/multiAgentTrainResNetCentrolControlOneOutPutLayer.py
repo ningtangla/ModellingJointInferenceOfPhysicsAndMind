@@ -199,7 +199,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     # restorePretrainModel
-    sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithHeatSeekingWolves', 'trainedResNNModels', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=200_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithHeatSeekingWolves', 'trainedResNNModels', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=200_trainSteps=50000')
 
     wolvesPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'pretrainWolvesTwoCenterControlWithPretrainedSheep', 'trainedResNNModels', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=300_trainSteps=50000')
 

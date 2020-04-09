@@ -88,7 +88,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     wolfTerminalReward = 1
     terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
 
-    killzoneRadius = 80
+    killzoneRadius = 90
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
     isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)

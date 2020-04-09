@@ -132,9 +132,9 @@ def main():
         isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
-        getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
+        getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
+        getWolfOneXPos = GetAgentPosFromState(wolfOneId, posIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, posIndex)
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
@@ -146,6 +146,10 @@ def main():
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
         stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
         transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
+
+        sheepTerminalPenalty = -1
+        wolfTerminalReward = 1
+        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
 
         # product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
@@ -181,7 +185,7 @@ def main():
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
 
         # restorePretrainModel
-        sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithHeatSeekingWolves', 'trainedResNNModels', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=200_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+        sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithHeatSeekingWolves', 'trainedResNNModels', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=200_trainSteps=50000')
 
         wolvesPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'pretrainWolvesTwoCenterControlWithPretrainedSheep', 'trainedResNNModels', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=300_trainSteps=50000')
         pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
@@ -235,7 +239,7 @@ def main():
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
 
             drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
-            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
+            render = Render(numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
