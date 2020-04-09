@@ -13,7 +13,7 @@ from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryAndOutObstacleByReflectVelocity, UnpackCenterControlAction
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -27,8 +27,9 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction,SelectSoftmaxAction
+from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction, SelectSoftmaxAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 class ComposeMultiAgentTransitInSingleAgentMCTS:
@@ -100,20 +101,20 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithPretrainModel', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
     numSimulations = 200
-    killzoneRadius = 80
+    killzoneRadius = 90
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
-        #No physics env
+        # No physics env
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
@@ -126,27 +127,29 @@ def main():
         numOfAgent = 3
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-        reset = Reset(xBoundary, yBoundary, numOfAgent)
+        xObstacles = [[120, 220], [380, 480]]
+        yObstacles = [[120, 220], [380, 480]]
+        isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
+        reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
-        sheepAliveBonus = 1 / maxRunningSteps
-        wolfAlivePenalty = -sheepAliveBonus
-        sheepTerminalPenalty = -1
-        wolfTerminalReward = 1
-        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
+        getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
+        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
+
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
         wolvesId = 1
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackCenterControlAction)
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
+        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
-        #action
+        # action
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        preyPowerRatio = 12
+        preyPowerRatio = 10
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
@@ -168,15 +171,14 @@ def main():
         generateModelList = [generateSheepModel, generateWolvesModel]
 
         sheepDepth = 9
-        wolfDepth=9
-        depthList=[sheepDepth,wolfDepth]
+        wolfDepth = 9
+        depthList = [sheepDepth, wolfDepth]
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
         trainableAgentIds = [sheepId, wolvesId]
 
-        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList,generateModelList)]
-
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
 
         otherAgentApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolvesActionSpace)]
         # NNGuidedMCTS init
@@ -198,7 +200,7 @@ def main():
 
         # load model
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'NNModelRes')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithPretrainModel', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -214,18 +216,27 @@ def main():
         # sample and save trajectories
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
+        renderOn = 0
         render = None
-        renderOn = False
         if renderOn:
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['orange']]
-            circleSize = 10
+            import pygame as pg
+            from pygame.color import THECOLORS
+
             saveImage = False
             saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
-            screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
-            render = Render(numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
+            circleSize = 10
+            lineWidth = 4
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            obstacleColor = THECOLORS['white']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
+            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+
+            drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
