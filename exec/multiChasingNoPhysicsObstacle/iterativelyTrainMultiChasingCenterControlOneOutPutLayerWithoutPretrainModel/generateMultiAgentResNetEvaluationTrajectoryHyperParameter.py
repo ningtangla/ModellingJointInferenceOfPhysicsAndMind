@@ -34,16 +34,27 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 def main():
     #input by subprocess
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath = json.loads(sys.argv[1])
+    # startSampleIndex = int(sys.argv[2])
+    # endSampleIndex = int(sys.argv[3])
+    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    
+    # numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
+    # numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
+    # selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+    # otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+
+# debug 
+    parametersForTrajectoryPath = {}
+    startSampleIndex = 0
+    endSampleIndex = 55
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     
-    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
-    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-    
+    numTrajectoriesPerIteration=4
+    numTrainStepEachIteration=1
+    selfIteration = 700
+    otherIteration = 700
+
     # check file exists or not
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'evaluateTrajectories')
@@ -87,8 +98,10 @@ def main():
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
 
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
+
+        playKillzoneRadius = 30
+        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         centerControlIndexList=[wolvesId]
@@ -105,9 +118,9 @@ def main():
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
@@ -165,7 +178,7 @@ def main():
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render=None
-        renderOn = False
+        renderOn = 1
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]

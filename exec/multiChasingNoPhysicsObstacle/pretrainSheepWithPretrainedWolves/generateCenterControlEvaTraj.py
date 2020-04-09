@@ -3,7 +3,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME,'..', '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 
 import json
 import numpy as np
@@ -74,7 +74,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 200
+    numSimulations = 300
     killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -140,7 +140,7 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        NNModelSaveDirectory = os.path.join(dirName,  '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
         sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100,'miniBatchSize':256,'learningRate':0.0001}
         getSheepNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
@@ -160,7 +160,7 @@ def main():
 
         generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
+        wolfNNModelSaveDirectory =  os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
         wolfId = 1
         NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
 
@@ -169,18 +169,19 @@ def main():
         wolvesTrainedModel = restoreVariables(initWolvesNNModel, wolvesTrainedModelPath)
         wolfPolicy = ApproximatePolicy(wolvesTrainedModel, wolvesActionSpace)
 
-        from exec.evaluateNoPhysicsEnvWithRender import Render
+        from src.episode import Render
+
         import pygame as pg
         from pygame.color import THECOLORS
         screenColor = THECOLORS['black']
         circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
         circleSize = 10
         saveImage = False
-        saveImageDir = os.path.join(dirName, '..','..','..', '..', 'data','img')
+        saveImageDir = os.path.join(dirName, '..','..', '..', 'data','img')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = False
+        renderOn = 1
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)

@@ -73,7 +73,7 @@ def trainOneCondition(manipulatedVariables):
     dataSetMaxRunningSteps = 50
     dataSetNumSimulations = 200
     killzoneRadius = 90
-    agentId = 1
+    agentId = 0
     wolvesId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -126,13 +126,13 @@ def trainOneCondition(manipulatedVariables):
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
-    numActionSpace = len(wolvesActionSpace)
+    numActionSpace = len(sheepActionSpace)
 
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(wolvesActionSpace)
+    actionToOneHot = ActionToOneHot(sheepActionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolvesId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 

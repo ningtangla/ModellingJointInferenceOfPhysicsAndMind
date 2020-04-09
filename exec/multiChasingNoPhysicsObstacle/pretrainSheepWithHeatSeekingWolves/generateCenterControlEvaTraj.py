@@ -3,7 +3,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME,'..', '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 
 import json
 import numpy as np
@@ -11,7 +11,7 @@ from collections import OrderedDict
 import pandas as pd
 from itertools import product
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryByReflectVelocity
+from src.constrainedChasingEscapingEnv.envNoPhysics import  TransiteForNoPhysics, Reset,IsTerminal,StayInBoundaryAndOutObstacleByReflectVelocity
 
 import src.constrainedChasingEscapingEnv.reward as reward
 
@@ -26,56 +26,24 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand,RollOut,establishSoftmaxActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy
+from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
-class SampleTrajectoryWithRender:
-    def __init__(self,maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
-        self.maxRunningSteps = maxRunningSteps
-        self.transit = transit
-        self.isTerminal = isTerminal
-        self.reset = reset
-        self.chooseAction = chooseAction
-        self.render = render
-        self.renderOn = renderOn
-        self.time = 0
-
-    def __call__(self, policy):
-        state = self.reset()
-
-        while self.isTerminal(state):
-            state = self.reset()
-
-        trajectory = []
-        for runningStep in range(self.maxRunningSteps):
-            if self.isTerminal(state):
-                trajectory.append((state, None, None))
-                break
-            if self.renderOn:
-                self.render(state,self.time)
-            self.time += 1
-            actionDists = policy(state)
-            action = [choose(action) for choose, action in zip(self.chooseAction, actionDists)]
-            trajectory.append((state, action, actionDists))
-            actionFortransit=[action[0],action[1][0],action[1][1]]
-            nextState = self.transit(state, actionFortransit)
-
-            state = nextState
-        return trajectory
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'evaTraj')
+    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'evaTraj')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
     numSimulations = 200
-    killzoneRadius = 80
+    killzoneRadius = 90
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -90,7 +58,7 @@ def main():
     startSampleIndex=0
     endSampleIndex=499
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
+    renderOn =1
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
     #while  True:
@@ -105,18 +73,22 @@ def main():
         xPosIndex = [0, 1]
         xBoundary = [0,600]
         yBoundary = [0,600]
+        xObstacles = [[120, 220], [380, 480]]
+        yObstacles = [[120, 220], [380, 480]]
+        isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
+        reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
-        getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
+        getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
+        getWolfOnePos = GetAgentPosFromState(wolfOneId, xPosIndex)
+        getWolfTwoPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        playKillzoneRadius = 30
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
-        isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
+        isTerminalOne = IsTerminal(getWolfOnePos, getSheepPos, killzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoPos, getSheepPos, killzoneRadius)
 
-        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-        transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+        stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
+        transit = TransiteForNoPhysics(stayInBoundaryAndOutObstacleByReflectVelocity)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
         preyPowerRatio = 3
@@ -125,12 +97,10 @@ def main():
         predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
 
         # neural network init
         numStateSpace = 6
         numSheepActionSpace=len(sheepActionSpace)
-        numWolvesActionSpace=len(wolvesActionSpace)
 
         regularizationFactor = 1e-4
         sharedWidths = [128]
@@ -140,8 +110,8 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
-        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100,'miniBatchSize':256,'learningRate':0.0001}
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithHeatSeekingWolves', 'trainedResNNModels')
+        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 200,'miniBatchSize':256,'learningRate':0.0001}
         getSheepNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
         if not os.path.exists(NNModelSaveDirectory):
@@ -158,41 +128,39 @@ def main():
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
 
-        generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
-        initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
-        wolfId = 1
-        NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
+        wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
+            wolfActionOneSpace, getWolfOnePos, getSheepPos, computeAngleBetweenVectors)
+        wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(
+            wolfActionTwoSpace, getWolfTwoPos, getSheepPos, computeAngleBetweenVectors)
 
-        getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParametersWolves)
-        wolvesTrainedModelPath = getWolfNNModelSavePath({'trainSteps':50000,'depth':depth})
-        wolvesTrainedModel = restoreVariables(initWolvesNNModel, wolvesTrainedModelPath)
-        wolfPolicy = ApproximatePolicy(wolvesTrainedModel, wolvesActionSpace)
-
-        from exec.evaluateNoPhysicsEnvWithRender import Render
-        import pygame as pg
-        from pygame.color import THECOLORS
-        screenColor = THECOLORS['black']
-        circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
-        circleSize = 10
-        saveImage = False
-        saveImageDir = os.path.join(dirName, '..','..','..', '..', 'data','img')
-        if not os.path.exists(saveImageDir):
-            os.makedirs(saveImageDir)
-        render=None
-        renderOn = False
+        render = None
         if renderOn:
+            import pygame as pg
+            from pygame.color import THECOLORS
+
+            saveImage = False
+            saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
+            if not os.path.exists(saveImageDir):
+                os.makedirs(saveImageDir)
+
+            circleSize = 10
+            lineWidth = 4
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            obstacleColor = THECOLORS['white']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
-        reset = Reset(xBoundary, yBoundary, numOfAgent)
-        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
+            drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
-        playRunningSteps = 150
+        chooseActionList = [chooseGreedyAction,chooseGreedyAction,chooseGreedyAction]
+
+        playRunningSteps = 50
         sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
         # All agents' policies
-        policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
+        policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
         #saveToPickle(trajectories, trajectorySavePath)

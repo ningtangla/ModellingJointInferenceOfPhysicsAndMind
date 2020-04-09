@@ -34,7 +34,7 @@ from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
-    DEBUG = 0
+    DEBUG = 1
     renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
