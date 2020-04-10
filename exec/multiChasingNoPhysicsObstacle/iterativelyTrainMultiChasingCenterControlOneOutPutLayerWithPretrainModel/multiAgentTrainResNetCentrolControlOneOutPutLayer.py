@@ -191,7 +191,6 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-    startTime = time.time()
 
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
     numTrajectoriesToStartTrain = 4 * miniBatchSize
@@ -252,6 +251,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
         print('iterationIndex: ', iterationIndex)
+        startTime = time.time()
 
         numCpuToUseWhileTrain = int(16)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
@@ -277,9 +277,9 @@ def iterateTrainOneCondition(parameterOneCondition):
             replayBuffer = updatedReplayBuffer
             deleteUsedModel(iterationIndex, agentId)
 
-    endTime = time.time()
-    print("Time taken for {} iterations: {} seconds".format(
-        numIterations, (endTime - startTime)))
+        endTime = time.time()
+        print("Time taken for {} iterationIndex: {} seconds".format(
+            iterationIndex, (endTime - startTime)))
 
 
 def main():
