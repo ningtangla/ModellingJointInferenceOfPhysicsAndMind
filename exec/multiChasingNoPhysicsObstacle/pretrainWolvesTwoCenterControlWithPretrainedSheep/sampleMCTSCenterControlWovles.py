@@ -30,7 +30,6 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 from visualize.continuousVisualization import DrawBackgroundWithObstacle
-from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
