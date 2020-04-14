@@ -50,14 +50,14 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainSheepWithPretrainedWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithPretrainedWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 200
-    killzoneRadius = 80
+    numSimulations = 300
+    killzoneRadius = 90
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -95,6 +95,10 @@ def main():
         stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
         transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
 
+        sheepTerminalPenalty = -1
+        wolfTerminalReward = 1
+        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward, wolfTerminalReward]
+
         # NNGuidedMCTS init
         cInit = 1
         cBase = 100
@@ -105,10 +109,10 @@ def main():
         wolfActionSpace = actionSpace
         # wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
 
-        preyPowerRatio = 13
+        preyPowerRatio = 10
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 10
+        predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
@@ -125,12 +129,12 @@ def main():
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        generateWolfModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
+        generateWolfModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
 
         # load save dir
         NNModelSaveExtension = ''
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolvesRandomsheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
-        wolfNNModelFixedParameters = {'agentId': 1, 'maxRunningSteps': 50, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'pretrainWolvesTwoCenterControlWithPretrainedSheep', 'trainedResNNModels')
+        wolfNNModelFixedParameters = {'agentId': 1, 'maxRunningSteps': 50, 'numSimulations': 300, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, wolfNNModelFixedParameters)
 
         depth = 9
@@ -157,7 +161,7 @@ def main():
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
         def sheepTransit(state, action): return transit(
-            state, [chooseActionInMCTS(wolfPolicy(state)), action])
+            state, [action, chooseActionInMCTS(wolfPolicy(state))])
 
         # reward function
         aliveBonus = 1 / maxRunningSteps

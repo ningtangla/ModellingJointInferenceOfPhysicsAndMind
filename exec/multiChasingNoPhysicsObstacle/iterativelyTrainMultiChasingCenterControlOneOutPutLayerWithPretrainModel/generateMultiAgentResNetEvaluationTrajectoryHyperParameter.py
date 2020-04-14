@@ -33,28 +33,30 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 def main():
+    renderOn = 0
+    if renderOn:
+    #demo
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 0
+        endSampleIndex = 55
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        
+        numTrajectoriesPerIteration=1
+        numTrainStepEachIteration=1
+        selfIteration = 3400
+        otherIteration = 3400
+
+    else:
     #input by subprocess
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    # numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    # numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
-    # selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    # otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-
-#demo
-    parametersForTrajectoryPath = {}
-    startSampleIndex = 0
-    endSampleIndex = 55
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    
-    numTrajectoriesPerIteration=1
-    numTrainStepEachIteration=1
-    selfIteration = 400
-    otherIteration = 400
-    renderOn = 1
+        numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
+        numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
+        selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+        otherIteration = int(parametersForTrajectoryPath['otherIteration'])
 
 
     # check file exists or not
@@ -94,12 +96,14 @@ def main():
         isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
-        sheepAliveBonus = 1/maxRunningSteps
+
+        playRunningSteps = 100
+        sheepAliveBonus = 1/playRunningSteps
         wolfAlivePenalty = -sheepAliveBonus
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-        
+
         playKillzoneRadius = 30
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
@@ -205,7 +209,6 @@ def main():
             drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
             render = Render(numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
-        playRunningSteps = 100
         sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         saveToPickle(trajectories, trajectorySavePath)

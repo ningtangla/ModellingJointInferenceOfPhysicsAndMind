@@ -102,8 +102,8 @@ def trainOneCondition(manipulatedVariables):
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
     playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
-    playAliveBonus = -1 / dataSetMaxRunningSteps
-    playDeathPenalty = 1
+    playAliveBonus = 1 / dataSetMaxRunningSteps
+    playDeathPenalty = -1
     playKillzoneRadius = killzoneRadius
 
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
@@ -113,7 +113,6 @@ def trainOneCondition(manipulatedVariables):
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
-
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
     preyPowerRatio = 10
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))

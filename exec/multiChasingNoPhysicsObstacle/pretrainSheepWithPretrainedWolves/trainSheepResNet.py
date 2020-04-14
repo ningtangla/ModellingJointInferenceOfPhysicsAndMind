@@ -64,7 +64,7 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    dataSetDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithPretrainedWolves', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -72,9 +72,8 @@ def trainOneCondition(manipulatedVariables):
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
     dataSetNumSimulations = 300
-    killzoneRadius = 80
-    agentId = 1
-    wolvesId = 1
+    killzoneRadius = 90
+    agentId = 0
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
@@ -102,8 +101,8 @@ def trainOneCondition(manipulatedVariables):
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
     playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
-    playAliveBonus = -1 / dataSetMaxRunningSteps
-    playDeathPenalty = 1
+    playAliveBonus = 1 / dataSetMaxRunningSteps
+    playDeathPenalty = -1
     playKillzoneRadius = killzoneRadius
 
     playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
@@ -115,7 +114,7 @@ def trainOneCondition(manipulatedVariables):
     # pre-process the trajectories
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 12
+    preyPowerRatio = 10
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 8
@@ -126,13 +125,13 @@ def trainOneCondition(manipulatedVariables):
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
-    numActionSpace = len(wolvesActionSpace)
+    numActionSpace = len(sheepActionSpace)
 
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(wolvesActionSpace)
+    actionToOneHot = ActionToOneHot(sheepActionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolvesId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, sheepId)
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
@@ -191,7 +190,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithPretrainedWolves', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

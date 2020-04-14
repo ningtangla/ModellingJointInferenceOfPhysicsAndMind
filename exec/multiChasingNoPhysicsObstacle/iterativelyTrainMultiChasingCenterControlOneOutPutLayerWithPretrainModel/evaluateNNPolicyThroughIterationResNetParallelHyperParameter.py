@@ -44,19 +44,19 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0, 1700, 400))
-    manipulatedVariables['otherIteration'] = list(range(0, 1700, 400))
-    manipulatedVariables['numTrainStepEachIteration'] = [3]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['selfIteration'] = list(range(0, 3401, 800))
+    manipulatedVariables['otherIteration'] = list(range(0, 3401, 800)) + [-999]
+    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
-    trainMaxRunningSteps = 100
+    trainMaxRunningSteps = 50
     trainNumSimulations = 200
-    killzoneRadius = 30
+    killzoneRadius = 90
 
     numAgents = 2
     sheepId = 0
@@ -70,13 +70,15 @@ def main():
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoIndex, posIndex)
 
-    playerKillzone = killzoneRadius
+    playerKillzone = 30
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playerKillzone)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playerKillzone)
 
     def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
-    sheepAliveBonus = 1 / trainMaxRunningSteps
+
+    playRunningSteps = 100
+    sheepAliveBonus = 1 / playRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
@@ -88,7 +90,7 @@ def main():
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.8 * numCpuCores)
+    numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials, numCmdList)
 
@@ -98,7 +100,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithPretrainModel', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
