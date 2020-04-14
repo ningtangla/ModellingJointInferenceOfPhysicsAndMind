@@ -100,9 +100,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 9
+    preyPowerRatio = 10
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    predatorPowerRatio = 6
+    predatorPowerRatio = 8
     wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
@@ -122,7 +122,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateModelList = [generateSheepModel, generateWolvesModel]
 
     # replay buffer
-    bufferSize = 3000
+    bufferSize = 10000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
     miniBatchSize = 256  # 256
@@ -178,7 +178,6 @@ def iterateTrainOneCondition(parameterOneCondition):
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-    startTime = time.time()
     trainableAgentIds = [sheepId, wolvesId]
 
     depth = 9
@@ -232,8 +231,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
     numIterations = 10000
     for iterationIndex in range(restoredIteration + 1, numIterations):
+        startTime = time.time()
 
-        numCpuToUseWhileTrain = int(3)
+        numCpuToUseWhileTrain = int(16)
         numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
         sampleTrajectoryFileName = 'sampleMultiMCTSAgentCenterControlResNetTrajCondtion.py'
 
@@ -260,10 +260,11 @@ def iterateTrainOneCondition(parameterOneCondition):
 
             deleteUsedModel(iterationIndex, agentId)
 
-    endTime = time.time()
-    print("Time taken for {} iterations: {} seconds".format(
-        numIterations, (endTime - startTime)))
+        endTime = time.time()
+        print("Time taken for {} iterationIndex: {} seconds".format(
+            iterationIndex, (endTime - startTime)))
 
+        print('======================================================')
 
 def main():
     manipulatedVariables = OrderedDict()
@@ -282,7 +283,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = True
+    prepareBefortrainData = False
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
