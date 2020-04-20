@@ -17,4 +17,5 @@ __pycache__/
 */.idea
 */demo
 demo
+log.txt
 MUJOCO_LOG.TXT
