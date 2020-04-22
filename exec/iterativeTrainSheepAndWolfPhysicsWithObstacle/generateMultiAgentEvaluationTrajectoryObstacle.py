@@ -150,7 +150,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
+        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoRandoObstacles3.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
