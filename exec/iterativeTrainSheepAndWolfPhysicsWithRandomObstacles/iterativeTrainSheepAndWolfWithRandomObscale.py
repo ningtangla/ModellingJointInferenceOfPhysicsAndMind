@@ -67,7 +67,7 @@ class TrainOneAgent:
         return NNModel
 def iterateTrainOneCondition(parameters):
 
-    numTrajectoriesPerIteration = 4
+
     learningRate=parameters['learningRate']
     depth=parameters['depth']
     dirName = os.path.dirname(__file__)
@@ -79,8 +79,8 @@ def iterateTrainOneCondition(parameters):
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
 
-    numSimulations = 50
-    maxRunningSteps = 10
+    numSimulations = 200
+    maxRunningSteps = 30
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
     sheepAliveBonus =  1 / maxRunningSteps
@@ -115,7 +115,7 @@ def iterateTrainOneCondition(parameters):
     bufferSize = 2000
     saveToBuffer = SaveToBuffer(bufferSize)
     getUniformSamplingProbabilities = lambda buffer: [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 4
+    miniBatchSize = 256
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -218,6 +218,7 @@ def iterateTrainOneCondition(parameters):
 
 
     #paralle sample trajectory
+    numTrajectoriesPerIteration = 1
     numCpuToUseWhileTrain = int(16)
     numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectoryFixedObstacle.py'
@@ -229,10 +230,9 @@ def iterateTrainOneCondition(parameters):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
     modelMemorySize = 5
-    modelSaveFrequency = 1000
+    modelSaveFrequency = 200
     deleteUsedModel = DeleteUsedModel(modelMemorySize, modelSaveFrequency, generatetoDeleteNNModelPathList)
-    numIterations = 1000
-    numTrajectoriesPerIteration = 4
+    numIterations = 10001
 
     for iterationIndex in range(restoredIteration + 1, numIterations):
 
@@ -275,7 +275,7 @@ def main():
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
 
     #Sample Trajectory Before Train to fill Buffer
-    miniBatchSize = 4
+    miniBatchSize = 256
     numTrajectoriesToStartTrain = 4 * miniBatchSize
     sampleTrajectoryFileName = 'prepareMultiMCTSAgentTrajectoryFixObstacle.py'
     numCpuCores = os.cpu_count()

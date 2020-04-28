@@ -54,8 +54,8 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 10
-    numSimulations = 50
+    maxRunningSteps = 30
+    numSimulations = 200
     killzoneRadius=2
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius}
 
