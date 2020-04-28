@@ -147,12 +147,7 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
-        rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-        rewardMultiAgents = [rewardSheep, rewardWolf]
-
-        decay = 1
-        accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
+  
 
         # NNGuidedMCTS init
         cInit = 1

@@ -132,11 +132,11 @@ class FixSampleTrajectoryWithRender:
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numSimulations'] = [50, 100, 200, 400]
-    manipulatedVariables['maxRolloutSteps']  = [10,20,30]
+    manipulatedVariables['gapLength'] = [1.1,1.6,1.65,1.70,1.75]
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
+    print(levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -147,10 +147,10 @@ def main():
     # trainPool = mp.Pool(numCpuToUse)
     # trainPool.map(generateOneCondition, parametersAllCondtion)
 
-    generateTrajectoriesCodeName = 'generateMCTSwolfOobscalePhysicsRandomSheepParrallel.py'
-    evalNumTrials = 50
+    generateTrajectoriesCodeName = 'sampleMCTSAgentPassGap.py'
+    evalNumTrials = 500
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.75 * numCpuCores)
+    numCpuToUse = int(0.40 * numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName,evalNumTrials, numCmdList)
 
@@ -163,7 +163,8 @@ def main():
 
     # load data
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory=os.path.join(dirName, '..', '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
+    trajectoryDirectory=os.path.join(dirName, '..', '..', '..', 'data', 'evaluateMCTSAgentPassGapWolf', 'trajectories')
+
     trajectoryExtension = '.pickle'
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
@@ -173,8 +174,9 @@ def main():
 
     killzoneRadius = 2
     maxRunningSteps = 30
-
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius}
+    numSimulations=50
+    maxRollOutSteps=30
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'numSimulations':numSimulations,'maxRolloutSteps':maxRollOutSteps}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     getTrajectorySavePathFromDf = lambda df: getTrajectorySavePath(readParametersFromDf(df))
@@ -205,6 +207,17 @@ def main():
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     print(statisticsDf)
     # plot the results
+
+    def calculateSuriveRatio(trajectory):
+        lenth=np.array(len(trajectory))
+        count=np.array([lenth<10,lenth>=10 and lenth<20,lenth>=20 and lenth<30,lenth>=30])
+
+        return count
+    computeNumbers = ComputeStatistics(loadTrajectoriesFromDf,calculateSuriveRatio)
+    df=toSplitFrame.groupby(levelNames).apply(computeNumbers)
+
+    print(df)
+
     fig = plt.figure()
     numRows = 1
     numColumns = len(manipulatedVariables['numSimulations'])

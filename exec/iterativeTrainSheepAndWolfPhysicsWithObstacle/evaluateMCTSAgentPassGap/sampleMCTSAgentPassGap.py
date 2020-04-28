@@ -1,3 +1,4 @@
+
 import time
 import sys
 import os
@@ -11,12 +12,15 @@ from collections import OrderedDict
 import pandas as pd
 from itertools import product
 import mujoco_py as mujoco
+import xmltodict
+import pygame as pg
+from pygame.color import THECOLORS
 
 from src.constrainedChasingEscapingEnv.envMujoco import  IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,HeuristicDistanceToTarget
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.constrainedChasingEscapingEnv.policies import RandomPolicy
+from src.constrainedChasingEscapingEnv.policies import RandomPolicy,stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
@@ -27,6 +31,21 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+
+
+
+
+
+def transferNumberListToStr(numList):
+    strList=[str(num) for num in numList]
+    return ' '.join(strList)
+def changeWallProperty(envDict,wallPropertyDict):
+    for number,propertyDict in wallPropertyDict.items():
+        for name,value in propertyDict.items():
+            envDict['mujoco']['worldbody']['body'][number]['geom'][name]=value
+
+    return envDict
+
 class CheckAngentStackInWall:
     def __init__(self, wallList,agentMaxSize):
         self.wallList=wallList
@@ -38,8 +57,8 @@ class CheckAngentStackInWall:
         isOverlapList=[np.all(np.abs(np.add(pos,-center))<diag)  for (center,diag) in zip (wallCenterList,wallExpandHalfDiagonalList) for pos in posList]
         return np.any(isOverlapList)
 
-class ResetUniformInEnvWithObstacles:
-    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,checkAngentStackInWall):
+class ResetUniformInEnvWithObstaclesOnHalfSideWithFixSheep:
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,sheepPos,checkAngentStackInWall):
         self.simulation = simulation
         self.qPosInit = np.asarray(qPosInit)
         self.qVelInit = np.asarray(qVelInit)
@@ -48,16 +67,17 @@ class ResetUniformInEnvWithObstacles:
         self.qVelInitNoise = qVelInitNoise
         self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
         self.checkAngentStackInWall=checkAngentStackInWall
+        self.sheepPos=np.array(sheepPos)
     def __call__(self):
         numQPos = len(self.simulation.data.qpos)
         numQVel = len(self.simulation.data.qvel)
 
 
-        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qPos = self.qPosInit +np.append(self.sheepPos, np.random.uniform(low=0, high=self.qPosInitNoise, size=numQPos-2))
 
         while self.checkAngentStackInWall(qPos):
-            qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
-        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
+             qPos = self.qPosInit +np.append(self.sheepPos, np.random.uniform(low=0, high=self.qPosInitNoise, size=numQPos-2))
+        qVel = self.qVelInit +np.append( np.array([0,0]),np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel-2))
 
         self.simulation.data.qpos[:] = qPos
         self.simulation.data.qvel[:] = qVel
@@ -91,6 +111,7 @@ class SampleTrajectoryWithRender:
 
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
+            # print(state)
             if self.isTerminal(state):
                 trajectory.append((state, None, None))
                 break
@@ -108,13 +129,13 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','evaluateMCTSAgentPassGapSheep',  'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 50
-    numSimulations = 200
+    maxRunningSteps = 30
+    numSimulations = 50
     killzoneRadius = 2
     maxRolloutSteps = 30
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':maxRolloutSteps}
@@ -125,24 +146,45 @@ def main():
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
+    np.random.seed(startSampleIndex*endSampleIndex)
     # parametersForTrajectoryPath={}
     # startSampleIndex=0
-    # endSampleIndex=12
+    # endSampleIndex=2
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
+    # parametersForTrajectoryPath['gapLength']=1.6
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath=os.path.join(dirName,'..','twoAgentsTwoObstacles4.xml')
-        physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+        physicsDynamicsPath = os.path.join(dirName, 'twoAgentsOneDoor.xml')
+
+        with open(physicsDynamicsPath) as f:
+            xml_string = f.read()
+        xml_doc_dict = xmltodict.parse(xml_string.strip())
+
+        wallPropertyDict={}
+        wall1Id=5
+        wall2Id=6
+        gapLength=float(parametersForTrajectoryPath['gapLength'])
+        wall1Pos=[0,(9.95+gapLength/2)/2,-0.2]
+        wall1Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
+        wall2Pos=[0,-(9.95+gapLength/2)/2,-0.2]
+        wall2Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
+
+        wallPropertyDict[wall1Id]={'@pos':transferNumberListToStr(wall1Pos),'@size':transferNumberListToStr(wall1Size)}
+        wallPropertyDict[wall2Id]={'@pos':transferNumberListToStr(wall2Pos),'@size':transferNumberListToStr(wall2Size)}
+
+        xml_doc_dict=changeWallProperty(xml_doc_dict,wallPropertyDict)
+        xml=xmltodict.unparse(xml_doc_dict)
+        physicsModel = mujoco.load_model_from_xml(xml)
+        physicsSimulation = mujoco.MjSim(physicsModel)
+
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         # MDP function
         agentMaxSize=0.6
-        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
+        wallList=[[0,5,0.9,5],[0,-5,0.9,5]]
         checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
         qPosInit = (0, 0, 0, 0)
@@ -150,8 +192,8 @@ def main():
         numAgents = 2
         qVelInitNoise = 8
         qPosInitNoise = 9.7
-
-        reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
+        sheepPos=[-3,0]
+        reset = ResetUniformInEnvWithObstaclesOnHalfSideWithFixSheep(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,sheepPos,checkAngentStackInWall)
 
         agentIds = list(range(numAgents))
         sheepId = 0
@@ -185,32 +227,13 @@ def main():
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
 
-        randomSheepPolicy=RandomPolicy(actionSpace)
-        sheepPolicy=randomSheepPolicy
+        # randomSheepPolicy=RandomPolicy(actionSpace)
+        sheepPolicy=stationaryAgentPolicy
 
 
-
-        renderOn = False
-        render=None
-        if renderOn:
-            from exec.evaluateNoPhysicsEnvWithRender import Render
-            import pygame as pg
-            from pygame.color import THECOLORS
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['orange']]
-            circleSize = 10
-            saveImage = False
-            saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
-            if not os.path.exists(saveImageDir):
-                os.makedirs(saveImageDir)
-            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
-
-        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
 
         # select child
@@ -245,7 +268,7 @@ def main():
             state): return actionSpace[np.random.choice(range(numWolfActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 0.0
+        rolloutHeuristicWeight = 0.1
         rolloutHeuristic = HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfXPos, getSheepXPos)
 
@@ -258,10 +281,137 @@ def main():
         # All agents' policies
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
 
+
+        renderOn = False
+        render=None
+        if renderOn:
+            from visualize.continuousVisualization import DrawBackgroundWithObstacles
+            fullScreen = False
+            screenWidth = 800
+            screenHeight = 800
+            screen = pg.display.set_mode([screenWidth, screenHeight])
+
+            screenColor = THECOLORS['black']
+            circleColorList = [THECOLORS['green'], THECOLORS['red']]
+
+
+            leaveEdgeSpace = 200
+            lineWidth = 3
+            xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
+            yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+
+            positionIndex = [2, 3]
+            rawXRange = [-10, 10]
+            rawYRange = [-10, 10]
+            scaledXRange = [210, 590]
+            scaledYRange = [210, 590]
+            scaleState = ScaleState(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+            transferWallToRescalePosForDraw=TransferWallToRescalePosForDraw(rawXRange,rawYRange,scaledXRange,scaledYRange)
+
+            allObstaclePos = transferWallToRescalePosForDraw(wallList)
+
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
+
+            circleSizeList=[8,8]
+            drawState = DrawState(screen, circleSizeList,circleColorList, positionIndex,drawBackground)
+
+            saveImage = False
+            demoDirectory = os.path.join(dirName, '..', '..', '..', 'data')
+
+            if not os.path.exists(demoDirectory):
+                os.makedirs(demoDirectory)
+            numOfAgent=2
+            render = RenderInObstacle(numOfAgent, positionIndex,screen, circleColorList, saveImage, demoDirectory,scaleState,drawState)
+        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
+        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
+
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         print([len(traj) for traj in trajectories])
         saveToPickle(trajectories, trajectorySavePath)
 
+class TransferWallToRescalePosForDraw:
+    def __init__(self,rawXRange,rawYRange,scaledXRange,scaledYRange):
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (self.rawYMax-rawY) * yScale + self.scaledYMin
+        self.rescaleWall=lambda wallForDraw :[adjustX(wallForDraw[0]),adjustY(wallForDraw[1]),wallForDraw[2]*xScale,wallForDraw[3]*yScale]
+        self.tranferWallForDraw=lambda wall:[wall[0]-wall[2],wall[1]+wall[3],2*wall[2],2*wall[3]]
+    def __call__(self,wallList):
+
+        wallForDarwList=[self.tranferWallForDraw(wall) for wall in wallList]
+        allObstaclePos=[ self.rescaleWall(wallForDraw) for wallForDraw in wallForDarwList]
+        return allObstaclePos
+class RenderInObstacle():
+    def __init__(self, numOfAgent, posIndex, screen, circleColorList,saveImage, saveImageDir,scaleState,drawState):
+        self.numOfAgent = numOfAgent
+        self.posIndex = posIndex
+        self.screen = screen
+        self.circleColorList = circleColorList
+        self.saveImage  = saveImage
+        self.saveImageDir = saveImageDir
+        self.scaleState=scaleState
+        self.drawState=drawState
+    def __call__(self, state, timeStep):
+        for j in range(1):
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+
+            rescaleState=self.scaleState(state)
+            # print(state,rescaleState)
+            screen = self.drawState(self.numOfAgent,rescaleState)
+            pg.time.wait(100)
+
+            if self.saveImage == True:
+                if not os.path.exists(self.saveImageDir):
+                    os.makedirs(self.saveImageDir)
+                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
+class DrawState:
+    def __init__(self, screen, circleSizeList,circleColorList, positionIndex, drawBackGround):
+        self.screen = screen
+        self.circleSizeList = circleSizeList
+        self.xIndex, self.yIndex = positionIndex
+        self.drawBackGround = drawBackGround
+        self.circleColorList=circleColorList
+    def __call__(self, numOfAgent, state):
+
+        self.drawBackGround()
+
+        for agentIndex in range(numOfAgent):
+            agentPos =[np.int(pos) for pos in state[agentIndex]]
+            agentColor = self.circleColorList[agentIndex]
+            pg.draw.circle(self.screen, agentColor, agentPos, self.circleSizeList[agentIndex])
+        pg.display.flip()
+        return self.screen
+
+class ScaleState:
+    def __init__(self, positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange):
+        self.xIndex, self.yIndex = positionIndex
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+
+    def __call__(self, originalState):
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (self.rawYMax-rawY) * yScale + self.scaledYMin
+
+        adjustState = lambda state: [adjustX(state[self.xIndex]), adjustY(state[self.yIndex])]
+
+        newState = [adjustState(agentState) for agentState in originalState]
+
+        return newState
 
 if __name__ == '__main__':
     main()
