@@ -154,6 +154,19 @@ class DrawState:
         pg.display.flip()
         return self.screen
 
+class InterpolateStateForNoPhysics:
+    def __init__(self, numFramesToInterpolate, transite):
+        self.numFramesToInterpolate = numFramesToInterpolate
+        self.transite = transite
+    def __call__(self, state, action):
+        actionForInterpolation = np.array(action) / (self.numFramesToInterpolate + 1)
+        interpolatedStates = [state]
+        for frameIndex in range(self.numFramesToInterpolate):
+            nextState, nextActionForInterpolation = self.transite(state, actionForInterpolation)
+            interpolatedStates.append(nextState)
+            state = nextState
+            actionForInterpolation = nextActionForInterpolation
+        return interpolatedStates
 
 class ChaseTrialWithTraj:
     def __init__(self, fps, colorSpace, drawState, saveImage):
