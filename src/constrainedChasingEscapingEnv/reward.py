@@ -13,7 +13,18 @@ class RewardFunctionCompete():
             reward += self.deathPenalty
 
         return reward
+class RewardFunctionCompeteWithInterpolationTerminal():
+    def __init__(self, aliveBonus, deathPenalty, isTerminal):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.isTerminal = isTerminal
 
+    def __call__(self, lastState,currentState, action):
+        reward = self.aliveBonus
+        if self.isTerminal(lastState,currentState):
+            reward += self.deathPenalty
+
+        return reward
 
 class IsCollided:
     def __init__(self, minXDis, getSelfPos, getOtherPos):
@@ -80,16 +91,17 @@ class RewardFunctionAvoidCollisionAndWall():
         return reward + wallPunish + velPunish
 
 class HeuristicDistanceToTarget:
-    def __init__(self, weight, getPredatorPosition, getPreyPosition):
+    def __init__(self, weight, getPredatorPosition, getPreyPosition, minDistance = 0):
         self.weight = weight
         self.getPredatorPosition = getPredatorPosition
         self.getPreyPosition = getPreyPosition
+        self.minDistance = minDistance
 
     def __call__(self, state):
         predatorPos = self.getPredatorPosition(state)
         preyPos = self.getPreyPosition(state)
 
         distance = np.linalg.norm(predatorPos - preyPos, ord = 2)
-        reward = -self.weight * distance
+        reward = -self.weight * max(0, distance - self.minDistance)
 
         return reward

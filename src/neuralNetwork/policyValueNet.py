@@ -103,7 +103,6 @@ class GenerateModel:
                     actionLoss_ = tf.reduce_mean(crossEntropy_, name='loss')
                     tf.add_to_collection("actionLoss", actionLoss_)
                     actionLossSummary = tf.summary.scalar("actionLoss", actionLoss_)
-
                     groundTruthActionIndices_ = tf.argmax(groundTruthAction_, axis=1)
                     actionAccuracy_ = tf.reduce_mean(tf.cast(tf.equal(actionIndices_, groundTruthActionIndices_), tf.float32), name="accuracy")
                     tf.add_to_collection("actionAccuracy", actionAccuracy_)

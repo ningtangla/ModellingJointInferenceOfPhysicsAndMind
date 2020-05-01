@@ -40,7 +40,12 @@ def main():
     distractorId = 3
     startTime = time.time()
 
+<<<<<<< HEAD
+
+    numTrajectories = 16
+=======
     numTrajectories = 4000
+>>>>>>> iterativeTrainSheepAndWolf
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMCTSDistractorInLeashedWolfTraj.py'
     # sampleTrajectoryFileName = 'sampleExpMCTSDistractorTraj.py'
@@ -52,6 +57,18 @@ def main():
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectories, numCmdList)
 
+<<<<<<< HEAD
+    killzoneRadius = 1
+
+    maxRunningSteps = 125
+    numSimulations = 200
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    trajectorySaveExtension = '.pickle'
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
+    fuzzySearchParameterNames = ['sampleIndex']
+    loadTrajectoriesForParallel = LoadTrajectories(generateTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+=======
+>>>>>>> iterativeTrainSheepAndWolf
 
     print("start")
     trainableAgentIds = [distractorId]

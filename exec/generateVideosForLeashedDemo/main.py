@@ -33,10 +33,19 @@ def main():
     # manipulatedVariables['tendonDamping'] =[0.7]
     # manipulatedVariables['tendonStiffness'] = [10]
 
+<<<<<<< HEAD
+    manipulatedVariables['agentId'] = [0]
+    manipulatedVariables['maxRunningSteps'] = [50]
+
+    manipulatedVariables['numSimulations'] = [200]
+    manipulatedVariables['killzoneRadius'] = [1]
+
+=======
     manipulatedVariables['agentId'] = [310]
     manipulatedVariables['maxRunningSteps'] = [250]
     manipulatedVariables['numSimulations'] = [300]
     manipulatedVariables['killzoneRadius'] = [0.5]
+>>>>>>> iterativeTrainSheepAndWolf
 
     # manipulatedVariables['sampleIndex'] = [(0,1)]
 
