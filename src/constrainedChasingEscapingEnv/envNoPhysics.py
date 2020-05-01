@@ -63,7 +63,7 @@ class TransiteForNoPhysics():
         checkedNewPositionsAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, action)]
         newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
-        return newState, newAction
+        return np.array(newState), np.array(newAction)
 
 
 class UnpackCenterControlAction:
@@ -91,7 +91,7 @@ class TransiteForNoPhysicsWithCenterControlAction():
         checkedNewPositionsAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, action)]
         newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
-        return newState, newAction
+        return np.array(newState), np.array(newAction)
 
 class TransitWithInterpolateState:
     def __init__(self, numFramesToInterpolate, transite, isTerminal):
@@ -107,7 +107,7 @@ class TransitWithInterpolateState:
                 break
             state = nextState
             actionForInterpolation = nextActionForInterpolation
-        return nextState
+        return np.array(nextState)
 
 class IsTerminal():
     def __init__(self, getPredatorPos, getPreyPos, minDistance):
