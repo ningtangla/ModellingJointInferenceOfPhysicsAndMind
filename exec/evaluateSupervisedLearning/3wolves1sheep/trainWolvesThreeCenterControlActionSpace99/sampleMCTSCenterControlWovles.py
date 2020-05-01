@@ -12,7 +12,7 @@ import pandas as pd
 from itertools import product
 
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateState
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
@@ -84,7 +84,10 @@ def main():
 
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
-        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackCenterControlAction)
+        transitWithAction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackCenterControlAction)
+
+        numFramesToInterpolate = 3
+        transit = TransitWithInterpolateState(numFramesToInterpolate, transitWithAction, isTerminal)
 
         # NNGuidedMCTS init
         cInit = 1
@@ -169,11 +172,11 @@ def main():
         rolloutHeuristicWeight = 1e-2
         minDistance = 400
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos,minDistance)
+            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, minDistance)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos,minDistance)
+            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, minDistance)
         rolloutHeuristic3 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfThreeXPos, getSheepXPos,minDistance)
+            rolloutHeuristicWeight, getWolfThreeXPos, getSheepXPos, minDistance)
 
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state) + rolloutHeuristic3(state)) / 3
 
