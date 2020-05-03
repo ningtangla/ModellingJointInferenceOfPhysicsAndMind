@@ -15,7 +15,7 @@ import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset
+from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset, TransitWithInterpolateState
 from src.episode import SampleTrajectory, Render, SampleTrajectoryWithRender, chooseGreedyAction, SampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
@@ -36,13 +36,13 @@ def main():
         agentId = int(parametersForTrajectoryPath['agentId'])
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    numSimulations = 100
+    numSimulations = 110
     maxRunningSteps = 50
-    killzoneRadius = 80
+    killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -73,7 +73,10 @@ def main():
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
 
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-        transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+        transite = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+
+        numFramesToInterpolate = 3
+        transitionFunction = TransitWithInterpolateState(numFramesToInterpolate, transite, isTerminal)
 
         reset = env.Reset(xBoundary, yBoundary, numOfAgent)
 
@@ -81,9 +84,9 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 9
+        preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 8
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
