@@ -39,8 +39,8 @@ def main():
     agentId = 0
     # test
 
-    killzoneRadius = 80
-    numSimulations = 100
+    killzoneRadius = 50
+    numSimulations = 110
     maxRunningSteps = 50
     fixedParameters = {'agentId':agentId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
@@ -84,14 +84,18 @@ def main():
         getPredatorTwoPos = GetAgentPosFromState(wolfTwoId, positionIndex)
         getPredatorThreePos = GetAgentPosFromState(wolfThreeId, positionIndex)
 
-        isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, killzoneRadius)
-        isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, killzoneRadius)
-        isTerminalThree = env.IsTerminal(getPredatorThreePos, getPreyPos, killzoneRadius)
+        playKillzoneRadius = 30
+        isTerminalOne = env.IsTerminal(getPredatorOnePos, getPreyPos, playKillzoneRadius)
+        isTerminalTwo = env.IsTerminal(getPredatorTwoPos, getPreyPos, playKillzoneRadius)
+        isTerminalThree = env.IsTerminal(getPredatorThreePos, getPreyPos, playKillzoneRadius)
 
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
 
         stayInBoundaryByReflectVelocity = env.StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-        transitionFunction = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+        transite = env.TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
+
+        numFramesToInterpolate = 3
+        transitionFunction = env.TransitWithInterpolateState(numFramesToInterpolate, transite, isTerminal)
 
         reset = env.Reset(xBoundary, yBoundary, numOfAgent)
 
@@ -99,9 +103,9 @@ def main():
                        (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         numActionSpace = len(actionSpace)
 
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
         wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(

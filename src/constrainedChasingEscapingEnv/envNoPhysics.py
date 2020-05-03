@@ -65,6 +65,21 @@ class TransiteForNoPhysics():
         newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
         return np.array(newState), np.array(newAction)
 
+class TransitWithInterpolateState:
+    def __init__(self, numFramesToInterpolate, transite, isTerminal):
+        self.numFramesToInterpolate = numFramesToInterpolate
+        self.transite = transite
+        self.isTerminal = isTerminal
+
+    def __call__(self, state, action):
+        actionForInterpolation = np.array(action) / (self.numFramesToInterpolate + 1)
+        for frameIndex in range(self.numFramesToInterpolate + 1):
+            nextState, nextActionForInterpolation = self.transite(state, actionForInterpolation)
+            if self.isTerminal(nextState):
+                break
+            state = nextState
+            actionForInterpolation = nextActionForInterpolation
+        return np.array(nextState)
 
 class UnpackCenterControlAction:
     def __init__(self, centerControlIndexList):
@@ -81,26 +96,27 @@ class UnpackCenterControlAction:
 
 
 class TransiteForNoPhysicsWithCenterControlAction():
-    def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
+    def __init__(self, stayInBoundaryByReflectVelocity):
         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
-        self.unpackCenterControlAction = unpackCenterControlAction
 
     def __call__(self, state, action):
-        actionFortansit = self.unpackCenterControlAction(action)
-        newState = state + np.array(actionFortansit)
+        newState = state + np.array(action)
         checkedNewPositionsAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, action)]
         newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
         return np.array(newState), np.array(newAction)
 
-class TransitWithInterpolateState:
-    def __init__(self, numFramesToInterpolate, transite, isTerminal):
+
+class TransitWithInterpolateStateWithCenterControlAction:
+    def __init__(self, numFramesToInterpolate, transite, isTerminal,unpackCenterControlAction):
         self.numFramesToInterpolate = numFramesToInterpolate
         self.transite = transite
         self.isTerminal = isTerminal
+        self.unpackCenterControlAction = unpackCenterControlAction
 
     def __call__(self, state, action):
-        actionForInterpolation = np.array(action) / (self.numFramesToInterpolate + 1)
+        actionFortansit = self.unpackCenterControlAction(action)
+        actionForInterpolation = np.array(actionFortansit) / (self.numFramesToInterpolate + 1)
         for frameIndex in range(self.numFramesToInterpolate + 1):
             nextState, nextActionForInterpolation = self.transite(state, actionForInterpolation)
             if self.isTerminal(nextState):

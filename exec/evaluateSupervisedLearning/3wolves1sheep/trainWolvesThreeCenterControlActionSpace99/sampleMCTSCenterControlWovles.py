@@ -12,7 +12,7 @@ import pandas as pd
 from itertools import product
 
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateState
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateState,TransitWithInterpolateStateWithCenterControlAction
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
@@ -22,9 +22,41 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 
 
+
+# class UnpackCenterControlAction:
+#     def __init__(self, centerControlIndexList):
+#         self.centerControlIndexList = centerControlIndexList
+
+#     def __call__(self, centerControlAction):
+#         upackedAction = []
+#         for index, action in enumerate(centerControlAction):
+#             if index in self.centerControlIndexList:
+#                 [upackedAction.append(subAction) for subAction in action]
+#             else:
+#                 upackedAction.append(action)
+#         return np.array(upackedAction)
+
+
+# class TransiteForNoPhysicsWithCenterControlAction():
+#     def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
+#         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
+#         self.unpackCenterControlAction = unpackCenterControlAction
+
+#     def __call__(self, state, action):
+#         actionFortansit = self.unpackCenterControlAction(action)
+#         newState = state + np.array(actionFortansit)
+#         checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
+#             position, velocity) for position, velocity in zip(newState, actionFortansit)]
+#         newState, newAction = list(zip(*checkedNewStateAndVelocities))
+#         return newState
+
+
+
+
+
 def main():
-    DEBUG = 0
-    renderOn = 0
+    DEBUG = 1
+    renderOn = 1
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -84,10 +116,10 @@ def main():
 
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
-        transitWithAction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackCenterControlAction)
+        transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
 
         numFramesToInterpolate = 3
-        transit = TransitWithInterpolateState(numFramesToInterpolate, transitWithAction, isTerminal)
+        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal,unpackCenterControlAction)
 
         # NNGuidedMCTS init
         cInit = 1

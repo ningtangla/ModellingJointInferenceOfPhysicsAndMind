@@ -90,8 +90,8 @@ def main():
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 100
-    killzoneRadius = 80
+    dataSetNumSimulations = 110
+    killzoneRadius = 50
     sheepId = 0
 
     dataSetFixedParameters = {'agentId': sheepId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -137,9 +137,9 @@ def main():
 
     # pre-process the trajectories
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 9
+    preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    predatorPowerRatio = 6
+    predatorPowerRatio = 8
     wolfActionSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
 
     numActionSpace = len(sheepActionSpace)
