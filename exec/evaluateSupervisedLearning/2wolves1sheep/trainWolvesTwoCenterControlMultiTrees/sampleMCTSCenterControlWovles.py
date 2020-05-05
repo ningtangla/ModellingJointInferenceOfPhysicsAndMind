@@ -11,7 +11,7 @@ from collections import OrderedDict
 import pandas as pd
 from itertools import product
 
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, StochasticMCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, StochasticMCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDistFromMultipleTrees
 from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateStateWithCenterControlAction
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -23,8 +23,8 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 1
-    renderOn = 1
+    DEBUG = 0
+    renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -40,13 +40,13 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlMultiTrees', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 250
+    numSimulations = 252
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -179,8 +179,8 @@ def main():
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
         numTree = 2
-        numSimulationsPerTree = numSimulations / numTree
-        wolfPolicy = StochasticMCTS(numTree, numSimulationsPerTree, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
+        numSimulationsPerTree = int(numSimulations / numTree)
+        wolfPolicy = StochasticMCTS(numTree, numSimulationsPerTree, selectChild, expand, rollout, backup, establishSoftmaxActionDistFromMultipleTrees)
 
         # All agents' policies
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
