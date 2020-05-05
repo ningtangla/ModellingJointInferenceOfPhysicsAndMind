@@ -36,18 +36,18 @@ def sampleMCTSOneCondtion(parameters):
 
 
     dirName = os.path.dirname(__file__)
-
+    sheepID=0
     wolfId = 1
-    pathParameters = {'agentId': wolfId}
+    pathParameters = {'agentId': sheepID}
     parameters.update(pathParameters)
 
     startTime = time.time()
     numTrajectories = 500
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
-
+    #sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
+    sampleTrajectoryFileName='generateMCTSSheepTrajcectory.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(2)
+    numCpuToUse = 2
     numCmdList = min(numTrajectories, numCpuToUse)
     print('numCpuToUse',numCpuToUse)
 
@@ -79,7 +79,7 @@ def main():
 
     #parallel train
     numCpuCores = os.cpu_count()
-    numCpuToUse = 6
+    numCpuToUse = 12
     trainPool = mp.Pool(numCpuToUse)
     trainPool.map(sampleMCTSOneCondtion,parametersAllCondtion)
 
