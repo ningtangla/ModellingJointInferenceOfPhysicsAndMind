@@ -11,21 +11,31 @@ from collections import OrderedDict
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,IsCollided
-from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
-from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, ActionToOneHot, ProcessTrajectoryForPolicyValueNet, PreProcessTrajectories,AccumulateMultiAgentRewards
+from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
+    ActionToOneHot, ProcessTrajectoryForPolicyValueNet
 
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
-from src.episode import SampleTrajectory, chooseGreedyAction
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ComposeMultiAgentTransitInSingleAgentMCTS,ComposeSingleAgentGuidedMCTS,PrepareMultiAgentPolicy
+
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
+from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
+
 from exec.parallelComputing import GenerateTrajectoriesParallel
 from exec.evaluationFunctions import ComputeStatistics
+
+
 def drawPerformanceLine(dataDf, axForDraw, agentId):
     for key, grp in dataDf.groupby('otherIteration'):
         grp.index = grp.index.droplevel('otherIteration')
@@ -36,12 +46,10 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-
-    manipulatedVariables['selfIteration'] = [0,250,600]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,250,600]#[-999]+list(range(0,10001,2000)),
-
-    manipulatedVariables['numTrainStepEachIteration'] = [4]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['selfIteration'] = [0,200,400]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,200,400]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['depth'] = [4]
+    manipulatedVariables['learningRate'] = [0.001]
     selfId=1
 
     levelNames = list(manipulatedVariables.keys())
@@ -76,8 +84,8 @@ def main():
 
 
 
-    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryObstacle.py'
-    evalNumTrials = 500
+    generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryFixObstacle.py'
+    evalNumTrials = 100
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
@@ -89,7 +97,8 @@ def main():
 #
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName,  '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentObstacle', 'evaluateTrajectories')
+    dataFolderName=os.path.join(dirName,'..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentFixObstacle')
+    trajectoryDirectory = os.path.join(dataFolderName, 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -111,29 +120,29 @@ def main():
 
     # plot the results
     fig = plt.figure()
-    numRows = len(manipulatedVariables['numTrainStepEachIteration'])
-    numColumns = len(manipulatedVariables['numTrajectoriesPerIteration'])
+    numRows = len(manipulatedVariables['depth'])
+    numColumns = len(manipulatedVariables['learningRate'])
     plotCounter = 1
 
-    for numTrainStepEachIteration, grp in statisticsDf.groupby('numTrainStepEachIteration'):
-        grp.index = grp.index.droplevel('numTrainStepEachIteration')
+    for depth, grp in statisticsDf.groupby('depth'):
+        grp.index = grp.index.droplevel('depth')
 
-        for numTrajectoriesPerIteration, group in grp.groupby('numTrajectoriesPerIteration'):
-            group.index = group.index.droplevel('numTrajectoriesPerIteration')
+        for learningRate, group in grp.groupby('learningRate'):
+            group.index = group.index.droplevel('learningRate')
 
             axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
             if (plotCounter % numColumns == 1) or numColumns==1:
-                axForDraw.set_ylabel('numTrainStepEachIteration: {}'.format(numTrainStepEachIteration))
+                axForDraw.set_ylabel('depth: {}'.format(depth))
             if plotCounter <= numColumns:
-                axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
+                axForDraw.set_title('learningRate: {}'.format(learningRate))
 
-            # axForDraw.set_ylim(-1, 1.5)
+            axForDraw.set_ylim(-1, 1.5)
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 
 
 
-    plt.suptitle('IterativeWolfPhysicsWithObstacle')
+    plt.suptitle('IterativeWolfPhysicsWithFixObstacle')
     plt.legend(loc='best')
     plt.show()
 

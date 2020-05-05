@@ -11,7 +11,7 @@ from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 def main():
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles3.xml')
+    physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles4.xml')
     physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
     physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -25,7 +25,7 @@ def main():
     # physicsSimulation.data.qpos[:] = np.array(init).flatten()
 
 
-    qPos=np.array([-5.5, -5, 5, 0]).flatten()
+    qPos=np.array([-5.8, -5, 5, 0]).flatten()
     physicsSimulation.data.qpos[:] = qPos
     physicsSimulation.step()
 

@@ -2,7 +2,7 @@ import sys
 import os
 
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
@@ -24,7 +24,7 @@ def main():
     # trajectorygg = trajectory.copy()
     # del trajectory[-1]
     # print(trajectorygg.pop())
-    maxRunningSteps = 30
+    maxRunningSteps = 50
     numSimulations = 200
     killzoneRadius = 2
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -32,8 +32,15 @@ def main():
     # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'killzoneRadius': killzoneRadius,'maxRolloutSteps':30,'agentId':1}
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trajectories')
     # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiMCTSAgentPhysicsWithObstacle','evaluateMCTSSimulation', 'trajectories')
+<<<<<<< HEAD
     trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'numTrainStepEachIteration':4,'numTrajectoriesPerIteration':16}
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+=======
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'numTrainStepEachIteration':4,'numTrajectoriesPerIteration':16}
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius}
+    # trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentObstacle', 'trajectories')
+    trajectoryDirectory= os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action', 'trajectories')
+>>>>>>> 172ddf46bf1edda133b3bca4e0e6871811a6bb5c
     trajectoryExtension = '.pickle'
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
     fuzzySearchParameterNames = ['sampleIndex']
@@ -41,8 +48,14 @@ def main():
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
     # para = {'numSimulations':numSimulations }
-    iterationIndex=100
+<<<<<<< HEAD
+    iterationIndex=400
     para = {'iterationIndex':iterationIndex }
+=======
+    iterationIndex=100
+    # para = {'iterationIndex':iterationIndex }
+    para={'maxRolloutSteps':30,'agentId':1}
+>>>>>>> 172ddf46bf1edda133b3bca4e0e6871811a6bb5c
     allTrajectories = loadTrajectories(para)
     print(len(allTrajectories))
     for dataIndex in range(len(allTrajectories)):
@@ -77,7 +90,7 @@ def main():
 
             FPS = 60
 
-            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=False,)
+            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=False)
 
             rawXRange = [-10, 10]
             rawYRange = [-10, 10]

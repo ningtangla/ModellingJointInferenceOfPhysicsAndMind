@@ -150,13 +150,17 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles3.xml')
+<<<<<<< HEAD
+        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoObstacles4.xml')
+=======
+        physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoRandoObstacles3.xml')
+>>>>>>> 172ddf46bf1edda133b3bca4e0e6871811a6bb5c
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         # MDP function
         agentMaxSize=0.6
-        wallList=[[0,2,0.5,1.45],[0,-2,0.5,1.45]]
+        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
         checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
         qPosInit = (0, 0, 0, 0)
@@ -182,7 +186,7 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
 
         numactionSpace=len(actionSpace)
         # neural network init
@@ -205,7 +209,7 @@ def main():
         restoreWolfNNModel = restoreVariables(initWolfNNModel, wolfModelPath)
 
         wolfPolicy = ApproximatePolicy(restoreWolfNNModel, actionSpace)
-        
+
         initSheepNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
         sheepModelPath = getNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
         restoreSheepNNModel=restoreVariables(initSheepNNModel, sheepModelPath)
@@ -227,7 +231,7 @@ def main():
                 os.makedirs(saveImageDir)
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, posIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
-        
+
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
         playMaxRunningSteps=50
         sampleTrajectory = FixSampleTrajectoryWithRender(playMaxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)

@@ -32,13 +32,13 @@ class GenerateTrajectoriesParallel:
 def main():
     dirName = os.path.dirname(__file__)
 
-    wolfId = 1
-    pathParameters = {'agentId': wolfId}
+    sheepId = 0
+    pathParameters = {'agentId': sheepId}
 
     startTime = time.time()
     numTrajectories = 4000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSWolfInPhysicsWithObstacle.py'
+    sampleTrajectoryFileName = 'sampleMCTSSheepWithPretrainWolfInPhysicsWithObstacle.py'
 
     numCpuCores = os.cpu_count()
     numCpuToUse = int(16)

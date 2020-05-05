@@ -96,7 +96,7 @@ class FixSampleTrajectoryWithRender:
         self.chooseAction = chooseAction
         self.render = render
         self.renderOn = renderOn
-
+        self.runningStep=0
     def __call__(self, policy,trailIndex):
         state = self.reset(trailIndex)
 
@@ -110,7 +110,8 @@ class FixSampleTrajectoryWithRender:
                 trajectory.append((state, None, None))
                 break
             if self.renderOn:
-                self.render(state,runningStep)
+                self.render(state,self.runningStep)
+            self.runningStep=self.runningStep+1
             actionDists = policy(state)
             action = [choose(action) for choose, action in zip(self.chooseAction, actionDists)]
             trajectory.append((state, action, actionDists))
@@ -132,8 +133,8 @@ def main():
     # dataSize=int(parametersForTrajectoryPath['dataSize'])
 
     parametersForTrajectoryPath = {}
-    depth = 5
-    dataSize = 1000
+    depth = 9
+    dataSize = 2000
     trainSteps = 50000
     startSampleIndex = 0
     endSampleIndex = 100
@@ -141,12 +142,12 @@ def main():
 
     killzoneRadius = 2
     numSimulations = 200
-    maxRunningSteps = 30
+    maxRunningSteps = 50
 
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle','evaluateTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action','evaluateTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -155,13 +156,13 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath=os.path.join(dirName,'..','twoAgentsTwoObstacles2.xml')
+        physicsDynamicsPath=os.path.join(dirName,'..','twoAgentsTwoObstacles4.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
         # MDP function
-        agentMaxSize=0
-        wallList=[[0,2,0.5,1.75],[0,-2,0.5,1.75]]
+        agentMaxSize=0.6
+        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
         checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
 
         qPosInit = (0, 0, 0, 0)
@@ -187,7 +188,7 @@ def main():
         numSimulationFrames = 20
         transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
 
         numactionSpace=len(actionSpace)
         # neural network init
@@ -201,7 +202,7 @@ def main():
         initializationMethod = 'uniform'
         generateWolvesModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
         initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacle', 'trainedResNNModels')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'evaluateSupervisedLearning', 'multiMCTSAgentPhysicsWithObstacleEnv4thWith(0,0)action', 'trainedResNNModels')
 
         wolfId = 1
         NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
@@ -223,10 +224,9 @@ def main():
             screenHeight = 800
             screen = pg.display.set_mode([screenWidth, screenHeight])
 
-            wallList=[[0,2,0.5,1.75],[0,-2,0.5,1.75]]
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red']]
-            circleSize = 10
+
 
             leaveEdgeSpace = 200
             lineWidth = 3
@@ -239,23 +239,19 @@ def main():
             scaledXRange = [210, 590]
             scaledYRange = [210, 590]
             scaleState = ScaleState(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+            transferWallToRescalePosForDraw=TransferWallToRescalePosForDraw(rawXRange,rawYRange,scaledXRange,scaledYRange)
 
-            obstacle1Pos = [-0.5,3.75,1,3.5]
-            obstacle2Pos = [-0.5,-0.25,1,3.5]
-
-            rescaleObstacle1Pos = [390.5, 328.5, 19, 66.5]
-            rescaleObstacle2Pos = [390.5, 404.75, 19, 66.5]
-            allObstaclePos = [rescaleObstacle1Pos, rescaleObstacle2Pos]
+            allObstaclePos = transferWallToRescalePosForDraw(wallList)
 
             screenColor = THECOLORS['black']
             lineColor = THECOLORS['white']
             drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
 
-            circleSizeList=[6,9]
+            circleSizeList=[8,11]
             drawState = DrawState(screen, circleSizeList,circleColorList, positionIndex,drawBackground)
 
-            saveImage = False
-            saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
+            saveImage = True
+            saveImageDir = os.path.join(dirName, '..','..', '..', 'data','ObstacaleDemoImg','supervisedLearningEnv4th')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
             numOfAgent=2
@@ -270,6 +266,24 @@ def main():
         trajectories = [sampleTrajectory(policy,sampleIndex-startSampleIndex) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
         saveToPickle(trajectories, trajectorySavePath)
+
+class TransferWallToRescalePosForDraw:
+    def __init__(self,rawXRange,rawYRange,scaledXRange,scaledYRange):
+        self.rawXMin, self.rawXMax = rawXRange
+        self.rawYMin, self.rawYMax = rawYRange
+        self.scaledXMin, self.scaledXMax = scaledXRange
+        self.scaledYMin, self.scaledYMax = scaledYRange
+        xScale = (self.scaledXMax - self.scaledXMin) / (self.rawXMax - self.rawXMin)
+        yScale = (self.scaledYMax - self.scaledYMin) / (self.rawYMax - self.rawYMin)
+        adjustX = lambda rawX: (rawX - self.rawXMin) * xScale + self.scaledXMin
+        adjustY = lambda rawY: (self.rawYMax-rawY) * yScale + self.scaledYMin
+        self.rescaleWall=lambda wallForDraw :[adjustX(wallForDraw[0]),adjustY(wallForDraw[1]),wallForDraw[2]*xScale,wallForDraw[3]*yScale]
+        self.tranferWallForDraw=lambda wall:[wall[0]-wall[2],wall[1]+wall[3],2*wall[2],2*wall[3]]
+    def __call__(self,wallList):
+
+        wallForDarwList=[self.tranferWallForDraw(wall) for wall in wallList]
+        allObstaclePos=[ self.rescaleWall(wallForDraw) for wallForDraw in wallForDarwList]
+        return allObstaclePos
 
 class RenderInObstacle():
     def __init__(self, numOfAgent, posIndex, screen, circleColorList,saveImage, saveImageDir,scaleState,drawState):
@@ -295,7 +309,7 @@ class RenderInObstacle():
             if self.saveImage == True:
                 if not os.path.exists(self.saveImageDir):
                     os.makedirs(self.saveImageDir)
-                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '04') + ".png")
+                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '05') + ".png")
 class DrawState:
     def __init__(self, screen, circleSizeList,circleColorList, positionIndex, drawBackGround):
         self.screen = screen
