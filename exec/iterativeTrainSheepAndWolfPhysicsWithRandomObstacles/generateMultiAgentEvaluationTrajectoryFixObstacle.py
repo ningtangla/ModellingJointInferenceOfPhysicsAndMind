@@ -11,10 +11,10 @@ import numpy as np
 from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
+import xmltodict
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
-from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, transferNumberListToStr, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles
-
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty,  SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles,getWallList
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 
@@ -28,7 +28,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ComposeMultiAgentTransitInSingleAgentMCTS,ComposeSingleAgentGuidedMCTS,PrepareMultiAgentPolicy
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ApproximatePolicy,ApproximateValue
 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
@@ -50,7 +50,7 @@ def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
     dataFolderName=os.path.join(dirName,'..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentFixObstacle')
-    trajectoriesSaveDirectory = os.path.join(dataFolderName,  'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dataFolderName,  'evaluateTrajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
@@ -65,18 +65,16 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
-
-     	physicsDynamicsPath=os.path.join(dirName,'twoAgentsTwoRandomObstacles.xml')
+        physicsDynamicsPath=os.path.join(dirName,'..','..','env','xmls','twoAgentsTwoRandomObstacles.xml')
         with open(physicsDynamicsPath) as f:
             xml_string = f.read()
         originalEnvXmlDict = xmltodict.parse(xml_string.strip())
 
         wallIDlist=[5,6]
-        gapLength=1.1
-        wall1Pos=[0,(9.95+gapLength/2)/2,-0.2]
-        wall1Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
-        wall2Pos=[0,-(9.95+gapLength/2)/2,-0.2]
-        wall2Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
+        wall1Pos=[0,2.5,-0.2]
+        wall1Size=[0.8,1.95,1.5]
+        wall2Pos=[0,-2.5,-0.2]
+        wall2Size=[0.8,1.95,1.5]
         wallPosList=[wall1Pos,wall2Pos]
         wallSizeList=[wall1Size,wall2Size]
 
@@ -86,8 +84,8 @@ def main():
         sampleObscalesProperty=SampleObscalesProperty(sampleFixWallPos,sampleFixWallSize)
         setMujocoEnvXmlProperty=SetMujocoEnvXmlProperty(wallIDlist,changeWallProperty)
 
-        wallPosList,wallSizeList=SampleObscalesProperty()
-        envXmlDict=SetMujocoEnvXmlProperty(wallPosList,wallSizeList,originalEnvXmlDict)
+        wallPosList,wallSizeList=sampleObscalesProperty()
+        envXmlDict=setMujocoEnvXmlProperty(wallPosList,wallSizeList,originalEnvXmlDict)
 
         envXml=xmltodict.unparse(envXmlDict)
         physicsModel = mujoco.load_model_from_xml(envXml)
@@ -95,7 +93,7 @@ def main():
 
         agentMaxSize=0.6
         wallList=getWallList(wallPosList,wallSizeList)
-        checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
+        checkAngentStackInWall=CheckAngentStackInWall(agentMaxSize)
 
         # MDP function
         qPosInit = (0, 0, 0, 0)
@@ -104,7 +102,7 @@ def main():
         qVelInitNoise = 8
         qPosInitNoise = 9.7
 
-        reset=ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
+        reset=ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,wallList,checkAngentStackInWall)
 
         agentIds = list(range(numAgents))
         sheepId = 0
@@ -112,7 +110,6 @@ def main():
         xPosIndex = [2, 3]
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
-		killzoneRadius = 2
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
         sheepAliveBonus = 1 / maxRunningSteps
@@ -121,12 +118,9 @@ def main():
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
 
-        rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
-        rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
-        rewardMultiAgents = [rewardSheep, rewardWolf]
 
         numSimulationFrames = 20
-        transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
+        transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
 
         # NNGuidedMCTS init
         cInit = 1

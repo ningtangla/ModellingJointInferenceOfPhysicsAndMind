@@ -12,8 +12,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
-from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, transferNumberListToStr, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles
-
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 
@@ -33,7 +33,7 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
 
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
+from exec.evaluationFunctions import ComputeStatistics
 
 
 def drawPerformanceLine(dataDf, axForDraw, agentId):
@@ -46,10 +46,10 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,250,450]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,250,450]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = [0,200,400]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,200,400]#[-999]+list(range(0,10001,2000)),
     manipulatedVariables['depth'] = [4]
-    manipulatedVariables['learningRate'] = [16]
+    manipulatedVariables['learningRate'] = [0.001]
     selfId=1
 
     levelNames = list(manipulatedVariables.keys())
@@ -85,7 +85,7 @@ def main():
 
 
     generateTrajectoriesCodeName = 'generateMultiAgentEvaluationTrajectoryFixObstacle.py'
-    evalNumTrials = 500
+    evalNumTrials = 100
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8*numCpuCores)
     numCmdList = min(evalNumTrials, numCpuToUse)
@@ -97,7 +97,8 @@ def main():
 #
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName,  '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentFixObstacle', 'evaluateTrajectories')
+    dataFolderName=os.path.join(dirName,'..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentFixObstacle')
+    trajectoryDirectory = os.path.join(dataFolderName, 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -141,7 +142,7 @@ def main():
 
 
 
-    plt.suptitle('IterativeWolfPhysicsWithObstacle')
+    plt.suptitle('IterativeWolfPhysicsWithFixObstacle')
     plt.legend(loc='best')
     plt.show()
 

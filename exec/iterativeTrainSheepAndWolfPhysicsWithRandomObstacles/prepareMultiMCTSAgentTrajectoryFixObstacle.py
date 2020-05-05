@@ -70,11 +70,10 @@ def main():
         originalEnvXmlDict = xmltodict.parse(xml_string.strip())
 
         wallIDlist=[5,6]
-        gapLength=1.1
-        wall1Pos=[0,(9.95+gapLength/2)/2,-0.2]
-        wall1Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
-        wall2Pos=[0,-(9.95+gapLength/2)/2,-0.2]
-        wall2Size=[0.9,(9.95+gapLength/2)/2-gapLength/2,1.5]
+        wall1Pos=[0,2.5,-0.2]
+        wall1Size=[0.8,1.95,1.5]
+        wall2Pos=[0,-2.5,-0.2]
+        wall2Size=[0.8,1.95,1.5]
         wallPosList=[wall1Pos,wall2Pos]
         wallSizeList=[wall1Size,wall2Size]
 
@@ -140,8 +139,6 @@ def main():
 
         getStateFromNode = lambda node: list(node.id.values())[0]
 
-        # sample trajectory
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
 
 
