@@ -11,7 +11,7 @@ from collections import OrderedDict
 import pandas as pd
 from itertools import product
 
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, StochasticMCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
 from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateStateWithCenterControlAction
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
@@ -178,7 +178,9 @@ def main():
         maxRolloutSteps = 15
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
-        wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
+        numTree = 2
+        numSimulationsPerTree = numSimulations / numTree
+        wolfPolicy = StochasticMCTS(numTree, numSimulationsPerTree, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
