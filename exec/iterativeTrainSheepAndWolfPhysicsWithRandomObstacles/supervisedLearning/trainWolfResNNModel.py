@@ -28,7 +28,24 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Exp
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
+def flattenStateInTrajectory(trajectory):
+    flattenState =lambda state : np.array([i for s in state for i in s ]).reshape(1,-1)
+    trajectoryWithFlattenState = [(flattenState(s), a, dist, v) for (s, a, dist, v) in trajectory]
 
+    return trajectoryWithFlattenState
+
+class PreprocessTrajectoriesForBuffer:
+    def __init__(self, addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory,flattenStateInTrajectory):
+        self.addMultiAgentValuesToTrajectory = addMultiAgentValuesToTrajectory
+        self.removeTerminalTupleFromTrajectory = removeTerminalTupleFromTrajectory
+        self.flattenStateInTrajectory=flattenStateInTrajectory
+    def __call__(self, trajectories):
+
+        trajectoriesWithValues = [self.addMultiAgentValuesToTrajectory(trajectory) for trajectory in trajectories]
+        filteredTrajectories = [self.removeTerminalTupleFromTrajectory(trajectory) for trajectory in trajectoriesWithValues]
+        flattenedTrajectories = [self.flattenStateInTrajectory(trajectory) for trajectory in filteredTrajectories]
+
+        return flattenedTrajectories
 
 def drawPerformanceLine(dataDf, axForDraw, deth):
     for learningRate, grp in dataDf.groupby('learningRate'):

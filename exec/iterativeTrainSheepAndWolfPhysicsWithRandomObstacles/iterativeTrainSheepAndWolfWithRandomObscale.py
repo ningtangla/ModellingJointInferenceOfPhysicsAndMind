@@ -205,14 +205,14 @@ def iterateTrainOneCondition(parameters):
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
     # restore modelrestoredIteration
-    restoredIteration=0#0
+    restoredIteration=705#0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId,  'depth':depth, 'learningRate':learningRate})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
         multiAgentNNmodel[agentId] = restoredNNModel
 
     restoredIterationIndexRange = range(restoredIteration)
-    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
+    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={'depth':depth, 'learningRate':learningRate}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
     preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
@@ -284,7 +284,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = True
+    prepareBefortrainData = False
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 

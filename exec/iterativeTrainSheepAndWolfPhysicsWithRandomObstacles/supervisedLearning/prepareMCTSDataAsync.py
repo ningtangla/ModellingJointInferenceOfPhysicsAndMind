@@ -12,6 +12,15 @@ import numpy as np
 from collections import OrderedDict
 import pathos.multiprocessing as mp
 import itertools as it
+import pandas as pd
+
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
+from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
+    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
+from exec.preProcessing import AccumulateMultiAgentRewards
+from exec.evaluationFunctions import ComputeStatistics
 
 class GenerateTrajectoriesParallel:
     def __init__(self, codeFileName):
@@ -38,22 +47,22 @@ def sampleMCTSOneCondtion(parameters):
     dirName = os.path.dirname(__file__)
     sheepID=0
     wolfId = 1
-    pathParameters = {'agentId': sheepID}
+    pathParameters = {'agentId': wolfId}
     parameters.update(pathParameters)
 
     startTime = time.time()
-    numTrajectories = 500
+    numTrajectories =6000
     # generate and load trajectories before train parallelly
-    #sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
-    sampleTrajectoryFileName='generateMCTSSheepTrajcectory.py'
+    sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
+    # sampleTrajectoryFileName='generateMCTSSheepTrajcectory.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = 2
+    numCpuToUse = 12
     numCmdList = min(numTrajectories, numCpuToUse)
     print('numCpuToUse',numCpuToUse)
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
-    numTrajPerSteps = numCmdList * 20
+    numTrajPerSteps = numCmdList * 50
     startSampleIndexes = np.arange(0, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
@@ -70,8 +79,9 @@ def sampleMCTSOneCondtion(parameters):
 
 def main():
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['numSimulations'] = [50,100,150,200]
-    manipulatedVariables['maxRolloutSteps'] = [10,20,30]
+    manipulatedVariables['maxRolloutSteps'] = [30]
+    manipulatedVariables['numSimulations'] = [150]
+
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -79,7 +89,7 @@ def main():
 
     #parallel train
     numCpuCores = os.cpu_count()
-    numCpuToUse = 12
+    numCpuToUse = 1
     trainPool = mp.Pool(numCpuToUse)
     trainPool.map(sampleMCTSOneCondtion,parametersAllCondtion)
 
@@ -93,10 +103,13 @@ def main():
     dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSFixObstacle')
     trajectoryDirectory = os.path.join(dataFolderName, 'trajectories')
 
+    if not os.path.exists(trajectoryDirectory):
+        os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
     maxRunningSteps = 30
     killzoneRadius = 2
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'agentId':agentId}
+    agentId=1
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps,  'killzoneRadius': killzoneRadius,'agentId':agentId}
 
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
@@ -104,6 +117,28 @@ def main():
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
     loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
+
+
+    numAgents = 2
+    sheepId = 0
+    wolfId = 1
+    posIndex = [2, 3]
+
+
+    getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
+    getWolfXPos = GetAgentPosFromState(wolfId, posIndex)
+
+    isTerminal = IsTerminal(killzoneRadius,getWolfXPos, getSheepXPos)
+
+    playMaxRunningSteps=30
+    sheepAliveBonus = 1/playMaxRunningSteps
+    wolfAlivePenalty = -sheepAliveBonus
+    sheepTerminalPenalty = -1
+    wolfTerminalReward = 1
+
+    rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
+    rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
+    rewardMultiAgents = [rewardSheep, rewardWolf]
 
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)

@@ -46,11 +46,11 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,200,400]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,200,400]#[-999]+list(range(0,10001,2000)),
+    manipulatedVariables['selfIteration'] = [0,1000,2000]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,1000,2000]#[-999]+list(range(0,10001,2000)),
     manipulatedVariables['depth'] = [4]
     manipulatedVariables['learningRate'] = [0.001]
-    selfId=1
+    selfId=0
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -72,7 +72,7 @@ def main():
 
     isTerminal = IsTerminal(killzoneRadius,getWolfXPos, getSheepXPos)
 
-    playMaxRunningSteps=50
+    playMaxRunningSteps=30
     sheepAliveBonus = 1/playMaxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1

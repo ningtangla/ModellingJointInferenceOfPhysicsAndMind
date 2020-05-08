@@ -112,12 +112,6 @@ def main():
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
         isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-        sheepAliveBonus = 1 / maxRunningSteps
-        wolfAlivePenalty = -sheepAliveBonus
-        sheepTerminalPenalty = -1
-        wolfTerminalReward = 1
-        terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-
 
         numSimulationFrames = 20
         transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
