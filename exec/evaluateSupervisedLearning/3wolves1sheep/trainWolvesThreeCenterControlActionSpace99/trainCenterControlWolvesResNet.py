@@ -52,7 +52,7 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex * self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            if not os.path.isfile(modelSavePath + '.index'):
+            if  os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
             else:
@@ -72,7 +72,7 @@ def trainOneCondition(manipulatedVariables):
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
     dataSetNumSimulations = 400
-    killzoneRadius = 80
+    killzoneRadius = 50
     agentId = 1
     wolvesId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}

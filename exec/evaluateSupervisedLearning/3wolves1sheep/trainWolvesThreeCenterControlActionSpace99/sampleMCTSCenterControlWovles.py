@@ -21,42 +21,9 @@ from src.episode import SampleAction, chooseGreedyAction, Render, SampleTrajecto
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 
-
-
-# class UnpackCenterControlAction:
-#     def __init__(self, centerControlIndexList):
-#         self.centerControlIndexList = centerControlIndexList
-
-#     def __call__(self, centerControlAction):
-#         upackedAction = []
-#         for index, action in enumerate(centerControlAction):
-#             if index in self.centerControlIndexList:
-#                 [upackedAction.append(subAction) for subAction in action]
-#             else:
-#                 upackedAction.append(action)
-#         return np.array(upackedAction)
-
-
-# class TransiteForNoPhysicsWithCenterControlAction():
-#     def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
-#         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
-#         self.unpackCenterControlAction = unpackCenterControlAction
-
-#     def __call__(self, state, action):
-#         actionFortansit = self.unpackCenterControlAction(action)
-#         newState = state + np.array(actionFortansit)
-#         checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
-#             position, velocity) for position, velocity in zip(newState, actionFortansit)]
-#         newState, newAction = list(zip(*checkedNewStateAndVelocities))
-#         return newState
-
-
-
-
-
 def main():
-    DEBUG = 1
-    renderOn = 1
+    DEBUG = 0
+    renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -79,7 +46,7 @@ def main():
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
     numSimulations = 400
-    killzoneRadius = 80
+    killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -156,7 +123,7 @@ def main():
         # load save dir
         NNModelSaveExtension = ''
         sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trainedResNNModels')
-        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 110, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getSheepNNModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
         depth = 9
@@ -201,7 +168,7 @@ def main():
             state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 1e-2
+        rolloutHeuristicWeight = 0
         minDistance = 400
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, minDistance)
@@ -212,7 +179,7 @@ def main():
 
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state) + rolloutHeuristic3(state)) / 3
 
-        maxRolloutSteps = 5
+        maxRolloutSteps = 10
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
         wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
