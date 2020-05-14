@@ -45,7 +45,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 50
+    maxRunningSteps = 51
     numSimulations = 250
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}

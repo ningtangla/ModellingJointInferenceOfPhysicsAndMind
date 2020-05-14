@@ -70,9 +70,9 @@ def trainOneCondition(manipulatedVariables):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 300
-    killzoneRadius = 80
+    dataSetMaxRunningSteps = 51
+    dataSetNumSimulations = 250
+    killzoneRadius = 50
     agentId = 1
     wolvesId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
