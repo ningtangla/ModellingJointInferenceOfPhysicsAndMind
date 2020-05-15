@@ -45,7 +45,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 50
+    maxRunningSteps = 51
     numSimulations = 250
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -135,7 +135,7 @@ def main():
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
     # MCTS
-        cInit = 10
+        cInit = 1
         cBase = 100
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
