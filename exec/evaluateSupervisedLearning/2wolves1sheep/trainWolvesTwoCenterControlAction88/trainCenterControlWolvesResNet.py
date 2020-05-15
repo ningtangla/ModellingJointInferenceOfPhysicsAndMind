@@ -52,15 +52,11 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex * self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-
-            trainedModel = train(model, self.trainData)
-            saveVariables(trainedModel, modelSavePath)
-
-            # if not os.path.isfile(modelSavePath + '.index'):
-            #     trainedModel = train(model, self.trainData)
-            #     saveVariables(trainedModel, modelSavePath)
-            # else:
-            #     trainedModel = restoreVariables(model, modelSavePath)
+            if not os.path.isfile(modelSavePath + '.index'):
+                trainedModel = train(model, self.trainData)
+                saveVariables(trainedModel, modelSavePath)
+            else:
+                trainedModel = restoreVariables(model, modelSavePath)
             model = trainedModel
 
 
@@ -68,15 +64,15 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace88', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlAction88', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
-    dataSetMaxRunningSteps = 150
-    dataSetNumSimulations = 200
-    killzoneRadius = 30
+    dataSetMaxRunningSteps = 50
+    dataSetNumSimulations = 250
+    killzoneRadius = 50
     agentId = 1
     wolvesId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -122,18 +118,15 @@ def trainOneCondition(manipulatedVariables):
     # pre-process the trajectories
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-
-    preyPowerRatio = 3
+    preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-    predatorPowerRatio = 2
+    predatorPowerRatio = 8
 
-    actionSpaceOne = wolfActionSpace  # [(10, 0), (-10, 0)]
-    wolfActionOneSpace = list(map(tuple, np.array(actionSpaceOne) * predatorPowerRatio))
+    wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
-    actionSpaceTwo = wolfActionSpace  # [(10, 0), (-10, 0)]
-    wolfActionTwoSpace = list(map(tuple, np.array(actionSpaceTwo) * predatorPowerRatio))
+    wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
     numActionSpace = len(wolvesActionSpace)
@@ -201,7 +194,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace88', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlAction88', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

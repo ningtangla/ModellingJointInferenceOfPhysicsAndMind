@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..','..', '..', '..'))
+sys.path.append(os.path.join(dirName, '..', '..', '..', '..'))
 import time
 import random
 import numpy as np
@@ -71,7 +71,7 @@ def trainOneCondition(manipulatedVariables):
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 252
+    dataSetNumSimulations = 500
     killzoneRadius = 50
     agentId = 1
     wolvesId = 1

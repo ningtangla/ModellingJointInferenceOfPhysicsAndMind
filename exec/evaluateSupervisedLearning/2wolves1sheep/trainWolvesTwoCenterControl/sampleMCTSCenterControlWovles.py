@@ -23,8 +23,8 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 1
-    renderOn = 1
+    DEBUG = 0
+    renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -40,7 +40,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlImagineMax', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -148,7 +148,7 @@ def main():
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
         def wolvesTransit(state, action): return transit(
-            state, [chooseActionInMCTS(sheepPolicy(state)), action])
+            state, [chooseGreedyAction(sheepPolicy(state)), action])
 
         # reward function
         aliveBonus = -1 / maxRunningSteps

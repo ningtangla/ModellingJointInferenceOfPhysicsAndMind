@@ -46,7 +46,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 252
+    numSimulations = 500
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -87,7 +87,7 @@ def main():
         transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)
 
         # NNGuidedMCTS init
-        cInit = 1
+        cInit = 10
         cBase = 100
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
@@ -135,7 +135,7 @@ def main():
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
     # MCTS
-        cInit = 10
+        cInit = 1
         cBase = 100
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
@@ -178,7 +178,7 @@ def main():
         maxRolloutSteps = 15
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
-        numTree = 2
+        numTree = 4
         numSimulationsPerTree = int(numSimulations / numTree)
         wolfPolicy = StochasticMCTS(numTree, numSimulationsPerTree, selectChild, expand, rollout, backup, establishSoftmaxActionDistFromMultipleTrees)
 

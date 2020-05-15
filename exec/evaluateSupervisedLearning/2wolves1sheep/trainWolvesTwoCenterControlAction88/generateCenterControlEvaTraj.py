@@ -68,14 +68,14 @@ class SampleTrajectoryWithRender:
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace88', 'evaTraj')
+    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'evaTraj')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 150
-    numSimulations = 200
-    killzoneRadius = 30
+    maxRunningSteps = 50
+    numSimulations = 300
+    killzoneRadius = 80
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -86,14 +86,15 @@ def main():
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 ## test
+    renderOn = 0
     parametersForTrajectoryPath={}
     startSampleIndex=0
-    endSampleIndex=501
+    endSampleIndex=500
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    # while  True:
+    #while  True:
     if not os.path.isfile(trajectorySavePath):
 
         numOfAgent = 3
@@ -119,14 +120,12 @@ def main():
         transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        wolfActionSpace =  [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-
         preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
         predatorPowerRatio = 2
-        wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
-        wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
+        wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+        wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
 
         # neural network init
@@ -162,7 +161,7 @@ def main():
 
         generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlActionSpace88', 'trainedResNNModels')
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
         wolfId = 1
         NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
 
@@ -182,13 +181,13 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render=None
-        renderOn = 1
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
         chooseActionList = [chooseGreedyAction,chooseGreedyAction]
+
         playRunningSteps = 150
         sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
@@ -201,6 +200,7 @@ def main():
         trajLen = [len(traj) for traj in trajectories]
         print(trajLen)
         print(np.mean(trajLen))
+
 
 if __name__ == '__main__':
     main()
