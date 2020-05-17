@@ -209,9 +209,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     # restorePretrainModel
-    sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
 
-    wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=51_miniBatchSize=256_numSimulations=252_trainSteps=50000')
     pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
 
     trainableAgentIds = [sheepId, wolvesId]
@@ -312,7 +312,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = False
+    prepareBefortrainData = True
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 

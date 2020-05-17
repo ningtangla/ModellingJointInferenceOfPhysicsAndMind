@@ -24,7 +24,7 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, StochasticMCTS, backup, establishPlainActionDist, Expand
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, StochasticMCTS, backup, establishPlainActionDistFromMultipleTrees, Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
@@ -44,7 +44,7 @@ class ComposeMultiAgentTransitInSingleAgentMCTS:
 
 class ComposeSingleAgentGuidedMCTS():
     def __init__(self, numTree, numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS):
-        self.numTree
+        self.numTree = numTree
         self.numSimulations = numSimulations
         self.numSimulationsPerTree = int(self.numSimulations / self.numTree)
         self.actionSpaceList = actionSpaceList
@@ -59,14 +59,15 @@ class ComposeSingleAgentGuidedMCTS():
 
     def __call__(self, agentId, selfNNModel, othersPolicy):
         approximateActionPrior = self.getApproximatePolicy[agentId](selfNNModel)
-        transitInMCTS = lambda state, selfAction: self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
+
+        def transitInMCTS(state, selfAction): return self.composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
         initializeChildren = InitializeChildren(self.actionSpaceList[agentId], transitInMCTS, approximateActionPrior)
         expand = Expand(self.isTerminal, initializeChildren)
 
         terminalReward = self.terminalRewardList[agentId]
         approximateValue = self.getApproximateValue[agentId](selfNNModel)
         estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = StochasticMCTS(self.numTree, self.numSimulationsPerTree, self.numSimulations, self.selectChild, expand, estimateValue, backup, establishPlainActionDist)
+        guidedMCTSPolicy = StochasticMCTS(self.numTree, self.numSimulationsPerTree, self.selectChild, expand, estimateValue, backup, establishPlainActionDistFromMultipleTrees)
 
         return guidedMCTSPolicy
 
@@ -85,17 +86,27 @@ class PrepareMultiAgentPolicy:
                                      for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
         multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
         multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
+
+        def policy(state): return [agentPolicy(state) for agentPolicy in multiAgentPolicy]
         return policy
 
 
 def main():
+    DEBUG = 0
+    renderOn = 0
 
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    iterationIndex = parametersForTrajectoryPath['iterationIndex']
+    if DEBUG:
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 0
+        endSampleIndex = 1
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        iterationIndex = 0
+    else:
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        iterationIndex = parametersForTrajectoryPath['iterationIndex']
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
@@ -138,7 +149,8 @@ def main():
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
         wolvesId = 1
         centerControlIndexList = [wolvesId]
@@ -147,7 +159,7 @@ def main():
         transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
 
         numFramesToInterpolate = 3
-        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)
+        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackAction)
 
         # product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
@@ -183,7 +195,7 @@ def main():
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
 
         # restorePretrainModel
-        sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=110_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+        sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
         wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=51_miniBatchSize=256_numSimulations=252_trainSteps=50000')
         pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
 
@@ -202,14 +214,15 @@ def main():
 
         getApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolvesActionSpace)]
         getApproximateValue = [lambda NNmodel: ApproximateValue(NNmodel), lambda NNmodel: ApproximateValue(NNmodel)]
-        getStateFromNode = lambda node: list(node.id.values())[0]
+
+        def getStateFromNode(node): return list(node.id.values())[0]
 
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseGreedyAction)
 
-        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
+        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numTree, numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
@@ -221,10 +234,9 @@ def main():
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
         render = None
-        renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['orange']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
             screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
             render = Render(numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
