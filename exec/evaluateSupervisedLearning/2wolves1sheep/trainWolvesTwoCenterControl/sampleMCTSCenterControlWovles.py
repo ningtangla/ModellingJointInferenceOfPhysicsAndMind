@@ -45,7 +45,7 @@ def main():
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
-    maxRunningSteps = 51
+    maxRunningSteps = 50
     numSimulations = 250
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
@@ -75,7 +75,7 @@ def main():
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
@@ -141,7 +141,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         # prior
-        getActionPrior = lambda state: {action: 1 / len(wolvesActionSpace) for action in wolvesActionSpace}
+        def getActionPrior(state): return {action: 1 / len(wolvesActionSpace) for action in wolvesActionSpace}
 
     # load chase nn policy
         temperatureInMCTS = 1
@@ -173,7 +173,7 @@ def main():
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
             rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, minDistance)
 
-        rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
+        def rolloutHeuristic(state): return (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
         maxRolloutSteps = 15
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
@@ -181,7 +181,7 @@ def main():
         wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
-        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
+        def policy(state): return [sheepPolicy(state), wolfPolicy(state)]
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render = None
