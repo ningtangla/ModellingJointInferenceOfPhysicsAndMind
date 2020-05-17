@@ -92,13 +92,20 @@ class PrepareMultiAgentPolicy:
 
 
 def main():
-
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    iterationIndex = parametersForTrajectoryPath['iterationIndex']
-
+    DEBUG = 0
+    renderOn = 0
+    if DEBUG:
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 1
+        endSampleIndex = 10
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        iterationIndex = 1
+    else:
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        iterationIndex = parametersForTrajectoryPath['iterationIndex']
     # check file exists or not
     dirName = os.path.dirname(__file__)
     trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'iterativelyTrain2wolves1SheepWithPretrainModelMultiTrees', 'trajectories')
@@ -110,6 +117,7 @@ def main():
     maxRunningSteps = 50
     numSimulations = 250
     killzoneRadius = 50
+    numTree = 2
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
@@ -147,7 +155,7 @@ def main():
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
         stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
-        transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
+        transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity)
 
         numFramesToInterpolate = 3
         transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)
@@ -190,11 +198,11 @@ def main():
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
 
         # restorePretrainModel
-        sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+        sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=0_iterationIndex=10000_killzoneRadius=90_maxRunningSteps=50_numSimulations=300_numTrainStepEachIteration=1_numTrajectoriesPerIteration=1')
 
-        wolvesPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=300_trainSteps=50000')
+        wolvesPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=1_iterationIndex=10000_killzoneRadius=90_maxRunningSteps=50_numSimulations=300_numTrainStepEachIteration=1_numTrajectoriesPerIteration=1')
+
         pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
-
         for agentId in trainableAgentIds:
             restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], pretrainModelPathList[agentId])
             multiAgentNNmodel[agentId] = restoredNNModel
@@ -216,7 +224,7 @@ def main():
 
         composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseGreedyAction)
 
-        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
+        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numTree, numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
 
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
@@ -225,7 +233,6 @@ def main():
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
         render = None
-        renderOn = False
         if renderOn:
             import pygame as pg
             from pygame.color import THECOLORS

@@ -112,7 +112,7 @@ def main():
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
         stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
-        transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
+        transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity)
 
         numFramesToInterpolate = 3
         transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)

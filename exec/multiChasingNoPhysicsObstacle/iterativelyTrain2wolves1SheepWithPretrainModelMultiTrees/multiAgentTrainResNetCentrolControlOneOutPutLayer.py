@@ -197,9 +197,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain, processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
     # restorePretrainModel
-    sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+    sheepPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=0_iterationIndex=10000_killzoneRadius=90_maxRunningSteps=50_numSimulations=300_numTrainStepEachIteration=1_numTrajectoriesPerIteration=1')
 
-    wolvesPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=300_trainSteps=50000')
+    wolvesPreTrainModelPath = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'preTrainModel', 'agentId=1_iterationIndex=10000_killzoneRadius=90_maxRunningSteps=50_numSimulations=300_numTrainStepEachIteration=1_numTrajectoriesPerIteration=1')
 
     pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
     trainableAgentIds = [sheepId, wolvesId]
