@@ -30,35 +30,51 @@ from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, He
 from src.episode import SampleTrajectoryWithRender, SampleAction, chooseGreedyAction,Render
 from exec.parallelComputing import GenerateTrajectoriesParallel
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
+
+    renderOn = 1
+    if renderOn:
+    # debug
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 0
+        endSampleIndex = 55
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+
+        numTrajectoriesPerIteration=1
+        numTrainStepEachIteration=1
+        selfIteration = 300
+        otherIteration = 300
+    else:
     #input by subprocess
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-    
-    numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
-    numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
-    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-    
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+
+        numTrajectoriesPerIteration=parametersForTrajectoryPath['numTrajectoriesPerIteration']
+        numTrainStepEachIteration=parametersForTrajectoryPath['numTrainStepEachIteration']
+        selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+        otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+
+
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'evaluateTrajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithoutPretrainModel', 'evaluateTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
     numSimulations = 200
-    killzoneRadius = 80
+    killzoneRadius = 90
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
-    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)   
+    generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
-    
+
     if not os.path.isfile(trajectorySavePath):
 
         #Init NoPhysics Env
@@ -76,8 +92,8 @@ def main():
 
         xBoundary = [0,600]
         yBoundary = [0,600]
-        xObstacles = [[100, 200], [400, 500]]
-        yObstacles = [[100, 200], [400, 500]]
+        xObstacles = [[120, 220], [380, 480]]
+        yObstacles = [[120, 220], [380, 480]]
         isLegal = lambda state: not(np.any([(xObstacle[0]<state[0]) and (xObstacle[1]>state[0]) and (yObstacle[0]<state[1]) and (yObstacle[1]>state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
@@ -87,8 +103,10 @@ def main():
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
 
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
+
+        playKillzoneRadius = 30
+        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
 
         centerControlIndexList=[wolvesId]
@@ -105,14 +123,14 @@ def main():
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7),
                        (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        preyPowerRatio = 9
+        preyPowerRatio = 3
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-        predatorPowerRatio = 6
+        predatorPowerRatio = 2
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolvesActionSpace =list(product(wolfActionOneSpace,wolfActionTwoSpace))
         actionSpaceList=[sheepActionSpace,wolvesActionSpace]
-       
+
 
         # neural network init
         numStateSpace = 6
@@ -126,7 +144,7 @@ def main():
         generateWolvesModel=GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         generateModelList=[generateSheepModel,generateWolvesModel]
 
-        depth = 5
+        depth = 9
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
@@ -134,7 +152,7 @@ def main():
 
         # load Model save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlObstacle', 'NNModelRes')
+        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','obstacle2wolves1sheep', 'iterativelyTrainMultiChasingCenterControlOneOutPutLayerWithoutPretrainModel', 'NNModelRes')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -151,31 +169,40 @@ def main():
             restoredNNModel = restoreVariables(multiAgentNNmodel[wolvesId], wolfModelPath)
             multiAgentNNmodel[wolvesId] = restoredNNModel
             wolfPolicy = ApproximatePolicy(multiAgentNNmodel[wolvesId], wolvesActionSpace)
-        
+
         #sheep policy
         sheepModelPath = generateNNModelSavePath({'iterationIndex': selfIteration, 'agentId': sheepId, 'numTrajectoriesPerIteration':numTrajectoriesPerIteration, 'numTrainStepEachIteration':numTrainStepEachIteration})
         sheepTrainedModel=restoreVariables(multiAgentNNmodel[sheepId], sheepModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
         policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
-        
+
         # sample and save trajectories
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
-        render=None
-        renderOn = False
+        render = None
         if renderOn:
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red']]
-            circleSize = 10
+            import pygame as pg
+            from pygame.color import THECOLORS
+
             saveImage = False
-            saveImageDir = os.path.join(dirName, '..','..', '..', 'data','demoImg')
+            saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
+
+            circleSize = 10
+            lineWidth = 4
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            obstacleColor = THECOLORS['white']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, posIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
+            drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
+            render = Render(numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
+
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
 
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]

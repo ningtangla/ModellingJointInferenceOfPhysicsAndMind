@@ -60,10 +60,10 @@ class TransiteForNoPhysics():
 
     def __call__(self, state, action):
         newState = state + np.array(action)
-        checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
+        checkedNewPositionsAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, action)]
-        newState, newAction = list(zip(*checkedNewStateAndVelocities))
-        return newState
+        newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
+        return np.array(newState), np.array(newAction)
 
 
 class UnpackCenterControlAction:
@@ -88,11 +88,26 @@ class TransiteForNoPhysicsWithCenterControlAction():
     def __call__(self, state, action):
         actionFortansit = self.unpackCenterControlAction(action)
         newState = state + np.array(actionFortansit)
-        checkedNewStateAndVelocities = [self.stayInBoundaryByReflectVelocity(
-            position, velocity) for position, velocity in zip(newState, actionFortansit)]
-        newState, newAction = list(zip(*checkedNewStateAndVelocities))
-        return newState
+        checkedNewPositionsAndVelocities = [self.stayInBoundaryByReflectVelocity(
+            position, velocity) for position, velocity in zip(newState, action)]
+        newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
+        return np.array(newState), np.array(newAction)
 
+class TransitWithInterpolateState:
+    def __init__(self, numFramesToInterpolate, transite, isTerminal):
+        self.numFramesToInterpolate = numFramesToInterpolate
+        self.transite = transite
+        self.isTerminal = isTerminal
+
+    def __call__(self, state, action):
+        actionForInterpolation = np.array(action) / (self.numFramesToInterpolate + 1)
+        for frameIndex in range(self.numFramesToInterpolate + 1):
+            nextState, nextActionForInterpolation = self.transite(state, actionForInterpolation)
+            if self.isTerminal(nextState):
+                break
+            state = nextState
+            actionForInterpolation = nextActionForInterpolation
+        return np.array(nextState)
 
 class IsTerminal():
     def __init__(self, getPredatorPos, getPreyPos, minDistance):

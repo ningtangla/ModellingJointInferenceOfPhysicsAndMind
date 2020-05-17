@@ -13,8 +13,8 @@ from itertools import product
 import pygame as pg
 from pygame.color import THECOLORS
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryAndOutObstacleByReflectVelocity, UnpackCenterControlAction
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete,HeuristicDistanceToTarget
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset, IsTerminal, StayInBoundaryAndOutObstacleByReflectVelocity, UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -24,15 +24,17 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand,RollOut,establishSoftmaxActionDist
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
+from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingDiscreteDeterministicPolicy, RandomPolicy
 from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
+from visualize.continuousVisualization import DrawBackgroundWithObstacle
 
 
 def main():
-    DEBUG = 0
+    DEBUG = 1
     renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
@@ -49,14 +51,14 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName,  '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'obstacle2wolves1sheep', 'trainSheepWithHeatSeekingWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 300
-    killzoneRadius = 80
+    numSimulations = 200
+    killzoneRadius = 90
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -74,76 +76,38 @@ def main():
         xPosIndex = [0, 1]
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-        xObstacles = [[200, 200], [400, 480]]
-        yObstacles = [[200, 200], [400, 480]]
+        xObstacles = [[120, 220], [380, 480]]
+        yObstacles = [[120, 220], [380, 480]]
         isLegal = lambda state: not(np.any([(xObstacle[0] < state[0]) and (xObstacle[1] > state[0]) and (yObstacle[0] < state[1]) and (yObstacle[1] > state[1]) for xObstacle, yObstacle in zip(xObstacles, yObstacles)]))
         reset = Reset(xBoundary, yBoundary, numOfAgent, isLegal)
 
-        getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
+        getSheepPos = GetAgentPosFromState(sheepId, xPosIndex)
+        getWolfOnePos = GetAgentPosFromState(wolfOneId, xPosIndex)
+        getWolfTwoPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
+        isTerminalOne = IsTerminal(getWolfOnePos, getSheepPos, killzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoPos, getSheepPos, killzoneRadius)
 
         isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
-        wolvesId = 1
-        centerControlIndexList = [wolvesId]
-        unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
         stayInBoundaryAndOutObstacleByReflectVelocity = StayInBoundaryAndOutObstacleByReflectVelocity(xBoundary, yBoundary, xObstacles, yObstacles)
-        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryAndOutObstacleByReflectVelocity, unpackCenterControlAction)
-
-        # NNGuidedMCTS init
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
+        transit = TransiteForNoPhysics(stayInBoundaryAndOutObstacleByReflectVelocity)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         wolfActionSpace = actionSpace
-        # wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
 
-        preyPowerRatio = 12
+        preyPowerRatio = 10
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+        numSheepActionSpace = len(sheepActionSpace)
 
         predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
-        wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
-
-        actionSpaceList = [sheepActionSpace, wolvesActionSpace]
-
-        # neural network init
-        numStateSpace = 2 * numOfAgent
-        numSheepActionSpace = len(sheepActionSpace)
-        numWolvesActionSpace = len(wolvesActionSpace)
-
-        regularizationFactor = 1e-4
-        sharedWidths = [128]
-        actionLayerWidths = [128]
-        valueLayerWidths = [128]
-        generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
-
-        # load save dir
-        NNModelSaveExtension = ''
-        sheepNNModelSaveDirectory = os.path.join(dirName,  '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
-        if not os.path.exists(sheepNNModelSaveDirectory):
-            os.makedirs(sheepNNModelSaveDirectory)
-
-        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
-        getSheepNNModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
-
-        depth = 9
-        resBlockSize = 2
-        dropoutRate = 0.0
-        initializationMethod = 'uniform'
-        initSheepNNModel = generateSheepModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-
-        sheepTrainedModelPath = getSheepNNModelSavePath({'trainSteps': 50000, 'depth': depth})
-        sheepTrainedModel = restoreVariables(initSheepNNModel, sheepTrainedModelPath)
-        sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
+        wolfOnePolicy = HeatSeekingDiscreteDeterministicPolicy(
+            wolfActionOneSpace, getWolfOnePos, getSheepPos, computeAngleBetweenVectors)
+        wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(
+            wolfActionTwoSpace, getWolfTwoPos, getSheepPos, computeAngleBetweenVectors)
 
     # MCTS
         cInit = 1
@@ -152,64 +116,67 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         # prior
-        getActionPrior = lambda state: {action: 1 / len(wolvesActionSpace) for action in wolvesActionSpace}
+        getActionPrior = lambda state: {action: 1 / len(sheepActionSpace) for action in sheepActionSpace}
 
-    # load chase nn policy
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
-        def wolvesTransit(state, action): return transit(
-            state, [chooseActionInMCTS(sheepPolicy(state)), action])
+        def sheepTransit(state, action): return transit(
+            state, [action, chooseActionInMCTS(wolfOnePolicy(state)), chooseActionInMCTS(wolfTwoPolicy(state))])
 
         # reward function
-        aliveBonus = -1 / maxRunningSteps
-        deathPenalty = 1
+        aliveBonus = 1 / maxRunningSteps
+        deathPenalty = -1
         rewardFunction = RewardFunctionCompete(
             aliveBonus, deathPenalty, isTerminal)
 
         # initialize children; expand
         initializeChildren = InitializeChildren(
-            wolvesActionSpace, wolvesTransit, getActionPrior)
+            sheepActionSpace, sheepTransit, getActionPrior)
         expand = Expand(isTerminal, initializeChildren)
 
         # random rollout policy
         def rolloutPolicy(
-            state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
+            state): return sheepActionSpace[np.random.choice(range(numSheepActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 1e-2
-        minDistance = 400
+        rolloutHeuristicWeight = 0
         rolloutHeuristic1 = HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, minDistance)
+            rolloutHeuristicWeight, getWolfOnePos, getSheepPos)
         rolloutHeuristic2 = HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, minDistance)
+            rolloutHeuristicWeight, getWolfTwoPos, getSheepPos)
 
         rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
-        maxRolloutSteps = 5
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
+        maxRolloutSteps = 10
+        rollout = RollOut(rolloutPolicy, maxRolloutSteps, sheepTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
-        wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
+        sheepPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
-        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
-        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
+        policy = lambda state: [sheepPolicy(state), wolfOnePolicy(state), wolfTwoPolicy(state)]
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
 
         render = None
         if renderOn:
             import pygame as pg
             from pygame.color import THECOLORS
-            screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
-            circleSize = 10
 
             saveImage = False
-            saveImageDir = os.path.join(dirName,  '..', '..', '..', 'data', 'demoImg')
+            saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
 
+            circleSize = 10
+            lineWidth = 4
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
+            obstacleColor = THECOLORS['white']
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+
+            drawBackground = DrawBackgroundWithObstacle(screen, screenColor, xBoundary, yBoundary, lineColor, lineWidth, xObstacles, yObstacles, obstacleColor)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir, drawBackground)
 
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
