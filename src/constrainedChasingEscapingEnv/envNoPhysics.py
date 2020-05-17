@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Reset():
-    def __init__(self, xBoundary, yBoundary, numOfAgent, isLegal = lambda state: True):
+    def __init__(self, xBoundary, yBoundary, numOfAgent, isLegal=lambda state: True):
         self.xBoundary = xBoundary
         self.yBoundary = yBoundary
         self.numOfAgnet = numOfAgent
@@ -17,7 +17,7 @@ class Reset():
         while np.all([self.isLegal(state) for state in initState]) is False:
             initState = [[np.random.uniform(xMin, xMax),
                           np.random.uniform(yMin, yMax)]
-                         for _ in range(self.numOfAgnet)] 
+                         for _ in range(self.numOfAgnet)]
         return np.array(initState)
 
 
@@ -81,17 +81,35 @@ class UnpackCenterControlAction:
 
 
 class TransiteForNoPhysicsWithCenterControlAction():
-    def __init__(self, stayInBoundaryByReflectVelocity, unpackCenterControlAction):
+    def __init__(self, stayInBoundaryByReflectVelocity):
         self.stayInBoundaryByReflectVelocity = stayInBoundaryByReflectVelocity
-        self.unpackCenterControlAction = unpackCenterControlAction
 
     def __call__(self, state, action):
-        actionFortansit = self.unpackCenterControlAction(action)
-        newState = state + np.array(actionFortansit)
+        newState = state + np.array(action)
         checkedNewPositionsAndVelocities = [self.stayInBoundaryByReflectVelocity(
             position, velocity) for position, velocity in zip(newState, action)]
         newState, newAction = list(zip(*checkedNewPositionsAndVelocities))
         return np.array(newState), np.array(newAction)
+
+
+class TransitWithInterpolateStateWithCenterControlAction:
+    def __init__(self, numFramesToInterpolate, transite, isTerminal, unpackCenterControlAction):
+        self.numFramesToInterpolate = numFramesToInterpolate
+        self.transite = transite
+        self.isTerminal = isTerminal
+        self.unpackCenterControlAction = unpackCenterControlAction
+
+    def __call__(self, state, action):
+        actionFortansit = self.unpackCenterControlAction(action)
+        actionForInterpolation = np.array(actionFortansit) / (self.numFramesToInterpolate + 1)
+        for frameIndex in range(self.numFramesToInterpolate + 1):
+            nextState, nextActionForInterpolation = self.transite(state, actionForInterpolation)
+            if self.isTerminal(nextState):
+                break
+            state = nextState
+            actionForInterpolation = nextActionForInterpolation
+        return np.array(nextState)
+
 
 class TransitWithInterpolateState:
     def __init__(self, numFramesToInterpolate, transite, isTerminal):
@@ -108,6 +126,7 @@ class TransitWithInterpolateState:
             state = nextState
             actionForInterpolation = nextActionForInterpolation
         return np.array(nextState)
+
 
 class IsTerminal():
     def __init__(self, getPredatorPos, getPreyPos, minDistance):
@@ -173,12 +192,14 @@ class StayInBoundaryByReflectVelocity():
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])
         return checkedPosition, checkedVelocity
 
+
 class StayInBoundaryAndOutObstacleByReflectVelocity():
     def __init__(self, xBoundary, yBoundary, xObstacles, yObstacles):
         self.xMin, self.xMax = xBoundary
         self.yMin, self.yMax = yBoundary
         self.xObstacles = xObstacles
         self.yObstacles = yObstacles
+
     def __call__(self, position, velocity):
         adjustedX, adjustedY = position
         adjustedVelX, adjustedVelY = velocity
@@ -194,27 +215,28 @@ class StayInBoundaryAndOutObstacleByReflectVelocity():
         if position[1] <= self.yMin:
             adjustedY = 2 * self.yMin - position[1]
             adjustedVelY = -velocity[1]
-	
+
         for xObstacle, yObstacle in zip(self.xObstacles, self.yObstacles):
             xObstacleMin, xObstacleMax = xObstacle
             yObstacleMin, yObstacleMax = yObstacle
             if position[0] >= xObstacleMin and position[0] <= xObstacleMax and position[1] >= yObstacleMin and position[1] <= yObstacleMax:
-                if position[0]-velocity[0]<=xObstacleMin:
-                    adjustedVelX=-velocity[0]
-                    adjustedX=2*xObstacleMin-position[0]
-                if position[0]-velocity[0]>=xObstacleMax:
-                    adjustedVelX=-velocity[0]
-                    adjustedX=2*xObstacleMax-position[0]
-                if position[1]-velocity[1]<=yObstacleMin:
-                    adjustedVelY=-velocity[1]
-                    adjustedY=2*yObstacleMin-position[1]
-                if position[1]-velocity[1]>=yObstacleMax:
-                    adjustedVelY=-velocity[1]
-                    adjustedY=2*yObstacleMax-position[1]
+                if position[0] - velocity[0] <= xObstacleMin:
+                    adjustedVelX = -velocity[0]
+                    adjustedX = 2 * xObstacleMin - position[0]
+                if position[0] - velocity[0] >= xObstacleMax:
+                    adjustedVelX = -velocity[0]
+                    adjustedX = 2 * xObstacleMax - position[0]
+                if position[1] - velocity[1] <= yObstacleMin:
+                    adjustedVelY = -velocity[1]
+                    adjustedY = 2 * yObstacleMin - position[1]
+                if position[1] - velocity[1] >= yObstacleMax:
+                    adjustedVelY = -velocity[1]
+                    adjustedY = 2 * yObstacleMax - position[1]
 
         checkedPosition = np.array([adjustedX, adjustedY])
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])
         return checkedPosition, checkedVelocity
+
 
 class CheckBoundary():
     def __init__(self, xBoundary, yBoundary):
