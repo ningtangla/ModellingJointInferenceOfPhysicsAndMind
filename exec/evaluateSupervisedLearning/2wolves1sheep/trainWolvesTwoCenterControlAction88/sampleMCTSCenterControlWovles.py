@@ -23,8 +23,8 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 1
-    renderOn = 1
+    DEBUG = 0
+    renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -134,7 +134,7 @@ def main():
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
     # MCTS
-        cInit = 10
+        cInit = 1
         cBase = 100
         calculateScore = ScoreChild(cInit, cBase)
         selectChild = SelectChild(calculateScore)
