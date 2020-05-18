@@ -38,7 +38,7 @@ def main():
     startTime = time.time()
     numTrajectories = 3000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSWolf.py'
+    sampleTrajectoryFileName = 'sampleMCTSWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
