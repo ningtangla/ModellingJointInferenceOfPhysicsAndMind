@@ -107,8 +107,6 @@ def main():
         endSampleIndex = 10
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
         iterationIndex = 1
-        numTrainStepEachIteration = 1
-        numTrajectoriesPerIteration = 1
 
     else:
         parametersForTrajectoryPath = json.loads(sys.argv[1])
@@ -116,8 +114,6 @@ def main():
         endSampleIndex = int(sys.argv[3])
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
         iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
-        numTrainStepEachIteration = int(parametersForTrajectoryPath['numTrainStepEachIteration'])
-        numTrajectoriesPerIteration = int(parametersForTrajectoryPath['numTrajectoriesPerIteration'])
 
     # check file exists or not
     dirName = os.path.dirname(__file__)

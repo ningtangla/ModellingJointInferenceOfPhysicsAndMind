@@ -277,7 +277,7 @@ def main():
 
     # Sample Trajectory Before Train to fill Buffer
     numTrajectoriesToStartTrain = 1024
-    sampleTrajectoryFileName = 'prepareMCTSAgentCenterControlResNetTraj.py'
+    sampleTrajectoryFileName = 'preparePretrainedNNMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
