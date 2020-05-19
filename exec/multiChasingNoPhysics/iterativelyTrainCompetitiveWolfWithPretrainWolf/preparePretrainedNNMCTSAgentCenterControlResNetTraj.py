@@ -117,7 +117,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrainCompetitiveWolf', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrainCompetitiveWolfWithPretrainWolf', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -198,7 +198,7 @@ def main():
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
 
         # restorePretrainModel
-        sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
+        sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
 
         wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=250_trainSteps=50000')
         pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
@@ -219,7 +219,8 @@ def main():
 
         fixNNAgentId = wolfTwoId
         fixedNNPolicy = ApproximatePolicy(multiAgentNNmodel[wolfOneId], wolfActionOneSpace)
-        fixedWolfNNPolicy = lambda state: fixedNNPolicy([state[0], state[2], state[1]])
+
+        def fixedWolfNNPolicy(state): return fixedNNPolicy([state[0], state[2], state[1]])
 
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)

@@ -1,6 +1,6 @@
 import sys
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
 sys.path.append(os.path.join(dirName, '..', '..', '..'))
 import time
@@ -52,7 +52,7 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex * self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            if not os.path.isfile(modelSavePath + '.index'):
+            if os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
             else:
