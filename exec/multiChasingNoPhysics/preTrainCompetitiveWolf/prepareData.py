@@ -38,7 +38,7 @@ def main():
     startTime = time.time()
     numTrajectories = 3000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'sampleMCTSWolf.py'
+    sampleTrajectoryFileName = 'sampleMCTSWolfTraj.py'
 
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
@@ -53,6 +53,7 @@ def main():
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 
     print("start")
+    initTime = time.time()
     for i in range(math.ceil(numTrajectories / numTrajPerSteps)):
         startTime = time.time()
 
@@ -61,6 +62,8 @@ def main():
 
         endTime = time.time()
         print("Time taken {} seconds".format((endTime - startTime)))
+
+    print("Total Time taken {} seconds".format((time.time() - initTime)))
 
 
 if __name__ == '__main__':

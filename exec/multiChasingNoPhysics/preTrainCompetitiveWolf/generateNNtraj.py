@@ -16,7 +16,7 @@ from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics,
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
-from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy, RandomPolicy
 from src.neuralNetwork.policyValueResNet import GenerateModel, ApproximatePolicy, restoreVariables
 from src.episode import SampleAction, chooseGreedyAction, Render, SampleTrajectoryWithRender
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
@@ -24,12 +24,12 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 0
+    DEBUG = 1
     renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
-        endSampleIndex = 10
+        endSampleIndex = 500
         agentId = 1
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     else:
@@ -41,7 +41,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolf', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolf', 'evaTrajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -111,6 +111,7 @@ def main():
         actionLayerWidths = [128]
         valueLayerWidths = [128]
         generateSheepModel = GenerateModel(numStateSpace, numWolfActionSpace, regularizationFactor)
+        generateWolfModel = GenerateModel(numStateSpace, numWolfActionSpace, regularizationFactor)
 
         # load save dir
         NNModelSaveExtension = ''
@@ -128,48 +129,21 @@ def main():
         sheepTrainedModel = restoreVariables(initSheepNNModel, sheepTrainedModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
-    # MCTS
-        cInit = 1
-        cBase = 100
-        calculateScore = ScoreChild(cInit, cBase)
-        selectChild = SelectChild(calculateScore)
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolf', 'trainedResNNModels')
+        NNModelSaveExtension = ''
+        wolfNNModelFixedParameters = {'agentId': 1, 'maxRunningSteps': 50, 'numSimulations': 250, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, wolfNNModelFixedParameters)
 
-        # prior
-        def getActionPrior(state): return {action: 1 / len(wolfActionOneSpace) for action in wolfActionOneSpace}
+        getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, wolfNNModelFixedParameters)
+        initWolfNNModel = generateWolfModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
-    # load chase nn policy
-        temperatureInMCTS = 1
-        chooseActionInMCTS = SampleAction(temperatureInMCTS)
-
-        def wolvesTransit(state, action): return transit(
-            state, [chooseActionInMCTS(sheepPolicy(state)), action, chooseActionInMCTS(wolfTwoPolicy(state))])
-
-        # reward function
-        aliveBonus = -1 / maxRunningSteps
-        deathPenalty = 1
-        rewardFunction = reward.RewardFunctionForCompetition(
-            aliveBonus, deathPenalty, isTerminalOne, isTerminal)
-
-        # initialize children; expand
-        initializeChildren = InitializeChildren(
-            wolfActionOneSpace, wolvesTransit, getActionPrior)
-        expand = Expand(isTerminal, initializeChildren)
-
-        # random rollout policy
-        def rolloutPolicy(
-            state): return wolfActionOneSpace[np.random.choice(range(numWolfActionSpace))]
-
-        # rollout
-        def rolloutHeuristic(x): return 0
-
-        maxRolloutSteps = 15
-        rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
-
-        numTree = 2
-        numSimulationsPerTree = int(numSimulations / numTree)
-        wolfPolicy = StochasticMCTS(numTree, numSimulationsPerTree, selectChild, expand, rollout, backup, establishPlainActionDistFromMultipleTrees)
+        wolfTrainedModelPath = getWolfNNModelSavePath({'trainSteps': 50000, 'depth': depth})
+        wolfTrainedModel = restoreVariables(initWolfNNModel, wolfTrainedModelPath)
+        wolfPolicy = ApproximatePolicy(wolfTrainedModel, wolfActionOneSpace)
 
         # All agents' policies
+        wolfTwoPolicy = RandomPolicy(sheepActionSpace)
+
         def policy(state): return [sheepPolicy(state), wolfPolicy(state), wolfTwoPolicy(state)]
         chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
 

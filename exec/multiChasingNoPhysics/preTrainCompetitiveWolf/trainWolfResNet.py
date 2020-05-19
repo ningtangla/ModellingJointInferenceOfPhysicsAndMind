@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..', '..', '..'))
+sys.path.append(os.path.join(dirName, '..', '..', '..'))
 import time
 import random
 import numpy as np
@@ -52,7 +52,7 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex * self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            if os.path.isfile(modelSavePath + '.index'):
+            if not os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
             else:
@@ -98,7 +98,8 @@ def trainOneCondition(manipulatedVariables):
 
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+    def playIsTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
     playAliveBonus = -1 / dataSetMaxRunningSteps
     playDeathPenalty = 1
@@ -125,7 +126,8 @@ def trainOneCondition(manipulatedVariables):
 
     actionIndex = 1
     actionToOneHot = ActionToOneHot(wolfActionOneSpace)
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+
+    def getTerminalActionFromTrajectory(trajectory): return trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
     processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolfOneId)
 
@@ -136,7 +138,7 @@ def trainOneCondition(manipulatedVariables):
     loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
-    filterState = lambda timeStep: (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])  # !!? magic
+    def filterState(timeStep): return (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])  # !!? magic
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 
@@ -173,15 +175,18 @@ def trainOneCondition(manipulatedVariables):
     afterActionCoeff = 1
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    terminalController = lambda evalDict, numSteps: False
+
+    def terminalController(evalDict, numSteps): return False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
     reportInterval = 10000
     trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
+
+    def learningRateModifier(learningRate): return LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
+
+    def getTrainNN(batchSize, learningRate): return Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
 
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
