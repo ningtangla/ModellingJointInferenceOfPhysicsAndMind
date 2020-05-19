@@ -28,7 +28,7 @@ from src.constrainedChasingEscapingEnv.measure import DistanceBetweenActualAndOp
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, HeuristicDistanceToTarget
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, RewardFunctionForCompetition, HeuristicDistanceToTarget
 from exec.preProcessing import AccumulateRewards, AccumulateMultiAgentRewards
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
@@ -44,24 +44,24 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0, 1001, 100))
-    manipulatedVariables['otherIteration'] = list(range(0, 1001, 100))
-    manipulatedVariables['numTrainStepEachIteration'] = [3]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['selfIteration'] = list(range(0, 201, 50))
+    manipulatedVariables['otherIteration'] = list(range(0, 201, 50))
+    manipulatedVariables['sheepIteration'] = list(range(0, 201, 100))
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
-    trainMaxRunningSteps = 50
-    trainNumSimulations = 250
+    maxRunningSteps = 50
+    numSimulations = 250
     killzoneRadius = 50
 
     sheepId = 0
     wolfId = 1
     posIndex = [0, 1]
-    selfId = sheepId
+
+    selfId = wolfId
 
     wolfOnePosIndex = 1
     wolfTwoIndex = 2
@@ -75,13 +75,13 @@ def main():
 
     def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
-    sheepAliveBonus = 1 / trainMaxRunningSteps
+    sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
     sheepTerminalPenalty = -1
     wolfTerminalReward = 1
 
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
-    rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
+    rewardWolf = RewardFunctionForCompetition(wolfAlivePenalty, wolfTerminalReward, isTerminalOne, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
@@ -98,11 +98,11 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrain2Wolves1SheepWithPretrainModelMultiTrees', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrainCompetitiveWolfWithPretrainWolf', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
-    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius, 'numTrajectoriesPerIteration': 1, 'numTrainStepEachIteration': 1}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     # compute statistics on the trajectories
@@ -122,27 +122,21 @@ def main():
 
     # plot the results
     fig = plt.figure()
-    numRows = len(manipulatedVariables['numTrainStepEachIteration'])
-    numColumns = len(manipulatedVariables['numTrajectoriesPerIteration'])
+    numRows = 1
+    numColumns = len(manipulatedVariables['sheepIteration'])
     plotCounter = 1
 
-    for numTrainStepEachIteration, grp in statisticsDf.groupby('numTrainStepEachIteration'):
-        grp.index = grp.index.droplevel('numTrainStepEachIteration')
+    for sheepIteration, group in statisticsDf.groupby('sheepIteration'):
+        group.index = group.index.droplevel('sheepIteration')
 
-        for numTrajectoriesPerIteration, group in grp.groupby('numTrajectoriesPerIteration'):
-            group.index = group.index.droplevel('numTrajectoriesPerIteration')
+        axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+        axForDraw.set_title('sheepIteration: {}'.format(sheepIteration))
 
-            axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
-            if (plotCounter % numColumns == 1) or numColumns == 1:
-                axForDraw.set_ylabel('numTrainStepEachIteration: {}'.format(numTrainStepEachIteration))
-            if plotCounter <= numColumns:
-                axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
+        axForDraw.set_ylim(-1, 1.5)
+        drawPerformanceLine(group, axForDraw, selfId)
+        plotCounter += 1
 
-            axForDraw.set_ylim(-1, 1.5)
-            drawPerformanceLine(group, axForDraw, selfId)
-            plotCounter += 1
-
-    plt.suptitle('SheepNNResnet Step=100 Simulation=200')
+    plt.suptitle('wolf NNResnet')
     plt.legend(loc='best')
     plt.show()
 
