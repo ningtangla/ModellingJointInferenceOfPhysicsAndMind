@@ -32,7 +32,9 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 
 def main():
+    renderOn = 0
     # input by subprocess
+
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
@@ -89,7 +91,10 @@ def main():
         playKillzoneRadius = killzoneRadius
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
+
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
+
+        stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
         transitionFunction = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
 
@@ -141,7 +146,7 @@ def main():
         wolfModelPath = generateNNModelSavePath({'iterationIndex': selfIteration, 'agentId': wolfOneId})
         restoredNNModel = restoreVariables(multiAgentNNmodel[wolfOneId], wolfModelPath)
         multiAgentNNmodel[wolfOneId] = restoredNNModel
-        wolfPolicy = ApproximatePolicy(multiAgentNNmodel[wolfOneId], wolvesActionSpace)
+        wolfPolicy = ApproximatePolicy(multiAgentNNmodel[wolfOneId], wolfActionOneSpace)
 
         # wolves policy
         if otherIteration == -999:
@@ -153,11 +158,11 @@ def main():
             wolfTwoPolicy = ApproximatePolicy(multiAgentNNmodel[wolfTwoId], wolfActionTwoSpace)
 
         def competitorPolicy(state): return wolfTwoPolicy([state[0], state[2], state[1]])
-        policy = lambda state: [sheepPolicy(state), wolfPolicy(state), competitorPolicy(state)]
+
+        def policy(state): return [sheepPolicy(state), wolfPolicy(state), competitorPolicy(state)]
         chooseActionList = [chooseGreedyAction, chooseGreedyAction, chooseGreedyAction]
 
         render = None
-        renderOn = False
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['orange']]
