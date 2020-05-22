@@ -54,9 +54,9 @@ def main():
     # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
 ## test
-    renderOn = 1
+    renderOn = 0
     parametersForTrajectoryPath={}
-    startSampleIndex=0
+    startSampleIndex=1
     endSampleIndex=500
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
@@ -82,7 +82,7 @@ def main():
         getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
         getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
 
-        playKillzoneRadius = 30
+        playKillzoneRadius = 50
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, playKillzoneRadius)
@@ -100,10 +100,10 @@ def main():
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
         wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
 
-        preyPowerRatio = 3
+        preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 2
+        predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionThreeSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))

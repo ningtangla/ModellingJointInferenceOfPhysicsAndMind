@@ -6,7 +6,7 @@ import pickle
 import random
 import json
 import time
-
+import itertools as it
 from collections import OrderedDict
 
 from src.algorithms.mcts import MCTS, ScoreChild, establishSoftmaxActionDist, SelectChild, Expand, RollOut, backup, InitializeChildren
@@ -16,6 +16,8 @@ from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeter
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 from src.constrainedChasingEscapingEnv.envNoPhysics import IsTerminal, TransiteForNoPhysics, Reset, TransitWithInterpolateState, UnpackCenterControlAction, TransiteForNoPhysicsWithCenterControlAction, TransitWithInterpolateStateWithCenterControlAction
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
+    ApproximatePolicy, restoreVariables
 from src.episode import SampleTrajectory, Render, SampleTrajectoryWithRender, chooseGreedyAction, SampleAction
 from exec.trajectoriesSaveLoad import GetSavePath, saveToPickle
 
@@ -45,7 +47,7 @@ def main():
     fixedParameters = {'agentId': agentId}
     trajectorySaveExtension = '.pickle'
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'evaSheepMCTSWithPretrainWolves', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -94,17 +96,27 @@ def main():
 
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
+        wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
         # load NN policy
+        numStateSpace = 2 * numOfAgent
+        numSheepActionSpace = len(sheepActionSpace)
+        numWolvesActionSpace = len(wolvesActionSpace)
+
+        regularizationFactor = 1e-4
+        sharedWidths = [128]
+        actionLayerWidths = [128]
+        valueLayerWidths = [128]
+        generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
+
         NNModelSaveExtension = ''
-        wolfTrainedModelPath = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'iterTrain', 'trainedResNNModels','')
+        wolfTrainedModelPath = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'iterTrain', 'trainedResNNModels','agentId=1_iterationIndex=1500_killzoneRadius=50_maxRunningSteps=50_numSimulations=250_numTrainStepEachIteration=1_numTrajectoriesPerIteration=1')
 
         depth = 9
         resBlockSize = 2
         dropoutRate = 0.0
         initializationMethod = 'uniform'
-        initWolfNNModel = generateSheepModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+        initWolfNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
         wolfTrainedModel = restoreVariables(initWolfNNModel, wolfTrainedModelPath)
         wolfPolicy = ApproximatePolicy(wolfTrainedModel, wolvesActionSpace)
@@ -122,7 +134,7 @@ def main():
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
-        def sheepTransit(state, action): return transitionFunction(
+        def sheepTransit(state, action): return transit(
             state, [action, chooseActionInMCTS(wolfPolicy(state))])
 
         # reward function
@@ -173,7 +185,7 @@ def main():
             render = Render(numOfAgent, positionIndex,
                             screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transitionFunction, isTerminal, reset, chooseActionList, render, renderOn)
+        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
         startTime = time.time()
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
