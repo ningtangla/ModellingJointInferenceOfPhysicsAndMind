@@ -35,6 +35,7 @@ def main():
     sheepId = 0
     numSimulationsList = [110, 150, 200]
     maxRolloutStepsList = [10, 15, 20]
+    usedTimeList = []
 
     startTime = time.time()
     numTrajectories = 300
@@ -52,19 +53,24 @@ def main():
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))
 
-    for numSimulations, maxRolloutSteps in it.product(numSimulationsList, maxRolloutStepsList):
+    allCondition = it.product(numSimulationsList, maxRolloutStepsList)
+    for numSimulations, maxRolloutSteps in allCondition:
         pathParameters = {'agentId': sheepId, 'numSimulations': numSimulations, 'maxRolloutSteps': maxRolloutSteps}
 
         print("start", startTime)
+        startTime = time.time()
         for i in range(math.ceil(numTrajectories / numTrajPerSteps)):
-            startTime = time.time()
-
             startEndIndexesPair = startEndIndexesPairs[numCmdList * i: numCmdList * i + numCmdList]
             cmdList = generateTrajectoriesParallel(startEndIndexesPair, pathParameters)
 
-            endTime = time.time()
-        print("Time taken {} seconds".format((endTime - startTime)))
+        endTime = time.time()
+        usedTime = endTime - startTime
 
+        usedTimeList.append(usedTime)
+        print("Time taken {} seconds".format(usedTime))
+
+    print(list(allCondition))
+    print(usedTimeList)
 
 if __name__ == '__main__':
     main()
