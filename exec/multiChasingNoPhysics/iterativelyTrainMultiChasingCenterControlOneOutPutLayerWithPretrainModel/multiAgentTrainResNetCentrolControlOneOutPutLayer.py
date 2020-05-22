@@ -173,7 +173,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
 
-    trainNN = Train(trainStepsIntervel, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController, trainReporter)
+    trainNN = Train(numTrainStepEachIteration, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController, trainReporter)
 
     # load save dir
     numSimulations = 100

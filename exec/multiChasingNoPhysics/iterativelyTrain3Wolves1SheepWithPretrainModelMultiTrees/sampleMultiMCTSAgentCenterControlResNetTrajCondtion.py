@@ -138,9 +138,9 @@ def main():
         posIndex = [0, 1]
 
         getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
-        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
-        getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
+        getWolfOneXPos = GetAgentPosFromState(wolfOneId, posIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, posIndex)
+        getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, posIndex)
 
         numOfAgent = 4
         xBoundary = [0, 600]
@@ -157,7 +157,7 @@ def main():
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, killzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
 
         wolvesId = 1
         centerControlIndexList = [wolvesId]
@@ -175,7 +175,9 @@ def main():
         predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-        wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
+        wolfActionThreeSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+
+        wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace, wolfActionThreeSpace))
         actionSpaceList = [sheepActionSpace, wolvesActionSpace]
 
         # neural network init

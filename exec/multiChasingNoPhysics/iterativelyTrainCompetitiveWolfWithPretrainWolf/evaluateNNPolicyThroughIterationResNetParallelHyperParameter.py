@@ -43,10 +43,12 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
+    ifSampleTraj = 1
+
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0, 201, 50))
-    manipulatedVariables['otherIteration'] = list(range(0, 201, 50))
-    manipulatedVariables['sheepIteration'] = list(range(0, 201, 100))
+    manipulatedVariables['selfIteration'] = list(range(0, 251, 50))
+    manipulatedVariables['otherIteration'] = list(range(0, 251, 50)) + [-999]
+    manipulatedVariables['sheepIteration'] = list(range(0, 251, 100))
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -94,7 +96,9 @@ def main():
     # run all trials and save trajectories
 
     def generateTrajectoriesParallelFromDf(df): return generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+
+    if ifSampleTraj:
+        toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -136,7 +140,7 @@ def main():
         drawPerformanceLine(group, axForDraw, selfId)
         plotCounter += 1
 
-    plt.suptitle('wolf NNResnet')
+    plt.suptitle('iter train competitive wolf with pretrain')
     plt.legend(loc='best')
     plt.show()
 

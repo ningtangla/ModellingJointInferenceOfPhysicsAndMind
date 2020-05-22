@@ -134,9 +134,9 @@ def main():
         wolfThreeId = 3
         posIndex = [0, 1]
         getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
-        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
-        getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
+        getWolfOneXPos = GetAgentPosFromState(wolfOneId, posIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, posIndex)
+        getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, posIndex)
 
         numOfAgent = 4
         xBoundary = [0, 600]
@@ -153,7 +153,7 @@ def main():
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
         isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, killzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
 
         wolvesId = 1
         centerControlIndexList = [wolvesId]
@@ -201,7 +201,7 @@ def main():
 
         # restorePretrainModel
         sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
-        wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=51_miniBatchSize=256_numSimulations=252_trainSteps=50000')
+        wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=400_trainSteps=50000')
         pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
 
         for agentId in trainableAgentIds:

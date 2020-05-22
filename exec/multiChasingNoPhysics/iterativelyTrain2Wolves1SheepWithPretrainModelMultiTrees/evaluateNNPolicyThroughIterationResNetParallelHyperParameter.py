@@ -44,10 +44,10 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = list(range(0, 1001, 100))
-    manipulatedVariables['otherIteration'] = list(range(0, 1001, 100))
-    manipulatedVariables['numTrainStepEachIteration'] = [3]
-    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+    manipulatedVariables['selfIteration'] = list(range(0, 1401, 400))
+    manipulatedVariables['otherIteration'] = list(range(0, 1401, 400)) + [-999]
+    manipulatedVariables['numTrainStepEachIteration'] = [1]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [1]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -142,7 +142,7 @@ def main():
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 
-    plt.suptitle('SheepNNResnet Step=100 Simulation=200')
+    plt.suptitle('iter train sheep with center control wolves wiht pretrain')
     plt.legend(loc='best')
     plt.show()
 

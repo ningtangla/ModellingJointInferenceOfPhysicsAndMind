@@ -107,7 +107,9 @@ def iterateTrainOneCondition(parameterOneCondition):
     predatorPowerRatio = 8
     wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
     wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
-    wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
+    wolfActionThreeSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+
+    wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace, wolfActionThreeSpace))
     actionSpaceList = [sheepActionSpace, wolvesActionSpace]
 
     # neural network init
@@ -209,7 +211,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     # restorePretrainModel
     sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
 
-    wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=51_miniBatchSize=256_numSimulations=252_trainSteps=50000')
+    wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=400_trainSteps=50000')
     pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
 
     trainableAgentIds = [sheepId, wolvesId]
@@ -240,7 +242,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     generatetoDeleteNNModelPathList = [GetSavePath(NNModelSaveDirectory, toDeleteNNModelExtension, fixedParametersForDelete) for toDeleteNNModelExtension in toDeleteNNModelExtensionList]
 
 # restore model
-    restoredIteration = 1069
+    restoredIteration = 0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)
@@ -314,8 +316,9 @@ def main():
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
-    trainPool = mp.Pool(numCpuToUse)
-    trainPool.map(iterateTrainOneCondition, parametersAllCondtion)
+    # trainPool = mp.Pool(numCpuToUse)
+    # trainPool.map(iterateTrainOneCondition, parametersAllCondtion)
+    iterateTrainOneCondition(parametersAllCondtion[0])
 
 
 if __name__ == '__main__':

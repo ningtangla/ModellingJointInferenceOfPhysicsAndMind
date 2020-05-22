@@ -32,17 +32,29 @@ from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeA
 
 
 def main():
+    DEBUG = 0
     renderOn = 0
     # input by subprocess
 
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    if DEBUG:
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 1
+        endSampleIndex = 99
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
 
-    selfIteration = int(parametersForTrajectoryPath['selfIteration'])
-    otherIteration = int(parametersForTrajectoryPath['otherIteration'])
-    sheepIteration = int(parametersForTrajectoryPath['sheepIteration'])
+        selfIteration = 30
+        otherIteration = 30
+        sheepIteration = 30
+
+    else:
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+
+        selfIteration = int(parametersForTrajectoryPath['selfIteration'])
+        otherIteration = int(parametersForTrajectoryPath['otherIteration'])
+        sheepIteration = int(parametersForTrajectoryPath['sheepIteration'])
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
@@ -150,7 +162,7 @@ def main():
 
         # wolves policy
         if otherIteration == -999:
-            wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionTwoSpace, getWolfTwoXPos, getSheepXPos, computeAngleBetweenVectors)
+            wolfTwoPolicy = HeatSeekingDiscreteDeterministicPolicy(wolfActionTwoSpace, getWolfOneXPos, getSheepXPos, computeAngleBetweenVectors)
         else:
             wolfTwoModelPath = generateNNModelSavePath({'iterationIndex': otherIteration, 'agentId': wolfOneId})
             restoredNNModel = restoreVariables(multiAgentNNmodel[wolfOneId], wolfTwoModelPath)
