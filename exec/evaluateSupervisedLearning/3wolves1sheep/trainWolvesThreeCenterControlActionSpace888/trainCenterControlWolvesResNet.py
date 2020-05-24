@@ -64,14 +64,14 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction555', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl888', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 250
+    dataSetNumSimulations = 400
     killzoneRadius = 50
     agentId = 1
     wolvesId = 1
@@ -123,7 +123,7 @@ def trainOneCondition(manipulatedVariables):
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 8
-    wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
+    wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
     wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
     wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
@@ -196,7 +196,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction555', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl888', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
