@@ -12,7 +12,7 @@ import pandas as pd
 from itertools import product
 
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateStateWithCenterControlAction
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
@@ -40,14 +40,14 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlAction44', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 400
-    killzoneRadius = 80
+    numSimulations = 150
+    killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
@@ -55,13 +55,12 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
-        numOfAgent = 4
+        numOfAgent = 3
         sheepId = 0
         wolvesId = 1
 
         wolfOneId = 1
         wolfTwoId = 2
-        wolfThreeId = 3
 
         xPosIndex = [0, 1]
         xBoundary = [0, 600]
@@ -70,21 +69,22 @@ def main():
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
         getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
-        getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-        isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, killzoneRadius)
 
-        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
+        isTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
 
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
         centerControlIndexList = [wolvesId]
         unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
-        transit = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity, unpackCenterControlAction)
+        transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
+
+        numFramesToInterpolate = 3
+        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)
 
         # NNGuidedMCTS init
         cInit = 1
@@ -93,8 +93,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        # wolfActionSpace = actionSpace
-        wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
+        wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10)]
 
         preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
@@ -102,9 +101,8 @@ def main():
         predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
-        wolfActionThreeSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
-        wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace, wolfActionThreeSpace))
+        wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
 
         actionSpaceList = [sheepActionSpace, wolvesActionSpace]
 
@@ -121,8 +119,8 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trainedResNNModels')
-        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 100, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 110, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getSheepNNModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
         depth = 9
@@ -167,18 +165,16 @@ def main():
             state): return wolvesActionSpace[np.random.choice(range(numWolvesActionSpace))]
 
         # rollout
-        rolloutHeuristicWeight = 1e-2
+        rolloutHeuristicWeight = 0
         minDistance = 400
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos,minDistance)
+            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, minDistance)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos,minDistance)
-        rolloutHeuristic3 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfThreeXPos, getSheepXPos,minDistance)
+            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, minDistance)
 
-        rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state) + rolloutHeuristic3(state)) / 3
+        rolloutHeuristic = lambda state: (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
-        maxRolloutSteps = 5
+        maxRolloutSteps = 15
         rollout = RollOut(rolloutPolicy, maxRolloutSteps, wolvesTransit, rewardFunction, isTerminal, rolloutHeuristic)
 
         wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
@@ -192,7 +188,7 @@ def main():
             import pygame as pg
             from pygame.color import THECOLORS
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
+            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
 
             saveImage = False
