@@ -2,7 +2,7 @@ import sys
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 dirName = os.path.dirname(__file__)
-sys.path.append(os.path.join(dirName, '..', '..', '..', '..'))
+sys.path.append(os.path.join(dirName, '..', '..', '..'))
 import time
 import random
 import numpy as np
@@ -14,7 +14,7 @@ import itertools as it
 import pathos.multiprocessing as mp
 
 from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset, IsTerminal, StayInBoundaryByReflectVelocity
-from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, RewardFunctionWithWall
+from src.constrainedChasingEscapingEnv.reward import RewardFunctionForCompetition, RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, \
@@ -52,7 +52,7 @@ class TrainModelForConditions:
         for trainIntervelIndex in self.trainIntervelIndexes:
             parameters.update({'trainSteps': trainIntervelIndex * self.trainStepsIntervel})
             modelSavePath = self.getModelSavePath(parameters)
-            if not os.path.isfile(modelSavePath + '.index'):
+            if os.path.isfile(modelSavePath + '.index'):
                 trainedModel = train(model, self.trainData)
                 saveVariables(trainedModel, modelSavePath)
             else:
@@ -64,7 +64,7 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolfAction8', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -81,63 +81,55 @@ def trainOneCondition(manipulatedVariables):
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
-    numOfAgent = 4
-
+    numOfAgent = 3
     sheepId = 0
-    wolvesId = 1
-
     wolfOneId = 1
     wolfTwoId = 2
-    wolfThreeId = 3
     xPosIndex = [0, 1]
+
     xBoundary = [0, 600]
     yBoundary = [0, 600]
 
     getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
-    getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
 
     reset = Reset(xBoundary, yBoundary, numOfAgent)
 
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, killzoneRadius)
 
-    playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state) or isTerminalThree(state)
+    def playIsTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
     playAliveBonus = -1 / dataSetMaxRunningSteps
     playDeathPenalty = 1
     playKillzoneRadius = killzoneRadius
 
-    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
+    playReward = RewardFunctionForCompetition(playAliveBonus, playDeathPenalty, isTerminalOne, playIsTerminal)
 
     decay = 1
     accumulateRewards = AccumulateRewards(decay, playReward)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
-
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
     preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 8
-    wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10)]
+    wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
     wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
     wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
-    wolfActionThreeSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
-    wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace, wolfActionThreeSpace))
-
-    numActionSpace = len(wolvesActionSpace)
+    numActionSpace = len(wolfActionOneSpace)
 
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(wolvesActionSpace)
-    getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
+    actionToOneHot = ActionToOneHot(wolfActionOneSpace)
+
+    def getTerminalActionFromTrajectory(trajectory): return trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolvesId)
+    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolfOneId)
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
@@ -146,7 +138,7 @@ def trainOneCondition(manipulatedVariables):
     loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
-    filterState = lambda timeStep: (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])  # !!? magic
+    def filterState(timeStep): return (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])  # !!? magic
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 
@@ -155,14 +147,8 @@ def trainOneCondition(manipulatedVariables):
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
 
-    print(len(preProcessedTrajectories))
-    print(preProcessedTrajectories[0])
-
-    trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
-    valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
-
     # neural network init and save path
-    numStateSpace = 8
+    numStateSpace = 2 * numOfAgent
     regularizationFactor = 1e-4
     sharedWidths = [128]
     actionLayerWidths = [128]
@@ -189,27 +175,30 @@ def trainOneCondition(manipulatedVariables):
     afterActionCoeff = 1
     afterValueCoeff = 1
     afterCoeff = (afterActionCoeff, afterValueCoeff)
-    terminalController = lambda evalDict, numSteps: False
+
+    def terminalController(evalDict, numSteps): return False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 10
+    reportInterval = 10000
     trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
+
+    def learningRateModifier(learningRate): return LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
+
+    def getTrainNN(batchSize, learningRate): return Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
 
     # get path to save trained models
-    NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'dataAugmented': 0}
+    NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolfAction8', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    numOfTrainStepsIntervel = 11
+    numOfTrainStepsIntervel = 6
     trainIntervelIndexes = list(range(numOfTrainStepsIntervel))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNModel, getTrainNN, getNNModelSavePath)
     trainModelForConditions(manipulatedVariables)
@@ -229,8 +218,8 @@ def main():
     trainPool = mp.Pool(numCpuToUse)
 
     startTime = time.time()
-    trainOneCondition(parametersAllCondtion[0])
-    #trainPool.map(trainOneCondition, parametersAllCondtion)
+
+    trainPool.map(trainOneCondition, parametersAllCondtion)
 
     endTime = time.time()
     print("Time taken {} seconds".format((endTime - startTime)))

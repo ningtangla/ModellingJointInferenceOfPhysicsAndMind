@@ -134,10 +134,15 @@ def trainOneCondition(manipulatedVariables):
     numActionSpace = len(wolvesActionSpace)
 
     actionIndex = 1
-    actionToOneHot = ActionToOneHot(wolvesActionSpace)
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    processTrajectoryForNN = ProcessTrajectoryForPolicyValueNet(actionToOneHot, wolvesId)
+
+# augment
+    def processTrajectoryForNN(trajectory):
+        processTuple = lambda state, actions, actionDist, value: \
+            (np.asarray(state), actions[wolvesId], value)
+        processedTrajectory = [processTuple(*triple) for triple in trajectory]
+        return processedTrajectory
 
     preProcessTrajectories = PreProcessTrajectories(addValuesToTrajectory, removeTerminalTupleFromTrajectory, processTrajectoryForNN)
 
@@ -150,11 +155,26 @@ def trainOneCondition(manipulatedVariables):
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 
-    preProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
+    unaugmentPreProcessedTrajectories = np.concatenate(preProcessTrajectories(trajectories))
 
-    trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
-    valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
+    numWolves = 3
+    augmentIdsForWolf = [list(Id) for Id in list(it.permutations(range(1, numWolves + 1)))]
+    augmentIdsForState = []
+    for Id in augmentIdsForWolf:
+        augmentId = [0] + Id
+        augmentIdsForState.append(augmentId)
+    augmentIdsForAction = [list(Id) for Id in list(it.permutations(range(0, numWolves)))]
 
+    actionToOneHot = ActionToOneHot(wolvesActionSpace)
+
+    def augment(timeStep):
+        state, action, value = timeStep
+        newTimeSteps = [(np.array(state[stateId]).flatten(), actionToOneHot(np.array(action)[Id]), value)
+                        for stateId, Id in zip(augmentIdsForState, augmentIdsForAction)]
+        return newTimeSteps
+
+    preProcessedTrajectories = np.concatenate([augment(timeStep) for timeStep in unaugmentPreProcessedTrajectories])
+###
     print(len(preProcessedTrajectories))
     print(preProcessedTrajectories[0])
 
@@ -200,7 +220,7 @@ def trainOneCondition(manipulatedVariables):
     getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
 
     # get path to save trained models
-    NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'dataAugmented': 0}
+    NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'dataAugmented': 1}
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
