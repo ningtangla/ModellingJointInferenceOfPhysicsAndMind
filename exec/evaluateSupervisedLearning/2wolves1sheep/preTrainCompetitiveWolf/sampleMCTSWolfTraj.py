@@ -3,7 +3,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..', '..'))
 
 import json
 import numpy as np
@@ -24,8 +24,8 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 0
-    renderOn = 0
+    DEBUG = 1
+    renderOn = 1
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -41,7 +41,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolfAction8', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolfAction8', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -105,16 +105,17 @@ def main():
         # neural network init
         numStateSpace = 2 * numOfAgent
         numWolfActionSpace = len(wolfActionOneSpace)
+        numSheepActionSpace = len(sheepActionSpace)
 
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        generateSheepModel = GenerateModel(numStateSpace, numWolfActionSpace, regularizationFactor)
+        generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
 
         # load save dir
         NNModelSaveExtension = ''
-        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
+        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainSheepWithTwoHeatSeekingWolves', 'trainedResNNModels')
         sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 110, 'miniBatchSize': 256, 'learningRate': 0.0001, }
         getSheepNNModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
@@ -182,7 +183,7 @@ def main():
             circleSize = 10
 
             saveImage = False
-            saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
+            saveImageDir = os.path.join(dirName, '..', '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
 
