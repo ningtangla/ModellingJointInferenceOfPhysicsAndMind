@@ -55,7 +55,7 @@ def main():
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
     trainMaxRunningSteps = 50
-    trainNumSimulations = 400
+    trainNumSimulations = 250
     killzoneRadius = 50
 
     sheepId = 0
@@ -100,7 +100,7 @@ def main():
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrain3Wolves1SheepWithPretrainModelMultiTrees', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrain3Wolves1SheepWithPretrainModelMultiTreesAction888', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
