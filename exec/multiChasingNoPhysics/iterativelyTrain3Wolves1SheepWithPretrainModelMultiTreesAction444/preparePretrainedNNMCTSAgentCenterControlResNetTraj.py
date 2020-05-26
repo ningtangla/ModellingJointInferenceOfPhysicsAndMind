@@ -27,7 +27,7 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, StochasticMCTS, backup, establishPlainActionDistFromMultipleTrees, Expand
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction, SelectSoftmaxAction
+from src.episode import Render, SampleTrajectoryWithRender, SampleAction, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
@@ -101,24 +101,20 @@ def main():
         endSampleIndex = 1
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
         iterationIndex = 0
-        numTrainStepEachIteration = 1
-        numTrajectoriesPerIteration = 1
-
     else:
         parametersForTrajectoryPath = json.loads(sys.argv[1])
         startSampleIndex = int(sys.argv[2])
         endSampleIndex = int(sys.argv[3])
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-        iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
-        numTrainStepEachIteration = int(parametersForTrajectoryPath['numTrainStepEachIteration'])
-        numTrajectoriesPerIteration = int(parametersForTrajectoryPath['numTrajectoriesPerIteration'])
+        iterationIndex = parametersForTrajectoryPath['iterationIndex']
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrain3Wolves1SheepWithPretrainModelMultiTreesAction444', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrain3Wolves1SheepWithPretrainModelMultiTreesAction888', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
+    # get traj save path
     trajectorySaveExtension = '.pickle'
 
     maxRunningSteps = 50
@@ -130,13 +126,13 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
+
         # No physics env
         sheepId = 0
         wolfOneId = 1
         wolfTwoId = 2
         wolfThreeId = 3
         posIndex = [0, 1]
-
         getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, posIndex)
         getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, posIndex)
@@ -161,19 +157,19 @@ def main():
 
         wolvesId = 1
         centerControlIndexList = [wolvesId]
-        unpackCenterControlAction = UnpackCenterControlAction(centerControlIndexList)
+        unpackAction = UnpackCenterControlAction(centerControlIndexList)
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
         transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
 
         numFramesToInterpolate = 3
-        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)
+        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackAction)
 
-        # action
+        # product wolves action space
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
         preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
         predatorPowerRatio = 8
-        wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10)]
+        wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionThreeSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
@@ -204,7 +200,17 @@ def main():
 
         multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
 
+        # restorePretrainModel
+        sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=110_trainSteps=50000')
+        wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=50_miniBatchSize=256_numSimulations=400_trainSteps=50000')
+        pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
+
+        for agentId in trainableAgentIds:
+            restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], pretrainModelPathList[agentId])
+            multiAgentNNmodel[agentId] = restoredNNModel
+
         otherAgentApproximatePolicy = [lambda NNmodel, : ApproximatePolicy(NNmodel, sheepActionSpace), lambda NNmodel, : ApproximatePolicy(NNmodel, wolvesActionSpace)]
+
         # NNGuidedMCTS init
         cInit = 1
         cBase = 100
@@ -219,43 +225,30 @@ def main():
         temperatureInMCTS = 1
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
-        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseActionInMCTS)
+        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseGreedyAction)
+
         composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numTree, numSimulations, actionSpaceList, terminalRewardList, selectChild, isTerminal, transit, getStateFromNode, getApproximatePolicy, getApproximateValue, composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy, trainableAgentIds)
-
-        # load model
-        NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiChasingNoPhysics', 'iterativelyTrain3Wolves1SheepWithPretrainModelMultiTreesAction444', 'NNModelRes')
-        if not os.path.exists(NNModelSaveDirectory):
-            os.makedirs(NNModelSaveDirectory)
-
-        generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
-
-        for agentId in trainableAgentIds:
-            modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex - 1, 'agentId': agentId, 'numTrajectoriesPerIteration': numTrajectoriesPerIteration, 'numTrainStepEachIteration': numTrainStepEachIteration})
-            restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
-            multiAgentNNmodel[agentId] = restoredNNModel
-
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
 
         # sample and save trajectories
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
+        saveImage = False
+        saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
+        if not os.path.exists(saveImageDir):
+            os.makedirs(saveImageDir)
         render = None
         if renderOn:
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
-            saveImage = False
-            saveImageDir = os.path.join(dirName, '..', '..', '..', 'data', 'demoImg')
-            if not os.path.exists(saveImageDir):
-                os.makedirs(saveImageDir)
             screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
             render = Render(numOfAgent, posIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
-
         sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
+        print([len(traj) for traj in trajectories])
         saveToPickle(trajectories, trajectorySavePath)
 
 
