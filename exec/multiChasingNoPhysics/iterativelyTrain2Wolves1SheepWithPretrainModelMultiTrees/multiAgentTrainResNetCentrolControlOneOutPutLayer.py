@@ -139,7 +139,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     saveToBuffer = SaveToBuffer(bufferSize)
 
     def getUniformSamplingProbabilities(buffer): return [(1 / len(buffer)) for _ in buffer]
-    miniBatchSize = 1000
+    miniBatchSize = 512
     sampleBatchFromBuffer = SampleBatchFromBuffer(miniBatchSize, getUniformSamplingProbabilities)
 
     # pre-process the trajectory for replayBuffer
@@ -305,7 +305,7 @@ def main():
 
     # Sample Trajectory Before Train to fill Buffer
     miniBatchSize = 256
-    numTrajectoriesToStartTrain = 4 * miniBatchSize
+    numTrajectoriesToStartTrain = 2 * miniBatchSize
     sampleTrajectoryFileName = 'preparePretrainedNNMCTSAgentCenterControlResNetTraj.py'
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)
@@ -313,7 +313,7 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain, numCmdList)
     iterationBeforeTrainIndex = 0
     trajectoryBeforeTrainPathParamters = {'iterationIndex': iterationBeforeTrainIndex}
-    prepareBefortrainData = False
+    prepareBefortrainData = True
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
