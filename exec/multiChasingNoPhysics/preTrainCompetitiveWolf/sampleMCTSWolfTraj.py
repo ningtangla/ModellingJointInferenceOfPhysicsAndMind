@@ -41,7 +41,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolf', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data', '2wolves1sheep', 'preTrainCompetitiveWolfAction8', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -89,7 +89,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        wolfActionSpace = actionSpace
+        wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
 
         preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
@@ -105,12 +105,13 @@ def main():
         # neural network init
         numStateSpace = 2 * numOfAgent
         numWolfActionSpace = len(wolfActionOneSpace)
+        numSheepActionSpace = len(sheepActionSpace)
 
         regularizationFactor = 1e-4
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        generateSheepModel = GenerateModel(numStateSpace, numWolfActionSpace, regularizationFactor)
+        generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
 
         # load save dir
         NNModelSaveExtension = ''
