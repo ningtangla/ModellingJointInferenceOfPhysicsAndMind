@@ -94,7 +94,7 @@ def main():
         fuzzySearchParameterNames = ['sampleIndex', 'timeUsed']
         loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
         loadedTrajectories = loadTrajectories(parameters={})
-        # print(len(loadedTrajectories))
+        print(len(loadedTrajectories))
 
         def filterState(timeStep): return (timeStep[0][0:numOfAgent], timeStep[1], timeStep[2])
         trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
