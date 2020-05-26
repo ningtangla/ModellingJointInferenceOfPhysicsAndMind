@@ -136,7 +136,7 @@ def trainOneCondition(manipulatedVariables):
     actionIndex = 1
     getTerminalActionFromTrajectory = lambda trajectory: trajectory[-1][actionIndex]
     removeTerminalTupleFromTrajectory = RemoveTerminalTupleFromTrajectory(getTerminalActionFromTrajectory)
-    
+
 # augment
     def processTrajectoryForNN(trajectory):
         processTuple = lambda state, actions, actionDist, value: \
@@ -164,12 +164,13 @@ def trainOneCondition(manipulatedVariables):
         augmentId = [0] + Id
         augmentIdsForState.append(augmentId)
     augmentIdsForAction = [list(Id) for Id in list(it.permutations(range(0, numWolves)))]
-    
+
     actionToOneHot = ActionToOneHot(wolvesActionSpace)
+
     def augment(timeStep):
         state, action, value = timeStep
-        newTimeSteps = [(np.array(state[stateId]).flatten(), actionToOneHot(np.array(action)[Id]), value) 
-                for stateId, Id in zip(augmentIdsForState, augmentIdsForAction)]
+        newTimeSteps = [(np.array(state[stateId]).flatten(), actionToOneHot(np.array(action)[Id]), value)
+                        for stateId, Id in zip(augmentIdsForState, augmentIdsForAction)]
         return newTimeSteps
 
     preProcessedTrajectories = np.concatenate([augment(timeStep) for timeStep in unaugmentPreProcessedTrajectories])
@@ -228,7 +229,7 @@ def trainOneCondition(manipulatedVariables):
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    numOfTrainStepsIntervel = 6
+    numOfTrainStepsIntervel = 11
     trainIntervelIndexes = list(range(numOfTrainStepsIntervel))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNModel, getTrainNN, getNNModelSavePath)
     trainModelForConditions(manipulatedVariables)

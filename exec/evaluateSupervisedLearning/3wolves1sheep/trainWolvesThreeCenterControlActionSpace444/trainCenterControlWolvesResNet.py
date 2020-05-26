@@ -209,7 +209,7 @@ def trainOneCondition(manipulatedVariables):
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    numOfTrainStepsIntervel = 6
+    numOfTrainStepsIntervel = 11
     trainIntervelIndexes = list(range(numOfTrainStepsIntervel))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, sheepNNModel, getTrainNN, getNNModelSavePath)
     trainModelForConditions(manipulatedVariables)
