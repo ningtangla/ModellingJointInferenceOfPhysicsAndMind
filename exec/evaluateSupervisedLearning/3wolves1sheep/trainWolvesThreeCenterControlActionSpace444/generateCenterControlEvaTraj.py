@@ -38,15 +38,16 @@ def main():
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    DEBUG = 1
+    DEBUG = 0
+    renderOn = 0
 
     if DEBUG:
-        renderOn = 0
         parametersForTrajectoryPath = {}
         startSampleIndex = 1
-        endSampleIndex = 500
+        endSampleIndex = 10
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
+        trainSteps = 60000
+        isDataAugmented = 1
     else:
         parametersForTrajectoryPath = json.loads(sys.argv[1])
         startSampleIndex = int(sys.argv[2])
@@ -176,7 +177,7 @@ def main():
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
-        #saveToPickle(trajectories, trajectorySavePath)
+        saveToPickle(trajectories, trajectorySavePath)
 
         trajLen = [len(traj) for traj in trajectories]
         print(trajLen)

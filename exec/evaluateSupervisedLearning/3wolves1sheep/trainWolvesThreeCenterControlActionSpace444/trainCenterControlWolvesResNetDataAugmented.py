@@ -176,7 +176,7 @@ def trainOneCondition(manipulatedVariables):
     preProcessedTrajectories = np.concatenate([augment(timeStep) for timeStep in unaugmentPreProcessedTrajectories])
 ###
     print(len(preProcessedTrajectories))
-    print(preProcessedTrajectories[0])
+    # print(preProcessedTrajectories[0])
 
     trainData = [list(varBatch) for varBatch in zip(*preProcessedTrajectories)]
     valuedTrajectories = [addValuesToTrajectory(tra) for tra in trajectories]
@@ -211,7 +211,7 @@ def trainOneCondition(manipulatedVariables):
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = lambda evalDict, numSteps: False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 10
+    reportInterval = 10000
     trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
@@ -220,7 +220,7 @@ def trainOneCondition(manipulatedVariables):
     getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController, trainReporter)
 
     # get path to save trained models
-    NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'dataAugmented': 1}
+    NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'dataAugmented': 11}
 
     NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):

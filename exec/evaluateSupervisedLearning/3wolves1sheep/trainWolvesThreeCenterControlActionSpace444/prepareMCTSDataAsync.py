@@ -41,7 +41,7 @@ def main():
     sampleTrajectoryFileName = 'sampleMCTSCenterControlWovles.py'
 
     numCpuCores = os.cpu_count()
-    numCpuToUse = int(0.75 * numCpuCores)
+    numCpuToUse = int(0.8 * numCpuCores)
     numCmdList = min(numTrajectories, numCpuToUse)
     print('numCpuToUse', numCpuToUse)
 

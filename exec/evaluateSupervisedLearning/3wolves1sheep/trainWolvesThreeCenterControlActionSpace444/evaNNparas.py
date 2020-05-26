@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME, '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..','..', '..', '..'))
 
 from subprocess import Popen, PIPE
 import json
@@ -34,18 +34,21 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
 def drawPerformanceLine(dataDf, axForDraw, agentId):
-    for key, grp in dataDf.groupby('isDataAugmented'):
-        grp.index = grp.index.droplevel('isDataAugmented')
+    print(dataDf)
+
+    for key, grp in dataDf.groupby('trainSteps'):
+        print(grp)
+        grp.index = grp.index.droplevel('trainSteps')
         grp['agentMean'] = np.array([value[agentId] for value in grp['mean'].values])
         grp['agentStd'] = np.array([value[agentId] for value in grp['std'].values])
-        grp.plot(ax=axForDraw, y='agentMean', yerr='agentStd', marker='o', label='isDataAugmented={}'.format(key))
+        grp.plot(ax=axForDraw, y='agentMean', yerr='agentStd', marker='o', label='trainSteps={}'.format(key))
 
 
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['trainSteps'] = list(range(0, 100001, 10000))
-    manipulatedVariables['isDataAugmented'] = [0, 1]
+    manipulatedVariables['trainSteps'] = list(range(0, 100001, 20000))
+    manipulatedVariables['isDataAugmented'] = [0,1,11]
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
@@ -59,7 +62,11 @@ def main():
     sheepId = 0
     wolfId = 1
     posIndex = [0, 1]
-    selfId = sheepId
+    selfId = wolfId
+
+    wolfOneId = 1
+    wolfTwoId = 2
+    wolfThreeId = 3
 
     wolfOnePosIndex = 1
     wolfTwoIndex = 2
@@ -84,7 +91,7 @@ def main():
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
-    generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
+    generateTrajectoriesCodeName = 'generateCenterControlEvaTraj.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.8 * numCpuCores)
@@ -94,15 +101,15 @@ def main():
     # run all trials and save trajectories
 
     def generateTrajectoriesParallelFromDf(df): return generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    trajectoryDirectory = oos.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'evaTraj')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'evaTraj')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
-    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
+    trajectoryFixedParameters = {'agentId':wolfId,'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius}
     getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
 
     # compute statistics on the trajectories
@@ -126,8 +133,8 @@ def main():
     numColumns = 1
     plotCounter = 1
 
-    for trainSteps, group in grp.groupby('trainSteps'):
-        group.index = group.index.droplevel('trainSteps')
+    for isDataAugmented, group in statisticsDf.groupby('isDataAugmented'):
+        group.index = group.index.droplevel('isDataAugmented')
 
         axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
         # if (plotCounter % numColumns == 1) or numColumns == 1:
@@ -136,8 +143,12 @@ def main():
         #     axForDraw.set_title('trainSteps: {}'.format(trainSteps))
 
         axForDraw.set_ylim(-1, 1.5)
-        drawPerformanceLine(group, axForDraw, selfId)
-        plotCounter += 1
+        # drawPerformanceLine(group, axForDraw, selfId)
+        group['agentMean'] = np.array([value[selfId] for value in group['mean'].values])
+        group['agentStd'] = np.array([value[selfId] for value in group['std'].values])
+        group.plot(ax=axForDraw, y='agentMean', yerr='agentStd', marker='o', label='isDataAugmented={}'.format(isDataAugmented))
+
+        # plotCounter += 1
 
     plt.suptitle('wolfNNResnet')
     plt.legend(loc='best')

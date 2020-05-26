@@ -191,7 +191,7 @@ def trainOneCondition(manipulatedVariables):
     afterCoeff = (afterActionCoeff, afterValueCoeff)
     terminalController = lambda evalDict, numSteps: False
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
-    reportInterval = 10
+    reportInterval = 10000
     trainStepsIntervel = 10000
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
