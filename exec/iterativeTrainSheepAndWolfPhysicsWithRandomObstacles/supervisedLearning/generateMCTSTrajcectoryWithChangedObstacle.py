@@ -74,13 +74,36 @@ def main():
         wall1Size=[0.8,1.95,1.5]
         wall2Pos=[0,-2.5,-0.2]
         wall2Size=[0.8,1.95,1.5]
-        wallPosList=[wall1Pos,wall2Pos]
-        wallSizeList=[wall1Size,wall2Size]
+        initWallPosList=[wall1Pos,wall2Pos]
+        initWallSizeList=[wall1Size,wall2Size]
 
-        sampleFixWallPos=lambda:wallPosList
+        wallXdelta=[-8,8]
+        wallYdelta=[-3.8,4.9]
+        class RandomMoveObstacleCenter(object):
+            def __init__(self, initWallPosList,wallXdelta,wallYdelta):
+                self.initWallPosList = initWallPosList
+                self.wallXdelta = wallXdelta
+                self.wallYdelta = wallYdelta
+            def __call__(self):
+                x=np.random.uniform(self.wallXdelta,size=1)[0]
+                y=np.random.uniform(self.wallYdelta,size=1)[0]
+                movingVector=[x,y,0]
+                wallPosList=[[pos+delta for pos,delta in zip(obstacle,movingVector)] for obstacle in self.initWallPosList]
+                print(movingVector,wallPosList)
+                return wallPosList
+        # def randomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
+        #     x=np.random.uniform(wallXdelta,size=1)[0]
+        #     y=np.random.uniform(wallYdelta,size=1)[0]
+        #     movingVector=[x,y,0]
+        #     wallPosList=[[pos+delta for pos,delta in zip(obstacle,movingVector)] for obstacle in initWallPosList]
+        #     print(movingVector,wallPosList)
+        #     return wallPosList
+        sampleMovedWallPos=RandomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
+        # sampleFixWallPos=lambda:initWallPosList
         sampleFixWallSize=lambda:wallSizeList
 
-        sampleObscalesProperty=SampleObscalesProperty(sampleFixWallPos,sampleFixWallSize)
+
+        sampleObscalesProperty=SampleObscalesProperty(sampleMovedWallPos,sampleFixWallSize)
         wallPosList,wallSizeList=sampleObscalesProperty()
 
         setMujocoEnvXmlProperty=SetMujocoEnvXmlProperty(wallIDlist,changeWallProperty)

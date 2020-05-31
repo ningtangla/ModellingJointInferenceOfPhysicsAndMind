@@ -33,7 +33,10 @@ class AddValuesToTrajectory:
 
     def __call__(self, trajectory):
         values = self.trajectoryValueFunction(trajectory)
+        # print(values)
         trajWithValues = [(s, a, dist, np.array([v]).flatten()) for (s, a, dist), v in zip(trajectory, values)]
+
+        # print(trajWithValues)
 
         return trajWithValues
 

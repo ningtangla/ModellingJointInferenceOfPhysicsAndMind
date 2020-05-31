@@ -98,8 +98,7 @@ class GenerateModel:
 
             with tf.name_scope("evaluate"):
                 with tf.name_scope("action"):
-                    crossEntropy_ = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionOutputLayerActivation_,
-                                                                               labels=groundTruthAction_)
+                    crossEntropy_ = tf.nn.softmax_cross_entropy_with_logits_v2(logits=actionOutputLayerActivation_, labels=groundTruthAction_)
                     actionLoss_ = tf.reduce_mean(crossEntropy_, name='loss')
                     tf.add_to_collection("actionLoss", actionLoss_)
                     actionLossSummary = tf.summary.scalar("actionLoss", actionLoss_)
@@ -312,7 +311,6 @@ class ApproximatePolicy:
             stateBatch = np.concatenate(stateBatch)
         if np.array(stateBatch).ndim == 1:
             stateBatch = np.array([stateBatch])
-        print(stateBatch)
         graph = self.policyValueNet.graph
         state_ = graph.get_collection_ref("inputs")[0]
         actionDist_ = graph.get_collection_ref("actionDistributions")[0]

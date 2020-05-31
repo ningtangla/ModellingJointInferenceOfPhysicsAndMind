@@ -58,7 +58,7 @@ def main():
 
 
     killzoneRadius = 30
-    numSimulations = 200 
+    numSimulations = 200
     maxRunningSteps = 150
 
 
@@ -150,9 +150,9 @@ def main():
 
     # eval MCTS basline
     # dataSetExtension = '.pickle'
-    # dataSetMaxRunningSteps = 150 
-    # dataSetNumSimulations = 200 
-    # killzoneRadius = 30 
+    # dataSetMaxRunningSteps = 150
+    # dataSetNumSimulations = 200
+    # killzoneRadius = 30
     # sheepId=0
     # dataSetDirectory = os.path.join(dirName, '..','..', '..', 'data','evaluateEscapeSingleChasingNoPhysics', 'trajectories')
     # dataSetFixedParameters = {'agentId':sheepId,'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
@@ -161,7 +161,7 @@ def main():
     # loadTrajectories = LoadTrajectories(getDataSetSavePath, loadFromPickle, fuzzySearchParameterNames)
     # allTrajectories = loadTrajectories(parameters={})
     # print(len(allTrajectories))
-    
+
     # allMeasurements = np.array([calculateSuriveRatio(trajectory) for trajectory in allTrajectories])
     # measurementMean = np.mean(allMeasurements, axis = 0)
     # measurementStd = np.std(allMeasurements, axis = 0)

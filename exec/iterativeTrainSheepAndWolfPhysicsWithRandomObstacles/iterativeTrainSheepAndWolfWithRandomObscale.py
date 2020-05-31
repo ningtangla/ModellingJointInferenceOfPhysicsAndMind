@@ -28,7 +28,7 @@ from exec.parallelComputing import GenerateTrajectoriesParallel
 def flattenStateInTrajectory(trajectory):
     flattenState =lambda state : np.array([i for s in state for i in s ]).reshape(1,-1)
     trajectoryWithFlattenState = [(flattenState(s), a, dist, v) for (s, a, dist, v) in trajectory]
-
+    # print('value',trajectoryWithFlattenState[0][0],trajectoryWithFlattenState[0][3])
     return trajectoryWithFlattenState
 
 class PreprocessTrajectoriesForBuffer:
@@ -205,7 +205,7 @@ def iterateTrainOneCondition(parameters):
     replayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectoriesBeforeTrain)
 
     # restore modelrestoredIteration
-    restoredIteration=705#0
+    restoredIteration=2818#0
     for agentId in trainableAgentIds:
         modelPathForRestore = generateNNModelSavePath({'iterationIndex': restoredIteration, 'agentId': agentId,  'depth':depth, 'learningRate':learningRate})
         restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPathForRestore)

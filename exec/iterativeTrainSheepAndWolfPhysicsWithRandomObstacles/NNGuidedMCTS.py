@@ -16,7 +16,7 @@ class ApproximatePolicy:
         if np.array(stateBatch).ndim == 1:
             stateBatch = np.array([state for i in stateBatch for state in i ])
             stateBatch=stateBatch.reshape(1,-1)
-        # print(stateBatch)
+            # print(stateBatch)
         graph = self.policyValueNet.graph
         state_ = graph.get_collection_ref("inputs")[0]
         actionDist_ = graph.get_collection_ref("actionDistributions")[0]

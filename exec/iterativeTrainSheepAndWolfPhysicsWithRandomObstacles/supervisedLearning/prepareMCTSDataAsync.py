@@ -51,7 +51,7 @@ def sampleMCTSOneCondtion(parameters):
     parameters.update(pathParameters)
 
     startTime = time.time()
-    numTrajectories =6000
+    numTrajectories =5000
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
     # sampleTrajectoryFileName='generateMCTSSheepTrajcectory.py'
@@ -62,7 +62,7 @@ def sampleMCTSOneCondtion(parameters):
 
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName)
 
-    numTrajPerSteps = numCmdList * 50
+    numTrajPerSteps = numCmdList * 2
     startSampleIndexes = np.arange(0, numTrajectories, math.ceil(numTrajPerSteps / numCmdList))
     endSampleIndexes = np.concatenate([startSampleIndexes[1:], [numTrajectories]])
     startEndIndexesPairs = list(zip(startSampleIndexes, endSampleIndexes))

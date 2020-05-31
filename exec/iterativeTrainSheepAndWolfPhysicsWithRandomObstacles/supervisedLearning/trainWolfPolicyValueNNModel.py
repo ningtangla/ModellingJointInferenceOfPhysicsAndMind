@@ -16,8 +16,9 @@ import pathos.multiprocessing as mp
 
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, TransitionFunction, ResetUniform
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue, ApproximatePolicy, restoreVariables
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
+    GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
+from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,  restoreVariables
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
@@ -99,8 +100,8 @@ def main():
     manipulatedVariables = OrderedDict()
 
     manipulatedVariables['miniBatchSize'] = [64, 128]
-    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
-    manipulatedVariables['depth'] = [5,9, 17]
+    manipulatedVariables['learningRate'] =  [ 1e-3,1e-4,1e-5]
+    manipulatedVariables['depth'] =[4,8,16] #[4,8,16]
     # manipulatedVariables['resBlock'] = [2 ,4, 6, 8]
     # manipulatedVariables['width'] = [32, 64 ,128, 256]
 
@@ -142,7 +143,7 @@ def main():
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
     numActionSpace = len(actionSpace)
     actionIndex = 1
     actionToOneHot = ActionToOneHot(actionSpace)
@@ -169,8 +170,7 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    resBlock = 4
-    getNNModel = lambda depth: generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths, resBlock)
+    getNNModel = lambda depth: generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths)
 
     # function to train NN model
     terminalThreshold = 1e-10
@@ -192,23 +192,22 @@ def main():
     learningRateDecay = 1
     learningRateDecayStep = 1
     learningRateModifier = lambda learningRate: LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
-    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,
-                                                                     trainReporter)
+    getTrainNN = lambda batchSize, learningRate: Train(trainStepsIntervel, batchSize, sampleData, learningRateModifier(learningRate), terminalController, coefficientController,trainReporter)
 
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfResModels')
+    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(50))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
-
+    # trainModelForConditions(parametersAllCondtion[0])
 
     # # train models for all conditions
     numCpuCores = os.cpu_count()
