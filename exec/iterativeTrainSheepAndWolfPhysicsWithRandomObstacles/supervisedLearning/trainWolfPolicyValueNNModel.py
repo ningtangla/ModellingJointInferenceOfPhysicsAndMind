@@ -28,7 +28,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 def flattenStateInTrajectory(trajectory):
-    flattenState =lambda state : np.array([i for s in state for i in s ]).reshape(1,-1)
+    flattenState =lambda state : np.array([i for s in state[0:2] for i in s ]).reshape(1,-1)
     trajectoryWithFlattenState = [(flattenState(s), a, dist, v) for (s, a, dist, v) in trajectory]
 
     return trajectoryWithFlattenState
@@ -164,7 +164,7 @@ def main():
     print(trainDataMeanAccumulatedReward)
 
     # neural network init and save path
-    numStateSpace = 20
+    numStateSpace = 12
     regularizationFactor = 1e-4
     sharedLayerWidths = [128]
     actionLayerWidths = [128]
@@ -185,8 +185,8 @@ def main():
     #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
 
-    reportInterval = 50000
-    trainStepsIntervel = 50000
+    reportInterval = 20000
+    trainStepsIntervel = 20000
 
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
@@ -197,14 +197,14 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfNNModels')
+    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfNNModelsWithoutObstacle')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(50))
+    trainIntervelIndexes = list(range(10))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # trainModelForConditions(parametersAllCondtion[0])

@@ -28,20 +28,26 @@ from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 from exec.evaluationFunctions import ComputeStatistics
 
-
+def drawPerformanceLine(dataDf, axForDraw, agentId):
+    for key, grp in dataDf.groupby('miniBatchSize'):
+        grp.index = grp.index.droplevel('miniBatchSize')
+        # grp['agentMean'] = np.array([value for value in grp['mean'].values])
+        # grp['agentMean'] =  grp['mean'].values
+        # grp['agentStd'] = np.array([value for value in grp['std'].values])
+        # grp['agentStd'] = grp['std'].values
+        grp.plot(ax=axForDraw, y='mean', yerr='std', marker='o', label='miniBatchSize={}'.format(key))
 
 def main():
     # important parameters
-    distractorId = 3
-    sampleOneStepPerTraj =  1
+
     # manipulated variables
 
     manipulatedVariables = OrderedDict()
 
-    manipulatedVariables['miniBatchSize'] = [ 128]
-    manipulatedVariables['learningRate'] =  [1e-4]
-    manipulatedVariables['depth'] = [4]
-    manipulatedVariables['trainSteps']=[0,50000,100000,150000,200000,250000,500000]
+    manipulatedVariables['miniBatchSize'] = [64, 128]
+    manipulatedVariables['learningRate'] =  [ 1e-3,1e-4,1e-5]
+    manipulatedVariables['depth'] = [4,8,16]
+    manipulatedVariables['trainSteps']=[0,20000,40000,60000,100000,180000]
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
@@ -84,7 +90,7 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
@@ -118,12 +124,37 @@ def main():
     statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
     print(statisticsDf)
 
+    # manipulatedVariables['miniBatchSize'] = [64, 128]
+    # manipulatedVariables['learningRate'] =  [ 1e-3,1e-4,1e-5]
+    # manipulatedVariables['depth'] = [4,8,16]
+    # manipulatedVariables['trainSteps']=[0,20000,40000,60000,100000,180000]
+
+    # plot the results
+    fig = plt.figure()
+    numRows = len(manipulatedVariables['depth'])
+    numColumns = len(manipulatedVariables['learningRate'])
+    plotCounter = 1
+    selfId=0
+    for depth, grp in statisticsDf.groupby('depth'):
+        grp.index = grp.index.droplevel('depth')
+
+        for learningRate, group in grp.groupby('learningRate'):
+            group.index = group.index.droplevel('learningRate')
+
+            axForDraw = fig.add_subplot(numRows, numColumns, plotCounter)
+            if (plotCounter % numColumns == 1) or numColumns==1:
+                axForDraw.set_ylabel('depth: {}'.format(depth))
+            if plotCounter <= numColumns:
+                axForDraw.set_title('learningRate: {}'.format(learningRate))
+
+            axForDraw.set_ylim(-1, 1)
+            drawPerformanceLine(group, axForDraw, selfId)
+            plotCounter += 1
 
 
-
-
-
-
+    plt.suptitle('SupervisedNNWolfwithFixWallState')
+    plt.legend(loc='best')
+    plt.show()
 
 
 
