@@ -48,7 +48,7 @@ def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
 
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSFixObstacle')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSMovedObstacle')
     trajectoriesSaveDirectory = os.path.join(dataFolderName,  'trajectories')
 
     if not os.path.exists(trajectoriesSaveDirectory):
@@ -85,8 +85,8 @@ def main():
                 self.wallXdelta = wallXdelta
                 self.wallYdelta = wallYdelta
             def __call__(self):
-                x=np.random.uniform(self.wallXdelta,size=1)[0]
-                y=np.random.uniform(self.wallYdelta,size=1)[0]
+                x=np.random.uniform(self.wallXdelta[0],self.wallXdelta[1],size=1)[0]
+                y=np.random.uniform(self.wallYdelta[0],self.wallYdelta[1],size=1)[0]
                 movingVector=[x,y,0]
                 wallPosList=[[pos+delta for pos,delta in zip(obstacle,movingVector)] for obstacle in self.initWallPosList]
                 print(movingVector,wallPosList)
@@ -100,7 +100,7 @@ def main():
         #     return wallPosList
         sampleMovedWallPos=RandomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
         # sampleFixWallPos=lambda:initWallPosList
-        sampleFixWallSize=lambda:wallSizeList
+        sampleFixWallSize=lambda:initWallSizeList
 
 
         sampleObscalesProperty=SampleObscalesProperty(sampleMovedWallPos,sampleFixWallSize)
