@@ -79,6 +79,7 @@ def trainOneCondition(manipulatedVariables):
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
     print("DATASET LOADED!")
 
+    numOfAgent = 3
     # accumulate rewards for trajectories
     decay = 1
     accumulateRewards = AccumulateRewards(decay)
@@ -110,7 +111,7 @@ def trainOneCondition(manipulatedVariables):
     loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
-    filterState = lambda timeStep: (timeStep[0][0:4], timeStep[1], timeStep[2], timeStep[3])  # !!? magic
+    filterState = lambda timeStep: (timeStep[0][:numOfAgent], timeStep[1], timeStep[2], timeStep[3])
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 

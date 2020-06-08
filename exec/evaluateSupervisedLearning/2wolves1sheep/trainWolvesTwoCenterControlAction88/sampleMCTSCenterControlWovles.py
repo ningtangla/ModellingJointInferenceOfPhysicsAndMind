@@ -28,7 +28,7 @@ def main():
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
-        endSampleIndex = 100
+        endSampleIndex = 10
         agentId = 1
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     else:
@@ -195,13 +195,11 @@ def main():
             screenColor = THECOLORS['black']
             circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
-
             saveImage = False
             saveImageDir = os.path.join(dirName, '..', '..', '..', '..', 'data', 'demoImg')
             if not os.path.exists(saveImageDir):
                 os.makedirs(saveImageDir)
-
-            screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
+            screen = pg.display.set_mode([max(xBoundary), max(yBoundary)])
             render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         forwardOneStep = ForwardOneStep(transit, rewardFunction)
