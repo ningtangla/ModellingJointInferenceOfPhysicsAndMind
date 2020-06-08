@@ -17,18 +17,82 @@ import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 
 from src.neuralNetwork.policyValueResNet import GenerateModel, ApproximatePolicy, restoreVariables
-from src.episode import SampleAction, chooseGreedyAction, Render, SampleTrajectoryWithRender
+from src.episode import SampleAction, chooseGreedyAction, Render, ForwardOneStep, SampleTrajectory, SampleTrajectoryWithRender
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
 
 
+class ForwardOneStep:
+    def __init__(self, transitionFunction, rewardFunction):
+        self.transitionFunction = transitionFunction
+        self.rewardFunction = rewardFunction
+
+    def __call__(self, state, sampleAction):
+        action = sampleAction(state)
+        nextState = self.transitionFunction(state, action)
+        reward = self.rewardFunction(state, action, nextState)
+        return (state, action, nextState, reward)
+
+
+class SampleTrajectory:
+    def __init__(self, maxRunningSteps, isTerminal, resetState, forwardOneStep):
+        self.maxRunningSteps = maxRunningSteps
+        self.isTerminal = isTerminal
+        self.resetState = resetState
+        self.forwardOneStep = forwardOneStep
+
+    def __call__(self, sampleAction):
+        state = self.resetState()
+        while self.isTerminal(state):
+            state = self.resetState()
+
+        trajectory = []
+        for runningStep in range(self.maxRunningSteps):
+            if self.isTerminal(state):
+                trajectory.append((state, None, None, 0))
+                break
+            state, action, nextState, reward = self.forwardOneStep(state, sampleAction)
+            trajectory.append((state, action, nextState, reward))
+            state = nextState
+
+        return trajectory
+
+
+class SampleTrajectoryWithRender:
+    def __init__(self, maxRunningSteps, isTerminal, resetState, forwardOneStep, render, renderOn):
+        self.maxRunningSteps = maxRunningSteps
+        self.isTerminal = isTerminal
+        self.resetState = resetState
+        self.forwardOneStep = forwardOneStep
+        self.render = render
+        self.renderOn = renderOn
+
+    def __call__(self, sampleAction):
+        state = self.resetState()
+        while self.isTerminal(state):
+            state = self.resetState()
+
+        trajectory = []
+        for runningStep in range(self.maxRunningSteps):
+            if self.isTerminal(state):
+                trajectory.append((state, None, None, 0))
+                break
+            if self.renderOn:
+                self.render(state)
+            state, action, nextState, reward = self.forwardOneStep(state, sampleAction)
+            trajectory.append((state, action, nextState, reward))
+            state = nextState
+
+        return trajectory
+
+
 def main():
-    DEBUG = 0
+    DEBUG = 1
     renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
-        endSampleIndex = 10
+        endSampleIndex = 100
         agentId = 1
         parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     else:
@@ -46,7 +110,7 @@ def main():
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 250
+    numSimulations = 2
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -70,7 +134,7 @@ def main():
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
         getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        reset = Reset(xBoundary, yBoundary, numOfAgent)
+        resetState = Reset(xBoundary, yBoundary, numOfAgent)
 
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
@@ -183,6 +247,11 @@ def main():
         policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
         chooseActionList = [chooseGreedyAction, chooseGreedyAction]
 
+        def sampleAction(state):
+            actionDists = [sheepPolicy(state), wolfPolicy(state)]
+            action = [chooseAction(actionDist) for actionDist, chooseAction in zip(actionDists, chooseActionList)]
+            return action
+
         render = None
         if renderOn:
             import pygame as pg
@@ -199,8 +268,10 @@ def main():
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
             render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
-        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
-        trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
+        forwardOneStep = ForwardOneStep(transit, rewardFunction)
+        sampleTrajectory = SampleTrajectoryWithRender(maxRunningSteps, isTerminal, resetState, forwardOneStep, render, renderOn)
+
+        trajectories = [sampleTrajectory(sampleAction) for sampleIndex in range(startSampleIndex, endSampleIndex)]
         print([len(traj) for traj in trajectories])
         saveToPickle(trajectories, trajectorySavePath)
 

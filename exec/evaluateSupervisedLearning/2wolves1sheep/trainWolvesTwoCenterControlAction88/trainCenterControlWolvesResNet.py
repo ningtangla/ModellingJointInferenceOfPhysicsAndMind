@@ -24,7 +24,6 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, ActionToOneHot, ProcessTrajectoryForPolicyValueNet, PreProcessTrajectories
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
-from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 
@@ -71,7 +70,7 @@ def trainOneCondition(manipulatedVariables):
 
     dataSetExtension = '.pickle'
     dataSetMaxRunningSteps = 50
-    dataSetNumSimulations = 250
+    dataSetNumSimulations = 2
     killzoneRadius = 50
     agentId = 1
     wolvesId = 1
@@ -81,51 +80,18 @@ def trainOneCondition(manipulatedVariables):
     print("DATASET LOADED!")
 
     # accumulate rewards for trajectories
-    numOfAgent = 3
-
-    sheepId = 0
-    wolvesId = 1
-
-    wolfOneId = 1
-    wolfTwoId = 2
-    xPosIndex = [0, 1]
-    xBoundary = [0, 600]
-    yBoundary = [0, 600]
-
-    getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-    getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-    getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
-
-    reset = Reset(xBoundary, yBoundary, numOfAgent)
-
-    isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-    isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
-    playIsTerminal = lambda state: isTerminalOne(state) or isTerminalTwo(state)
-
-    stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
-    transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
-
-    playAliveBonus = -1 / dataSetMaxRunningSteps
-    playDeathPenalty = 1
-    playKillzoneRadius = killzoneRadius
-
-    playReward = RewardFunctionCompete(playAliveBonus, playDeathPenalty, playIsTerminal)
-
     decay = 1
-    accumulateRewards = AccumulateRewards(decay, playReward)
+    accumulateRewards = AccumulateRewards(decay)
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
-
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
     preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 8
-
     wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
-
     wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
@@ -144,7 +110,7 @@ def trainOneCondition(manipulatedVariables):
     loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
-    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])  # !!? magic
+    filterState = lambda timeStep: (timeStep[0][0:4], timeStep[1], timeStep[2], timeStep[3])  # !!? magic
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 

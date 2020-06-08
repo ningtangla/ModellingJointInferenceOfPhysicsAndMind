@@ -82,10 +82,11 @@ class RollOut:
 
         for rolloutStep in range(self.maxRolloutStep):
             action = self.rolloutPolicy(currentState)
-            totalRewardForRollout += self.rewardFunction(currentState, action)
             if self.isTerminal(currentState):
                 break
             nextState = self.transitionFunction(currentState, action)
+            totalRewardForRollout += self.rewardFunction(currentState, action, nextState)
+
             currentState = nextState
 
         heuristicReward = 0

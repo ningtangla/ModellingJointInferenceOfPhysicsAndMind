@@ -28,29 +28,65 @@ class MultiAgentSampleTrajectory:
         return trajectory
 
 
+class ForwardOneStep:
+    def __init__(self, transitionFunction, rewardFunction):
+        self.transitionFunction = transitionFunction
+        self.rewardFunction = rewardFunction
+
+    def __call__(self, state, sampleAction):
+        action = sampleAction(state)
+        nextState = self.transitionFunction(state, action)
+        reward = self.rewardFunction(state, action, nextState)
+        return (state, action, nextState, reward)
+
+
 class SampleTrajectory:
-    def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction):
+    def __init__(self, maxRunningSteps, isTerminal, resetState, forwardOneStep):
         self.maxRunningSteps = maxRunningSteps
-        self.transit = transit
         self.isTerminal = isTerminal
-        self.reset = reset
-        self.chooseAction = chooseAction
+        self.resetState = resetState
+        self.forwardOneStep = forwardOneStep
 
-    def __call__(self, policy):
-        state = self.reset()
-
+    def __call__(self, sampleAction):
+        state = self.resetState()
         while self.isTerminal(state):
-            state = self.reset()
+            state = self.resetState()
 
         trajectory = []
         for runningStep in range(self.maxRunningSteps):
             if self.isTerminal(state):
-                trajectory.append((state, None, None))
+                trajectory.append((state, None, None, 0))
                 break
-            actionDists = policy(state)
-            action = [choose(actionDist) for choose, actionDist in zip(self.chooseAction, actionDists)]
-            trajectory.append((state, action, actionDists))
-            nextState = self.transit(state, action)
+            state, action, nextState, reward = self.forwardOneStep(state, sampleAction)
+            trajectory.append((state, action, nextState, reward))
+            state = nextState
+
+        return trajectory
+
+
+class SampleTrajectoryWithRender:
+    def __init__(self, maxRunningSteps, isTerminal, resetState, forwardOneStep, render, renderOn):
+        self.maxRunningSteps = maxRunningSteps
+        self.isTerminal = isTerminal
+        self.resetState = resetState
+        self.forwardOneStep = forwardOneStep
+        self.render = render
+        self.renderOn = renderOn
+
+    def __call__(self, sampleAction):
+        state = self.resetState()
+        while self.isTerminal(state):
+            state = self.resetState()
+
+        trajectory = []
+        for runningStep in range(self.maxRunningSteps):
+            if self.isTerminal(state):
+                trajectory.append((state, None, None, 0))
+                break
+            if self.renderOn:
+                self.render(state)
+            state, action, nextState, reward = self.forwardOneStep(state, sampleAction)
+            trajectory.append((state, action, nextState, reward))
             state = nextState
 
         return trajectory
@@ -67,7 +103,7 @@ class Render():
         self.saveImage = saveImage
         self.saveImageDir = saveImageDir
 
-    def __call__(self, state, timeStep):
+    def __call__(self, state):
         for j in range(1):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -81,43 +117,8 @@ class Render():
             pg.time.wait(100)
 
             if self.saveImage == True:
-                if not os.path.exists(self.saveImageDir):
-                    os.makedirs(self.saveImageDir)
-                pg.image.save(self.screen, self.saveImageDir + '/' + format(timeStep, '05') + ".png")
-
-
-class SampleTrajectoryWithRender:
-    def __init__(self, maxRunningSteps, transit, isTerminal, reset, chooseAction, render, renderOn):
-        self.maxRunningSteps = maxRunningSteps
-        self.transit = transit
-        self.isTerminal = isTerminal
-        self.reset = reset
-        self.chooseAction = chooseAction
-        self.render = render
-        self.renderOn = renderOn
-        self.runningStep = 0
-
-    def __call__(self, policy):
-        state = self.reset()
-
-        while self.isTerminal(state):
-            state = self.reset()
-
-        trajectory = []
-        for runningStep in range(self.maxRunningSteps):
-            if self.isTerminal(state):
-                trajectory.append((state, None, None))
-                break
-            if self.renderOn:
-                self.render(state, self.runningStep)
-                self.runningStep = self.runningStep + 1
-            actionDists = policy(state)
-            action = [choose(action) for choose, action in zip(self.chooseAction, actionDists)]
-            trajectory.append((state, action, actionDists))
-            nextState = self.transit(state, action)
-            state = nextState
-
-        return trajectory
+                filenameList = os.listdir(self.saveImageDir)
+                pg.image.save(self.screen, self.saveImageDir + '/' + str(len(filenameList)) + '.png')
 
 
 class Sample3ObjectsTrajectory:
