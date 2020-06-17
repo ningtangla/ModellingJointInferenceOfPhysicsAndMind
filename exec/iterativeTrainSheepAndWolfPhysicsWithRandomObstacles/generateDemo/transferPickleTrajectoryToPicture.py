@@ -89,21 +89,15 @@ def main():
     trajectorySaveExtension = '.pickle'
 #######
     #MCTS Trajectories
-    # trajectoriesLoadDirectory = os.path.join(dataFolderName, 'multiAgentTrain', 'MCTSFixObstacle',  'trajectories')
-    # numSimulations=200
+    # trajectoryDirectory = os.path.join(dataFolderName, 'multiAgentTrain', 'MCTSRandomObstacle',  'trajectories')
+    # numSimulations=150
     # maxRolloutSteps=30
     # agentId=1
     # maxRunningSteps = 30
     # killzoneRadius = 2
-    # fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'maxRolloutSteps':maxRolloutSteps}
-
-    # generateTrajectoryLoadPath = GetSavePath(trajectoriesLoadDirectory, trajectorySaveExtension, fixedParameters)
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius,'maxRolloutSteps':maxRolloutSteps,'agentId':agentId}
 
 
-    # fuzzySearchParameterNames = ['sampleIndex']
-    # loadTrajectoriesForDraw = LoadTrajectories(generateTrajectoryLoadPath, loadFromPickle, fuzzySearchParameterNames)
-
-    # restoredTrajectories = loadTrajectoriesForDraw({'agentId':agentId})
 
 ######
     # #Iterative NNGuideMCTS Trajectories
@@ -121,27 +115,45 @@ def main():
 
 
 ######
-    #supervise ResNN
-    killzoneRadius = 2
-    numSimulations = 150
-    maxRunningSteps = 30
-    agentId=1
+    #supervise ResNN NN
+    # killzoneRadius = 2
+    # numSimulations = 150
+    # maxRunningSteps = 30
+    # agentId=1
+    # depth=4
+    # learningRate=1e-5
+    # miniBatchSize=256
+    # trainSteps=180000
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'depth':depth,'learningRate':learningRate,'miniBatchSize':miniBatchSize,'trainSteps':trainSteps,'agentId':agentId}
+    # dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSRandomObstacle')
+    # trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectoriesNNWithObstacle')
+#########
+    # #iterativeTrain add wall
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'originVersionAddObstacle')
+    trajectoryDirectory = os.path.join(dataFolderName,'evaluateTrajectories')
+    trainMaxRunningSteps = 30
+    trainNumSimulations = 200
+    killzoneRadius=2
+    selfIteration=5000
+    otherIteration=5000
+    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius,'selfIteration':selfIteration,'otherIteration':otherIteration}
 
-    depth=9
-    learningRate=0.001
-    miniBatchSize=128
-    trainSteps=50000
-    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'depth':depth,'learningRate':learningRate,'miniBatchSize':miniBatchSize,'trainSteps':trainSteps}
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSFixObstacle')
-    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectories')
 
+########
+    
+
+
+
+
+
+########
     generateTrajectoryLoadPath = GetSavePath(trajectoryDirectory, trajectorySaveExtension, trajectoryFixedParameters)
 
 
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectoriesForDraw = LoadTrajectories(generateTrajectoryLoadPath, loadFromPickle, fuzzySearchParameterNames)
 
-    restoredTrajectories = loadTrajectoriesForDraw({'agentId':agentId})
+    restoredTrajectories = loadTrajectoriesForDraw({})
 
 
 
@@ -187,7 +199,7 @@ def main():
     circleSizeList=[8,11]
     drawState = DrawState(screen, circleSizeList,circleColorList, positionIndex)
 
-    saveImage = True
+    saveImage = False
 
     numOfAgent=2
     render = RenderInObstacle(numOfAgent,screen, circleColorList, saveImage, parseState,scaleWall,drawBackGround,scaleState,drawState)

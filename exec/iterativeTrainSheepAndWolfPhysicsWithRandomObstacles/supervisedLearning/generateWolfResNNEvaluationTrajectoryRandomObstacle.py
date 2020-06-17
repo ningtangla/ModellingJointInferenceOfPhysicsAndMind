@@ -32,7 +32,8 @@ from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
 
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,  restoreVariables
+
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, ApproximateValue,ApproximatePolicy, restoreVariables
 
 from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ApproximatePolicy,ApproximateValue
 
@@ -52,8 +53,8 @@ def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
 
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSMovedObstacle')
-    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectories')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSRandomObstacle')
+    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectoriesResNNWithObstacle')
 
 
     if not os.path.exists(trajectoryDirectory):
@@ -76,18 +77,59 @@ def main():
             xml_string = f.read()
         originalEnvXmlDict = xmltodict.parse(xml_string.strip())
 
+
         wallIDlist=[5,6]
-        wall1Pos=[0,2.5,-0.2]
-        wall1Size=[0.8,1.95,1.5]
-        wall2Pos=[0,-2.5,-0.2]
-        wall2Size=[0.8,1.95,1.5]
-        wallPosList=[wall1Pos,wall2Pos]
-        wallSizeList=[wall1Size,wall2Size]
 
-        sampleFixWallPos=lambda:wallPosList
-        sampleFixWallSize=lambda:wallSizeList
+        class SampleRandomWallSize():
+            def __init__(self, gapDelta,wallLengthDelta,wallWidthDelta,zPos=-0.2,zSize=1.5):
+                self.gapDelta = gapDelta
+                self.wallLengthDelta=wallLengthDelta
+                self.wallWidthDelta=wallWidthDelta
+                self.zPos=zPos
+                self.zSize=zSize
 
-        sampleObscalesProperty=SampleObscalesProperty(sampleFixWallPos,sampleFixWallSize)
+            def __call__(self):
+
+                halfGapLen=np.random.uniform(self.gapDelta[0],self.gapDelta[1],size=2)
+                halfWallLength=np.random.uniform(self.wallLengthDelta[0],self.wallLengthDelta[1],size=2)
+                halfWallWidth=np.random.uniform(self.wallWidthDelta[0],self.wallWidthDelta[1],size=2)
+
+                initWallPosList=[[0,dirc*(gap+lenth),self.zPos] for gap,lenth, dirc in zip(halfGapLen,halfWallLength,[-1,1])]
+                initWallSizeList=[[width,lenth,self.zSize] for width,lenth in zip (halfWallWidth,halfWallLength)]
+
+                print(initWallPosList,initWallSizeList)
+
+
+                return initWallPosList,initWallSizeList
+
+        gapDelta=[0.55,0.8]
+        wallLengthDelta=[0.4,2]
+        wallWidthDelta=[0.4,2]
+        sampleRandomWallSize=SampleRandomWallSize(gapDelta,wallLengthDelta,wallWidthDelta)
+
+        initWallPosList,initWallSizeList=sampleRandomWallSize()
+
+        wallXdelta=[-6,6]
+        wallYdelta=[-3.2,3.2]
+        class RandomMoveObstacleCenter(object):
+            def __init__(self, initWallPosList,wallXdelta,wallYdelta):
+                self.initWallPosList = initWallPosList
+                self.wallXdelta = wallXdelta
+                self.wallYdelta = wallYdelta
+            def __call__(self):
+                x=np.random.uniform(self.wallXdelta[0],self.wallXdelta[1],size=1)[0]
+                y=np.random.uniform(self.wallYdelta[0],self.wallYdelta[1],size=1)[0]
+                movingVector=[x,y,0]
+                wallPosList=[[pos+delta for pos,delta in zip(obstacle,movingVector)] for obstacle in self.initWallPosList]
+                print(movingVector,wallPosList)
+                return wallPosList
+
+
+
+                
+        sampleMovedWallPos=RandomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
+        sampleFixWallSize=lambda:initWallSizeList
+        sampleObscalesProperty=SampleObscalesProperty(sampleMovedWallPos,sampleFixWallSize)
         wallPosList,wallSizeList=sampleObscalesProperty()
 
         setMujocoEnvXmlProperty=SetMujocoEnvXmlProperty(wallIDlist,changeWallProperty)
@@ -127,7 +169,7 @@ def main():
         transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
 
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numactionSpace=len(actionSpace)
         randomSheepPolicy=RandomPolicy(actionSpace)
         sheepPolicy=randomSheepPolicy
@@ -135,14 +177,16 @@ def main():
         # neural network init and save path
         numStateSpace = 20
         regularizationFactor = 1e-4
-        sharedLayerWidths = [128]
+        sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
+        resBlockSize = 2
+        dropoutRate = 0.0
 
+        initializationMethod = 'uniform'
         generateModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
-
-        initWolfNNModel = generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths)
-        NNModelSaveDirectory = os.path.join(dataFolderName, 'trainedWolfNNModels')
+        initWolfNNModel = generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
+        NNModelSaveDirectory = os.path.join(dataFolderName, 'trainedWolfResModelsWithObstacle')
 
         NNModelSaveExtension=' '
         dataSetMaxRunningSteps=30

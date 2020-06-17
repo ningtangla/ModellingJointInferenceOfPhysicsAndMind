@@ -53,7 +53,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSMovedObstacle')
-    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectories')
+    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectoriesNNWithObstacle')
 
 
     if not os.path.exists(trajectoryDirectory):
@@ -76,18 +76,33 @@ def main():
             xml_string = f.read()
         originalEnvXmlDict = xmltodict.parse(xml_string.strip())
 
+
         wallIDlist=[5,6]
         wall1Pos=[0,2.5,-0.2]
         wall1Size=[0.8,1.95,1.5]
         wall2Pos=[0,-2.5,-0.2]
         wall2Size=[0.8,1.95,1.5]
-        wallPosList=[wall1Pos,wall2Pos]
-        wallSizeList=[wall1Size,wall2Size]
+        initWallPosList=[wall1Pos,wall2Pos]
+        initWallSizeList=[wall1Size,wall2Size]
 
-        sampleFixWallPos=lambda:wallPosList
-        sampleFixWallSize=lambda:wallSizeList
-
-        sampleObscalesProperty=SampleObscalesProperty(sampleFixWallPos,sampleFixWallSize)
+        wallXdelta=[-8,8]
+        wallYdelta=[-3.8,4.9]
+        class RandomMoveObstacleCenter(object):
+            def __init__(self, initWallPosList,wallXdelta,wallYdelta):
+                self.initWallPosList = initWallPosList
+                self.wallXdelta = wallXdelta
+                self.wallYdelta = wallYdelta
+            def __call__(self):
+                x=np.random.uniform(self.wallXdelta[0],self.wallXdelta[1],size=1)[0]
+                y=np.random.uniform(self.wallYdelta[0],self.wallYdelta[1],size=1)[0]
+                movingVector=[x,y,0]
+                wallPosList=[[pos+delta for pos,delta in zip(obstacle,movingVector)] for obstacle in self.initWallPosList]
+                print(movingVector,wallPosList)
+                return wallPosList
+        sampleMovedWallPos=RandomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
+        # sampleFixWallPos=lambda:initWallPosList
+        sampleFixWallSize=lambda:initWallSizeList
+        sampleObscalesProperty=SampleObscalesProperty(sampleMovedWallPos,sampleFixWallSize)
         wallPosList,wallSizeList=sampleObscalesProperty()
 
         setMujocoEnvXmlProperty=SetMujocoEnvXmlProperty(wallIDlist,changeWallProperty)
@@ -127,7 +142,7 @@ def main():
         transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
 
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         numactionSpace=len(actionSpace)
         randomSheepPolicy=RandomPolicy(actionSpace)
         sheepPolicy=randomSheepPolicy
@@ -142,7 +157,7 @@ def main():
         generateModel = GenerateModel(numStateSpace, numactionSpace, regularizationFactor)
 
         initWolfNNModel = generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths)
-        NNModelSaveDirectory = os.path.join(dataFolderName, 'trainedWolfNNModels')
+        NNModelSaveDirectory = os.path.join(dataFolderName, 'trainedWolfNNModelsWithObstacle')
 
         NNModelSaveExtension=' '
         dataSetMaxRunningSteps=30

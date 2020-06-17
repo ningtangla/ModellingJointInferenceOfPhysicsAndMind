@@ -28,7 +28,7 @@ from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 def flattenStateInTrajectory(trajectory):
-    flattenState =lambda state : np.array([i for s in state[0:2] for i in s ]).reshape(1,-1)
+    flattenState =lambda state : np.array([i for s in state for i in s ]).reshape(1,-1)
     trajectoryWithFlattenState = [(flattenState(s), a, dist, v) for (s, a, dist, v) in trajectory]
 
     return trajectoryWithFlattenState
@@ -99,7 +99,7 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
 
-    manipulatedVariables['miniBatchSize'] = [64, 128]
+    manipulatedVariables['miniBatchSize'] = [64, 256]
     manipulatedVariables['learningRate'] =  [ 1e-3,1e-4,1e-5]
     manipulatedVariables['depth'] =[4,8,16] #[4,8,16]
     # manipulatedVariables['resBlock'] = [2 ,4, 6, 8]
@@ -110,7 +110,7 @@ def main():
 
     # Get dataset for training
     dirName = os.path.dirname(__file__)
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSFixObstacle')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSRandomObstacle')
     dataSetDirectory = os.path.join(dataFolderName,'trajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -143,7 +143,7 @@ def main():
     addValuesToTrajectory = AddValuesToTrajectory(accumulateRewards)
 
     # pre-process the trajectories
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     numActionSpace = len(actionSpace)
     actionIndex = 1
     actionToOneHot = ActionToOneHot(actionSpace)
@@ -164,7 +164,7 @@ def main():
     print(trainDataMeanAccumulatedReward)
 
     # neural network init and save path
-    numStateSpace = 12
+    numStateSpace = 20
     regularizationFactor = 1e-4
     sharedLayerWidths = [128]
     actionLayerWidths = [128]
@@ -185,8 +185,8 @@ def main():
     #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
 
-    reportInterval = 20000
-    trainStepsIntervel = 20000
+    reportInterval = 500
+    trainStepsIntervel = 500
 
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
@@ -197,14 +197,14 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfNNModelsWithoutObstacle')
+    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfNNModelsWithObstacle')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(10))
+    trainIntervelIndexes = list(range(361))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
     # trainModelForConditions(parametersAllCondtion[0])
@@ -212,7 +212,7 @@ def main():
     # # train models for all conditions
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.7*numCpuCores)
+    numCpuToUse = 18
     trainPool = mp.Pool(numCpuToUse)
     trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     models = trainPool.map(trainModelForConditions, parametersAllCondtion)

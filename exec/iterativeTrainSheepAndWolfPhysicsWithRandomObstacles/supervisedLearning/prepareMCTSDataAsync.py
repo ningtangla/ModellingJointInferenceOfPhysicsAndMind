@@ -53,11 +53,11 @@ def sampleMCTSOneCondtion(parameters):
     startTime = time.time()
     numTrajectories =5000
     # generate and load trajectories before train parallelly
-    sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
+    # sampleTrajectoryFileName = 'generateMCTSTrajcectory.py'
     # sampleTrajectoryFileName='generateMCTSSheepTrajcectory.py'
-    sampleTrajectoryFileName='generateMCTSTrajcectoryWithChangedObstacle.py'
+    sampleTrajectoryFileName='generateMCTSTrajcectoryWithRandomObstacle.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse = 12
+    numCpuToUse = 36
     numCmdList = min(numTrajectories, numCpuToUse)
     print('numCpuToUse',numCpuToUse)
 
@@ -101,7 +101,7 @@ def main():
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
     dirName = os.path.dirname(__file__)
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSMovedObstacle')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSRandomObstacle')
     trajectoryDirectory = os.path.join(dataFolderName, 'trajectories')
 
     if not os.path.exists(trajectoryDirectory):

@@ -46,7 +46,7 @@ class PreProcessTrajectories:
         flattenedTrajectories = [self.flattenStateInTrajectory(trajectory) for trajectory in filteredTrajectories]
         processedTrajectories = [self.processTrajectoryForNN(trajectory) for trajectory in flattenedTrajectories]
 
-        print(processedTrajectories[0])
+        # print(processedTrajectories[0])
 
         return processedTrajectories
 
@@ -98,8 +98,8 @@ def main():
     # manipulated variables
     manipulatedVariables = OrderedDict()
 
-    manipulatedVariables['miniBatchSize'] = [64, 128]
-    manipulatedVariables['learningRate'] =  [1e-3, 1e-4]
+    manipulatedVariables['miniBatchSize'] = [64, 256]
+    manipulatedVariables['learningRate'] =  [1e-3, 1e-4,1e-5]
     manipulatedVariables['depth'] = [5,9, 17]
     # manipulatedVariables['resBlock'] = [2 ,4, 6, 8]
     # manipulatedVariables['width'] = [32, 64 ,128, 256]
@@ -109,7 +109,7 @@ def main():
 
     # Get dataset for training
     dirName = os.path.dirname(__file__)
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSFixObstacle')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSRandomObstacle')
     dataSetDirectory = os.path.join(dataFolderName,'trajectories')
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -169,7 +169,7 @@ def main():
     actionLayerWidths = [128]
     valueLayerWidths = [128]
     generateModel = GenerateModel(numStateSpace, numActionSpace, regularizationFactor)
-    resBlock = 4
+    resBlock = 2
     getNNModel = lambda depth: generateModel(sharedLayerWidths * depth, actionLayerWidths, valueLayerWidths, resBlock)
 
     # function to train NN model
@@ -185,8 +185,8 @@ def main():
     #terminalController = TrainTerminalController(lossHistorySize, terminalThreshold)
     coefficientController = CoefficientCotroller(initCoeff, afterCoeff)
 
-    reportInterval = 50000
-    trainStepsIntervel = 50000
+    reportInterval = 500
+    trainStepsIntervel = 500
 
     trainReporter = TrainReporter(trainStepsIntervel, reportInterval)
     learningRateDecay = 1
@@ -198,14 +198,14 @@ def main():
     # get path to save trained models
     NNModelFixedParameters = {'agentId': wolfId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfResModels')
+    NNModelSaveDirectory = os.path.join(dataFolderName,'trainedWolfResModelsWithObstacle')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''
     getNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParameters)
 
     # function to train models
-    trainIntervelIndexes = list(range(11))
+    trainIntervelIndexes = list(range(101))
     trainModelForConditions = TrainModelForConditions(trainIntervelIndexes, trainStepsIntervel, trainData, getNNModel, getTrainNN, getNNModelSavePath)
 
 
@@ -213,7 +213,7 @@ def main():
     # # train models for all conditions
     numCpuCores = os.cpu_count()
     print(numCpuCores)
-    numCpuToUse = int(0.7*numCpuCores)
+    numCpuToUse = 18
     trainPool = mp.Pool(numCpuToUse)
     trainedModels = [trainPool.apply_async(trainModelForConditions, (parameters,)) for parameters in parametersAllCondtion]
     models = trainPool.map(trainModelForConditions, parametersAllCondtion)

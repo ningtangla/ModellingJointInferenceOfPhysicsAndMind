@@ -44,10 +44,10 @@ def main():
 
     manipulatedVariables = OrderedDict()
 
-    manipulatedVariables['miniBatchSize'] = [64, 128]
+    manipulatedVariables['miniBatchSize'] = [64, 256]
     manipulatedVariables['learningRate'] =  [ 1e-3,1e-4,1e-5]
-    manipulatedVariables['depth'] = [4,8,16]
-    manipulatedVariables['trainSteps']=[0,20000,40000,60000,100000,180000]
+    manipulatedVariables['depth'] =[5,9,17] #[4,8,16]#
+    manipulatedVariables['trainSteps']=[0,5000,10000,20000,50000]
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
@@ -81,7 +81,10 @@ def main():
 
 # generate trajectory parallel
     # generateTrajectoriesCodeName = 'generateWolfResNNEvaluationTrajectoryFixObstacle.py'
-    generateTrajectoriesCodeName = 'generateWolfNNEvaluationTrajectoryFixObstacle.py'
+    # generateTrajectoriesCodeName = 'generateWolfNNEvaluationTrajectoryFixObstacle.py'
+    # generateTrajectoriesCodeName = 'generateWolfResNNEvaluationTrajectoryMovedObstacle.py'
+    generateTrajectoriesCodeName = 'generateWolfResNNEvaluationTrajectoryRandomObstacle.py'
+    # generateTrajectoriesCodeName = 'generateWolfNNEvaluationTrajectoryRandomObstacle.py'
     evalNumTrials = 100
     numCpuCores = os.cpu_count()
     numCpuToUse = int(0.75 * numCpuCores)
@@ -90,12 +93,12 @@ def main():
 
     # run all trials and save trajectories
     generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
-    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+    toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSFixObstacle')
-    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectories')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'MCTSRandomObstacle')
+    trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectoriesResNNWithObstacle')
 
 
 
@@ -152,7 +155,7 @@ def main():
             plotCounter += 1
 
 
-    plt.suptitle('SupervisedNNWolfwithFixWallState')
+    plt.suptitle('SupervisedNNWolfwithRandomWallState')
     plt.legend(loc='best')
     plt.show()
 
