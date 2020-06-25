@@ -101,9 +101,9 @@ def main():
 
                 return initWallPosList,initWallSizeList
 
-        gapDelta=[0.55,0.8]
-        wallLengthDelta=[0.4,2]
-        wallWidthDelta=[0.4,2]
+        gapDelta=[0.55,1.2]
+        wallLengthDelta=[0.6,2]
+        wallWidthDelta=[0.6,2]
         sampleRandomWallSize=SampleRandomWallSize(gapDelta,wallLengthDelta,wallWidthDelta)
 
         initWallPosList,initWallSizeList=sampleRandomWallSize()

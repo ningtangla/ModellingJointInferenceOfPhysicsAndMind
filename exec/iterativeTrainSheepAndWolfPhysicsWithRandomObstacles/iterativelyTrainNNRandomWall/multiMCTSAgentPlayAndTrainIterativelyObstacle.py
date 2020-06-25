@@ -36,81 +36,13 @@ from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
-def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
-    multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
-    multiAgentActions.insert(agentId, selfAction)
-    transitInSelfMCTS = transit(state, multiAgentActions)
-    return transitInSelfMCTS
-
-def sampleAction(actionDist):
-    actions = list(actionDist.keys())
-    probs = list(actionDist.values())
-    normlizedProbs = [prob / sum(probs) for prob in probs]
-    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
-    selectedAction = actions[selectedIndex]
-    return selectedAction
-
-class ComposeSingleAgentGuidedMCTS():
-    def __init__(self, numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit,
-                 getStateFromNode, getApproximatePolicy, getApproximateValue):
-        self.numSimulations = numSimulations
-        self.actionSpace = actionSpace
-        self.terminalRewardList = terminalRewardList
-        self.selectChild = selectChild
-        self.isTerminal = isTerminal
-        self.transit = transit
-        self.getStateFromNode = getStateFromNode
-        self.getApproximatePolicy = getApproximatePolicy
-        self.getApproximateValue = getApproximateValue
-
-    def __call__(self, agentId, selfNNModel, othersPolicy):
-        approximateActionPrior = self.getApproximatePolicy(selfNNModel)
-        transitInMCTS = lambda state, selfAction: composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
-        initializeChildren = InitializeChildren(self.actionSpace, transitInMCTS, approximateActionPrior)
-        expand = Expand(self.isTerminal, initializeChildren)
-
-        terminalReward = self.terminalRewardList[agentId]
-        approximateValue = self.getApproximateValue(selfNNModel)
-        estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
-
-        return guidedMCTSPolicy
-
-
-class PrepareMultiAgentPolicy:
-    def __init__(self, composeSingleAgentGuidedMCTS, approximatePolicy, MCTSAgentIds):
-        self.composeSingleAgentGuidedMCTS = composeSingleAgentGuidedMCTS
-        self.approximatePolicy = approximatePolicy
-        self.MCTSAgentIds = MCTSAgentIds
-
-    def __call__(self, multiAgentNNModel):
-        multiAgentApproximatePolicy = np.array([self.approximatePolicy(NNModel) for NNModel in multiAgentNNModel])
-        otherAgentPolicyForMCTSAgents = np.array(
-            [np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])
-             for agentId in self.MCTSAgentIds])
-        MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
-        MCTSAgentsPolicy = np.array(
-            [self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy)
-             for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
-        multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
-        multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
-        return policy
 
 def flattenStateInTrajectory(trajectory):
     flattenState =lambda state : np.array([i for s in state for i in s ]).reshape(1,-1)
     trajectoryWithFlattenState = [(flattenState(s), a, dist, v) for (s, a, dist, v) in trajectory]
 
     return trajectoryWithFlattenState
-# class addObstacleStateToTrajectory():
-#     def __init__(self,obstatcleState,flattenStateInTrajectory):
-#         self.obstatcleState = np.array(obstatcleState).reshape(1,-1)[0]
-#         self.flattenState=flattenStateInTrajectory
-#     def __call__(self,trajectory) :
-#         trajectoryWithFlattenState = [(flattenState(s), a, dist, v) for (s, a, dist, v) in trajectory]
 
-        # return trajectoryWithFlattenState
 class PreprocessTrajectoriesForBuffer:
     def __init__(self, addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory,flattenStateInTrajectory):
         self.addMultiAgentValuesToTrajectory = addMultiAgentValuesToTrajectory
@@ -146,74 +78,20 @@ class TrainOneAgent:
 
         return NNModel
 
-# class CheckAngentStackInWall:
-#     def __init__(self, wallList,agentMaxSize):
-#         self.wallList=wallList
-#         self.agentMaxSize=agentMaxSize
-#     def __call__(self,qPosList):
-#         wallCenterList=np.array([wall[:2] for wall in self.wallList])
-#         wallExpandHalfDiagonalList=np.array([np.add(wall[2:],self.agentMaxSize) for wall in self.wallList])
-#         posList=qPosList.reshape(-1,2)
-#         isOverlapList=[np.all(np.abs(np.add(pos,-center))<diag)  for (center,diag) in zip (wallCenterList,wallExpandHalfDiagonalList) for pos in posList]
-#         return np.any(isOverlapList)
-
-# class ResetUniformInEnvWithObstacles:
-#     def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,checkAngentStackInWall):
-#         self.simulation = simulation
-#         self.qPosInit = np.asarray(qPosInit)
-#         self.qVelInit = np.asarray(qVelInit)
-#         self.numAgent = self.simulation.model.nsite
-#         self.qPosInitNoise = qPosInitNoise
-#         self.qVelInitNoise = qVelInitNoise
-#         self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
-#         self.checkAngentStackInWall=checkAngentStackInWall
-#     def __call__(self):
-#         numQPos = len(self.simulation.data.qpos)
-#         numQVel = len(self.simulation.data.qvel)
-
-
-#         qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
-
-#         while self.checkAngentStackInWall(qPos):
-#             qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
-#         qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
-
-#         self.simulation.data.qpos[:] = qPos
-#         self.simulation.data.qvel[:] = qVel
-#         self.simulation.forward()
-
-#         xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
-
-#         agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
-#         agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
-#         agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
-#         agentState = lambda agentIndex: np.concatenate(
-#             [agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
-#         startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
-
-#         return startState
 def main():
-    # Mujoco environment
+
+
+    # load save dir
     dirName = os.path.dirname(__file__)
-    physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles4.xml')
-    physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
-    physicsSimulation = mujoco.MjSim(physicsModel)
+    dataDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentNNRandomObstacle')
+    if not os.path.exists(dataDirectory):
+        os.makedirs(dataDirectory)
+    #manupulate parameters
+    restoredIteration = 405
 
-    # MDP function
-    qPosInit = (0, 0, 0, 0)
-    qVelInit = [0, 0, 0, 0]
-    numAgents = 2
-    qVelInitNoise = 8
-    qPosInitNoise = 9.7
 
-    agentMaxSize=0.6
-    wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
-    # checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
-    checkAngentStackInWall=CheckAngentStackInWall(agentMaxSize)
-    # reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
-    reset=ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,wallList,checkAngentStackInWall)
-    # reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
+    numAgents=2
     agentIds = list(range(numAgents))
     sheepId = 0
     wolfId = 1
@@ -232,14 +110,6 @@ def main():
     killzoneRadius = 2
     isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
-    numSimulationFrames = 20
-    # transit = TransitionFunction(physicsSimulation, isTerminal, numSimulationFrames)
-    transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
-
-
-
-
-
     rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
@@ -247,21 +117,7 @@ def main():
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
 
-    # NNGuidedMCTS init
-    cInit = 1
-    cBase = 100
-    calculateScore = ScoreChild(cInit, cBase)
-    selectChild = SelectChild(calculateScore)
-
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
-    getApproximatePolicy = lambda NNmodel: ApproximatePolicy(NNmodel, actionSpace)
-    getApproximateValue = lambda NNmodel: ApproximateValue(NNmodel)
-
-    getStateFromNode = lambda node: list(node.id.values())[0]
-
-    # sample trajectory
-    chooseActionList=[chooseGreedyAction,chooseGreedyAction]
-    sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
 
     # neural network init
     numStateSpace = 20
@@ -305,33 +161,25 @@ def main():
     trainReporter = TrainReporter(numTrainStepsPerIteration, reportInterval)
     learningRateDecay = 1
     learningRateDecayStep = 1
-    learningRate = 0.001
+    learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
     trainNN = Train(numTrainStepsPerIteration, miniBatchSize, sampleData,learningRateModifier, terminalController, coefficientController,trainReporter)
 
-    # load save dir
-    # dataDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'originVersionObstacle')
-    # if not os.path.exists(dataDirectory):
-    #     os.makedirs(dataDirectory)
+
     numSimulations = 200
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,
                        'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
-    # trajectoriesSaveDirectory = os.path.join(dataDirectory, 'trajectories')
-    # if not os.path.exists(trajectoriesSaveDirectory):
-    #     os.makedirs(trajectoriesSaveDirectory)
-
-    # NNModelSaveDirectory = os.path.join(dataDirectory, 'NNModel')
-    # if not os.path.exists(NNModelSaveDirectory):
-    #     os.makedirs(NNModelSaveDirectory)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'originVersionAddObstacle', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dataDirectory, 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'originVersionAddObstacle', 'NNModel')
+    NNModelSaveDirectory = os.path.join(dataDirectory, 'NNModel')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
+
+
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
     generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
@@ -341,12 +189,9 @@ def main():
     depth = 4
     multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
 
-    otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
 
-    composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,selectChild, isTerminal, transit, getStateFromNode,getApproximatePolicy, getApproximateValue)
-    prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy,trainableAgentIds)
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory,removeTerminalTupleFromTrajectory,flattenStateInTrajectory)
-    numTrajectoriesToStartTrain = 4 * miniBatchSize
+    numTrajectoriesToStartTrain =4 * miniBatchSize
     numTrainStepEachIteration = 1
     trainOneAgent = TrainOneAgent(numTrainStepEachIteration, numTrajectoriesToStartTrain,processTrajectoryForPolicyValueNets, sampleBatchFromBuffer, trainNN)
 
@@ -357,7 +202,7 @@ def main():
     # generate and load trajectories before train parallelly
     sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectoryObstacle.py'
     numCpuCores = os.cpu_count()
-    numCpuToUse =20#int(0.8 * numCpuCores)
+    numCpuToUse =int(0.8 * numCpuCores)
     numCmdList = min(numTrajectoriesToStartTrain, numCpuToUse)
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesToStartTrain,numCmdList)
     trajectoryBeforeTrainPathParamters = {'iterationIndex': 0}
@@ -370,7 +215,7 @@ def main():
     # initRreplayBuffer
     replayBuffer = []
 
-    restoredIteration = 600
+ 
     if restoredIteration == 0:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
     trajectoriesBeforeTrain = loadTrajectoriesForParallel(trajectoryBeforeTrainPathParamters)
@@ -384,35 +229,63 @@ def main():
         multiAgentNNmodel[agentId] = restoredNNModel
 
     restoredIterationIndexRange = range(restoredIteration)
-    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={
+    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={'depth':depth,'isResNet':0}, parametersWithSpecificValues={
         'iterationIndex': list(restoredIterationIndexRange)})
     preProcessedRestoredTrajectories = preprocessMultiAgentTrajectories(restoredTrajectories)
     replayBuffer = saveToBuffer(replayBuffer, preProcessedRestoredTrajectories)
 
+
+    #paralle sample trajectory
     numTrajectoriesPerIteration = 1
+    numCpuToUseWhileTrain = int(16)
+    numCmdList = min(numTrajectoriesPerIteration, numCpuToUseWhileTrain)
+    sampleTrajectoryFileName = 'sampleMultiMCTSAgentTrajectoryRandomObstacle.py'
+    generateTrajectoriesParallelWhileTrain = GenerateTrajectoriesParallel(sampleTrajectoryFileName, numTrajectoriesPerIteration, numCmdList)
+
+
+
+
     numIterations = 100000
-    saveCheckPointInterval = 50
+
+
 
     for iterationIndex in range(restoredIteration + 1, numIterations):
-        print("ITERATION INDEX: ", iterationIndex)
-        print("BUFFER SIZE: ", len(replayBuffer))
+        # print("ITERATION INDEX: ", iterationIndex)
+        # print("BUFFER SIZE: ", len(replayBuffer))
 
-        policy = prepareMultiAgentPolicy(multiAgentNNmodel)
-        trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
-        trajectoryPathParameters = {'iterationIndex': iterationIndex}
+        # policy = prepareMultiAgentPolicy(multiAgentNNmodel)
+        # trajectories = [sampleTrajectory(policy) for _ in range(numTrajectoriesPerIteration)]
+        # trajectoryPathParameters = {'iterationIndex': iterationIndex}
+        # trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
+        # saveToPickle(trajectories, trajectorySavePath)
+
+        trajectoryPathParameters = {'iterationIndex': iterationIndex, 'depth':depth,'isResNet':0}
+
+        trajecoriesNum=0
+        while trajecoriesNum!=numTrajectoriesPerIteration:
+            cmdList = generateTrajectoriesParallelWhileTrain(trajectoryPathParameters)
+            trajectories = loadTrajectoriesForParallel(trajectoryPathParameters)
+            trajecoriesNum=len(trajectories)
+            if trajecoriesNum!=numTrajectoriesPerIteration:
+                print('MISSSUBPROCESS,RETRY',trajecoriesNum)
+        print('length of traj', len(trajectories))
         trajectorySavePath = generateTrajectorySavePath(trajectoryPathParameters)
         saveToPickle(trajectories, trajectorySavePath)
 
+
         preProcessedTrajectories = preprocessMultiAgentTrajectories(trajectories)
         updatedReplayBuffer = saveToBuffer(replayBuffer, preProcessedTrajectories)
+
+
+
 
         for agentId in trainableAgentIds:
 
             updatedAgentNNModel = trainOneAgent(agentId, multiAgentNNmodel, updatedReplayBuffer)
             NNModelPathParameters = {'iterationIndex': iterationIndex, 'agentId': agentId}
             NNModelSavePath = generateNNModelSavePath(NNModelPathParameters)
-            if iterationIndex % saveCheckPointInterval == 0:
-                saveVariables(updatedAgentNNModel, NNModelSavePath)
+
+            saveVariables(updatedAgentNNModel, NNModelSavePath)
 
             multiAgentNNmodel[agentId] = updatedAgentNNModel
             replayBuffer = updatedReplayBuffer

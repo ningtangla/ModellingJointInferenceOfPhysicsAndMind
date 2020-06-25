@@ -87,6 +87,7 @@ def main():
         os.makedirs(mainSaveImageDir)
 
     trajectorySaveExtension = '.pickle'
+    fuzzySearchParameterNames = ['sampleIndex']
 #######
     #MCTS Trajectories
     # trajectoryDirectory = os.path.join(dataFolderName, 'multiAgentTrain', 'MCTSRandomObstacle',  'trajectories')
@@ -99,19 +100,6 @@ def main():
 
 
 
-######
-    # #Iterative NNGuideMCTS Trajectories
-    # numSimulations=200
-    # maxRunningSteps = 30
-    # killzoneRadius = 2
-    # depth=4
-    # learningRate=0.001
-    # trajectoriesSaveDirectory=os.path.join(dataFolderName, 'multiAgentTrain', 'multiMCTSAgentFixObstacle','trajectories')
-    # fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'depth':depth,'learningRate':learningRate}
-    # generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-    # loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
-    # restoredIterationIndexRange = range(2000,2003)
-    # restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
 
 
 ######
@@ -129,14 +117,14 @@ def main():
     # trajectoryDirectory = os.path.join(dataFolderName,'evaluationTrajectoriesNNWithObstacle')
 #########
     # #iterativeTrain add wall
-    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'originVersionAddObstacle')
-    trajectoryDirectory = os.path.join(dataFolderName,'evaluateTrajectories')
-    trainMaxRunningSteps = 30
-    trainNumSimulations = 200
-    killzoneRadius=2
-    selfIteration=5000
-    otherIteration=5000
-    trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius,'selfIteration':selfIteration,'otherIteration':otherIteration}
+    # dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'originVersionAddObstacle')
+    # trajectoryDirectory = os.path.join(dataFolderName,'evaluateTrajectories')
+    # trainMaxRunningSteps = 30
+    # trainNumSimulations = 200
+    # killzoneRadius=2
+    # selfIteration=5000
+    # otherIteration=5000
+    # trajectoryFixedParameters = {'maxRunningSteps': trainMaxRunningSteps, 'numSimulations': trainNumSimulations, 'killzoneRadius': killzoneRadius,'selfIteration':selfIteration,'otherIteration':otherIteration}
 
 
 ########
@@ -147,17 +135,32 @@ def main():
 
 
 ########
-    generateTrajectoryLoadPath = GetSavePath(trajectoryDirectory, trajectorySaveExtension, trajectoryFixedParameters)
+    # generateTrajectoryLoadPath = GetSavePath(trajectoryDirectory, trajectorySaveExtension, trajectoryFixedParameters)
 
 
-    fuzzySearchParameterNames = ['sampleIndex']
-    loadTrajectoriesForDraw = LoadTrajectories(generateTrajectoryLoadPath, loadFromPickle, fuzzySearchParameterNames)
+    
 
-    restoredTrajectories = loadTrajectoriesForDraw({})
+    # loadTrajectoriesForDraw = LoadTrajectories(generateTrajectoryLoadPath, loadFromPickle, fuzzySearchParameterNames)
+
+    # restoredTrajectories = loadTrajectoriesForDraw({})
 
 
+    ######
+    #Iterative NNGuideMCTS Trajectories
+    numSimulations=200
+    maxRunningSteps = 30
+    killzoneRadius = 2
+    depth=9
+    learningRate=0.0001
+    trajectoryDirectory=os.path.join(dataFolderName, 'multiAgentTrain', 'multiMCTSAgentResNNRandomObstacle','trajectories')
+    trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'depth':depth,'isResNet':0}
+    # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius,'iterationIndex':0}
+    generateTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectorySaveExtension, trajectoryFixedParameters)
+    loadTrajectoriesForTrainBreak = LoadTrajectories(generateTrajectorySavePath, loadFromPickle)
+    restoredIterationIndexRange = range(1100,1200)
+    restoredTrajectories = loadTrajectoriesForTrainBreak(parameters={}, parametersWithSpecificValues={'iterationIndex': list(restoredIterationIndexRange)})
 
-
+#####
 
     fullScreen = False
     screenWidth = 800

@@ -11,16 +11,15 @@ import numpy as np
 from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
-
-from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal, ResetUniform
-from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles,getWallList
+import xmltodict
+from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles,getWallList,RandomMoveObstacleCenter,SampleRandomWallSize,RejectSampleObstacleMoveVector,CheckObstacleOutEnv
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, \
     LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, \
-    restoreVariables
-from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ApproximatePolicy,ApproximateValue
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData,  restoreVariables
+
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
 from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, \
     LearningRateModifier
@@ -30,77 +29,19 @@ from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajector
 from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
     establishPlainActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
+
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ComposeMultiAgentTransitInSingleAgentMCTS,ComposeSingleAgentGuidedMCTS,PrepareMultiAgentPolicy,ApproximatePolicy,ApproximateValue
+
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
 from src.episode import SampleTrajectory, chooseGreedyAction
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
 
-def composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, transit):
-    multiAgentActions = [sampleAction(policy(state)) for policy in othersPolicy]
-    multiAgentActions.insert(agentId, selfAction)
-    transitInSelfMCTS = transit(state, multiAgentActions)
-    return transitInSelfMCTS
-def sampleAction(actionDist):
-    actions = list(actionDist.keys())
-    probs = list(actionDist.values())
-    normlizedProbs = [prob / sum(probs) for prob in probs]
-    selectedIndex = list(np.random.multinomial(1, normlizedProbs)).index(1)
-    selectedAction = actions[selectedIndex]
-    return selectedAction
-
-class ComposeSingleAgentGuidedMCTS():
-    def __init__(self, numSimulations, actionSpace, terminalRewardList, selectChild, isTerminal, transit,
-                 getStateFromNode, getApproximatePolicy, getApproximateValue):
-        self.numSimulations = numSimulations
-        self.actionSpace = actionSpace
-        self.terminalRewardList = terminalRewardList
-        self.selectChild = selectChild
-        self.isTerminal = isTerminal
-        self.transit = transit
-        self.getStateFromNode = getStateFromNode
-        self.getApproximatePolicy = getApproximatePolicy
-        self.getApproximateValue = getApproximateValue
-
-    def __call__(self, agentId, selfNNModel, othersPolicy):
-        approximateActionPrior = self.getApproximatePolicy(selfNNModel)
-        transitInMCTS = lambda state, selfAction: composeMultiAgentTransitInSingleAgentMCTS(agentId, state, selfAction, othersPolicy, self.transit)
-        initializeChildren = InitializeChildren(self.actionSpace, transitInMCTS, approximateActionPrior)
-        expand = Expand(self.isTerminal, initializeChildren)
-
-        terminalReward = self.terminalRewardList[agentId]
-        approximateValue = self.getApproximateValue(selfNNModel)
-        estimateValue = EstimateValueFromNode(terminalReward, self.isTerminal, self.getStateFromNode, approximateValue)
-        guidedMCTSPolicy = MCTS(self.numSimulations, self.selectChild, expand,
-                                estimateValue, backup, establishPlainActionDist)
-
-        return guidedMCTSPolicy
-
-
-class PrepareMultiAgentPolicy:
-    def __init__(self, composeSingleAgentGuidedMCTS, approximatePolicy, MCTSAgentIds):
-        self.composeSingleAgentGuidedMCTS = composeSingleAgentGuidedMCTS
-        self.approximatePolicy = approximatePolicy
-        self.MCTSAgentIds = MCTSAgentIds
-
-    def __call__(self, multiAgentNNModel):
-        multiAgentApproximatePolicy = np.array([self.approximatePolicy(NNModel) for NNModel in multiAgentNNModel])
-        otherAgentPolicyForMCTSAgents = np.array(
-            [np.concatenate([multiAgentApproximatePolicy[:agentId], multiAgentApproximatePolicy[agentId + 1:]])
-             for agentId in self.MCTSAgentIds])
-        MCTSAgentIdWithCorrespondingOtherPolicyPair = zip(self.MCTSAgentIds, otherAgentPolicyForMCTSAgents)
-        MCTSAgentsPolicy = np.array(
-            [self.composeSingleAgentGuidedMCTS(agentId, multiAgentNNModel[agentId], correspondingOtherAgentPolicy)
-             for agentId, correspondingOtherAgentPolicy in MCTSAgentIdWithCorrespondingOtherPolicyPair])
-        multiAgentPolicy = np.copy(multiAgentApproximatePolicy)
-        multiAgentPolicy[self.MCTSAgentIds] = MCTSAgentsPolicy
-        policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
-        return policy
-
 def main():
     # check file exists or not
 
     dirName = os.path.dirname(__file__)
-    dataDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'originVersionAddObstacle')
+    dataDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNNRandomObstacle')
     if not os.path.exists(dataDirectory):
         os.makedirs(dataDirectory)
     trajectoriesSaveDirectory = os.path.join(dataDirectory, 'trajectories')
@@ -119,29 +60,59 @@ def main():
     parametersForTrajectoryPath = json.loads(sys.argv[1])
     startSampleIndex = int(sys.argv[2])
     endSampleIndex = int(sys.argv[3])
+    iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
     parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath = os.path.join(dirName, 'twoAgentsTwoObstacles4.xml')
-        physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
+        physicsDynamicsPath=os.path.join(dirName,'..','..','..','env','xmls','twoAgentsTwoRandomObstacles.xml')
+        with open(physicsDynamicsPath) as f:
+           xml_string = f.read()
+        originalEnvXmlDict = xmltodict.parse(xml_string.strip())
+
+        wallIDlist=[5,6]
+
+        gapDelta=[0.55,1.2]
+        wallLengthDelta=[0.8,2.5]
+        wallWidthDelta=[0.8,2.5]
+        sampleRandomWallSize=SampleRandomWallSize(gapDelta,wallLengthDelta,wallWidthDelta)
+
+        initWallPosList,initWallSizeList=sampleRandomWallSize()
+        
+        wallXdelta=[-10,10]
+        wallYdelta=[-10,10]
+        sampleMovedWallPos=RandomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
+        
+        allowedArea=[[-8,8],[-8,8]]
+        checkObstacleInEnv=CheckObstacleOutEnv(initWallSizeList,allowedArea)
+        rejectSampleObstacleMoveVector=RejectSampleObstacleMoveVector(sampleMovedWallPos,checkObstacleInEnv)
+
+        sampleFixWallSize=lambda:initWallSizeList
+        sampleObscalesProperty=SampleObscalesProperty(rejectSampleObstacleMoveVector,sampleFixWallSize)
+
+        wallPosList,wallSizeList=sampleObscalesProperty()
+
+        setMujocoEnvXmlProperty=SetMujocoEnvXmlProperty(wallIDlist,changeWallProperty)
+        envXmlDict=setMujocoEnvXmlProperty(wallPosList,wallSizeList,originalEnvXmlDict)
+
+        envXml=xmltodict.unparse(envXmlDict)
+        physicsModel = mujoco.load_model_from_xml(envXml)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
-        # MDP function
+        agentMaxSize=0.6
+        wallList=getWallList(wallPosList,wallSizeList)
+        checkAngentStackInWall=CheckAngentStackInWall(agentMaxSize)
+
+       # MDP function
         qPosInit = (0, 0, 0, 0)
         qVelInit = [0, 0, 0, 0]
         numAgents = 2
         qVelInitNoise = 8
         qPosInitNoise = 9.7
-        agentMaxSize=0.6
-        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
-        # checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
-        checkAngentStackInWall=CheckAngentStackInWall(agentMaxSize)
-        # reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
+
         reset=ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,wallList,checkAngentStackInWall)
-        # reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
         agentIds = list(range(numAgents))
         sheepId = 0
@@ -199,58 +170,35 @@ def main():
         # NNModelSaveDirectory = os.path.join(dataDirectory, 'NNModel')
 
 
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'originVersionAddObstacle', 'NNModel')
+        NNModelSaveDirectory = os.path.join(dirName, dataDirectory, 'ResNNModel')
 
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
         generateNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, fixedParameters)
 
-        # # load wolf baseline for init iteration
 
-        # depth = 4
-        # initializedNNModel = generateModel(sharedWidths , actionLayerWidths * depth, valueLayerWidths)
-        #     wolfBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','preTrainBaseline', 'wolfModels')
-        #     wolfBaselineSaveParameters = {'numSimulations': 100,'agentId': 1, 'depth': 4,'miniBatchSize':256,
-        #                               'learningRate': 0.001, 'maxRunningSteps': 20}
-        #     getWolfBaselineModelSavePath = GetSavePath(wolfBaselineNNModelSaveDirectory, NNModelSaveExtension, wolfBaselineSaveParameters)
-        #     baselineModelTrainSteps = 40000
-        #     wolfBaselineNNModelSavePath = getWolfBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
-        #     wolfBaseLineModel = restoreVariables(initializedNNModel, wolfBaselineNNModelSavePath)
-
-        # # load sheep baseline for init iteration
-        #     sheepBaselineNNModelSaveDirectory = os.path.join(dirName, '..', '..', 'data','preTrainBaseline', 'trainedModels')
-        #     sheepBaselineSaveParameters = {'numSimulations': 200,'agentId': 0, 'depth': 4,'miniBatchSize':256,
-        #                               'learningRate': 0.001, 'maxRunningSteps': 20, 'killzoneRadius':2}
-
-        #     getSheepBaselineModelSavePath = GetSavePath(sheepBaselineNNModelSaveDirectory, NNModelSaveExtension, sheepBaselineSaveParameters)
-        #     baselineModelTrainSteps = 20000
-        #     sheepBaselineNNModelSavePath = getSheepBaselineModelSavePath({'trainSteps': baselineModelTrainSteps})
-        #     sheepBaseLineModel = restoreVariables(initializedNNModel, sheepBaselineNNModelSavePath)
-
-        #     multiAgentNNmodel = [sheepBaseLineModel, wolfBaseLineModel]
         trainableAgentIds = [sheepId, wolfId]
 
-        depth = 4
-        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-        # for agentId in trainableAgentIds:
-        #     baseLineModelPath = generateNNModelSavePath({'iterationIndex': -2, 'agentId': agentId})
-        #     multiAgentNNmodel[agentId] = restoreVariables(multiAgentNNmodel[agentId], baseLineModelPath)
+        depth = 9
+        resBlock = 2
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths,resBlock) for agentId in agentIds]
+
 
         startTime = time.time()
 
-        # otherAgent= lambda NNModel: stationaryAgentPolicy
+
 
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
 
-
-        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,selectChild, isTerminal, transit, getStateFromNode,getApproximatePolicy, getApproximateValue)
-
+        composeMultiAgentTransitInSingleAgentMCTS = ComposeMultiAgentTransitInSingleAgentMCTS(chooseGreedyAction)
+        composeSingleAgentGuidedMCTS = ComposeSingleAgentGuidedMCTS(numSimulations, actionSpace, terminalRewardList,selectChild, isTerminal, transit, getStateFromNode,getApproximatePolicy, getApproximateValue,composeMultiAgentTransitInSingleAgentMCTS)
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy,trainableAgentIds)
+
 
         # load NN
         # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-        iterationIndex = parametersForTrajectoryPath['iterationIndex']
+        
 
         for agentId in trainableAgentIds:
             modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId})

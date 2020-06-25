@@ -12,86 +12,76 @@ from collections import OrderedDict
 import pandas as pd
 import mujoco_py as mujoco
 import xmltodict
+
 from src.constrainedChasingEscapingEnv.envMujoco import IsTerminal
-from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles,getWallList,RandomMoveObstacleCenter,SampleRandomWallSize,RejectSampleObstacleMoveVector,CheckObstacleOutEnv
+from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.envMujocoRandomObstacles import SampleObscalesProperty, SetMujocoEnvXmlProperty, changeWallProperty,TransitionFunction,CheckAngentStackInWall,ResetUniformInEnvWithObstacles,getWallList,RandomMoveObstacleCenter,SampleRandomWallSize
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete
-from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, \
-    LoadTrajectories, SaveAllTrajectories, \
+from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditionDfFromParametersDict, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
-from src.neuralNetwork.policyValueNet import GenerateModel, Train, saveVariables, sampleData, \
-    restoreVariables
+
+from src.neuralNetwork.policyValueResNet import GenerateModel, Train, saveVariables, sampleData, restoreVariables
 
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
-from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, \
-    LearningRateModifier
+from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalController, TrainReporter, LearningRateModifier
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, \
-    establishPlainActionDist
-from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, Expand, MCTS, backup, establishPlainActionDist
+from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from exec.iterativeTrainSheepAndWolfPhysicsWithRandomObstacles.NNGuidedMCTS import ComposeMultiAgentTransitInSingleAgentMCTS,ComposeSingleAgentGuidedMCTS,PrepareMultiAgentPolicy,ApproximatePolicy,ApproximateValue
 
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, chooseGreedyAction
+from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction
+
 from exec.parallelComputing import GenerateTrajectoriesParallel
 
-
 def main():
-    # check file exists or not
 
+    parametersForTrajectoryPath = json.loads(sys.argv[1])
+    startSampleIndex = int(sys.argv[2])
+    endSampleIndex = int(sys.argv[3])
+    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+    iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
+    depth=9
+
+    # check file exists or not
     dirName = os.path.dirname(__file__)
-    dataDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentNNRandomObstacle')
-    if not os.path.exists(dataDirectory):
-        os.makedirs(dataDirectory)
-    trajectoriesSaveDirectory = os.path.join(dataDirectory, 'trajectories')
+    dataFolderName=os.path.join(dirName,'..','..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNNRandomObstacle')
+    trajectoriesSaveDirectory = os.path.join(dataFolderName,  'trajectories')
+
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 30
     numSimulations = 200
-    killzoneRadius = 2
-    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,
-                       'killzoneRadius': killzoneRadius}
+    killzoneRadius=2
+    fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-
-    parametersForTrajectoryPath = json.loads(sys.argv[1])
-    startSampleIndex = int(sys.argv[2])
-    endSampleIndex = int(sys.argv[3])
-    iterationIndex = int(parametersForTrajectoryPath['iterationIndex'])
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
 
-        # Mujoco environment
         physicsDynamicsPath=os.path.join(dirName,'..','..','..','env','xmls','twoAgentsTwoRandomObstacles.xml')
         with open(physicsDynamicsPath) as f:
-           xml_string = f.read()
+            xml_string = f.read()
         originalEnvXmlDict = xmltodict.parse(xml_string.strip())
 
         wallIDlist=[5,6]
 
         gapDelta=[0.55,1.2]
-        wallLengthDelta=[0.8,2.5]
-        wallWidthDelta=[0.8,2.5]
+        wallLengthDelta=[0.6,2]
+        wallWidthDelta=[0.6,2]
         sampleRandomWallSize=SampleRandomWallSize(gapDelta,wallLengthDelta,wallWidthDelta)
 
         initWallPosList,initWallSizeList=sampleRandomWallSize()
-        
-        wallXdelta=[-10,10]
-        wallYdelta=[-10,10]
+        wallXdelta=[-6,6]
+        wallYdelta=[-3.2,3.2]
         sampleMovedWallPos=RandomMoveObstacleCenter(initWallPosList,wallXdelta,wallYdelta)
-        
-        allowedArea=[[-8,8],[-8,8]]
-        checkObstacleInEnv=CheckObstacleOutEnv(initWallSizeList,allowedArea)
-        rejectSampleObstacleMoveVector=RejectSampleObstacleMoveVector(sampleMovedWallPos,checkObstacleInEnv)
-
         sampleFixWallSize=lambda:initWallSizeList
-        sampleObscalesProperty=SampleObscalesProperty(rejectSampleObstacleMoveVector,sampleFixWallSize)
+        sampleObscalesProperty=SampleObscalesProperty(sampleMovedWallPos,sampleFixWallSize)
 
         wallPosList,wallSizeList=sampleObscalesProperty()
 
@@ -106,7 +96,7 @@ def main():
         wallList=getWallList(wallPosList,wallSizeList)
         checkAngentStackInWall=CheckAngentStackInWall(agentMaxSize)
 
-       # MDP function
+        # MDP function
         qPosInit = (0, 0, 0, 0)
         qVelInit = [0, 0, 0, 0]
         numAgents = 2
@@ -121,25 +111,21 @@ def main():
         xPosIndex = [2, 3]
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfXPos = GetAgentPosFromState(wolfId, xPosIndex)
+        killzoneRadius = 2
+        isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
 
         sheepAliveBonus = 1 / maxRunningSteps
         wolfAlivePenalty = -sheepAliveBonus
-
         sheepTerminalPenalty = -1
         wolfTerminalReward = 1
         terminalRewardList = [sheepTerminalPenalty, wolfTerminalReward]
-
-        isTerminal = IsTerminal(killzoneRadius, getSheepXPos, getWolfXPos)
-
-        numSimulationFrames = 20
-        transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
 
         rewardSheep = RewardFunctionCompete(sheepAliveBonus, sheepTerminalPenalty, isTerminal)
         rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
         rewardMultiAgents = [rewardSheep, rewardWolf]
 
-        decay = 1
-        accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
+        numSimulationFrames = 20
+        transit = TransitionFunction(numAgents,physicsSimulation , numSimulationFrames,isTerminal)
 
         # NNGuidedMCTS init
         cInit = 1
@@ -154,8 +140,7 @@ def main():
         getStateFromNode = lambda node: list(node.id.values())[0]
 
         # sample trajectory
-        chooseActionList=[chooseGreedyAction,chooseGreedyAction]
-        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseGreedyAction)
 
         # neural network init
         numStateSpace = 20
@@ -168,11 +153,7 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        # NNModelSaveDirectory = os.path.join(dataDirectory, 'NNModel')
-
-
-        NNModelSaveDirectory = os.path.join(dirName, dataDirectory, 'NNModel')
-
+        NNModelSaveDirectory = os.path.join(dataFolderName, 'ResNNModel')
         if not os.path.exists(NNModelSaveDirectory):
             os.makedirs(NNModelSaveDirectory)
 
@@ -180,14 +161,10 @@ def main():
 
 
         trainableAgentIds = [sheepId, wolfId]
-
-        depth = 4
-        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-
+        resBlock=2
+        multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths,resBlock) for agentId in agentIds]
 
         startTime = time.time()
-
-
 
         otherAgentApproximatePolicy = lambda NNModel: ApproximatePolicy(NNModel, actionSpace)
 
@@ -196,17 +173,17 @@ def main():
         prepareMultiAgentPolicy = PrepareMultiAgentPolicy(composeSingleAgentGuidedMCTS, otherAgentApproximatePolicy,trainableAgentIds)
 
 
-        # load NN
-        # multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths) for agentId in agentIds]
-        
-
         for agentId in trainableAgentIds:
-            modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex, 'agentId': agentId})
+            modelPath = generateNNModelSavePath({'iterationIndex': iterationIndex-1, 'agentId': agentId})
             restoredNNModel = restoreVariables(multiAgentNNmodel[agentId], modelPath)
             multiAgentNNmodel[agentId] = restoredNNModel
 
         # sample and save trajectories
         policy = prepareMultiAgentPolicy(multiAgentNNmodel)
+
+        # sample trajectory
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
+        sampleTrajectory = SampleTrajectory(maxRunningSteps, transit, isTerminal, reset, chooseActionList)
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
         saveToPickle(trajectories, trajectorySavePath)
