@@ -61,7 +61,7 @@ class GenerateModel:
                 for i in range(2, len(sharedWidths) + 1):
                     if i in blockHeads:
                         resBlockInput_ = activation_
-                    fcLayer = tf.layers.Dense(units=sharedWidths[i-1], activation=None, kernel_initializer=initWeight,
+                    fcLayer = tf.layers.Dense(units=sharedWidths[i - 1], activation=None, kernel_initializer=initWeight,
                                               bias_initializer=initBias, name="fc{}".format(i))
                     preActivation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     activation_ = tf.nn.relu(preActivation_ + resBlockInput_) if i in blockTails \
@@ -75,7 +75,7 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(actionLayerWidths)):
                     fcLayer = tf.layers.Dense(units=actionLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fc{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i + 1))
                     activation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
@@ -98,7 +98,7 @@ class GenerateModel:
                 activation_ = sharedOutput_
                 for i in range(len(valueLayerWidths)):
                     fcLayer = tf.layers.Dense(units=valueLayerWidths[i], activation=tf.nn.relu, kernel_initializer=initWeight,
-                                              bias_initializer=initBias, name="fc{}".format(i+1))
+                                              bias_initializer=initBias, name="fc{}".format(i + 1))
                     activation_ = tf.nn.dropout(fcLayer(activation_), rate=dropoutRate)
                     tf.add_to_collections(["weights", f"weight/{fcLayer.kernel.name}"], fcLayer.kernel)
                     tf.add_to_collections(["biases", f"bias/{fcLayer.bias.name}"], fcLayer.bias)
@@ -150,7 +150,7 @@ class GenerateModel:
                         name="l2RegLoss")
                     tf.summary.scalar("l2RegLoss", l2RegularizationLoss_)
 
-                loss_ = tf.add_n([actionLossCoef_*actionLoss_, valueLossCoef_*valueLoss_, l2RegularizationLoss_], name="loss")
+                loss_ = tf.add_n([actionLossCoef_ * actionLoss_, valueLossCoef_ * valueLoss_, l2RegularizationLoss_], name="loss")
                 tf.add_to_collection("loss", loss_)
                 lossSummary = tf.summary.scalar("loss", loss_)
 
@@ -329,7 +329,7 @@ def restoreVariables(model, path):
 
 
 class ApproximatePolicy:
-    def __init__ (self, policyValueNet, actionSpace):
+    def __init__(self, policyValueNet, actionSpace):
         self.policyValueNet = policyValueNet
         self.actionSpace = actionSpace
 
