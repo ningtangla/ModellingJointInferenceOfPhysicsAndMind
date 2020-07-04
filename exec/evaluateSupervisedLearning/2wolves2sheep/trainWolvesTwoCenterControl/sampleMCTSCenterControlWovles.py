@@ -15,6 +15,8 @@ from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCT
 from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, UnpackCenterControlAction, TransitWithInterpolateStateWithCenterControlAction
 import src.constrainedChasingEscapingEnv.reward as reward
 from src.constrainedChasingEscapingEnv.state import GetAgentPosFromState
+from src.constrainedChasingEscapingEnv.policies import HeatSeekingContinuesDeterministicPolicy, HeatSeekingDiscreteDeterministicPolicy, stationaryAgentPolicy
+from src.constrainedChasingEscapingEnv.analyticGeometryFunctions import computeAngleBetweenVectors
 
 from src.neuralNetwork.policyValueResNet import GenerateModel, ApproximatePolicy, restoreVariables
 from src.episode import SampleAction, chooseGreedyAction, Render, SampleTrajectoryWithRender
@@ -23,8 +25,8 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 0
-    renderOn = 0
+    DEBUG = 1
+    renderOn = 1
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -40,7 +42,7 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves1sheep', 'trainWolvesTwoCenterControlImagineMax', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves2sheep', 'trainWolvesTwoCenterControl', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
@@ -55,27 +57,30 @@ def main():
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
 
     if not os.path.isfile(trajectorySavePath):
-        numOfAgent = 3
-        sheepId = 0
-        wolvesId = 1
+        numOfAgent = 4
+        sheepOneId = 0
+        sheepTwoId = 1
+        wolvesId = 2
 
-        wolfOneId = 1
-        wolfTwoId = 2
+        wolfOneId = 2
+        wolfTwoId = 3
 
         xPosIndex = [0, 1]
         xBoundary = [0, 600]
         yBoundary = [0, 600]
-
-        getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
-        getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
-
         reset = Reset(xBoundary, yBoundary, numOfAgent)
 
-        isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, killzoneRadius)
-        isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, killzoneRadius)
+        getSheepOnePos = GetAgentPosFromState(sheepOneId, xPosIndex)
+        getSheepTwoPos = GetAgentPosFromState(sheepTwoId, xPosIndex)
+        getWolfOnePos = GetAgentPosFromState(wolfOneId, xPosIndex)
+        getWolfTwoPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
 
-        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
+        isTerminalOne = IsTerminal(getWolfOnePos, getSheepOnePos, killzoneRadius)
+        isTerminalTwo = IsTerminal(getWolfTwoPos, getSheepOnePos, killzoneRadius)
+        isTerminal3 = IsTerminal(getWolfOnePos, getSheepTwoPos, killzoneRadius)
+        isTerminal4 = IsTerminal(getWolfTwoPos, getSheepTwoPos, killzoneRadius)
+
+        def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state) or isTerminal3(state) or isTerminal4(state)
 
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
 
@@ -104,7 +109,6 @@ def main():
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
         wolvesActionSpace = list(product(wolfActionOneSpace, wolfActionTwoSpace))
-
         actionSpaceList = [sheepActionSpace, wolvesActionSpace]
 
         # neural network init
@@ -116,7 +120,9 @@ def main():
         sharedWidths = [128]
         actionLayerWidths = [128]
         valueLayerWidths = [128]
-        generateSheepModel = GenerateModel(numStateSpace, numSheepActionSpace, regularizationFactor)
+
+        sheepModelStateSpace = 6
+        generateSheepModel = GenerateModel(sheepModelStateSpace, numSheepActionSpace, regularizationFactor)
 
         # load save dir
         NNModelSaveExtension = ''
@@ -134,6 +140,9 @@ def main():
         sheepTrainedModel = restoreVariables(initSheepNNModel, sheepTrainedModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
+        sheepOnePolicy = lambda state: sheepPolicy([state[sheepOneId], state[wolfOneId], state[wolfTwoId]])
+        sheepTwoPolicy = lambda state: sheepPolicy([state[sheepTwoId], state[wolfOneId], state[wolfTwoId]])
+
     # MCTS
         cInit = 1
         cBase = 100
@@ -148,7 +157,7 @@ def main():
         chooseActionInMCTS = SampleAction(temperatureInMCTS)
 
         def wolvesTransit(state, action): return transit(
-            state, [chooseGreedyAction(sheepPolicy(state)), action])
+            state, [chooseActionInMCTS(sheepOnePolicy(state)), chooseActionInMCTS(sheepTwoPolicy(state)), action])
 
         # reward function
         aliveBonus = -1 / maxRunningSteps
@@ -169,9 +178,9 @@ def main():
         rolloutHeuristicWeight = 0
         minDistance = 400
         rolloutHeuristic1 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfOneXPos, getSheepXPos, minDistance)
+            rolloutHeuristicWeight, getWolfOnePos, getSheepOnePos, minDistance)
         rolloutHeuristic2 = reward.HeuristicDistanceToTarget(
-            rolloutHeuristicWeight, getWolfTwoXPos, getSheepXPos, minDistance)
+            rolloutHeuristicWeight, getWolfTwoPos, getSheepOnePos, minDistance)
 
         def rolloutHeuristic(state): return (rolloutHeuristic1(state) + rolloutHeuristic2(state)) / 2
 
@@ -181,15 +190,15 @@ def main():
         wolfPolicy = MCTS(numSimulations, selectChild, expand, rollout, backup, establishSoftmaxActionDist)
 
         # All agents' policies
-        def policy(state): return [sheepPolicy(state), wolfPolicy(state)]
-        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
+        def policy(state): return [sheepOnePolicy(state), sheepTwoPolicy(state), wolfPolicy(state)]
+        chooseActionList = [chooseActionInMCTS, chooseActionInMCTS, chooseGreedyAction]
 
         render = None
         if renderOn:
             import pygame as pg
             from pygame.color import THECOLORS
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
+            circleColorList = [THECOLORS['green'], THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
             circleSize = 10
 
             saveImage = False

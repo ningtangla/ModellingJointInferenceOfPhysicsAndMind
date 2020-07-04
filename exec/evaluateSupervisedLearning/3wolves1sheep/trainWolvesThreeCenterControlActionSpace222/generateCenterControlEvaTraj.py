@@ -3,7 +3,7 @@ import sys
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 DIRNAME = os.path.dirname(__file__)
-sys.path.append(os.path.join(DIRNAME,'..', '..', '..', '..'))
+sys.path.append(os.path.join(DIRNAME, '..', '..', '..', '..'))
 
 import json
 import numpy as np
@@ -11,7 +11,7 @@ from collections import OrderedDict
 import pandas as pd
 from itertools import product
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import  UnpackCenterControlAction, TransiteForNoPhysicsWithCenterControlAction, Reset,IsTerminal,StayInBoundaryByReflectVelocity,TransitWithInterpolateStateWithCenterControlAction
+from src.constrainedChasingEscapingEnv.envNoPhysics import UnpackCenterControlAction, TransiteForNoPhysicsWithCenterControlAction, Reset, IsTerminal, StayInBoundaryByReflectVelocity, TransitWithInterpolateStateWithCenterControlAction
 
 import src.constrainedChasingEscapingEnv.reward as reward
 
@@ -24,42 +24,45 @@ from src.neuralNetwork.trainTools import CoefficientCotroller, TrainTerminalCont
 from src.replayBuffer import SampleBatchFromBuffer, SaveToBuffer
 from exec.preProcessing import AccumulateMultiAgentRewards, AddValuesToTrajectory, RemoveTerminalTupleFromTrajectory, \
     ActionToOneHot, ProcessTrajectoryForPolicyValueNet
-from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist,Expand,RollOut,establishSoftmaxActionDist
+from src.algorithms.mcts import ScoreChild, SelectChild, InitializeChildren, MCTS, backup, establishPlainActionDist, Expand, RollOut, establishSoftmaxActionDist
 from exec.trainMCTSNNIteratively.valueFromNode import EstimateValueFromNode
 from src.constrainedChasingEscapingEnv.policies import stationaryAgentPolicy, HeatSeekingContinuesDeterministicPolicy
-from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction,SampleTrajectoryWithRender
+from src.episode import SampleTrajectory, SampleAction, chooseGreedyAction, SampleTrajectoryWithRender
 from exec.parallelComputing import GenerateTrajectoriesParallel
-
 
 
 def main():
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory =os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl99', 'evaTraj')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'evaTraj')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
+    DEBUG = 1
+
+    if DEBUG:
+        renderOn = 0
+        parametersForTrajectoryPath = {}
+        startSampleIndex = 1
+        endSampleIndex = 500
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+
+    else:
+        parametersForTrajectoryPath = json.loads(sys.argv[1])
+        startSampleIndex = int(sys.argv[2])
+        endSampleIndex = int(sys.argv[3])
+        parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
+        trainSteps = parametersForTrajectoryPath['trainSteps']
+        isDataAugmented = parametersForTrajectoryPath['isDataAugmented']
+
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 400
-    killzoneRadius = 80
+    numSimulations = 250
+    killzoneRadius = 50
     agentId = 1
-    fixedParameters = {'agentId': agentId,'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
+    fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
     generateTrajectorySavePath = GetSavePath(trajectoriesSaveDirectory, trajectorySaveExtension, fixedParameters)
-
-    # parametersForTrajectoryPath = json.loads(sys.argv[1])
-    # startSampleIndex = int(sys.argv[2])
-    # endSampleIndex = int(sys.argv[3])
-    # parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
-## test
-    renderOn = 1
-    parametersForTrajectoryPath={}
-    startSampleIndex=0
-    endSampleIndex=500
-    parametersForTrajectoryPath['sampleIndex'] = (startSampleIndex, endSampleIndex)
-
 
     trajectorySavePath = generateTrajectorySavePath(parametersForTrajectoryPath)
     # while  True:
@@ -74,15 +77,15 @@ def main():
         wolfThreeId = 3
 
         xPosIndex = [0, 1]
-        xBoundary = [0,600]
-        yBoundary = [0,600]
+        xBoundary = [0, 600]
+        yBoundary = [0, 600]
 
         getSheepXPos = GetAgentPosFromState(sheepId, xPosIndex)
         getWolfOneXPos = GetAgentPosFromState(wolfOneId, xPosIndex)
-        getWolfTwoXPos =GetAgentPosFromState(wolfTwoId, xPosIndex)
+        getWolfTwoXPos = GetAgentPosFromState(wolfTwoId, xPosIndex)
         getWolfThreeXPos = GetAgentPosFromState(wolfThreeId, xPosIndex)
 
-        playKillzoneRadius = 30
+        playKillzoneRadius = killzoneRadius
         isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playKillzoneRadius)
         isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playKillzoneRadius)
         isTerminalThree = IsTerminal(getWolfThreeXPos, getSheepXPos, playKillzoneRadius)
@@ -95,15 +98,15 @@ def main():
         transitionFunction = TransiteForNoPhysicsWithCenterControlAction(stayInBoundaryByReflectVelocity)
 
         numFramesToInterpolate = 3
-        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal,unpackCenterControlAction)
+        transit = TransitWithInterpolateStateWithCenterControlAction(numFramesToInterpolate, transitionFunction, isTerminal, unpackCenterControlAction)
 
-        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
-        wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7),(0,0)]
+        actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
+        wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10)]
 
-        preyPowerRatio = 3
+        preyPowerRatio = 12
         sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
-        predatorPowerRatio = 2
+        predatorPowerRatio = 8
         wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
         wolfActionThreeSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
@@ -112,8 +115,8 @@ def main():
 
         # neural network init
         numStateSpace = 8
-        numSheepActionSpace=len(sheepActionSpace)
-        numWolvesActionSpace=len(wolvesActionSpace)
+        numSheepActionSpace = len(sheepActionSpace)
+        numWolvesActionSpace = len(wolvesActionSpace)
 
         regularizationFactor = 1e-4
         sharedWidths = [128]
@@ -123,12 +126,9 @@ def main():
 
         # load save dir
         NNModelSaveExtension = ''
-        NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trainedResNNModels')
-        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 110,'miniBatchSize':256,'learningRate':0.0001}
-        getSheepNNModelSavePath = GetSavePath(NNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
-
-        if not os.path.exists(NNModelSaveDirectory):
-            os.makedirs(NNModelSaveDirectory)
+        sheepNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainSheepInMultiChasingNoPhysicsThreeWolves', 'trainedResNNModels')
+        sheepNNModelFixedParameters = {'agentId': 0, 'maxRunningSteps': 50, 'numSimulations': 110, 'miniBatchSize': 256, 'learningRate': 0.0001, }
+        getSheepNNModelSavePath = GetSavePath(sheepNNModelSaveDirectory, NNModelSaveExtension, sheepNNModelFixedParameters)
 
         depth = 9
         resBlockSize = 2
@@ -136,19 +136,19 @@ def main():
         initializationMethod = 'uniform'
         initSheepNNModel = generateSheepModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
 
-        sheepTrainedModelPath = getSheepNNModelSavePath({'trainSteps':50000,'depth':depth})
+        sheepTrainedModelPath = getSheepNNModelSavePath({'trainSteps': 50000, 'depth': depth})
         sheepTrainedModel = restoreVariables(initSheepNNModel, sheepTrainedModelPath)
         sheepPolicy = ApproximatePolicy(sheepTrainedModel, sheepActionSpace)
 
-
         generateWolvesModel = GenerateModel(numStateSpace, numWolvesActionSpace, regularizationFactor)
         initWolvesNNModel = generateWolvesModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate)
-        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControl99', 'trainedResNNModels')
+        wolfNNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '3wolves1sheep', 'trainWolvesThreeCenterControlAction444', 'trainedResNNModels')
         wolfId = 1
-        NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations,'miniBatchSize':256,'learningRate':0.0001,}
+
+        NNModelFixedParametersWolves = {'agentId': wolfId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'miniBatchSize': 256, 'learningRate': 0.0001, }
 
         getWolfNNModelSavePath = GetSavePath(wolfNNModelSaveDirectory, NNModelSaveExtension, NNModelFixedParametersWolves)
-        wolvesTrainedModelPath = getWolfNNModelSavePath({'trainSteps':50000,'depth':depth})
+        wolvesTrainedModelPath = getWolfNNModelSavePath({'trainSteps': trainSteps, 'depth': depth, 'dataAugmented': isDataAugmented})
         wolvesTrainedModel = restoreVariables(initWolvesNNModel, wolvesTrainedModelPath)
         wolfPolicy = ApproximatePolicy(wolvesTrainedModel, wolvesActionSpace)
 
@@ -156,24 +156,24 @@ def main():
         import pygame as pg
         from pygame.color import THECOLORS
         screenColor = THECOLORS['black']
-        circleColorList = [THECOLORS['green'], THECOLORS['red'],THECOLORS['red'], THECOLORS['red']]
+        circleColorList = [THECOLORS['green'], THECOLORS['red'], THECOLORS['red'], THECOLORS['red']]
         circleSize = 10
         saveImage = False
-        saveImageDir = os.path.join(dirName, '..','..','..', '..', 'data','img')
+        saveImageDir = os.path.join(dirName, '..', '..', '..', '..', 'data', 'img')
         if not os.path.exists(saveImageDir):
             os.makedirs(saveImageDir)
-        render=None
+        render = None
         if renderOn:
             screen = pg.display.set_mode([xBoundary[1], yBoundary[1]])
-            render = Render(numOfAgent, xPosIndex,screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
+            render = Render(numOfAgent, xPosIndex, screen, screenColor, circleColorList, circleSize, saveImage, saveImageDir)
 
         reset = Reset(xBoundary, yBoundary, numOfAgent)
-        chooseActionList = [chooseGreedyAction,chooseGreedyAction]
-        playRunningSteps = 150
-        sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList,render,renderOn)
+        chooseActionList = [chooseGreedyAction, chooseGreedyAction]
+        playRunningSteps = maxRunningSteps
+        sampleTrajectory = SampleTrajectoryWithRender(playRunningSteps, transit, isTerminal, reset, chooseActionList, render, renderOn)
 
         # All agents' policies
-        policy = lambda state:[sheepPolicy(state),wolfPolicy(state)]
+        policy = lambda state: [sheepPolicy(state), wolfPolicy(state)]
         trajectories = [sampleTrajectory(policy) for sampleIndex in range(startSampleIndex, endSampleIndex)]
 
         #saveToPickle(trajectories, trajectorySavePath)
@@ -181,6 +181,7 @@ def main():
         trajLen = [len(traj) for traj in trajectories]
         print(trajLen)
         print(np.mean(trajLen))
+
 
 if __name__ == '__main__':
     main()
