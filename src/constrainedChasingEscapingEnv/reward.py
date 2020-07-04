@@ -1,5 +1,20 @@
 import numpy as np
 
+class RewardFunctionForCompetition():
+    def __init__(self, aliveBonus, deathPenalty, isSelfTerminal, isTerminal):
+        self.aliveBonus = aliveBonus
+        self.deathPenalty = deathPenalty
+        self.isSelfTerminal = isSelfTerminal
+        self.isTerminal = isTerminal
+
+    def __call__(self, state, action):
+        reward = self.aliveBonus
+        if self.isTerminal(state):
+            if self.isSelfTerminal:
+                reward += self.deathPenalty
+            else:
+                reward += -self.deathPenalty
+        return reward
 
 class RewardFunctionCompete():
     def __init__(self, aliveBonus, deathPenalty, isTerminal):
