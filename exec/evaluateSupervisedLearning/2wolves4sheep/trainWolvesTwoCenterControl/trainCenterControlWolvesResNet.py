@@ -64,7 +64,7 @@ def trainOneCondition(manipulatedVariables):
     depth = int(manipulatedVariables['depth'])
     # Get dataset for training
     DIRNAME = os.path.dirname(__file__)
-    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves2sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    dataSetDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves4sheep', 'trainWolvesTwoCenterControl', 'trajectories')
 
     if not os.path.exists(dataSetDirectory):
         os.makedirs(dataSetDirectory)
@@ -116,16 +116,17 @@ def trainOneCondition(manipulatedVariables):
     # pre-process the trajectories
 
     actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
+    wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
     preyPowerRatio = 12
     sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
 
     predatorPowerRatio = 8
 
     # actionSpaceOne = [(10, 0), (-10, 0)]
-    wolfActionOneSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+    wolfActionOneSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
 
     # actionSpaceTwo = [(10, 0), (-10, 0)]
-    wolfActionTwoSpace = list(map(tuple, np.array(actionSpace) * predatorPowerRatio))
+    wolfActionTwoSpace = list(map(tuple, np.array(wolfActionSpace) * predatorPowerRatio))
     wolvesActionSpace = list(it.product(wolfActionOneSpace, wolfActionTwoSpace))
 
     numActionSpace = len(wolvesActionSpace)
@@ -193,7 +194,7 @@ def trainOneCondition(manipulatedVariables):
     # get path to save trained models
     NNModelFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations}
 
-    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves2sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
+    NNModelSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves4sheep', 'trainWolvesTwoCenterControl', 'trainedResNNModels')
     if not os.path.exists(NNModelSaveDirectory):
         os.makedirs(NNModelSaveDirectory)
     NNModelSaveExtension = ''

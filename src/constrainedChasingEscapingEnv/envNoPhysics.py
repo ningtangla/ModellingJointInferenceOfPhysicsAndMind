@@ -155,9 +155,8 @@ class IsTerminalMultiAgent():
         preyPositions = [getPreyPos(state) for getPreyPos in self.getPreyPosList]
         predatorPositions = [getPredatorPos(state) for getPredatorPos in self.getPredatorPosList]
 
-        L2Normdistances = [np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2) for preyPosition in preyPositions for predatorPosition in predatorPositions]
-
-        if np.any(L2Normdistances) <= self.minDistance:
+        L2Normdistances = np.array([np.linalg.norm((np.array(preyPosition) - np.array(predatorPosition)), ord=2) for preyPosition in preyPositions for predatorPosition in predatorPositions])
+        if np.any(L2Normdistances <= self.minDistance):
             terminal = True
         return terminal
 

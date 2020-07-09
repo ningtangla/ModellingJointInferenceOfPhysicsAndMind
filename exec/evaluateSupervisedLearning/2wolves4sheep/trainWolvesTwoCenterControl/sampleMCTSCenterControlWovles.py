@@ -25,8 +25,8 @@ from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, conditi
 
 
 def main():
-    DEBUG = 1
-    renderOn = 1
+    DEBUG = 0
+    renderOn = 0
     if DEBUG:
         parametersForTrajectoryPath = {}
         startSampleIndex = 0
@@ -42,13 +42,13 @@ def main():
 
     # check file exists or not
     dirName = os.path.dirname(__file__)
-    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves2sheep', 'trainWolvesTwoCenterControl', 'trajectories')
+    trajectoriesSaveDirectory = os.path.join(dirName, '..', '..', '..', '..', 'data', '2wolves4sheep', 'trainWolvesTwoCenterControl', 'trajectories')
     if not os.path.exists(trajectoriesSaveDirectory):
         os.makedirs(trajectoriesSaveDirectory)
 
     trajectorySaveExtension = '.pickle'
     maxRunningSteps = 50
-    numSimulations = 2
+    numSimulations = 250
     killzoneRadius = 50
     fixedParameters = {'agentId': agentId, 'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
 
@@ -64,6 +64,7 @@ def main():
         wolfOneId = 4
         wolfTwoId = 5
         wolfIds = [wolfOneId, wolfTwoId]
+        numWolves = len(wolfIds)
         wolvesId = 4
 
         xPosIndex = [0, 1]
@@ -92,7 +93,7 @@ def main():
         selectChild = SelectChild(calculateScore)
 
         actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-        wolfActionSpace = actionSpace
+        wolfActionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7)]
         # wolfActionSpace = [(10, 0), (0, 10), (-10, 0), (0, -10), (0, 0)]
 
         preyPowerRatio = 12
@@ -186,7 +187,7 @@ def main():
             import pygame as pg
             from pygame.color import THECOLORS
             screenColor = THECOLORS['black']
-            circleColorList = [THECOLORS['green'], THECOLORS['green'], THECOLORS['red'], THECOLORS['red']]
+            circleColorList = [THECOLORS['green']]*numSheeps +[THECOLORS['red']]*numWolves
             circleSize = 10
 
             saveImage = False

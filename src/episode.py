@@ -78,8 +78,6 @@ class Render():
                 pg.draw.circle(self.screen, self.circleColorList[i], [np.int(
                     agentPos[0]), np.int(agentPos[1])], self.circleSize)
             pg.display.flip()
-            pg.time.wait(100)
-
             if self.saveImage == True:
                 if not os.path.exists(self.saveImageDir):
                     os.makedirs(self.saveImageDir)

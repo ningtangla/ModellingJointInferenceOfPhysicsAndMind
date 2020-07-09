@@ -149,7 +149,7 @@ def trainOneCondition(manipulatedVariables):
     loadedTrajectories = loadTrajectories(parameters={})
     # print(loadedTrajectories[0])
 
-    filterState = lambda timeStep: (timeStep[0][0:3], timeStep[1], timeStep[2])  # !!? magic
+    filterState = lambda timeStep: (timeStep[0][0:4], timeStep[1], timeStep[2])  # !!? magic
     trajectories = [[filterState(timeStep) for timeStep in trajectory] for trajectory in loadedTrajectories]
     print(len(trajectories))
 
