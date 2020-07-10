@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 import itertools as it
 import pathos.multiprocessing as mp
 
-from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset, IsTerminal, StayInBoundaryByReflectVelocity
+from src.constrainedChasingEscapingEnv.envNoPhysics import TransiteForNoPhysics, Reset, IsTerminalMultiAgent, StayInBoundaryByReflectVelocity
 from src.constrainedChasingEscapingEnv.reward import RewardFunctionCompete, RewardFunctionWithWall
 from exec.trajectoriesSaveLoad import GetSavePath, readParametersFromDf, LoadTrajectories, SaveAllTrajectories, \
     GenerateAllSampleIndexSavePaths, saveToPickle, loadFromPickle
@@ -74,7 +74,6 @@ def trainOneCondition(manipulatedVariables):
     dataSetNumSimulations = 250
     killzoneRadius = 50
     agentId = 1
-    wolvesId = 1
     dataSetFixedParameters = {'agentId': agentId, 'maxRunningSteps': dataSetMaxRunningSteps, 'numSimulations': dataSetNumSimulations, 'killzoneRadius': killzoneRadius}
 
     getDataSetSavePath = GetSavePath(dataSetDirectory, dataSetExtension, dataSetFixedParameters)
@@ -98,7 +97,7 @@ def trainOneCondition(manipulatedVariables):
     getSheepPosList = [GetAgentPosFromState(sheepId, xPosIndex) for sheepId in sheepIds]
     getWolfPosList = [GetAgentPosFromState(wolfId, xPosIndex) for wolfId in wolfIds]
 
-    isTerminal = IsTerminalMultiAgent(getWolfPosList, getSheepPosList, killzoneRadius)
+    playIsTerminal = IsTerminalMultiAgent(getWolfPosList, getSheepPosList, killzoneRadius)
 
     stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity(xBoundary, yBoundary)
     transit = TransiteForNoPhysics(stayInBoundaryByReflectVelocity)
