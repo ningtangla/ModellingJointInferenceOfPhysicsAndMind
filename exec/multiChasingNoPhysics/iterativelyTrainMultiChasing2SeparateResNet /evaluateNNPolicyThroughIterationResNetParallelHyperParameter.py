@@ -43,8 +43,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0,40,140]#list(range(0,10001,2000))
-    manipulatedVariables['otherIteration'] = [0,40,140]#[-999]+list(range(0,10001,2000))
+    manipulatedVariables['selfIteration'] = [0,40,390,590]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,40,390,590]#[-999]+list(range(0,10001,2000))
     manipulatedVariables['numTrainStepEachIteration'] = [1]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
     selfId=0
@@ -169,14 +169,14 @@ def main():
             if plotCounter <= numColumns:
                 axForDraw.set_title('numTrajectoriesPerIteration: {}'.format(numTrajectoriesPerIteration))
 
-            axForDraw.set_ylim(-1, 1.5)
+            axForDraw.set_ylim(-1, 1)
             # plt.ylabel('Accumulated rewards')
             drawPerformanceLine(group, axForDraw, selfId)
             plotCounter += 1
 
 
 
-    plt.suptitle('SheepNNResnet')
+    plt.suptitle('2SeperateMCTSResNetWolf')
     plt.legend(loc='best')
     plt.show()
 

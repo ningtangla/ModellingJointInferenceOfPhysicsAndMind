@@ -80,7 +80,7 @@ def iterateTrainOneCondition(parameterOneCondition):
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, xPosIndex)
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoIndex, xPosIndex)
 
-    maxRunningSteps = 100
+    maxRunningSteps = 70
     sheepAliveBonus = 1 / maxRunningSteps
     wolfAlivePenalty = -sheepAliveBonus
 
@@ -173,10 +173,10 @@ def iterateTrainOneCondition(parameterOneCondition):
     learningRate = 0.0001
     learningRateModifier = LearningRateModifier(learningRate, learningRateDecay, learningRateDecayStep)
 
-    trainNN = Train(trainStepsIntervel, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController, trainReporter)
+    trainNN = Train(numTrainStepEachIteration, miniBatchSize, sampleData, learningRateModifier, terminalController, coefficientController, trainReporter)
 
     # load save dir
-    numSimulations = 200
+    numSimulations = 100
     fixedParameters = {'maxRunningSteps': maxRunningSteps, 'numSimulations': numSimulations, 'killzoneRadius': killzoneRadius}
     trajectorySaveExtension = '.pickle'
     NNModelSaveExtension = ''
@@ -193,6 +193,14 @@ def iterateTrainOneCondition(parameterOneCondition):
 
     startTime = time.time()
 
+    sheepDepth = 5
+    wolfDepth = 9
+    depthList = [sheepDepth, wolfDepth]
+    resBlockSize = 2
+    dropoutRate = 0.0
+    initializationMethod = 'uniform'
+    multiAgentNNmodel = [generateModel(sharedWidths * depth, actionLayerWidths, valueLayerWidths, resBlockSize, initializationMethod, dropoutRate) for depth, generateModel in zip(depthList, generateModelList)]
+
     preprocessMultiAgentTrajectories = PreprocessTrajectoriesForBuffer(addMultiAgentValuesToTrajectory, removeTerminalTupleFromTrajectory)
     numTrajectoriesToStartTrain = 4 * miniBatchSize
 
@@ -200,6 +208,7 @@ def iterateTrainOneCondition(parameterOneCondition):
 
     # restorePretrainModel
     sheepPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=0_depth=5_learningRate=0.0001_maxRunningSteps=150_miniBatchSize=256_numSimulations=200_trainSteps=50000')
+
     # wolvesPreTrainModelPath=os.path.join(dirName,'preTrainModel','agentId=1_dataSize=3000_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
     wolvesPreTrainModelPath = os.path.join(dirName, 'preTrainModel', 'agentId=1_depth=9_learningRate=0.0001_maxRunningSteps=100_miniBatchSize=256_numSimulations=200_trainSteps=50000')
     pretrainModelPathList = [sheepPreTrainModelPath, wolvesPreTrainModelPath]
@@ -305,7 +314,12 @@ def main():
     if prepareBefortrainData:
         cmdList = generateTrajectoriesParallel(trajectoryBeforeTrainPathParamters)
 
-    # parallel train
+
+<< << << < HEAD
+# parallel train
+== == == =
+# parallel train
+>>>>>> > a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
     trainPool = mp.Pool(numCpuToUse)
     trainPool.map(iterateTrainOneCondition, parametersAllCondtion)
 

@@ -44,18 +44,33 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
+<<<<<<< HEAD
+
+    manipulatedVariables['selfIteration'] = [0,50,100 ,150,250]#list(range(0,10001,2000))
+    manipulatedVariables['otherIteration'] = [0,50,100 ,150,250]#[-999]+list(range(0,10001,2000)),
+
+    manipulatedVariables['numTrainStepEachIteration'] = [4]
+    manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+
+=======
     manipulatedVariables['selfIteration'] = list(range(0, 1001, 100))
     manipulatedVariables['otherIteration'] = list(range(0, 1001, 100))
     manipulatedVariables['numTrainStepEachIteration'] = [3]
     manipulatedVariables['numTrajectoriesPerIteration'] = [16]
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
 
     levelNames = list(manipulatedVariables.keys())
     levelValues = list(manipulatedVariables.values())
     modelIndex = pd.MultiIndex.from_product(levelValues, names=levelNames)
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
     trainMaxRunningSteps = 100
     trainNumSimulations = 200
+
     killzoneRadius = 30
 
     numAgents = 2
@@ -68,11 +83,22 @@ def main():
     wolfTwoIndex = 2
     getSheepXPos = GetAgentPosFromState(sheepId, posIndex)
     getWolfOneXPos = GetAgentPosFromState(wolfOnePosIndex, posIndex)
+<<<<<<< HEAD
+    getWolfTwoXPos =GetAgentPosFromState(wolfTwoIndex, posIndex)
+
+
+    playerKillzone=25
+    isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playerKillzone)
+    isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playerKillzone)
+
+    isTerminal=lambda state:isTerminalOne(state) or isTerminalTwo(state)
+=======
     getWolfTwoXPos = GetAgentPosFromState(wolfTwoIndex, posIndex)
 
     playerKillzone = killzoneRadius
     isTerminalOne = IsTerminal(getWolfOneXPos, getSheepXPos, playerKillzone)
     isTerminalTwo = IsTerminal(getWolfTwoXPos, getSheepXPos, playerKillzone)
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
 
     def isTerminal(state): return isTerminalOne(state) or isTerminalTwo(state)
 
@@ -85,6 +111,11 @@ def main():
     rewardWolf = RewardFunctionCompete(wolfAlivePenalty, wolfTerminalReward, isTerminal)
     rewardMultiAgents = [rewardSheep, rewardWolf]
 
+<<<<<<< HEAD
+
+
+=======
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
     generateTrajectoriesCodeName = 'generateMultiAgentResNetEvaluationTrajectoryHyperParameter.py'
     evalNumTrials = 500
     numCpuCores = os.cpu_count()
@@ -93,12 +124,23 @@ def main():
     generateTrajectoriesParallel = GenerateTrajectoriesParallel(generateTrajectoriesCodeName, evalNumTrials, numCmdList)
 
     # run all trials and save trajectories
+<<<<<<< HEAD
+    generateTrajectoriesParallelFromDf = lambda df: generateTrajectoriesParallel(readParametersFromDf(df))
+    # toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
+
+    # save evaluation trajectories
+    dirName = os.path.dirname(__file__)
+
+    trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data','multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'evaluateTrajectories')
+
+=======
     def generateTrajectoriesParallelFromDf(df): return generateTrajectoriesParallel(readParametersFromDf(df))
     toSplitFrame.groupby(levelNames).apply(generateTrajectoriesParallelFromDf)
 
     # save evaluation trajectories
     dirName = os.path.dirname(__file__)
     trajectoryDirectory = os.path.join(dirName, '..', '..', '..', 'data', 'multiAgentTrain', 'multiMCTSAgentResNetNoPhysicsCenterControlWithPreTrain', 'evaluateTrajectories')
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
@@ -108,8 +150,12 @@ def main():
     # compute statistics on the trajectories
     fuzzySearchParameterNames = ['sampleIndex']
     loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
+<<<<<<< HEAD
+    loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
+=======
 
     def loadTrajectoriesFromDf(df): return loadTrajectories(readParametersFromDf(df))
+>>>>>>> a4653d2458aaf2b9a7a42b30d2bd0f678adcf0e0
 
     decay = 1
     accumulateMultiAgentRewards = AccumulateMultiAgentRewards(decay, rewardMultiAgents)
