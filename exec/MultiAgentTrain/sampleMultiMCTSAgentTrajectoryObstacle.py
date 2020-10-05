@@ -88,7 +88,52 @@ class PrepareMultiAgentPolicy:
         policy = lambda state: [agentPolicy(state) for agentPolicy in multiAgentPolicy]
         return policy
 
+class CheckAngentStackInWall:
+    def __init__(self, wallList,agentMaxSize):
+        self.wallList=wallList
+        self.agentMaxSize=agentMaxSize
+    def __call__(self,qPosList):
+        wallCenterList=np.array([wall[:2] for wall in self.wallList])
+        wallExpandHalfDiagonalList=np.array([np.add(wall[2:],self.agentMaxSize) for wall in self.wallList])
+        posList=qPosList.reshape(-1,2)
+        isOverlapList=[np.all(np.abs(np.add(pos,-center))<diag)  for (center,diag) in zip (wallCenterList,wallExpandHalfDiagonalList) for pos in posList]
+        return np.any(isOverlapList)
 
+class ResetUniformInEnvWithObstacles:
+    def __init__(self, simulation, qPosInit, qVelInit, numAgent, qPosInitNoise, qVelInitNoise,checkAngentStackInWall):
+        self.simulation = simulation
+        self.qPosInit = np.asarray(qPosInit)
+        self.qVelInit = np.asarray(qVelInit)
+        self.numAgent = self.simulation.model.nsite
+        self.qPosInitNoise = qPosInitNoise
+        self.qVelInitNoise = qVelInitNoise
+        self.numJointEachSite = int(self.simulation.model.njnt / self.simulation.model.nsite)
+        self.checkAngentStackInWall=checkAngentStackInWall
+    def __call__(self):
+        numQPos = len(self.simulation.data.qpos)
+        numQVel = len(self.simulation.data.qvel)
+
+
+        qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+
+        while self.checkAngentStackInWall(qPos):
+            qPos = self.qPosInit + np.random.uniform(low=-self.qPosInitNoise, high=self.qPosInitNoise, size=numQPos)
+        qVel = self.qVelInit + np.random.uniform(low=-self.qVelInitNoise, high=self.qVelInitNoise, size=numQVel)
+
+        self.simulation.data.qpos[:] = qPos
+        self.simulation.data.qvel[:] = qVel
+        self.simulation.forward()
+
+        xPos = np.concatenate(self.simulation.data.site_xpos[:self.numAgent, :self.numJointEachSite])
+
+        agentQPos = lambda agentIndex: qPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentXPos = lambda agentIndex: xPos[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentQVel = lambda agentIndex: qVel[self.numJointEachSite * agentIndex: self.numJointEachSite * (agentIndex + 1)]
+        agentState = lambda agentIndex: np.concatenate(
+            [agentQPos(agentIndex), agentXPos(agentIndex), agentQVel(agentIndex)])
+        startState = np.asarray([agentState(agentIndex) for agentIndex in range(self.numAgent)])
+
+        return startState
 def main():
     # check file exists or not
 
@@ -116,7 +161,7 @@ def main():
     if not os.path.isfile(trajectorySavePath):
 
         # Mujoco environment
-        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles.xml')
+        physicsDynamicsPath = os.path.join(dirName, '..', '..', 'env', 'xmls', 'twoAgentsTwoObstacles4.xml')
         physicsModel = mujoco.load_model_from_path(physicsDynamicsPath)
         physicsSimulation = mujoco.MjSim(physicsModel)
 
@@ -126,7 +171,12 @@ def main():
         numAgents = 2
         qVelInitNoise = 8
         qPosInitNoise = 9.7
-        reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
+        agentMaxSize=0.6
+        wallList=[[0,2.5,0.8,1.95],[0,-2.5,0.8,1.95]]
+        checkAngentStackInWall=CheckAngentStackInWall(wallList,agentMaxSize)
+        reset = ResetUniformInEnvWithObstacles(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise,checkAngentStackInWall)
+
+        # reset = ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents, qPosInitNoise, qVelInitNoise)
 
         agentIds = list(range(numAgents))
         sheepId = 0

@@ -44,8 +44,8 @@ def drawPerformanceLine(dataDf, axForDraw, agentId):
 def main():
     # manipulated variables (and some other parameters that are commonly varied)
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['selfIteration'] = [0, 6000]#list(range(0,6001,6000))
-    manipulatedVariables['otherIteration'] = [0, 6000]#list(range(0,6001,6000))
+    manipulatedVariables['selfIteration'] = [0, 6500]#list(range(0,6001,6000))
+    manipulatedVariables['otherIteration'] = [0, 6500]#list(range(0,6001,6000))
     manipulatedVariables['selfId'] = [0]
 
     levelNames = list(manipulatedVariables.keys())

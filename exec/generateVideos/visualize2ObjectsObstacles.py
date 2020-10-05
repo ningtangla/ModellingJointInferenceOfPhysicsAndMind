@@ -6,7 +6,7 @@ sys.path.append(os.path.join(DIRNAME, '..', '..'))
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-from exec.trajectoriesSaveLoad import loadFromPickle
+from exec.trajectoriesSaveLoad import loadFromPickle,GetSavePath,LoadTrajectories
 from src.inferChasing.inference import Observe
 from visualize.continuousVisualization import DrawBackgroundWithObstacles, DrawState, ChaseTrialWithTraj, \
     ScaleTrajectory, AdjustDfFPStoTraj
@@ -19,51 +19,71 @@ pd.set_option('display.max_columns', None)
 
 def main():
     dirName = os.path.dirname(__file__)
-    dataIndex = 5
-    dataPath = os.path.join(dirName, '..', '..', 'data', 'trainMCTSNNIteratively', 'replayBufferStartWithRandomModelChasingObstacle', 'evaluationTrajectories3500TrainSteps', 'iteration=3500_maxRunningSteps=30_numTrials=500_policyName=NNPolicy2HiddenLayers_sampleIndex=250_trainBufferSize=2000_trainLearningRate=0.001_trainMiniBatchSize=256_trainNumSimulations=200_trainNumTrajectoriesPerIteration=1.pickle')
-    trajectory = loadFromPickle(dataPath)
+    # dataPath = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain','multiMCTSAgentObstacle','evaluateTrajectories','killzoneRadius=2_maxRunningSteps=30_numSimulations=200_otherIteration=6000_sampleIndex=(15,16)_selfId=0_selfIteration=6000.pickle')
+    # trajectory = loadFromPickle(dataPath)[0]
+    # trajectorygg = trajectory.copy()
+    # del trajectory[-1]
+    # print(trajectorygg.pop())
 
-    stateIndex = 0
-    observe = Observe(stateIndex, trajectory)
+    trajectoryFixedParameters = {'killzoneRadius':2,'maxRunningSteps':30,'numSimulations':200}
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data', 'multiAgentTrain','multiMCTSAgentObstacle','demoTrajectoriesNNGuideMCTS')
 
-    fullScreen = False
-    screenWidth = 800
-    screenHeight = 800
-    screen = initializeScreen(fullScreen, screenWidth, screenHeight)
+    trajectoryExtension = '.pickle'
+    getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
+    fuzzySearchParameterNames = ['sampleIndex']
+    # fuzzySearchParameterNames = []
+    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle,fuzzySearchParameterNames)
 
-    leaveEdgeSpace = 200
-    lineWidth = 3
-    xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
-    yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
-    obstacle1Pos = [377.5, 270, 45, 60]
-    obstacle2Pos = [377.5, 470, 45, 60]
-    allObstaclePos = [obstacle1Pos, obstacle2Pos]
-    screenColor = THECOLORS['black']
-    lineColor = THECOLORS['white']
+    para = {'selfIteration':6500,'otherIteration':6500,'selfId':0  }
+    allTrajectories = loadTrajectories(para)
 
-    drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
-    circleSize = 10
-    positionIndex = [0, 1]
-    drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
+    for dataIndex in range(len(allTrajectories)):
+        trajectory = allTrajectories[dataIndex]
+        del trajectory[-1]
+        if len(trajectory) != 0:
+            # print(trajectory[0])
+            stateIndex = 0
+            observe = Observe(stateIndex, trajectory)
 
-    colorSpace = [THECOLORS['green'], THECOLORS['red']]
+            fullScreen = False
+            screenWidth = 800
+            screenHeight = 800
+            screen = initializeScreen(fullScreen, screenWidth, screenHeight)
 
-    FPS = 60
-    chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='2ObjectsObstacles/7' + str(dataIndex))
+            leaveEdgeSpace = 200
+            lineWidth = 3
+            xBoundary = [leaveEdgeSpace, screenWidth - leaveEdgeSpace * 2]
+            yBoundary = [leaveEdgeSpace, screenHeight - leaveEdgeSpace * 2]
+            obstacle1Pos = [380, 273, 40, 54]
+            obstacle2Pos = [380, 473, 40, 54]
+            allObstaclePos = [obstacle1Pos, obstacle2Pos]
+            screenColor = THECOLORS['black']
+            lineColor = THECOLORS['white']
 
-    rawXRange = [-10, 10]
-    rawYRange = [-10, 10]
-    scaledXRange = [210, 590]
-    scaledYRange = [210, 590]
-    scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+            drawBackground = DrawBackgroundWithObstacles(screen, screenColor, xBoundary, yBoundary, allObstaclePos, lineColor, lineWidth)
+            circleSize = 10
+            positionIndex = [0, 1]
+            drawState = DrawState(screen, circleSize, positionIndex, drawBackground)
 
-    oldFPS = 5
-    adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
+            colorSpace = [THECOLORS['green'], THECOLORS['red']]
 
-    getTrajectory = lambda rawTrajectory: scaleTrajectory(adjustFPS(rawTrajectory))
-    positionList = [observe(index) for index in range(len(trajectory))]
-    positionListToDraw = getTrajectory(positionList)
-    chaseTrial(positionListToDraw)
+            FPS = 60
+
+            chaseTrial = ChaseTrialWithTraj(FPS, colorSpace, drawState, saveImage=True, imageFolderName='2ObjectsObstaclesNNGuideMCTS_selfIteration=6500_otherIteration=6500/' + str(dataIndex))
+
+            rawXRange = [-10, 10]
+            rawYRange = [-10, 10]
+            scaledXRange = [210, 590]
+            scaledYRange = [210, 590]
+            scaleTrajectory = ScaleTrajectory(positionIndex, rawXRange, rawYRange, scaledXRange, scaledYRange)
+
+            oldFPS = 5
+            adjustFPS = AdjustDfFPStoTraj(oldFPS, FPS)
+
+            getTrajectory = lambda rawTrajectory: scaleTrajectory(adjustFPS(rawTrajectory))
+            positionList = [observe(index) for index in range(len(trajectory))]
+            positionListToDraw = getTrajectory(positionList)
+            chaseTrial(positionListToDraw)
 
 
 if __name__ == '__main__':

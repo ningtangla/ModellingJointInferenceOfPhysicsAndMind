@@ -32,7 +32,7 @@ class GetSavePath:
 
         fileName = '_'.join(nameValueStringPairs) + self.extension
         fileName = fileName.replace(" ", "")
-        
+
         path = os.path.join(self.dataDirectory, fileName)
 
         return path
@@ -59,16 +59,21 @@ class LoadTrajectories:
         self.fuzzySearchParameterNames = fuzzySearchParameterNames
 
     def __call__(self, parameters, parametersWithSpecificValues={}):
-        parametersWithFuzzy = dict(list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
-        productedSpecificValues = it.product(*[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()])
-        parametersFinal = np.array([dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in productedSpecificValues])
+        parametersWithFuzzy = dict(
+            list(parameters.items()) + [(parameterName, '*') for parameterName in self.fuzzySearchParameterNames])
+        productedSpecificValues = it.product(
+            *[[(key, value) for value in values] for key, values in parametersWithSpecificValues.items()])
+        parametersFinal = np.array(
+            [dict(list(parametersWithFuzzy.items()) + list(specificValueParameter)) for specificValueParameter in
+             productedSpecificValues])
         genericSavePath = [self.getSavePath(parameters) for parameters in parametersFinal]
         if len(genericSavePath) != 0:
-            filesNames = np.concatenate([glob.glob(savePath) for savePath in genericSavePath])
+            filesNames = np.concatenate([sorted(glob.glob(savePath)) for savePath in genericSavePath])
         else:
             filesNames = []
         mergedTrajectories = []
         for fileName in filesNames:
+            print(fileName)
             oneFileTrajectories = self.loadFromPickle(fileName)
             mergedTrajectories.extend(oneFileTrajectories)
         return mergedTrajectories
@@ -79,13 +84,14 @@ class GenerateAllSampleIndexSavePaths:
         self.getSavePath = getSavePath
 
     def __call__(self, numSamples, pathParameters):
-        parametersWithSampleIndex = lambda sampleIndex: dict(list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
+        parametersWithSampleIndex = lambda sampleIndex: dict(
+            list(pathParameters.items()) + [('sampleIndex', sampleIndex)])
         genericSavePath = self.getSavePath(parametersWithSampleIndex('*'))
         existingFilesNames = glob.glob(genericSavePath)
         numExistingFiles = len(existingFilesNames)
         print("{} FILES ALREADY EXIST".format(numExistingFiles))
-        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex+numExistingFiles) for sampleIndex in
-                              range(numSamples)}
+
+        allIndexParameters = {sampleIndex: parametersWithSampleIndex(sampleIndex + numExistingFiles) for sampleIndex in range(numSamples)}
         allSavePaths = {sampleIndex: self.getSavePath(indexParameters) for sampleIndex, indexParameters in
                         allIndexParameters.items()}
 
@@ -145,9 +151,24 @@ class ConvertTrajectoryToStateDf:
         indexLevels = {levelName: getLevelValueRange(trajectory) for levelName, getLevelValueRange in
                        self.getAllLevelsValueRange.items()}
         emptyDf = self.getDfFromIndexLevelDict(indexLevels)
-        extractTrajectoryInformation = lambda df: pd.Series({columnName: extractColumnValue(trajectory, df) for
-                                                             columnName, extractColumnValue in
-                                                             self.extractColumnValues.items()})
+        extractTrajectoryInformation = lambda df: pd.Series({columnName: extractColumnValue(trajectory, df) for columnName, extractColumnValue in self.extractColumnValues.items()})
         stateDf = emptyDf.groupby(list(indexLevels.keys())).apply(extractTrajectoryInformation)
 
         return stateDf
+
+class DeleteUsedModel:
+    def __init__(self,modelMemorySize, modelSaveFrequency,generatetoDeleteNNModelPathList):
+        self.generatetoDeleteNNModelPathList=generatetoDeleteNNModelPathList
+        self.modelMemorySize=modelMemorySize
+        self.modelSaveFrequency=modelSaveFrequency
+    def __call__(self,iterationIndex,agentId):
+
+        if (iterationIndex-self.modelMemorySize) % self.modelSaveFrequency != 0 and iterationIndex>=self.modelMemorySize:
+                toDeleteNNModelPathParameters={'iterationIndex': iterationIndex-self.modelMemorySize, 'agentId': agentId}
+                toDeleteModelPathList = [generatetoDeleteNNModelPath(toDeleteNNModelPathParameters) for generatetoDeleteNNModelPath in self.generatetoDeleteNNModelPathList ]
+                for toDeleteModelPath in toDeleteModelPathList:
+                    if os.path.isfile(toDeleteModelPath):
+                        os.remove(toDeleteModelPath)
+                        print('delete',toDeleteModelPath)
+                    else:
+                        print('no such file',toDeleteModelPath)

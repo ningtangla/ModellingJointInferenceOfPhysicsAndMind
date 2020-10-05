@@ -181,22 +181,18 @@ def main():
     evalQVelInitNoise = 0
     qVelInit = [0, 0, 0, 0]
 
-    getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents,
-                                                              evalQPosInitNoise, evalQVelInitNoise)
+    getResetFromQPosInitDummy = lambda qPosInit: ResetUniform(physicsSimulation, qPosInit, qVelInit, numAgents,evalQPosInitNoise, evalQVelInitNoise)
 
     generateInitQPos = GenerateInitQPosUniform(-9.7, 9.7, isTerminal, getResetFromQPosInitDummy)
     evalAllQPosInit = [generateInitQPos() for _ in range(evalNumTrials)]
     evalAllQVelInit = np.random.uniform(-8, 8, (evalNumTrials, 4))
-    getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],
-                                                   numAgents, evalQPosInitNoise, evalQVelInitNoise)
-    getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,
-                                                         getResetFromTrial(trial), chooseGreedyAction)
+    getResetFromTrial = lambda trial: ResetUniform(physicsSimulation, evalAllQPosInit[trial], evalAllQVelInit[trial],numAgents, evalQPosInitNoise, evalQVelInitNoise)
+    getSampleTrajectory = lambda trial: SampleTrajectory(evalMaxRunningSteps, transit, isTerminal,getResetFromTrial(trial), chooseGreedyAction)
 
     allSampleTrajectories = [getSampleTrajectory(trial) for trial in range(evalNumTrials)]
 
     # save evaluation trajectories
-    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data',
-                                       'multiAgentTrain', 'multiAgentSeprateBuffer', 'evaluateTrajectories')
+    trajectoryDirectory = os.path.join(dirName, '..', '..', 'data','multiAgentTrain', 'multiAgentSeprateBuffer', 'evaluateTrajectories')
     if not os.path.exists(trajectoryDirectory):
         os.makedirs(trajectoryDirectory)
     trajectoryExtension = '.pickle'
